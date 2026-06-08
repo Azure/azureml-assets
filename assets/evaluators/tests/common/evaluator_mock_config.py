@@ -68,6 +68,7 @@ EVALUATOR_CONFIGS: Dict[str, EvaluatorOutputConfig] = {
     "customer_satisfaction": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.DICT),
     "deflection_rate": EvaluatorOutputConfig(EvaluatorCategory.BINARY_INVERSE, OutputType.DICT),
     "quality_grader": EvaluatorOutputConfig(EvaluatorCategory.BINARY, OutputType.DICT),
+    "retrieval": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.DICT),
 }
 
 
@@ -115,6 +116,23 @@ def get_dict_llm_output(score: int, explanation: str = DEFAULT_EXPLANATION) -> D
                 "unsupportedClaims": [],
                 "explanation": {},
             },
+        }
+    }
+
+
+def get_dict_llm_output_none_score(reason: str = "Not applicable: intermediate response") -> Dict[str, Any]:
+    """
+    Generate dictionary-formatted LLM output with score=None (skipped/not_applicable).
+
+    This simulates what the prompty returns when a response is not applicable
+    for evaluation (e.g., intermediate tool-only responses).
+    """
+    return {
+        "llm_output": {
+            "score": None,
+            "reason": reason,
+            "status": "skipped",
+            "properties": None,
         }
     }
 
@@ -167,3 +185,61 @@ def get_flow_side_effect_for_evaluator(
 
     config = EVALUATOR_CONFIGS[evaluator_name]
     return create_flow_side_effect(config.score, config.output_type)
+
+
+def create_none_score_flow_side_effect(
+    reason: str = "Not applicable: intermediate response",
+) -> Callable[[int], Awaitable[Dict[str, Any]]]:
+    """
+    Create async side effect that returns score=None (skipped/not_applicable).
+
+    Used to test that evaluators handle None scores from _return_not_applicable_result
+    without crashing on math.isnan(None).
+    """
+
+    async def flow_side_effect(timeout, **kwargs):
+        return get_dict_llm_output_none_score(reason)
+
+    return flow_side_effect
+
+
+def create_mocked_evaluator(evaluator_cls, evaluator_name: str):
+    """Create an evaluator instance with _flow mocked using standard side effect.
+
+    Reusable factory for evaluators that only need model_config and a mocked _flow.
+    For evaluators with extra init params (evaluation_level, multi_turn, etc.),
+    use a custom helper instead.
+
+    Args:
+        evaluator_cls: The evaluator class to instantiate (e.g., FluencyEvaluator).
+        evaluator_name: Name used to look up the mock config (e.g., "fluency").
+
+    Returns:
+        An evaluator instance with _flow replaced by a MagicMock.
+    """
+    import os
+    from unittest.mock import MagicMock
+    from azure.ai.evaluation import AzureOpenAIModelConfiguration
+
+    model_config = AzureOpenAIModelConfiguration(
+        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
+        azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
+    )
+    evaluator = evaluator_cls(model_config=model_config)
+    evaluator._flow = MagicMock(side_effect=get_flow_side_effect_for_evaluator(evaluator_name))
+    return evaluator
+
+
+def assert_none_score_result(result: Dict[str, Any], evaluator_name: str):
+    """Assert that an evaluator result reflects a None/not_applicable score.
+
+    Args:
+        result: The evaluator output dict.
+        evaluator_name: The evaluator key (e.g., "fluency", "groundedness").
+    """
+    assert result[evaluator_name] is None, (
+        f"Expected {evaluator_name} score to be None, got {result[evaluator_name]}"
+    )
+    assert result[f"{evaluator_name}_result"] == "not_applicable", (
+        f"Expected {evaluator_name}_result to be 'not_applicable', got {result.get(f'{evaluator_name}_result')}"
+    )

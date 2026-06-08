@@ -583,18 +583,54 @@ async def send_request(data: Dict) -> (InferenceResult, Dict):
             f"{get_downstream_url()}/{uri}", headers=headers, json=payload)
 
         generated_text = None
+        results: Dict[str, Any] = {}
         if response.status_code == 200:
             output = response.json()
             if task_type == TaskType.CHAT_COMPLETION:
-                generated_text = output["choices"][0]["message"]["content"]
-            elif task_type == TaskType.TEXT_GENERATION:
-                generated_text = output["choices"][0]["text"]
+                choice = output["choices"][0]
+                message = choice.get("message", {}) or {}
+                generated_text = message.get("content")
+                results = {
+                    "output": generated_text,
+                    "message": message,
+                    "finish_reason": choice.get("finish_reason"),
+                    "usage": output.get("usage"),
+                    "model": output.get("model"),
+                    "id": output.get("id"),
+                }
 
-        results = (
-            {"output": generated_text}
-            if task_type == TaskType.CHAT_COMPLETION
-            else {"output": [generated_text]}
-        )
+                tool_calls = message.get("tool_calls")
+                if tool_calls:
+                    results["tool_calls"] = tool_calls
+
+                reasoning = (
+                    message.get("reasoning_content")
+                    or message.get("reasoning")
+                )
+                if reasoning:
+                    results["reasoning_content"] = reasoning
+            elif task_type == TaskType.TEXT_GENERATION:
+                choice = output["choices"][0]
+                generated_text = choice.get("text")
+                results = {
+                    "output": [generated_text],
+                    "finish_reason": choice.get("finish_reason"),
+                    "usage": output.get("usage"),
+                    "model": output.get("model"),
+                    "id": output.get("id"),
+                }
+        else:
+            try:
+                error_body = response.json()
+            except Exception:
+                error_body = response.text
+            results = {
+                "output": None,
+                "error": {
+                    "status_code": response.status_code,
+                    "body": error_body,
+                },
+            }
 
         return InferenceResult(generated_text), results
 
