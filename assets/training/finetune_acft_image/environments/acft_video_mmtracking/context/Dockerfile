@@ -2,7 +2,15 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 USER root
-RUN apt-get -y update && apt-get -y upgrade
+RUN apt-get -y update && apt-get -y upgrade \
+ && apt-get -y install --only-upgrade \
+      liblzma5 \
+      xz-utils \
+      libgcrypt20 \
+      dotnet-host-8.0 \
+      dotnet-hostfxr-8.0 \
+      dotnet-runtime-8.0 \
+ && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install required packages from pypi
 COPY requirements.txt .
@@ -91,3 +99,14 @@ RUN pip install --no-cache-dir --no-deps 'diffusers==0.38.0'
 # Bound the upgrade to the 2.x line to keep ABI-compatible with the existing requests stack.
 RUN pip install --no-cache-dir --upgrade 'urllib3>=2.7.0,<3' \
  && /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'urllib3>=2.7.0,<3'
+
+# Upgrade aiohttp to >=3.14.0 in both envs to fix GHSA-jg22-mg44-37j8 and GHSA-hg6j-4rv6-33pg.
+# Upgrade click to >=8.3.3 in base env to fix GHSA-47fr-3ffg-hgmw.
+# Upgrade idna to >=3.15 in base env to fix GHSA-65pc-fj4g-8rjx.
+# Root cause: aiohttp/click/idna are transitive deps installed in the base /opt/conda (py3.13)
+# and ptca (py3.10) envs by the upstream base image; no parent constrains them to the
+# vulnerable range, so a direct upgrade is safe and sufficient.
+RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' \
+ && /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' \
+ && /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'click>=8.3.3' \
+ && /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'idna>=3.15'
