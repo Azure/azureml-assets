@@ -19,11 +19,27 @@ RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/v
 # the base image was built. The latest parent image
 # (mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04, resolved via
 # {{latest-image-tag}}) already ships the fixes for USN-8222-1 (openssh),
-# USN-8227-1 (curl/libcurl*), USN-8229-1 (sed) and USN-8233-1 (libnghttp2-14),
-# so no explicit per-package reinstall is required here -- `apt-get -y upgrade`
-# is sufficient and also covers any future USNs published after a base-image build.
+# USN-8227-1 (curl/libcurl*), USN-8229-1 (sed) and USN-8233-1 (libnghttp2-14).
+# Packages listed below are explicitly reinstalled to force pickup of patched
+# versions even when an older base layer is cached (same pattern used across
+# other automl Dockerfiles).
+# USN-8284-1: libgnutls30 3.7.3-4ubuntu1.8 -> 3.7.3-4ubuntu1.9
+# USN-8292-1: libarchive13 3.6.0-1ubuntu1.6 -> 3.6.0-1ubuntu1.7
+# USN-8319-1: libgcrypt20 1.9.4-3ubuntu3 -> 1.9.4-3ubuntu3.2
+# USN-8354-1: nginx-common/libnginx-mod-*/nginx-light 1.18.0-6ubuntu14.11 -> 1.18.0-6ubuntu14.12
+# USN-8362-1: liblzma5/xz-utils 5.2.5-2ubuntu1 -> 5.2.5-2ubuntu1.1
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
+    apt-get install --reinstall -y \
+        libgnutls30 \
+        libarchive13 \
+        libgcrypt20 \
+        liblzma5 xz-utils && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade \
+        nginx-common \
+        libnginx-mod-http-geoip2 \
+        nginx-light \
+        libnginx-mod-http-echo && \
     apt-get install -y --no-install-recommends \
         cmake \
         libboost-dev \
@@ -47,6 +63,11 @@ RUN apt-get update && \
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 pip=26.0 -y && \
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH python -m pip install --no-cache-dir --upgrade 'pip>=26.1,<27' && \
     conda clean -a -y
+
+# Security: upgrade idna in the base miniconda env (GHSA-65pc-fj4g-8rjx).
+# VCM SCA scans /opt/miniconda/lib/python3.12/site-packages/ and detects idna<3.15.
+# The base image ships idna 3.13; 3.15 fixes the ReDoS via crafted hostname labels.
+RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'idna>=3.15'
 
 ###############################
 # Pre-Build LightGBM
@@ -125,7 +146,8 @@ RUN pip install --upgrade torchvision==0.23.0 torch==2.8.0 --no-cache-dir
 RUN pip install --upgrade 'distributed>=2026.1.0' 'mlflow-skinny>=2.16.0' \
                           'protobuf>=5.29.6' 'pillow>=12.1.1' \
                           'bokeh>=3.8.2' \
-                          'onnx>=1.21.0'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
+                          'onnx>=1.21.0' \
+                          'starlette>=1.0.1'  # GHSA-86qp-5c8j-p5mr: DoS via malformed multipart (0.52.1 -> >=1.0.1)
 
 # --- End Vulnerability Fixes ---
 
