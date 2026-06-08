@@ -11,8 +11,18 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 ENV ENABLE_METADATA=true
 
 # Upgrade OS packages to pick up current Ubuntu security errata.
+# USN-8319-1: libgcrypt20 1.10.3-2build1 -> 1.10.3-2ubuntu0.1
+# USN-8354-1: nginx/nginx-common/nginx-light 1.24.0-2ubuntu7.8 -> 1.24.0-2ubuntu7.9
+# USN-8362-1: liblzma5/xz-utils 5.6.1+really5.4.5-1ubuntu0.2 -> 5.6.1+really5.4.5-1ubuntu0.3
+# `apt-get -y upgrade` alone can leave held versions in place when an older base
+# layer is cached, so reinstall affected packages explicitly to force the patched
+# versions (same pattern used across other curated training image Dockerfiles).
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade --fix-missing && \
+    apt-get install --reinstall -y \
+        libgcrypt20 \
+        nginx nginx-common nginx-light \
+        liblzma5 xz-utils && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Security: idna>=3.16 fixes GHSA-65pc-fj4g-8rjx / CVE-2026-45409 in
