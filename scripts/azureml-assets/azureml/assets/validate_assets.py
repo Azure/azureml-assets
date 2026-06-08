@@ -818,6 +818,115 @@ def confirm_min_sku_spec(
     return 0
 
 
+def _is_empty_value(value) -> bool:
+    """Return True if the value should be treated as absent for backfill purposes."""
+    if value is None:
+        return True
+    if isinstance(value, str) and not value.strip():
+        return True
+    if isinstance(value, (list, dict)) and len(value) == 0:
+        return True
+    return False
+
+
+def _to_comma_separated_string(value):
+    """Convert a list to a trimmed comma-separated string, leaving other types unchanged."""
+    if isinstance(value, list):
+        return ",".join(str(item).strip() for item in value if str(item).strip())
+    return value
+
+
+def _normalize_sku_list(value):
+    """Normalize a list of SKUs to trimmed strings; pass through non-list values."""
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+    return value
+
+
+def _is_shared_compute_enabled(value) -> bool:
+    """Strictly interpret a sharedComputeCapacityEnabled value as enabled or not.
+
+    Accepts a real boolean True or a case-insensitive "true" string. Everything else
+    (False, "false", "", None, numbers, etc.) is treated as not enabled so that a model
+    with shared compute disabled still fails validation as it did before.
+    """
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() == "true"
+    return False
+
+
+def backfill_validation_fields_from_system_metadata(model: Model, system_metadata: dict) -> None:
+    """Apply system_metadata equivalents onto the validator-visible tags/properties.
+
+    The model spec validator reads required fields from tags/properties only, while the
+    Azure ML SDK ``Model`` loaded from the spec has no awareness of ``system_metadata``.
+    ``system_metadata`` is the source of truth for migrated models, so when it specifies a
+    field, its value overrides any legacy tag/property used during validation. When
+    ``system_metadata`` does not specify a field (missing or empty), the existing
+    tag/property is left untouched as a fallback.
+
+    Args:
+        model (Model): model loaded from spec, mutated in place.
+        system_metadata (dict): system_metadata section from the model spec.
+    """
+    if not system_metadata:
+        return
+
+    if model.tags is None:
+        model.tags = {}
+    if model.properties is None:
+        model.properties = {}
+
+    tasks = system_metadata.get("tasks") or {}
+    sku = system_metadata.get("SKU") or {}
+    supported_computes = system_metadata.get("supportedComputes") or {}
+
+    # tag name -> equivalent system_metadata value (converted to tags format)
+    tag_equivalents = {
+        MLFlowModelTags.TASK: _to_comma_separated_string(tasks.get("inferenceTasks")),
+        MLFlowModelTags.LICENSE: system_metadata.get("license"),
+        MLFlowModelTags.INFERENCE_COMPUTE_ALLOWLIST:
+            _normalize_sku_list(supported_computes.get("inferenceComputes")),
+        MLFlowModelTags.EVALUATION_COMPUTE_ALLOWLIST:
+            _normalize_sku_list(supported_computes.get("evaluationComputes")),
+        MLFlowModelTags.FINETUNE_COMPUTE_ALLOWLIST:
+            _normalize_sku_list(supported_computes.get("finetuneComputes")),
+    }
+    for tag_name, value in tag_equivalents.items():
+        if not _is_empty_value(value):
+            model.tags[tag_name] = value
+
+    # property name -> equivalent system_metadata value (converted to properties format)
+    property_equivalents = {
+        MLFlowModelProperties.INFERENCE_MIN_SKU_SPEC: sku.get("inferenceMinSkuSpec"),
+        MLFlowModelProperties.INFERENCE_RECOMMENDED_SKU: _normalize_sku_list(sku.get("inferenceRecommendedSkus")),
+        MLFlowModelProperties.EVALUATION_MIN_SKU_SPEC: sku.get("evaluationMinSkuSpec"),
+        MLFlowModelProperties.EVALUATION_RECOMMENDED_SKU: _normalize_sku_list(sku.get("evaluationRecommendedSkus")),
+        MLFlowModelProperties.FINETUNE_MIN_SKU_SPEC: sku.get("finetuneMinSkuSpec"),
+        MLFlowModelProperties.FINETUNE_RECOMMENDED_SKU: _normalize_sku_list(sku.get("finetuneRecommendedSkus")),
+        MLFlowModelProperties.FINETUNING_TASKS: _to_comma_separated_string(tasks.get("fineTuningTasks")),
+    }
+    for property_name, value in property_equivalents.items():
+        if isinstance(value, str):
+            value = value.strip()
+        if not _is_empty_value(value):
+            model.properties[property_name] = value
+
+    # sharedComputeCapacityEnabled maps to both a tag (presence) and a property (truthy value).
+    # When system_metadata specifies it, it is authoritative and overrides legacy tag/property.
+    if "sharedComputeCapacityEnabled" in system_metadata:
+        if _is_shared_compute_enabled(system_metadata.get("sharedComputeCapacityEnabled")):
+            model.tags[MLFlowModelTags.SHARED_COMPUTE_CAPACITY] = ""
+            model.properties[MLFlowModelProperties.SHARED_COMPUTE_CAPACITY] = "True"
+        else:
+            # system_metadata says shared compute is disabled; reflect that so validation
+            # (which requires it enabled) flags the model instead of trusting stale legacy values.
+            model.tags.pop(MLFlowModelTags.SHARED_COMPUTE_CAPACITY, None)
+            model.properties[MLFlowModelProperties.SHARED_COMPUTE_CAPACITY] = ""
+
+
 def validate_model_spec(asset_config: assets.AssetConfig) -> int:
     """Validate model spec.
 
@@ -847,6 +956,15 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
             f"Bypass validation for {asset_config.name} as model type is: {model_config.type.value}"
         )
         return 0
+
+    # The SDK Model object has no awareness of system_metadata. Apply system_metadata as the
+    # source of truth onto the validator-visible tags/properties for migrated models, so its
+    # values take precedence over any legacy tag/property.
+    try:
+        system_metadata = asset_config.spec_as_object().system_metadata
+    except Exception:
+        system_metadata = {}
+    backfill_validation_fields_from_system_metadata(model, system_metadata)
 
     # confirm must have
     if not model.tags.get(MLFlowModelTags.TASK):
