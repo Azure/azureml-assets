@@ -32,6 +32,27 @@ RUN apt-get update && \
     rm -f /etc/nginx/sites-enabled/default && \
     apt-get autoremove -y
 
+# Security: upgrade Ubuntu packages to patched versions.
+# USN-8298-1: dotnet-{hostfxr,host,runtime}-8.0 8.0.26-0ubuntu1~22.04.1 -> 8.0.27-0ubuntu1~22.04.1
+# USN-8319-1: libgcrypt20 1.9.4-3ubuntu3 -> 1.9.4-3ubuntu3.2
+# USN-8354-1: nginx-common/nginx-light/libnginx-mod-* 1.18.0-6ubuntu14.11 -> 1.18.0-6ubuntu14.12
+# USN-8362-1: liblzma5/xz-utils 5.2.5-2ubuntu1 -> 5.2.5-2ubuntu1.1
+# `--only-upgrade` is a no-op for packages not present, so this is safe even if
+# dotnet is absent from the base image.
+RUN apt-get update && \
+    apt-get install -y --only-upgrade \
+        dotnet-hostfxr-8.0 \
+        dotnet-host-8.0 \
+        dotnet-runtime-8.0 \
+        libgcrypt20 \
+        nginx-common \
+        libnginx-mod-http-geoip2 \
+        nginx-light \
+        libnginx-mod-http-echo \
+        liblzma5 \
+        xz-utils && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
 ENV SVDIR=/var/runit
 ENV WORKER_TIMEOUT=400
 EXPOSE 5001 8883 8888
@@ -151,6 +172,17 @@ RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'urllib3>=2.7.0' 'idna>=
 # pydantic-settings==2.14.1) still use the same loose floors, so a parent upgrade
 # cannot force >=1.2.2; direct override is the only remediation.
 RUN conda run -n base pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2'
+
+# Security: upgrade aiohttp to fix GHSA-hg6j-4rv6-33pg and GHSA-jg22-mg44-37j8
+# (aiohttp < 3.14.0). Installed in three Python environments:
+#   1. azureml-automl-dnn-text-gpu conda env (py3.10) — via SHELL (conda run)
+#   2. /opt/conda base env (py3.13)
+#   3. /opt/conda/envs/ptca env (py3.10)
+# Latest parents (aiohttp is not directly pinned by any upper constraint) allow
+# the upgrade; no --no-deps needed.
+RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0'
+RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' && \
+    /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0'
 
 # Apply the same setuptools vendored-dependency fix in the AzureML conda env.
 RUN pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
