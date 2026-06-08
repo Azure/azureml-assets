@@ -10,7 +10,11 @@ RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' && \
         'python-dotenv>=1.2.2' \
         'urllib3>=2.7.0' \
         'idna>=3.15' \
-        'click>=8.3.3' && \
+        'click>=8.3.3' \
+        'aiohttp>=3.14.0' && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir \
+        'urllib3>=2.7.0' \
+        'idna>=3.15' && \
     conda clean -a -y && \
     rm -rf /opt/conda/pkgs
 
