@@ -20,6 +20,8 @@ ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 # is already fixed by the upgrade above. Removed to keep the layer minimal.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade \
+        libgnutls30t64 libgcrypt20 liblzma5 xz-utils nginx nginx-common nginx-light && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -55,7 +57,8 @@ RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
     'tqdm~=4.66.3' \
     py-cpuinfo==5.0.0 \
     'torch-tb-profiler~=0.4.0' \
-    'starlette>=0.49.1' && \
+    'starlette>=1.0.1' \
+    'idna>=3.15' && \
     rm conda_dependencies.yaml
 
 # Security vulnerability fixes
@@ -72,4 +75,7 @@ RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
 # aiohttp / distributed: kept overrides to ensure latest patched versions; transitive
 #   parent constraints (mlflow-skinny, dask) don't require these specific patches.
 RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
-    aiohttp==3.13.4 cryptography==46.0.7 'distributed>=2026.1.0'
+    'aiohttp>=3.14.0' cryptography==46.0.7 'distributed>=2026.1.0'
+
+# Upgrade idna in /opt/miniconda to fix GHSA-65pc-fj4g-8rjx (idna <3.15)
+RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'idna>=3.15'
