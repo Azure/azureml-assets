@@ -30,17 +30,6 @@ RUN apt-get update && \
         wget \
         runit
 
-ENV MINICONDA_VERSION=py310_23.10.0-1
-ENV PATH=/opt/miniconda/bin:$PATH
-
-RUN wget -qO /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh && \
-    bash /tmp/miniconda.sh -bf -p /opt/miniconda && \
-    conda update --all -c conda-forge -y && \
-    conda clean -ay && \
-    rm -rf /opt/miniconda/pkgs && \
-    rm /tmp/miniconda.sh && \
-    find / -type d -name __pycache__ | xargs rm -rf
-
 # AzureML conda environment
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/default
 
@@ -58,10 +47,6 @@ WORKDIR /
 
 # When copied to assets repo, change to install from public pypi
 RUN pip install llm-optimized-inference==0.2.57 --no-cache-dir
-
-# clean conda and pip caches
-RUN rm -rf ~/.cache/pip && \
-    rm -rf /opt/miniconda/lib/python3.10/site-packages
 
 # Remove unwanted services if present
 RUN rm -rf /var/runit/gunicorn \
