@@ -1,3 +1,7 @@
+## 1.17.5 (2026-06-04)
+### 🐛 Bugs Fixed
+- [#5111](https://github.com/Azure/azureml-assets/pull/5111) Use system_metadata equivalents for tags/properties in MLFlow model spec validation
+
 ## 1.17.4 (2026-05-19)
 ### 🚀 New Features
 - [#5036](https://github.com/Azure/azureml-assets/pull/5057) Update Trivy and Oras versions

@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/models/qwen2.5-1.5b-instruct/onnx/openvino_npu/v5
+  container_path: foundrylocal/models/nemotron-speech-streaming-en-0.6b/onnx/cuda/v1
   storage_name: foundrylocalassetdata
   type: azureblob
 publish:
