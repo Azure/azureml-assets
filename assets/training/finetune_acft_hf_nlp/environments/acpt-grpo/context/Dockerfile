@@ -46,13 +46,25 @@ RUN rm -rf ~/.cache/pip
 # python-dotenv in base conda env: GHSA-mf9w-mj56-hr94; base ships 1.2.1, need >=1.2.2
 #   parent packages: uvicorn (>=0.13), pydantic-settings (>=0.21.0) — both use loose floors
 # urllib3 in base conda env: see urllib3 note above; same direct-override rationale.
+# idna in base conda env: GHSA-65pc-fj4g-8rjx (CVE-2026-45409, CRITICAL); base ships 3.11,
+#   need >=3.15. Pulled transitively by requests/anyio/httpx/yarl; all published releases use
+#   loose floors (idna>=2.5), so no parent upgrade forces the patched version — direct override.
+# click in base conda env: GHSA-47fr-3ffg-hgmw (CVE-2026-7246, click.edit() command injection);
+#   base ships 8.2.1, need >=8.3.3. Pulled by typer/anaconda-cli-base which only require
+#   click>=8.2.1, so a direct override is required.
 # pip: see note above — bootstrap tool, must be upgraded directly in base env too
 # Also clean stale conda-meta/pip-*.json (see ptca env note above for scanner detail).
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'pip>=26.1.1' 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' && \
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'pip>=26.1.1' 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' && \
     rm -f /opt/conda/conda-meta/pip-26.0*.json
-# ray vendors aiohttp for runtime_env agent under thirdparty_files; patch that copy too.
-RUN rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/ray/__private/runtime_env/agent/thirdparty_files/aiohttp* && \
-    pip install --no-cache-dir --target /opt/conda/envs/ptca/lib/python3.10/site-packages/ray/__private/runtime_env/agent/thirdparty_files 'aiohttp==3.13.5'
+# ray vendors aiohttp AND idna for the runtime_env agent under thirdparty_files; those vendored
+# copies are not touched by the pip installs above. Patch both: aiohttp (prior CVE) and idna
+# (GHSA-65pc-fj4g-8rjx / CVE-2026-45409 — the scanner flags the vendored idna-3.11 by path).
+# Use a dynamic `find` (matching the sibling acpt-rft image) so every thirdparty_files dir is
+# covered regardless of its exact location under ray/_private/... — a hardcoded path is brittle.
+RUN find /opt/conda/envs/ptca/lib/python3.10/site-packages/ray -type d -name 'thirdparty_files' | while read dir; do \
+      rm -rf "$dir"/aiohttp* "$dir"/idna*; \
+      pip install --no-cache-dir --target "$dir" 'aiohttp==3.13.5' 'idna>=3.15'; \
+    done
 # Patch log4j-core 2.25.3→2.25.4 inside ray's fat JAR (ray_dist.jar).
 # ray (all versions through 2.55.1) bundles log4j-core 2.25.3 in java/dependencies.bzl.
 # No ray release includes 2.25.4; manual JAR surgery is required.

@@ -44,8 +44,15 @@ ENV AZURE_ML_CLI_PRIVATE_FEATURES_ENABLED=True
 #   with constraint `urllib3<3,>=1.26`; the latest requests release does not
 #   raise this floor either, so a parent upgrade cannot pull in urllib3>=2.7.0
 #   and a direct override is required.
+# - idna: base ships 3.11; need >=3.15 for GHSA-65pc-fj4g-8rjx (CVE-2026-45409,
+#   CRITICAL). idna is pulled transitively by requests/anyio/httpx/yarl, none of
+#   which pin idna>=3.15 in any published release (loose floors like idna>=2.5),
+#   so a parent upgrade cannot force the patched version; direct override required.
+# - click: base ships 8.2.1; need >=8.3.3 for GHSA-47fr-3ffg-hgmw (CVE-2026-7246,
+#   click.edit() command injection). click is pulled by typer/anaconda-cli-base;
+#   their latest releases only require click>=8.2.1, so a direct override is required.
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
-        'setuptools>=82.0.1' 'python-dotenv>=1.2.2' 'urllib3>=2.7.0'
+        'setuptools>=82.0.1' 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3'
 
 # Vulnerability overrides in ptca conda env (python3.10):
 # - urllib3: the ptca env ships urllib3 2.7.0 from the base image, but the

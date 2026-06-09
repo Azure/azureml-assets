@@ -43,7 +43,12 @@ RUN pip install yapf==0.40.1
 #   - The ptca conda env (py3.10) already gets 1.2.2 transitively via mlflow-skinny when
 #     requirements.txt is installed above, so this RUN only needs to fix the py3.13 env.
 # Bound the upgrade to the 1.x line to keep rebuilds reproducible without locking out future patches.
-RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2,<2'
+# idna 3.11 -> >=3.15 (GHSA-65pc-fj4g-8rjx / CVE-2026-45409, CRITICAL) and click 8.2.1 -> >=8.3.3
+# (GHSA-47fr-3ffg-hgmw / CVE-2026-7246, click.edit() command injection) in the same py3.13 env:
+# both are base-image packages pulled transitively (requests/anyio/httpx for idna,
+# typer/anaconda-cli-base for click) with loose floors, so no parent upgrade forces the patched
+# versions and `pip install -r requirements.txt` (which targets ptca) does not reach this env.
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2,<2' 'idna>=3.15' 'click>=8.3.3'
 
 # pip 26.0.1 -> 26.1.1 to fix GHSA-jp4c-xjxw-mgf9 (PEP 770 SBOM tag injection in pip install --report).
 # Root cause (verified 2026-05 against the built image):
