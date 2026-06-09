@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """Apply Retail RFT compatibility patches to the slime image."""
 
 from __future__ import annotations
