@@ -12,6 +12,7 @@ SLIME_ROOT = Path("/opt/slime")
 
 
 def replace_once(path: Path, old: str, new: str) -> None:
+    """Replace one expected text block in a file."""
     text = path.read_text(encoding="utf-8")
     if new in text:
         return
@@ -21,6 +22,7 @@ def replace_once(path: Path, old: str, new: str) -> None:
 
 
 def patch_numpy_guard() -> None:
+    """Remove slime's conservative numpy 1.x startup assertion."""
     path = SLIME_ROOT / "slime" / "backends" / "megatron_utils" / "initialize.py"
     replace_once(
         path,
@@ -31,6 +33,7 @@ def patch_numpy_guard() -> None:
 
 
 def patch_attention_backend_propagation() -> None:
+    """Propagate CLI attention backend selection into Megatron Bridge config."""
     path = SLIME_ROOT / "slime" / "backends" / "megatron_utils" / "model_provider.py"
     text = path.read_text(encoding="utf-8")
     marker = "        provider.context_parallel_size = args.context_parallel_size\n"
@@ -48,6 +51,7 @@ def patch_attention_backend_propagation() -> None:
 
 
 def main() -> None:
+    """Apply all Retail RFT compatibility patches."""
     patch_numpy_guard()
     patch_attention_backend_propagation()
 
