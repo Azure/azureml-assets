@@ -1,44 +1,20 @@
-FROM mcr.microsoft.com/mirror/docker/library/ubuntu:22.04
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:latest
 
 User root:root
 
+# Only inference-scaffolding packages are installed here. OS libraries
+# (libssl3, libgcrypt20, glibc, krb5, ncurses, gnutls, ...) are already
+# patched by the AzureML CPU training base and pick up USN rebuilds via the
+# {{latest-image-tag}} resolver, so we no longer pin them manually.
+# Exception: xz-utils/liblzma5 are explicitly upgraded here to pull
+# 5.2.5-2ubuntu1.1 (USN-8362-1 / CVE-2026-34743) until the base rebuilds.
 RUN apt-get update && \
-    apt-get install -y software-properties-common && \
-    add-apt-repository -y ppa:adiscon/v8-stable && \
-    apt-get purge -y software-properties-common && \
-    apt-get update && \
     apt-get install -y --no-install-recommends \
-        procps \ 
-        libgnutls30 \ 
-        libk5crypto3 \ 
-        libkrb5-3 \ 
-        libkrb5support0 \ 
-        libpam-modules \ 
         nginx-light \
-        wget \
         runit \
-        libtinfo6 \ 
-        libncurses6 \ 
-        ncurses-bin \ 
-        ncurses-base \ 
-        libncursesw6 \ 
-        libcap2 \ 
-        libc6 \    
-        libc-bin \
-        libtasn1-6 \
         rsyslog \
-        build-essential \
-        psmisc \
-        unzip \
-        perl \
-        binutils-multiarch \
-        binutils \
-        libcurl4 \
-        libunwind8 \
-        systemd \
-        libudev1 \
-        libssl3 \
-        sed=4.8-1ubuntu2.1 && \
+        xz-utils \
+        liblzma5 && \
     apt-get autoremove -y && \
     apt-get clean -y && \
     rm -rf /usr/share/man/* && \
@@ -60,7 +36,7 @@ RUN chmod +x var/runit/*/*
 RUN chmod +x var/azureml-logger/start_logger.sh
 #RUN chmod +x /var/runit/nginx/run
 
-RUN ln -s /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
+RUN ln -sf /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
         rm -f /etc/nginx/sites-enabled/default
 COPY configs/rsyslog.conf    etc/rsyslog.conf
 
@@ -81,6 +57,8 @@ ENV SVDIR=/var/runit
 ENV WORKER_TIMEOUT=300
 ENV AZUREML_INFERENCE_SERVER_HTTP_ENABLED="True"
 
+ENV PIP_USE_PEP517=1
+
 EXPOSE 5001
 
 COPY grant_ownership.sh /tmp/
@@ -95,17 +73,22 @@ RUN chown -R dockeruser /run
 RUN chmod +x /var/azureml-logger/start_logger.sh
 RUN chown -R dockeruser /var/azureml-app
 RUN chown -R dockeruser:dockeruser /opt/miniconda
-USER dockeruser
 
+# Pre-accept Anaconda Terms of Service for the default channels.
+# Conda stores ToS acceptance per-user under ~/.cache/conda, so this must run
+# as the same user that invokes `conda env create` at container start
+# (dockeruser via runit/gunicorn/run). Accepting as root would only persist in
+# /root and the runtime prompt would still appear.
+USER dockeruser
+RUN /opt/miniconda/bin/conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main && \
+    /opt/miniconda/bin/conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
+
+# Miniconda is provided by the AzureML CPU training base at /opt/miniconda.
+# We deliberately do NOT run `conda update --all -c conda-forge` here: that
+# pulls in py-rattler/rattler.abi3.so (Rust SCA CVEs in openssl, aws-lc-sys,
+# rustls-webpki, tar, rand, bytes, etc.) into the base env. The per-deployment
+# conda env below is built strictly from conda_dependencies.yaml.
 ENV PATH=/opt/miniconda/bin:$PATH
-RUN wget -qO /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-py312_24.5.0-0-Linux-x86_64.sh && \
-    bash /tmp/miniconda.sh -bf -p /opt/miniconda && \
-    conda update --all -c conda-forge -y && \
-    conda install "py-rattler>=0.24.0" -c conda-forge -y && \
-    conda clean -ay && \
-    rm -rf /opt/miniconda/pkgs && \
-    rm -f /tmp/miniconda.sh && \
-    find /opt/miniconda -type d -name __pycache__ | xargs rm -rf
 
 WORKDIR /
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/mlflow
@@ -130,7 +113,7 @@ RUN conda clean -afy && \
     conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
-    conda clean -a -y   
+    conda clean -a -y  
 
 RUN pip install pipdeptree
 
