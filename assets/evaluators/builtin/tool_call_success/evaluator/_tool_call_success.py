@@ -1126,8 +1126,10 @@ _FAILED_TOOL_STATUSES = frozenset({"failed", "error", "incomplete", "cancelled",
 
 
 def _collect_failed_tool_statuses(agent_response_msgs):
-    """Return the list of failure statuses seen on any `tool_call` or
-    `tool_result` content block in `agent_response_msgs`.
+    """Return failure statuses seen on tool_call / tool_result content blocks.
+
+    Scans ``agent_response_msgs`` for any ``tool_call`` or ``tool_result``
+    content block whose ``status`` field is in ``_FAILED_TOOL_STATUSES``.
 
     Inputs are intentionally tolerated -- malformed messages / non-dict
     content blocks are skipped rather than raised on, so this helper is safe
