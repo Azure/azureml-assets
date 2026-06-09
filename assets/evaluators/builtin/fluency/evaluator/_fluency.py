@@ -921,6 +921,12 @@ class FluencyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         result = await self._the_super_do_eval(eval_input)
 
+        # Honor explicit skip status before any numeric validation. This is structurally safer
+        # than relying solely on the None-guard below: if the base helper already produced a
+        # not-applicable record, propagate it as-is and never run math.isnan on its None score.
+        if result.get(f"{self._result_key}_status") == "skipped":
+            return result
+
         # Check if base returned nan (invalid output case); None means not-applicable/skipped
         _score = result.get(self._result_key, 0)
         if _score is not None and math.isnan(_score):
