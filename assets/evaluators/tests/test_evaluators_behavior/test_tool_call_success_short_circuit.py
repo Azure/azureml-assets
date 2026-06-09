@@ -22,6 +22,28 @@ from ..common.base_prompty_evaluator_runner import BasePromptyEvaluatorRunner
 # region helpers
 
 
+def _assistant_parallel_tool_calls(blocks):
+    """Build a single assistant message that emits multiple tool_call blocks in one turn.
+
+    ``blocks`` is a list of ``(tool_call_id, name, arguments, status)`` tuples.
+    This shapes the message the way modern Responses-API runtimes emit parallel
+    tool calls (multiple ``tool_call`` content blocks under one assistant message),
+    in contrast to one assistant message per call.
+    """
+    content = []
+    for tool_call_id, name, arguments, status in blocks:
+        block = {
+            "type": "tool_call",
+            "tool_call_id": tool_call_id,
+            "name": name,
+            "arguments": arguments,
+        }
+        if status is not None:
+            block["status"] = status
+        content.append(block)
+    return {"role": "assistant", "content": content}
+
+
 def _assistant_tool_call(tool_call_id, name, arguments, status=None):
     """Build an assistant message carrying a single tool_call content block."""
     block = {
@@ -191,3 +213,37 @@ class TestToolCallSuccessShortCircuit(BasePromptyEvaluatorRunner):
             response=response,
         )
         flow_mock.assert_called_once()
+
+    def test_short_circuit_on_parallel_tool_calls_in_one_assistant_message(self):
+        """Short-circuit fires when failed status is on one of N parallel calls in a single assistant message.
+
+        The modern Responses-API topology emits multiple ``tool_call`` blocks
+        under one assistant message's ``content`` list (parallel function-call
+        invocation). The short-circuit must walk into that content list and
+        flag a single failed block among otherwise-completed siblings -- not
+        only when failed calls live in their own separate assistant messages
+        (which the dedupe test already covers).
+        """
+        response = [
+            _assistant_parallel_tool_calls([
+                ("c1", "fetch_weather", {"city": "Seattle"}, "completed"),
+                ("c2", "send_email",   {"to": "x@example.com"}, "failed"),
+                ("c3", "lookup_user",  {"id": "u42"}, "completed"),
+            ]),
+            _tool_result("c1", "Sunny, 72F.", status="completed"),
+            _tool_result("c2", "", status="failed"),
+            _tool_result("c3", {"user_id": "u42"}, status="completed"),
+        ]
+        results, flow_mock = self._run_evaluation_and_return_mocked_flow(
+            query=self._failing_query(),
+            response=response,
+        )
+        assert results["tool_call_success_result"] == "fail"
+        assert results["tool_call_success_passed"] is False
+        assert results["tool_call_success_score"] == 0.0
+        properties = results["tool_call_success_properties"]
+        assert properties["short_circuit"] == "tool_status"
+        # Only "failed" is in _FAILED_TOOL_STATUSES among these three; dedupes the
+        # tool_call + tool_result pair carrying it.
+        assert properties["failed_statuses"] == ["failed"]
+        flow_mock.assert_not_called()
