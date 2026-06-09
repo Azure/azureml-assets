@@ -1,7 +1,5 @@
 FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:{{latest-image-tag}}
 
-User root:root
-
 # Exception: xz-utils/liblzma5 are explicitly upgraded here to pull
 # 5.2.5-2ubuntu1.1 (USN-8362-1 / CVE-2026-34743) until the base rebuilds.
 RUN apt-get update && \
@@ -70,20 +68,10 @@ RUN chmod +x /var/azureml-logger/start_logger.sh
 RUN chown -R dockeruser /var/azureml-app
 RUN chown -R dockeruser:dockeruser /opt/miniconda
 
-# Pre-accept Anaconda Terms of Service for the default channels.
-# Conda stores ToS acceptance per-user under ~/.cache/conda, so this must run
-# as the same user that invokes `conda env create` at container start
-# (dockeruser via runit/gunicorn/run). Accepting as root would only persist in
-# /root and the runtime prompt would still appear.
 USER dockeruser
 RUN /opt/miniconda/bin/conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main && \
     /opt/miniconda/bin/conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
 
-# Miniconda is provided by the AzureML CPU training base at /opt/miniconda.
-# We deliberately do NOT run `conda update --all -c conda-forge` here: that
-# pulls in py-rattler/rattler.abi3.so (Rust SCA CVEs in openssl, aws-lc-sys,
-# rustls-webpki, tar, rand, bytes, etc.) into the base env. The per-deployment
-# conda env below is built strictly from conda_dependencies.yaml.
 ENV PATH=/opt/miniconda/bin:$PATH
 
 WORKDIR /
