@@ -1,11 +1,7 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:latest
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:{{latest-image-tag}}
 
 User root:root
 
-# Only inference-scaffolding packages are installed here. OS libraries
-# (libssl3, libgcrypt20, glibc, krb5, ncurses, gnutls, ...) are already
-# patched by the AzureML CPU training base and pick up USN rebuilds via the
-# {{latest-image-tag}} resolver, so we no longer pin them manually.
 # Exception: xz-utils/liblzma5 are explicitly upgraded here to pull
 # 5.2.5-2ubuntu1.1 (USN-8362-1 / CVE-2026-34743) until the base rebuilds.
 RUN apt-get update && \
