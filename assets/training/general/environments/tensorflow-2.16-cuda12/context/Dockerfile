@@ -131,7 +131,14 @@ RUN apt-get update && \
         libcurl4 \
         libcurl3-gnutls \
         sed \
-        libkmod2 && \
+        libkmod2 \
+        # USN-8284-1 (libgnutls30 3.7.3-4ubuntu1.9)
+        libgnutls30 \
+        # USN-8319-1 (libgcrypt20 1.9.4-3ubuntu3.2)
+        libgcrypt20 \
+        # USN-8362-1 (liblzma5/xz-utils 5.2.5-2ubuntu1.1)
+        liblzma5 \
+        xz-utils && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
                
@@ -160,6 +167,15 @@ RUN apt-get update && \
     cp /var/configuration/nginx.conf /etc/nginx/sites-available/app && \
     ln -s /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
     rm -f /etc/nginx/sites-enabled/default
+
+# USN-8354-1: upgrade nginx packages to 1.18.0-6ubuntu14.12
+RUN apt-get update && \
+    apt-get install -y --only-upgrade \
+        nginx-common \
+        nginx-light \
+        libnginx-mod-http-geoip2 \
+        libnginx-mod-http-echo && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 ENV SVDIR=/var/runit
 ENV WORKER_TIMEOUT=300
 EXPOSE 5001 8883 8888
@@ -272,12 +288,12 @@ RUN conda run -p $CONDA_PREFIX conda install -c conda-forge openssl
 # requests>=2.33.0 fixes GHSA-gc5v-m9x4-r6x2
 # pillow>=12.2.0 fixes GHSA-whj4-6x5x-4v2j
 # pip>=26.1 fixes GHSA-jp4c-xjxw-mgf9 / CVE-2026-6357 (bumped from >=26.0 which resolved to 26.0.1)
-RUN conda run -p $CONDA_PREFIX pip install --upgrade 'pip>=26.1' 'cryptography>=46.0.7' 'setuptools>=82.0.1' 'protobuf>=5.29.6' 'requests>=2.33.0' 'pillow>=12.2.0'
+RUN conda run -p $CONDA_PREFIX pip install --upgrade 'pip>=26.1' 'cryptography>=46.0.7' 'setuptools>=82.0.1' 'protobuf>=5.29.6' 'requests>=2.33.0' 'pillow>=12.2.0' 'starlette>=1.0.1' 'idna>=3.15'
 
 # Upgrade vulnerable packages in the base miniconda env (python3.10)
 # Use the absolute path to /opt/miniconda's pip because $CONDA_PREFIX/bin precedes /opt/miniconda/bin in PATH.
 # pip>=26.1 fixes GHSA-jp4c-xjxw-mgf9 / CVE-2026-6357 in the base miniconda env install path.
-RUN /opt/miniconda/bin/pip install --upgrade 'pip>=26.1' 'cryptography>=46.0.7' 'requests>=2.33.0' && \
+RUN /opt/miniconda/bin/pip install --upgrade 'pip>=26.1' 'cryptography>=46.0.7' 'requests>=2.33.0' 'idna>=3.15' && \
     # Remove the conda pkgs cache — conda env create / conda install repopulate it with
     # pip-26.0.1-pyh8b19718__0 which still ships vulnerable pip 26.0.1 metadata
     # (scanned at opt/miniconda/pkgs/pip-26.0.1-pyh8b19718__0/site-packages/pip-26.0.1.dist-info).
