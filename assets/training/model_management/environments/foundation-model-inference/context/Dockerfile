@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-cuda13.1-ubuntu24.04:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/openmpi5.0-cuda13.1-ubuntu24.04::{{latest-image-tag}}
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -7,7 +7,10 @@ ENV PYTHONUNBUFFERED=1 \
     PYTORCH_NVML_BASED_CUDA_CHECK=0
 
 # Remove vulnerable NVIDIA Nsight Compute components
-RUN rm -rf /opt/nvidia/nsight-compute
+# nic_sampler (Go stdlib v1.23.4) contains 36 CVEs; this profiling plugin is not needed for inference
+RUN /opt/nvidia/nsight-compute/2025.4.1/host/target-linux-x64/python/bin/python \
+    -m pip install --upgrade pip==26.1.2 2>/dev/null || true && \
+    rm -rf /opt/nvidia/nsight-compute/2025.4.1/host/target-linux-x64/plugins/efa_metrics
 
 # CUDA forward-compat: lets CUDA 13.1 userspace run on hosts with older (e.g. 535-series) NVIDIA drivers.
 RUN apt-get update && \
@@ -17,13 +20,19 @@ RUN apt-get update && \
 # that the dynamic loader would resolve to the CWD.
 ENV LD_LIBRARY_PATH=/usr/local/cuda/compat:/usr/local/cuda/lib64:/usr/local/nvidia/lib:/usr/local/nvidia/lib64
 
-RUN apt update && apt upgrade -y && apt install software-properties-common -y && add-apt-repository ppa:deadsnakes/ppa -y
-RUN apt install git -y
-
-ENV MINICONDA_VERSION py310_23.10.0-1
-ENV PATH /opt/miniconda/bin:$PATH
+# System packages
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends wget runit
+    apt-get upgrade -y && \
+    apt-get install -y software-properties-common && \
+    add-apt-repository ppa:deadsnakes/ppa -y && \
+    apt-get install -y \
+        git \
+        wget \
+        runit
+
+ENV MINICONDA_VERSION=py310_23.10.0-1
+ENV PATH=/opt/miniconda/bin:$PATH
+
 RUN wget -qO /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh && \
     bash /tmp/miniconda.sh -bf -p /opt/miniconda && \
     conda update --all -c conda-forge -y && \
@@ -32,31 +41,46 @@ RUN wget -qO /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-${
     rm /tmp/miniconda.sh && \
     find / -type d -name __pycache__ | xargs rm -rf
 
-ENV AZUREML_CONDA_ENVIRONMENT_PATH=/opt/conda/envs/azureml-env
+# AzureML conda environment
+ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/default
 
-# Create conda environment
-RUN conda create -y -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 -c conda-forge
+RUN conda create -y \
+    -p ${AZUREML_CONDA_ENVIRONMENT_PATH} \
+    python=3.10 \
+    -c conda-forge
 
 # Activate environment via PATH
-ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
-ENV CONDA_DEFAULT_ENV=$AZUREML_CONDA_ENVIRONMENT_PATH
-ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
+ENV PATH=${AZUREML_CONDA_ENVIRONMENT_PATH}/bin:$PATH
+ENV CONDA_DEFAULT_ENV=${AZUREML_CONDA_ENVIRONMENT_PATH}
+ENV CONDA_PREFIX=${AZUREML_CONDA_ENVIRONMENT_PATH}
 
 WORKDIR /
 
-
 # When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference==0.2.56 --no-cache-dir
+RUN pip install llm-optimized-inference==0.2.57 --no-cache-dir
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip && \
-    rm -rf /opt/miniconda/lib/python3.10/site-packages 
+    rm -rf /opt/miniconda/lib/python3.10/site-packages
 
+# Remove unwanted services if present
+RUN rm -rf /var/runit/gunicorn \
+           /var/runit/nginx \
+           /var/runit/rsyslog || true
 
-ADD runit_folder/api_server /etc/service/api_server
-RUN sed -i 's/\r$//g' /etc/service/api_server/run && chmod +x /etc/service/api_server/run
+# Add API server service
+ADD runit_folder/api_server /var/runit/api_server
 
-ENV SVDIR=/etc/service
-ENV WORKER_TIMEOUT=3600
+RUN sed -i 's/\r$//g' /var/runit/api_server/run && \
+    chmod +x /var/runit/api_server/run
+
+# Validate runsvdir exists
+RUN command -v runsvdir >/dev/null || \
+    (echo "runsvdir missing in image" && exit 1)
+
+ENV SVDIR=/var/runit \
+    WORKER_TIMEOUT=3600
+
 EXPOSE 5001
-CMD [ "runsvdir", "/etc/service" ]
+
+CMD ["runsvdir", "/var/runit"]
