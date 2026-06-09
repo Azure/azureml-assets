@@ -1,0 +1,35 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: nemotron-speech-streaming-es-0.6b-ft-cuda-gpu
+version: 1
+isArchived: true
+path: ./
+tags:
+  foundryLocal: ""
+  license: "MIT"
+  licenseDescription: "This model is provided under the License Terms available at <https://github.com/microsoft/Foundry-Local/blob/main/licenses/nemotron-speech-streaming.md>."
+  author: Microsoft
+  inputModalities: "audio"
+  outputModalities: "text"
+  task: automatic-speech-recognition
+  maxOutputTokens: 2048
+  alias: nemotron-speech-streaming-es-0.6b
+  directoryPath: v1
+  promptTemplate: ""
+  capabilities: ""
+  supportsReasoning: ""
+  reasoningStart: ""
+  reasoningEnd: ""
+  contextLength: 0
+  minFLVersion: "1.1.0"
+  disable-maap: "true"
+type: custom_model
+variantInfo:
+  parents:
+  - assetId: azureml://registries/azureml/models/nemotron-speech-streaming-en-0.6b/versions/1
+  variantMetadata:
+    modelType: 'ONNX'
+    quantization: ['RTN']
+    device: 'gpu'
+    executionProvider: 'CUDAExecutionProvider'
+    fileSizeBytes: 764952910
+    vRamFootprintBytes: 764952910
