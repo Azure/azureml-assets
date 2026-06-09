@@ -277,7 +277,10 @@ RUN conda run -p $CONDA_PREFIX pip install --upgrade 'pip>=26.1' 'cryptography>=
 # Upgrade vulnerable packages in the base miniconda env (python3.10)
 # Use the absolute path to /opt/miniconda's pip because $CONDA_PREFIX/bin precedes /opt/miniconda/bin in PATH.
 # pip>=26.1 fixes GHSA-jp4c-xjxw-mgf9 / CVE-2026-6357 in the base miniconda env install path.
-RUN /opt/miniconda/bin/pip install --upgrade 'pip>=26.1' 'cryptography>=46.0.7' 'requests>=2.33.0' && \
+# idna>=3.15 fixes GHSA-65pc-fj4g-8rjx / CVE-2026-45409. `conda update --all` resolves the
+# base miniconda idna to 3.13 from conda-forge, and requests (its parent) only requires
+# idna<4,>=2.5, so the parent cannot pull the patched floor — direct override required.
+RUN /opt/miniconda/bin/pip install --upgrade 'pip>=26.1' 'cryptography>=46.0.7' 'requests>=2.33.0' 'idna>=3.15' && \
     # Remove the conda pkgs cache — conda env create / conda install repopulate it with
     # pip-26.0.1-pyh8b19718__0 which still ships vulnerable pip 26.0.1 metadata
     # (scanned at opt/miniconda/pkgs/pip-26.0.1-pyh8b19718__0/site-packages/pip-26.0.1.dist-info).
