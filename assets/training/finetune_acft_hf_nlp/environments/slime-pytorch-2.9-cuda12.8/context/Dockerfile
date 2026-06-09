@@ -81,6 +81,11 @@ RUN python -m pip install --no-cache-dir \
     python -m pip install --no-cache-dir \
         'nvidia-modelopt[torch]>=0.37.0' --no-build-isolation
 
+RUN python -m pip install --no-cache-dir transformer-engine-cu12==2.15.0 && \
+    MAX_JOBS=32 NVTE_FRAMEWORK=pytorch TORCH_CUDA_ARCH_LIST=8.0 \
+        python -m pip install --no-cache-dir --no-build-isolation transformer-engine-torch==2.15.0 && \
+    python -m pip install --no-cache-dir transformer-engine==2.15.0
+
 COPY requirements.txt /tmp/slime-requirements.txt
 RUN python -m pip install --no-cache-dir -r /tmp/slime-requirements.txt && \
     rm /tmp/slime-requirements.txt
@@ -105,6 +110,10 @@ RUN LOG4J_VERSION=${LOG4J_VERSION} \
 
 RUN cd /opt/slime && \
     python -m pip install --no-cache-dir -e . --no-deps
+
+COPY patch_slime_rft_fixes.py /tmp/patch_slime_rft_fixes.py
+RUN python /tmp/patch_slime_rft_fixes.py && \
+    rm /tmp/patch_slime_rft_fixes.py
 
 RUN cd /opt/slime/slime/backends/megatron_utils/kernels/int4_qat && \
     python -m pip install --no-cache-dir . --no-build-isolation
