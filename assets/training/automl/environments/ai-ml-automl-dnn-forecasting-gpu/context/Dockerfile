@@ -17,6 +17,9 @@ ENV ENABLE_METADATA=true
 # USN-8227-1: curl/libcurl4/libcurl3-gnutls 7.81.0-1ubuntu1.23 -> 7.81.0-1ubuntu1.24
 # USN-8229-1: sed 4.8-1ubuntu2 -> 4.8-1ubuntu2.1
 # USN-8233-1: libnghttp2-14 1.43.0-1ubuntu0.2 -> 1.43.0-1ubuntu0.3
+# USN-8362-1: liblzma5/xz-utils 5.2.5-2ubuntu1 -> 5.2.5-2ubuntu1.1
+# USN-8354-1: nginx-common/libnginx-mod-http-geoip2/nginx-light/libnginx-mod-http-echo
+#             1.18.0-6ubuntu14.11 -> 1.18.0-6ubuntu14.12
 # Parent: ubuntu 22.04 jammy base image (mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04).
 # `apt-get -y upgrade` alone has been observed to leave the held openssh version in
 # place when an older base layer is cached, so reinstall the openssh-* packages
@@ -26,9 +29,14 @@ ENV ENABLE_METADATA=true
 # assets/training/automl/environments/ai-ml-automl-dnn-gpu/context/Dockerfile).
 # curl/sed/nghttp2 USNs are picked up by the standard `apt-get upgrade` from
 # jammy-updates; no reinstall needed for them.
+# liblzma5/xz-utils and nginx packages are also reinstalled explicitly to guarantee
+# the patched versions are present regardless of base-layer caching.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
-    apt-get install --reinstall -y openssh-client openssh-server openssh-sftp-server && \
+    apt-get install --reinstall -y \
+        openssh-client openssh-server openssh-sftp-server \
+        liblzma5 xz-utils \
+        nginx-common libnginx-mod-http-geoip2 nginx-light libnginx-mod-http-echo && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && \
