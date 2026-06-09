@@ -106,7 +106,7 @@ RUN pip install --no-cache-dir --upgrade 'urllib3>=2.7.0,<3' \
 # Root cause: aiohttp/click/idna are transitive deps installed in the base /opt/conda (py3.13)
 # and ptca (py3.10) envs by the upstream base image; no parent constrains them to the
 # vulnerable range, so a direct upgrade is safe and sufficient.
-RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' \
+RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' 'click>=8.3.3' 'idna>=3.15' \
  && /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' \
  && /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'click>=8.3.3' \
  && /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'idna>=3.15'
