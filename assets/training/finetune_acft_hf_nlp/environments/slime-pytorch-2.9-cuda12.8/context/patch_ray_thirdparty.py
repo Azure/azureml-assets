@@ -1,4 +1,4 @@
-﻿# Copyright (c) Microsoft Corporation.
+# Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
 """Remove vulnerable package dist-info from anywhere in the Python path.
