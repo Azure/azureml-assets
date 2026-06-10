@@ -26,6 +26,7 @@ MIN_VERSIONS = {
 
 
 def find_site_dirs():
+    """Return site-packages paths plus known Ray vendor directories."""
     dirs = set()
     for d in site.getsitepackages():
         dirs.add(d)
@@ -43,6 +44,7 @@ def find_site_dirs():
 
 
 def clean_directory(dirpath):
+    """Remove vulnerable dist-info directories from a single search path."""
     removed = 0
     try:
         entries = os.listdir(dirpath)
@@ -71,6 +73,7 @@ def clean_directory(dirpath):
 
 
 def main():
+    """Scan known package directories and remove vulnerable metadata."""
     site_dirs = find_site_dirs()
     total_removed = 0
     for d in site_dirs:
