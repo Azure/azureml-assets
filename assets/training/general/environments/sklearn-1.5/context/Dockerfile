@@ -9,15 +9,7 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
-# Update package lists and upgrade all OS packages to pull latest security patches
-# (e.g. openssh USN-8222-1, curl USN-8227-1, kmod USN-8226-1, sed USN-8229-1,
-# nghttp2 USN-8233-1 currently outstanding in base image openmpi5.0-ubuntu24.04:latest).
-# Previously this step also did `apt-get install --reinstall openssl libssl-dev
-# openssh-server libpam-runtime libc-bin dpkg-dev` but those reinstalls became
-# redundant after `apt-get upgrade` was added: a fresh scan of the base image
-# (mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:latest, digest 53c17a5a) shows
-# none of those packages other than openssh have an outstanding USN, and openssh
-# is already fixed by the upgrade above. Removed to keep the layer minimal.
+# Upgrade OS packages to pick up current Ubuntu security errata.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get clean && \
