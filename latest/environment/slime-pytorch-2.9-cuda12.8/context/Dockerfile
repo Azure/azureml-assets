@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.8-ubuntu24.04:20260528.v1
+FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.8-ubuntu24.04:20260609.v2
 
 USER root
 # Editable sources live under /opt so AML/Singularity jobs (uid 9000) can

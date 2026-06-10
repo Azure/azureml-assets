@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:20260528.v1
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:20260609.v2
 
 # Exception: xz-utils/liblzma5 are explicitly upgraded here to pull
 # 5.2.5-2ubuntu1.1 (USN-8362-1 / CVE-2026-34743) until the base rebuilds.
