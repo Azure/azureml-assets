@@ -20,8 +20,6 @@ ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 # is already fixed by the upgrade above. Removed to keep the layer minimal.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade \
-        libgnutls30t64 libgcrypt20 liblzma5 xz-utils nginx nginx-common nginx-light && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -39,6 +37,7 @@ RUN conda create -p $CONDA_PREFIX -q -y python=3.10 pip=26.1.1 'pandas~=1.5.3' '
     conda clean -a -y
 
 # Step 2: Install pip packages separately (pip resolver uses less memory than conda's SAT solver)
+# starlette>=1.0.1 (GHSA-86qp-5c8j-p5mr) / idna>=3.15 (GHSA-65pc-fj4g-8rjx): transitive via fastapi / requests; drop when parent bumps
 RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
     scikit-learn-intelex=={{latest-pypi-version}} \
     azureml-core=={{latest-pypi-version}} \
@@ -77,5 +76,5 @@ RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
 RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
     'aiohttp>=3.14.0' cryptography==46.0.7 'distributed>=2026.1.0'
 
-# Upgrade idna in /opt/miniconda to fix GHSA-65pc-fj4g-8rjx (idna <3.15)
+# idna>=3.15 (GHSA-65pc-fj4g-8rjx): base-image miniconda ships idna<3.15; drop once base image updates
 RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'idna>=3.15'

@@ -79,6 +79,7 @@ RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
 #   parent constraints (azureml-mlflow caps mlflow-skinny<=3.9.0 -> protobuf<7,
 #   dask~=2026.3.0 -> distributed<2026.3.1) would otherwise allow older patch
 #   levels with outstanding CVEs, so explicit floor pins are required.
+# starlette>=1.0.1 / idna>=3.15: transitive via fastapi / requests (base miniconda ships idna<3.15); drop when parents/base update
 RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
     'aiohttp>=3.14.0' 'protobuf>=6.33.5' 'distributed>=2026.1.0' cryptography==46.0.7 'idna>=3.15' 'starlette>=1.0.1' && \
     /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'idna>=3.15'

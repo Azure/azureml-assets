@@ -31,17 +31,6 @@ RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/v
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get install --reinstall -y openssh-client openssh-server openssh-sftp-server && \
-    apt-get install --reinstall -y \
-        libgnutls30 \
-        libarchive13 \
-        libgcrypt20 \
-        liblzma5 \
-        xz-utils && \
-    apt-get install -y --only-upgrade \
-        nginx-common \
-        libnginx-mod-http-geoip2 \
-        nginx-light \
-        libnginx-mod-http-echo && \
     apt-get install -y --no-install-recommends \
         cmake \
         libboost-dev \
@@ -156,21 +145,12 @@ RUN pip install \
 #   Override is required to remediate the vulnerability.
 #   Chain: azureml-automl-runtime / azureml-train-automl-runtime -> onnx<=1.17.0
 #
-# starlette>=1.0.1 — GHSA-86qp-5c8j-p5mr
-#   Pulled in transitively into the azureml-automl-dnn-gpu conda env.
-#   No parent constraint prevents upgrading to 1.0.1.
-#
-# idna>=3.15 — GHSA-65pc-fj4g-8rjx
-#   Installed in both the conda env and the base miniconda python3.12 env.
-#   The base miniconda path is upgraded separately via /opt/miniconda/bin/pip below.
+# starlette>=1.0.1 — GHSA-86qp-5c8j-p5mr; transitive via fastapi (loose floor), drop when parent bumps
+# idna>=3.15 — GHSA-65pc-fj4g-8rjx; transitive via requests/yarl (loose floor), drop when parent bumps
 RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0' \
     'bokeh>=3.8.2' \
     'onnx>=1.21.0' \
     'starlette>=1.0.1' \
     'idna>=3.15'
-# idna>=3.15 (GHSA-65pc-fj4g-8rjx): upgrade also in the base miniconda python env
-# (scanned at opt/miniconda/lib/python3.12/site-packages) which is separate from the
-# conda env created above.
-RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'idna>=3.15'
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH

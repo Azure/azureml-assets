@@ -109,6 +109,45 @@ RUN cd /opt/slime && \
 RUN cd /opt/slime/slime/backends/megatron_utils/kernels/int4_qat && \
     python -m pip install --no-cache-dir . --no-build-isolation
 
+# Security: upgrade system packages with known vulnerabilities
+# (rsync USN-8283-1, libgnutls30t64 USN-8284-1, bind9 USN-8293-1,
+#  libarchive13t64 USN-8292-1, nginx USN-8354-1, xz-utils USN-8362-1,
+#  libgcrypt20 USN-8319-1)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends --only-upgrade \
+        rsync \
+        libgnutls30t64 \
+        bind9-host \
+        bind9-dnsutils \
+        bind9-libs \
+        libarchive13t64 \
+        nginx \
+        nginx-common \
+        nginx-light \
+        xz-utils \
+        liblzma5 \
+        libgcrypt20 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Security: upgrade Python packages with known vulnerabilities
+# (aiohttp GHSA-jg22-mg44-37j8 / GHSA-hg6j-4rv6-33pg, starlette GHSA-86qp-5c8j-p5mr,
+#  idna GHSA-65pc-fj4g-8rjx in main site-packages and ray's vendored thirdparty copy)
+RUN python -m pip install --no-cache-dir \
+        "aiohttp>=3.14.0" \
+        "starlette>=1.0.1" \
+        "idna>=3.15"
+
+COPY patch_ray_thirdparty.py /tmp/patch_ray_thirdparty.py
+# Upgrade vulnerable packages inside ray's vendored thirdparty_files directory and
+# remove the old dist-info so the vulnerability scanner no longer sees them.
+RUN python -m pip install --no-cache-dir \
+        "idna>=3.15" \
+        "aiohttp>=3.14.0" \
+        --target "$(python -c 'import site; print(site.getsitepackages()[0])')/ray/_private/runtime_env/agent/thirdparty_files" && \
+    python /tmp/patch_ray_thirdparty.py && \
+    rm /tmp/patch_ray_thirdparty.py
+
 # AML/Singularity jobs run as uid 9000 (aiscuser). Explicitly grant
 # world read + traverse on the editable slime and Megatron-LM trees so
 # `import slime`, `python /opt/slime/train.py`, and the PYTHONPATH-based

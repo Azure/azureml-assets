@@ -12,7 +12,3 @@ requests==2.34.2
 # httpx (via openai). Current parent releases still allow vulnerable idna
 # versions instead of requiring idna>=3.15, so keep this direct override.
 idna>=3.15
-# urllib3 >=2.7.0 fixes GHSA-mf9v-mfxr-j63j and GHSA-qccp-gfcp-xxvc.
-urllib3>=2.7.0
-# starlette >=1.0.1 fixes GHSA-86qp-5c8j-p5mr.
-starlette>=1.0.1
