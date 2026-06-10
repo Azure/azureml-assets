@@ -1000,17 +1000,8 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             score = float(score)
             score_result = "pass" if score >= self._threshold else "fail"
             llm_properties = llm_output.get("properties", {}) or {}
-            llm_properties.update(
-                {
-                    "prompt_tokens": prompty_output_dict.get("input_token_count", 0),
-                    "completion_tokens": prompty_output_dict.get("output_token_count", 0),
-                    "total_tokens": prompty_output_dict.get("total_token_count", 0),
-                    "finish_reason": prompty_output_dict.get("finish_reason", ""),
-                    "model": prompty_output_dict.get("model_id", ""),
-                    "sample_input": prompty_output_dict.get("sample_input", ""),
-                    "sample_output": prompty_output_dict.get("sample_output", ""),
-                }
-            )
+            token_metadata = self._get_token_metadata(prompty_output_dict)
+            llm_properties.update(token_metadata)
             response_dict = {
                 self._result_key: score,
                 f"{self._result_key}_score": score,
@@ -1021,6 +1012,8 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 f"{self._result_key}_threshold": self._threshold,
                 f"{self._result_key}_properties": llm_properties,
             }
+            # Add top-level token metadata fields for backward compatibility.
+            response_dict.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
             return response_dict
 
         else:
@@ -1074,7 +1067,8 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: A dictionary containing the result of the evaluation.
         :rtype: Dict[str, Union[str, float, None]]
         """
-        return {
+        token_metadata = self._get_token_metadata({})
+        result = {
             f"{self._result_key}": None,
             f"{self._result_key}_score": None,
             f"{self._result_key}_passed": None,
@@ -1083,6 +1077,22 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             f"{self._result_key}_status": "skipped",
             f"{self._result_key}_threshold": threshold,
             f"{self._result_key}_properties": None,
+        }
+        # Add top-level token metadata fields for backward compatibility.
+        result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+        return result
+
+    @staticmethod
+    def _get_token_metadata(prompty_output: Dict) -> Dict:
+        """Extract token usage and model metadata from the prompty output dict."""
+        return {
+            "prompt_tokens": prompty_output.get("input_token_count", 0),
+            "completion_tokens": prompty_output.get("output_token_count", 0),
+            "total_tokens": prompty_output.get("total_token_count", 0),
+            "finish_reason": prompty_output.get("finish_reason", ""),
+            "model": prompty_output.get("model_id", ""),
+            "sample_input": prompty_output.get("sample_input", ""),
+            "sample_output": prompty_output.get("sample_output", ""),
         }
 
     def _extract_needed_tool_definitions(self, tool_calls, tool_definitions):
