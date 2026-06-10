@@ -76,7 +76,13 @@ def main():
     for d in site_dirs:
         print("Scanning " + d + " ...")
         total_removed += clean_directory(d)
-    print("\nDone. Removed " + str(total_removed) + " vulnerable dist-info director" + ("y" if total_removed == 1 else "ies") + " across all paths.")
+    print(
+        "\nDone. Removed "
+        + str(total_removed)
+        + " vulnerable dist-info director"
+        + ("y" if total_removed == 1 else "ies")
+        + " across all paths."
+    )
 
 
 if __name__ == "__main__":
