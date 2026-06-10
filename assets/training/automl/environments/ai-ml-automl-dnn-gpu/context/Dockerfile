@@ -15,13 +15,7 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 ENV ENABLE_METADATA=true
 RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
 
-# Defensive OS-package upgrade: pulls in any USN-patched packages published after
-# the base image was built. The latest parent image
-# (mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04, resolved via
-# {{latest-image-tag}}) already ships the fixes for USN-8222-1 (openssh),
-# USN-8227-1 (curl/libcurl*), USN-8229-1 (sed) and USN-8233-1 (libnghttp2-14),
-# so no explicit per-package reinstall is required here -- `apt-get -y upgrade`
-# is sufficient and also covers any future USNs published after a base-image build.
+# Upgrade OS packages to pick up current Ubuntu security errata.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get install -y --no-install-recommends \
