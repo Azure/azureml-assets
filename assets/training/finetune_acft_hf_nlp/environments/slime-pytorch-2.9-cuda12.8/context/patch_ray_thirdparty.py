@@ -1,4 +1,7 @@
-﻿"""Remove vulnerable package dist-info from anywhere in the Python path.
+﻿# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Remove vulnerable package dist-info from anywhere in the Python path.
 
 Ray and other packages may bundle vulnerable copies of aiohttp and idna in
 non-standard locations. This script walks all dist-info directories in every
