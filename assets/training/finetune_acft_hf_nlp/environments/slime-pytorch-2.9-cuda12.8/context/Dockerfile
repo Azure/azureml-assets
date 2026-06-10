@@ -81,10 +81,13 @@ RUN python -m pip install --no-cache-dir \
     python -m pip install --no-cache-dir \
         'nvidia-modelopt[torch]>=0.37.0' --no-build-isolation
 
-RUN python -m pip install --no-cache-dir transformer-engine-cu12==2.15.0 && \
-    MAX_JOBS=32 NVTE_FRAMEWORK=pytorch TORCH_CUDA_ARCH_LIST=8.0 \
-        python -m pip install --no-cache-dir --no-build-isolation transformer-engine-torch==2.15.0 && \
-    python -m pip install --no-cache-dir transformer-engine==2.15.0
+# The PyTorch extension has no public wheel for this image's torch/CUDA stack.
+# Install the hosted wheel extracted from the tested canary image instead of
+# building transformer-engine-torch from source in the release pipeline.
+RUN python -m pip install --no-cache-dir transformer-engine-cu12==2.10.0 && \
+    python -m pip install --no-cache-dir \
+        https://github.com/yeshsurya/TransformerEngine/releases/download/transformer_engine_torch-2.10.0/transformer_engine_torch-2.10.0-cp310-cp310-linux_x86_64.whl && \
+    python -m pip install --no-cache-dir transformer-engine==2.10.0
 
 COPY requirements.txt /tmp/slime-requirements.txt
 RUN python -m pip install --no-cache-dir -r /tmp/slime-requirements.txt && \
