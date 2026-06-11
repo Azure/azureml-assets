@@ -9,15 +9,7 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
-# Update package lists and upgrade all OS packages to pull latest security patches
-# (e.g. openssh USN-8222-1, curl USN-8227-1, kmod USN-8226-1, sed USN-8229-1,
-# nghttp2 USN-8233-1 currently outstanding in base image openmpi5.0-ubuntu24.04:latest).
-# Previously this step also did `apt-get install --reinstall openssl libssl-dev
-# openssh-server libpam-runtime libc-bin dpkg-dev` but those reinstalls became
-# redundant after `apt-get upgrade` was added: a fresh scan of the base image
-# (mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:latest, digest 53c17a5a) shows
-# none of those packages other than openssh have an outstanding USN, and openssh
-# is already fixed by the upgrade above. Removed to keep the layer minimal.
+# Upgrade OS packages to pick up current Ubuntu security errata.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get clean && \
@@ -37,6 +29,7 @@ RUN conda create -p $CONDA_PREFIX -q -y python=3.10 pip=26.1.1 'pandas~=1.5.3' '
     conda clean -a -y
 
 # Step 2: Install pip packages separately (pip resolver uses less memory than conda's SAT solver)
+# starlette>=1.0.1 (GHSA-86qp-5c8j-p5mr) / idna>=3.15 (GHSA-65pc-fj4g-8rjx): transitive via fastapi / requests; drop when parent bumps
 RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
     scikit-learn-intelex=={{latest-pypi-version}} \
     azureml-core=={{latest-pypi-version}} \
@@ -55,7 +48,8 @@ RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
     'tqdm~=4.66.3' \
     py-cpuinfo==5.0.0 \
     'torch-tb-profiler~=0.4.0' \
-    'starlette>=0.49.1' && \
+    'starlette>=1.0.1' \
+    'idna>=3.15' && \
     rm conda_dependencies.yaml
 
 # Security vulnerability fixes
@@ -72,4 +66,7 @@ RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
 # aiohttp / distributed: kept overrides to ensure latest patched versions; transitive
 #   parent constraints (mlflow-skinny, dask) don't require these specific patches.
 RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
-    aiohttp==3.13.4 cryptography==46.0.7 'distributed>=2026.1.0'
+    'aiohttp>=3.14.0' cryptography==46.0.7 'distributed>=2026.1.0'
+
+# idna>=3.15 (GHSA-65pc-fj4g-8rjx): base-image miniconda ships idna<3.15; drop once base image updates
+RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'idna>=3.15'

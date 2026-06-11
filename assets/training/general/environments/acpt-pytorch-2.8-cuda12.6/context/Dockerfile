@@ -38,7 +38,12 @@ RUN apt-get update && \
 # and VCM reads the ptca conda-meta record, so conda must update it. The current
 # base plus requirements dry-run already keep urllib3 at 2.7.0.
 # setuptools>=82.0.1: GHSA-58pv-8j8x-9vj2, GHSA-8rrh-rw8j-w5fx.
-RUN conda install -n ptca -c conda-forge -y 'pip>=26.1.1' 'setuptools>=82.0.1'
+# urllib3>=2.7.0: GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j.
+# idna>=3.15: GHSA-65pc-fj4g-8rjx.
+# aiohttp>=3.14.0: GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8.
+RUN conda install -n ptca -c conda-forge -y 'pip>=26.1.1' 'setuptools>=82.0.1' && \
+    conda run -n ptca python -m pip install --upgrade \
+        'urllib3>=2.7.0' 'idna>=3.15' 'aiohttp>=3.14.0'
 
 # Fix base conda env vulnerabilities (python 3.13). Parent packages still expose
 # loose floors as of 2026-05-25, so these direct floors are required:
@@ -48,9 +53,10 @@ RUN conda install -n ptca -c conda-forge -y 'pip>=26.1.1' 'setuptools>=82.0.1'
 # idna>=3.15: requests 2.34.2 requires <4,>=2.5.
 # click>=8.3.3: typer 0.25.1 requires >=8.2.1; mlflow-skinny 3.12.0 requires
 #   <9,>=7.0.
+# aiohttp>=3.14.0: GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8.
 RUN conda run -n base python -m pip install --upgrade \
     'setuptools>=82.0.1' 'python-dotenv>=1.2.2' \
-    'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3'
+    'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.0'
 
 # pip>=26.1.1 in base env: GHSA-jp4c-xjxw-mgf9. pip is a root tool with no
 # parent package. Pin conda to the base version because an unconstrained
