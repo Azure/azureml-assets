@@ -11,7 +11,7 @@ description: Import PyTorch / MLflow model
 is_deterministic: true
 
 environment: 
-  azureml://registries/azureml/environments/acft-mmdetection-image-gpu/versions/85
+  azureml://registries/azureml/environments/acft-mmdetection-image-gpu/versions/86
 
 code: ../../../src/model_selector
 
