@@ -47,4 +47,13 @@ RUN pip install --no-cache-dir --upgrade 'setuptools>=82.0.1' 'nltk>=3.9.4' 'tra
 # unrelated solver packages.
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
     'setuptools>=82.0.1' 'pyOpenSSL>=26.0.0' 'urllib3>=2.7.0' \
-    'python-dotenv>=1.2.2' 'pip>=26.1.1' 'idna>=3.15' 'click>=8.3.3'
+    'python-dotenv>=1.2.2' 'pip>=26.1.1' 'idna>=3.15' 'click>=8.3.3' \
+    'aiohttp>=3.14.0'
+
+# Checked 2026-06-09: ptca-env overrides for packages not yet pinned to fixed
+# versions by their parents inside the ptca conda environment.
+# - idna>=3.15 patches GHSA-65pc-fj4g-8rjx (ReDoS via crafted domain labels).
+# - aiohttp>=3.14.0 patches GHSA-hg6j-4rv6-33pg and GHSA-jg22-mg44-37j8
+#   (request smuggling / header-injection vulnerabilities).
+RUN conda run -n ptca pip install --no-cache-dir --upgrade \
+    'idna>=3.15' 'aiohttp>=3.14.0'

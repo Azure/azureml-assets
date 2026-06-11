@@ -1,8 +1,20 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202606.1
 
 USER root
-RUN apt-get -y update && apt-get -y upgrade && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+# Pull latest Ubuntu 22.04 security patches.
+# Explicit --only-upgrade list ensures USN-8298-1 (.NET), USN-8319-1 (libgcrypt20),
+# and USN-8362-1 (xz-utils/liblzma5) patches are applied; || true skips packages
+# not present in this image without failing the build.
+RUN apt-get -y update && apt-get -y upgrade \
+ && apt-get -y install --only-upgrade \
+        dotnet-hostfxr-8.0 \
+        dotnet-host-8.0 \
+        dotnet-runtime-8.0 \
+        libgcrypt20 \
+        liblzma5 \
+        xz-utils \
+ || true \
+ && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install required packages from pypi
 COPY requirements.txt .
@@ -38,7 +50,11 @@ RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
     'urllib3>=2.7.0,<3' \
     'idna>=3.15' \
     'click>=8.3.3' \
-    'python-dotenv>=1.2.2'
+    'python-dotenv>=1.2.2' \
+    'aiohttp>=3.14.0'
+
+# aiohttp is also present in the ptca env (GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8).
+RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0'
 
 # The conda pip upgrade can reinstall the rattler solver. The base image does
 # not need it for runtime, and its compiled extension currently carries Rust CVEs.

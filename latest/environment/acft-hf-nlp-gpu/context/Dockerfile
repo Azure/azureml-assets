@@ -3,7 +3,14 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly
 
 USER root
 
-RUN apt-get update && apt-get -y upgrade
+RUN apt-get update && apt-get -y upgrade && \
+    apt-get install -y --only-upgrade \
+      dotnet-hostfxr-8.0 \
+      dotnet-host-8.0 \
+      dotnet-runtime-8.0 \
+      libgcrypt20 \
+      liblzma5 \
+      xz-utils || true
 
 COPY requirements.txt .
 # The below 2 files are required for baking the code into the environment
@@ -45,13 +52,17 @@ RUN pip install --upgrade --no-cache-dir pyasn1==0.6.3 'python-multipart>=0.0.26
 # - click: anaconda-cli-base 0.8.2, typer 0.25.1 and extras from httpx/python-dotenv/cryptography accept 8.2.1.
 # python-dotenv has no installed parent in base; it is a vulnerable base package itself. Upgrading parents
 # does not force patched child versions, and conda updates would introduce py-rattler, so use pip in base.
-RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3'
+RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.0'
 
 # pip is the package manager in both base and ptca conda envs. defaults has no pip>=26.1.1 package,
 # while a normal conda-forge solve pulls unrelated conda updates and py-rattler. Install only the
 # patched pip package so conda-meta and site-packages both report the fixed version.
 RUN conda install -n base -c conda-forge --no-deps -y 'pip>=26.1.1' && \
     conda install -n ptca -c conda-forge --no-deps -y 'pip>=26.1.1'
+
+# aiohttp in ptca env (Python 3.10): requirements.txt sets >=3.14.0 for main installs, but
+# the ptca env may still have 3.13.5 from the base image; force upgrade here explicitly.
+RUN conda run -n ptca python -m pip install --upgrade --no-cache-dir 'aiohttp>=3.14.0'
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
