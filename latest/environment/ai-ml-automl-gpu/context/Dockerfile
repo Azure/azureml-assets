@@ -16,21 +16,9 @@ ENV ENABLE_METADATA=true
 
 RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
 
-# System package security upgrades for the Ubuntu 22.04 (jammy) base image
-# (mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04). All listed CVEs
-# have patched versions available in jammy-updates:
-#   USN-8222-1: openssh-{client,server,sftp-server} 1:8.9p1-3ubuntu0.14 -> 0.15
-#   USN-8227-1: curl/libcurl4/libcurl3-gnutls       7.81.0-1ubuntu1.23 -> 1.24
-#   USN-8229-1: sed                                 4.8-1ubuntu2       -> 4.8-1ubuntu2.1
-#   USN-8233-1: libnghttp2-14                       1.43.0-1ubuntu0.2  -> 0.3
-# `apt-get -y upgrade` alone has been observed to leave the held openssh version in
-# place when an older base layer is cached (and `--fix-missing` can silently skip
-# packages on mirror flakes), so reinstall the openssh-* packages explicitly to
-# force pickup of the patched version (same pattern as the sibling
-# assets/training/automl/environments/ai-ml-automl/context/Dockerfile).
+# Pull current Ubuntu security errata; install build deps for LightGBM/XGBoost.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
-    apt-get install --reinstall -y openssh-client openssh-server openssh-sftp-server && \
     apt-get install -y --no-install-recommends \
         cmake \
         libboost-dev \
@@ -144,8 +132,13 @@ RUN pip install \
 #   (the latest releases) still enforce onnx<=1.17.0,>=1.16.1.
 #   Override is required to remediate the vulnerability.
 #   Chain: azureml-automl-runtime / azureml-train-automl-runtime -> onnx<=1.17.0
+#
+# starlette>=1.0.1 — GHSA-86qp-5c8j-p5mr; transitive via fastapi (loose floor), drop when parent bumps
+# idna>=3.15 — GHSA-65pc-fj4g-8rjx; transitive via requests/yarl (loose floor), drop when parent bumps
 RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0' \
     'bokeh>=3.8.2' \
-    'onnx>=1.21.0'
+    'onnx>=1.21.0' \
+    'starlette>=1.0.1' \
+    'idna>=3.15'
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH

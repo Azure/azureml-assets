@@ -46,12 +46,16 @@ RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.5
 #   azureml-train-automl-runtime==1.62.0, which requires bokeh<3.0.0 and
 #   dask[complete]<=2023.2.0. Latest AzureML parents remain at 1.62.0 as of
 #   2026-05-26, so direct override is required.
+# aiohttp 3.13.5 -> >=3.14.0 (GHSA-jg22-mg44-37j8, GHSA-hg6j-4rv6-33pg): aiohttp
+#   is pulled in transitively with no parent pinning it to <3.14.0, so direct
+#   override is required.
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade \
     'pip>=26.1.1' \
     'setuptools>=82.0.1' \
     'onnx>=1.21.0' \
     'bokeh>=3.8.2' \
-    'distributed>=2026.1.0' && \
+    'distributed>=2026.1.0' \
+    'aiohttp>=3.14.0' && \
     rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0.1-*.json
 
 # Vulnerability patches for conda base env (python 3.13 at /opt/conda)
@@ -73,10 +77,20 @@ RUN /opt/conda/envs/ptca/bin/pip install --upgrade \
 #   anaconda-auth). Latest releases on PyPI as of 2026-05-26 (anaconda-auth==0.15.0,
 #   pydantic-settings==2.14.1) still use the same loose floors, so a parent upgrade
 #   cannot force >=1.2.2 -- direct override required.
+# aiohttp 3.13.5 -> >=3.14.0 (GHSA-jg22-mg44-37j8, GHSA-hg6j-4rv6-33pg): aiohttp
+#   is pulled in transitively with no parent pinning it to <3.14.0, so direct
+#   override is required.
+# Stale conda pkgs-cache entries for click, idna, pip, and python-dotenv are removed
+#   so scanners do not re-flag the old versions from the package cache directories.
 RUN /opt/conda/bin/pip install --upgrade \
     'pip>=26.1.1' \
     'urllib3>=2.7.0' \
     'idna>=3.15' \
     'click>=8.3.3' \
     'setuptools>=82.0.1' \
-    'python-dotenv>=1.2.2'
+    'python-dotenv>=1.2.2' \
+    'aiohttp>=3.14.0' && \
+    rm -rf /opt/conda/pkgs/click-8.2.1-* \
+           /opt/conda/pkgs/idna-3.11-* \
+           /opt/conda/pkgs/pip-26.0.1-* \
+           /opt/conda/pkgs/python-dotenv-1.2.1-*

@@ -9,6 +9,12 @@ COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:2025
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 # Inference requirements
+# Security: reinstall packages to pick up patched versions even when an older base layer
+# is cached (apt-get upgrade alone has been observed to leave held packages in place).
+# USN-8298-1: dotnet-host/hostfxr/runtime-8.0 8.0.26 -> 8.0.27
+# USN-8319-1: libgcrypt20 1.9.4-3ubuntu3 -> 1.9.4-3ubuntu3.2
+# USN-8354-1: nginx-common/light/libnginx-mod-* 1.18.0-6ubuntu14.11 -> 1.18.0-6ubuntu14.12
+# USN-8362-1: liblzma5/xz-utils 5.2.5-2ubuntu1 -> 5.2.5-2ubuntu1.1
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 /artifacts /var/
 RUN apt-get update && \
     apt-get upgrade -y && \
@@ -21,6 +27,17 @@ RUN apt-get update && \
         rsyslog \
         runit \
         unzip && \
+    DEBIAN_FRONTEND=noninteractive apt-get install --reinstall -y \
+        dotnet-host-8.0 \
+        dotnet-hostfxr-8.0 \
+        dotnet-runtime-8.0 \
+        libgcrypt20 \
+        liblzma5 \
+        xz-utils \
+        nginx-common \
+        nginx-light \
+        libnginx-mod-http-geoip2 \
+        libnginx-mod-http-echo && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
     cp /var/configuration/nginx.conf /etc/nginx/sites-available/app && \
@@ -90,6 +107,9 @@ RUN pip install --no-cache-dir \
 #       GHSA-cmw6-hcpp-c6jp, GHSA-538c-55jv-c5g9, GHSA-q56x-g2fj-4rj6, GHSA-p433-9wv8-28xj,
 #       GHSA-3r9x-f23j-gc73, GHSA-hqmj-h5c6-369m. Parent azureml-automl-runtime (1.62.0) cannot
 #       be upgraded as latest still constrains onnx<=1.17.0.
+# NOTE: starlette>=1.0.1 (GHSA-86qp-5c8j-p5mr): starlette 0.52.1 is installed as a
+#       transitive dep into the azureml-automl-dnn-vision-gpu conda env. No parent
+#       release pins the patched floor; explicit override required.
 RUN pip install --no-cache-dir --upgrade \
                 'cryptography>=46.0.7' \
                 'distributed>=2026.1.0' \
@@ -100,7 +120,8 @@ RUN pip install --no-cache-dir --upgrade \
                 'requests>=2.33.0' \
                 'idna>=3.15' \
                 'pyOpenSSL>=26.0.0' \
-                'wheel>=0.46.2'
+                'wheel>=0.46.2' \
+                'starlette>=1.0.1'
 
 
 
@@ -112,7 +133,8 @@ RUN pip install --no-cache-dir --upgrade \
 #   in biweekly.202605.2; pip is its own parent (no upstream package can pull in a
 #   fixed pip via dependency resolution), so explicit override is required.
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
-                'pip>=26.1'
+                'pip>=26.1' \
+                'aiohttp>=3.14.0'
 # setuptools resolver picks wrong version due to dep conflicts; force install to fix jaraco.context vuln (GHSA-58pv-8j8x-9vj2)
 # setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
@@ -139,12 +161,16 @@ RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-d
 #   anaconda-cli-base==0.8.2 (`click`) and typer==0.25.1 (`click>=8.2.1`).
 #   Current published parent metadata still has loose floors only, so no parent
 #   upgrade can force the patched click version; explicit override is required.
+# aiohttp>=3.14.0 (GHSA-hg6j-4rv6-33pg / GHSA-jg22-mg44-37j8): aiohttp 3.13.5 is
+#   shipped in the base conda env (py3.13) of the ACPT base image. Two CVEs require
+#   3.14.0; no parent release pins the patched floor, so explicit override required.
 RUN conda run -n base pip install --no-cache-dir --upgrade \
                 'python-dotenv>=1.2.2' \
                 'pip>=26.1' \
                 'urllib3>=2.7.0' \
                 'idna>=3.15' \
-                'click>=8.3.3'
+                'click>=8.3.3' \
+                'aiohttp>=3.14.0'
 # Fix vendored jaraco.context (GHSA-58pv-8j8x-9vj2) and wheel (GHSA-8rrh-rw8j-w5fx) in base setuptools
 # setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced
 RUN /opt/conda/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
