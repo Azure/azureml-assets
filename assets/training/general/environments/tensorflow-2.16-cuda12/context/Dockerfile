@@ -34,108 +34,11 @@ RUN apt-get update && \
     zlib1g-dev \
 	librdmacm-dev \
 	libibverbs-dev \
-    dh-make \
-    # Vulnerability fixes
-    libgnutls30 \
-    libgssapi-krb5-2 \
-    libpam-cap \
-    libtasn1-6 \
-    libk5crypto3 \
-    libcap2  \
-    gpgconf \
-    # Perl vulnerability fixes
-    perl-modules-5.34 \
-    perl \
-    perl-base \
-    libperl5.34 && \
+    dh-make && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/* 
 
-RUN apt-get update && \
-    apt-get install -y --only-upgrade \
-        libpython3.10-stdlib \
-        python3.10 \
-        libpython3.10-minimal \
-        python3.10-minimal \
-        libsqlite3-0 \
-        libc6 \
-        libc6-dev \
-        libc-bin \
-        libc-dev-bin \
-        dotnet-hostfxr-8.0 \
-        dotnet-host-8.0 \
-        dotnet-runtime-8.0 \
-        dpkg \
-        dpkg-dev \
-        libbinutils \
-        binutils \
-        binutils-common \
-        binutils-multiarch \
-        binutils-x86-64-linux-gnu \
-        libctf0 \
-        libctf-nobfd0 \
-        libdpkg-perl \
-        libssh-4 \
-        libxml2 \
-        linux-libc-dev \
-        linux-headers-generic \
-        locales \
-        openssl \
-        libssl-dev \
-        libssl3 \
-        gnupg2 \
-        systemd \
-        systemd-sysv \
-        systemd-timesyncd \
-        libsystemd0 \
-        libnss-systemd \
-        libudev1 \
-        udev \
-        libpam-systemd \
-        libpam0g \
-        libpam-modules-bin \
-        libpam-modules \
-        libpam-runtime \
-        libpython3.10-stdlib \
-        python3.10 \
-        libpython3.10-minimal \
-        python3.10-minimal \
-        libarchive13 \
-        # Vulnerabiltiy fixes
-        cpp-11 \
-        libtsan0 \
-        libstdc++-11-dev \
-        gcc-11 \
-        libgcc-11-dev \
-        g++-11 \
-        libasan6 \
-        gcc-11-base \
-        libquadmath0 \
-        libstdc++6 \
-        libatomic1 \
-        liblsan0 \
-        libubsan1 \
-        libcc1-0 \
-        libgcc-s1 \
-        libgomp1 \
-        gcc-12-base \
-        libitm1 \
-        # USN-8233-1 (libnghttp2-14 1.43.0-1ubuntu0.3), USN-8227-1 (curl/libcurl 7.81.0-1ubuntu1.24),
-        # USN-8229-1 (sed 4.8-1ubuntu2.1), USN-8226-1 (libkmod2 29-1ubuntu1.1).
-        # These are root-level OS packages from individual Ubuntu source packages
-        # (nghttp2/curl/sed/kmod) - no transitive parent. Fixed versions are published
-        # in the jammy-security archive (uploaded 2026-04-17 .. 2026-04-30), so we install
-        # them via --only-upgrade to pick the patched candidates.
-        libnghttp2-14 \
-        curl \
-        libcurl4 \
-        libcurl3-gnutls \
-        sed \
-        libkmod2 && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
-               
-# Update to latest redis       
+# Update to latest redis
 RUN apt-get update && apt-get install -y lsb-release && \
     curl -fsSL https://packages.redis.io/gpg | gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg && \
     echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/redis.list && \
@@ -272,12 +175,13 @@ RUN conda run -p $CONDA_PREFIX conda install -c conda-forge openssl
 # requests>=2.33.0 fixes GHSA-gc5v-m9x4-r6x2
 # pillow>=12.2.0 fixes GHSA-whj4-6x5x-4v2j
 # pip>=26.1 fixes GHSA-jp4c-xjxw-mgf9 / CVE-2026-6357 (bumped from >=26.0 which resolved to 26.0.1)
-RUN conda run -p $CONDA_PREFIX pip install --upgrade 'pip>=26.1' 'cryptography>=46.0.7' 'setuptools>=82.0.1' 'protobuf>=5.29.6' 'requests>=2.33.0' 'pillow>=12.2.0'
+# starlette>=1.0.1 (GHSA-86qp-5c8j-p5mr) / idna>=3.15 (GHSA-65pc-fj4g-8rjx): transitive via fastapi / requests; drop when parent bumps
+RUN conda run -p $CONDA_PREFIX pip install --upgrade 'pip>=26.1' 'cryptography>=46.0.7' 'setuptools>=82.0.1' 'protobuf>=5.29.6' 'requests>=2.33.0' 'pillow>=12.2.0' 'starlette>=1.0.1' 'idna>=3.15'
 
 # Upgrade vulnerable packages in the base miniconda env (python3.10)
 # Use the absolute path to /opt/miniconda's pip because $CONDA_PREFIX/bin precedes /opt/miniconda/bin in PATH.
 # pip>=26.1 fixes GHSA-jp4c-xjxw-mgf9 / CVE-2026-6357 in the base miniconda env install path.
-RUN /opt/miniconda/bin/pip install --upgrade 'pip>=26.1' 'cryptography>=46.0.7' 'requests>=2.33.0' && \
+RUN /opt/miniconda/bin/pip install --upgrade 'pip>=26.1' 'cryptography>=46.0.7' 'requests>=2.33.0' 'idna>=3.15' && \
     # Remove the conda pkgs cache — conda env create / conda install repopulate it with
     # pip-26.0.1-pyh8b19718__0 which still ships vulnerable pip 26.0.1 metadata
     # (scanned at opt/miniconda/pkgs/pip-26.0.1-pyh8b19718__0/site-packages/pip-26.0.1.dist-info).

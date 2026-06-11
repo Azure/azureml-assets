@@ -63,7 +63,7 @@ RUN pip install --no-cache-dir --upgrade 'onnx>=1.21.0'
 # parents. As of 2026-05-25, latest anaconda-cli-base, typer, and python-dotenv still require
 # click without a >=8.3.3 floor, so direct override is required.
 RUN /opt/conda/bin/conda install -n base -c conda-forge 'pip>=26.1' -y && \
-    /opt/conda/bin/pip install --no-cache-dir --upgrade 'requests>=2.33.0' 'urllib3>=2.7.0' 'aiohttp>=3.13.4' 'wheel>=0.46.2' \
+    /opt/conda/bin/pip install --no-cache-dir --upgrade 'requests>=2.33.0' 'urllib3>=2.7.0' 'aiohttp>=3.14.0' 'wheel>=0.46.2' \
     'setuptools>=82.0.1' 'cryptography>=46.0.7' 'PyJWT>=2.12.0' \
     'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3'
 # Security: fix ptca conda env (python 3.10).
@@ -75,7 +75,7 @@ RUN /opt/conda/bin/conda install -n ptca -c conda-forge 'pip>=26.1' -y && \
     /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'filelock>=3.20.3' \
     'wheel>=0.46.2' 'setuptools>=82.0.1' 'protobuf>=6.33.5' \
     'pillow>=12.2.0' 'onnx>=1.21.0' 'requests>=2.33.0' 'urllib3>=2.7.0' \
-    'aiohttp>=3.13.4' 'pytest>=9.0.3' 'idna>=3.15'
+    'aiohttp>=3.14.0' 'pytest>=9.0.3' 'idna>=3.15'
 
 # Fix security vulnerabilities in active conda env (azureml-automl-dnn-vision-gpu, python 3.10)
 # aiohttp, bokeh, distributed, protobuf, cryptography, filelock, setuptools, PyJWT, urllib3, pillow, onnx,
@@ -85,7 +85,7 @@ RUN /opt/conda/bin/conda install -n ptca -c conda-forge 'pip>=26.1' -y && \
 # python-dotenv>=1.2.2: CVE-2026-28684; pydantic-settings (<=2.14.0) requires >=0.21.0 only.
 # idna>=3.15 and click>=8.3.3 are direct overrides because requests/yarl/dask parents keep
 # loose dependency ranges that allow vulnerable versions.
-RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.13.4' 'distributed>=2026.1.0' 'protobuf>=6.33.5' 'cryptography>=46.0.7' \
+RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' 'distributed>=2026.1.0' 'protobuf>=6.33.5' 'cryptography>=46.0.7' \
     'filelock>=3.20.3' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'urllib3>=2.7.0' 'pillow>=12.2.0' \
     'onnx>=1.21.0' 'requests>=2.33.0' 'python-dotenv>=1.2.2' \
     'bokeh>=3.8.2' 'idna>=3.15' 'click>=8.3.3'

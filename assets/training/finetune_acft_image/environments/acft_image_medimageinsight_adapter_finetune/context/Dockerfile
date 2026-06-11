@@ -2,9 +2,17 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 
 USER root
 
-RUN apt-get -y update && \
-    apt-get -y install --no-install-recommends unzip && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt-get -y update && apt-get -y upgrade \
+ && apt-get -y install --only-upgrade \
+        dotnet-hostfxr-8.0 \
+        dotnet-host-8.0 \
+        dotnet-runtime-8.0 \
+        libgcrypt20 \
+        liblzma5 \
+        xz-utils \
+ || true \
+ && apt-get -y install --no-install-recommends unzip \
+ && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # pip is installed directly as the Python installer in both conda envs, so
 # there is no parent package to upgrade. Base tag biweekly.202605.2 still ships
@@ -60,5 +68,9 @@ RUN /opt/conda/bin/pip uninstall -y py-rattler conda-rattler-solver && \
            /opt/conda/lib/python3.13/site-packages/conda_rattler_solver* && \
     rm -f /opt/conda/conda-meta/py-rattler-*.json \
           /opt/conda/conda-meta/conda-rattler-solver-*.json
+
+# Upgrade aiohttp to patched version in both envs (GHSA-jg22-mg44-37j8, GHSA-hg6j-4rv6-33pg)
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' && \
+    conda run -n ptca python -m pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0'
 
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
