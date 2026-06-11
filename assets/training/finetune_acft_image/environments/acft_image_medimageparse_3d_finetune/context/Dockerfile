@@ -46,6 +46,10 @@ RUN apt-get update && \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+# Upgrade idna in the base miniconda Python to fix GHSA-65pc-fj4g-8rjx (idna < 3.15).
+# The base image ships idna 3.13 in /opt/miniconda; pip install --upgrade pins the fix.
+RUN /opt/miniconda/bin/pip install --no-cache-dir "idna>=3.15"
+
 # Step 1: minimal conda env with python 3.10 (matches azureml-acft-image-components compat).
 # Keep this step pure conda-channel — the SAT solver OOMs on ACR Standard build
 # agents when conda + pip resolution run together. Sibling envs split for the

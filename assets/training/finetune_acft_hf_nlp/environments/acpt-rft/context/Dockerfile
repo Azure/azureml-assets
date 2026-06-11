@@ -6,6 +6,14 @@ RUN apt-get update && \
     apt-get autoremove -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/apt/archives/*.deb
+# USN-8298-1: dotnet 8.0.27; USN-8319-1: libgcrypt20 1.9.4-3ubuntu3.2
+# These packages are not always picked up by apt-get upgrade (held back), so install explicitly.
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade \
+        dotnet-hostfxr-8.0 dotnet-host-8.0 dotnet-runtime-8.0 \
+        libgcrypt20 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 COPY requirements.txt .
 
 RUN pip install -r requirements.txt --no-cache-dir
@@ -21,7 +29,6 @@ RUN pip install --no-cache-dir sglang-kernel==0.4.2
 
 RUN pip uninstall -y mlflow 
 RUN pip install --no-cache-dir --force-reinstall "mlflow>=3.2.0,<4.0.0"
-RUN pip install --no-cache-dir starlette==0.49.1
 # Upgrade wandb to latest; remove wandb-core Go binary to fix GO-2026-4864..4947
 # wandb 0.26.1 ships wandb-core compiled with Go 1.26.1 (needs 1.26.2); no fixed wandb release yet.
 # Removing the binary forces wandb to use its Python backend (safe fallback).
@@ -53,7 +60,9 @@ RUN pip install --no-cache-dir 'flash-attn-4>=4.0.0b9'
 #   gitpython!=3.1.29,>=1.0.0 as of 0.26.1), parent uses loose floor — no wandb release forces >=3.1.47
 # pyOpenSSL>=26.0.0: CVE-2026-27459 and CVE-2026-27448. azureml-core 1.61.0.post3 still
 #   pins pyopenssl<26.0.0, so explicit override is required.
-RUN pip install --upgrade cryptography==46.0.7 'fastmcp>=3.2.0' 'Mako>=1.3.11' 'lxml>=6.1.0' 'transformers==5.6.0' 'GitPython>=3.1.47' 'pyOpenSSL>=26.0.0'
+# starlette>=1.0.1: GHSA-86qp-5c8j-p5mr; placed here (after vllm) so that vllm's transitive
+#   fastapi dependency cannot downgrade starlette to the vulnerable 0.x series.
+RUN pip install --upgrade cryptography==46.0.7 'fastmcp>=3.2.0' 'Mako>=1.3.11' 'lxml>=6.1.0' 'transformers==5.6.0' 'GitPython>=3.1.47' 'pyOpenSSL>=26.0.0' 'starlette>=1.0.1'
 # Base env (py3.13) and ptca env (py3.10) overrides for packages where every parent pins a loose floor.
 # python-dotenv>=1.2.2: GHSA-mf9w-mj56-hr94; transitive dep of pydantic-settings, uvicorn,
 #   and fastmcp. All parents use loose floors, so no parent upgrade can force >=1.2.2.
@@ -79,14 +88,19 @@ RUN pip install --upgrade cryptography==46.0.7 'fastmcp>=3.2.0' 'Mako>=1.3.11' '
 #   (Note: requirements.txt also pins click==8.3.3 to cover the ptca env install path.)
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.1.1' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' && \
     rm -f /opt/conda/conda-meta/pip-26.0*.json
-RUN pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.1.1' && \
+# GHSA-65pc-fj4g-8rjx: idna>=3.15 for ptca env (base env covered above)
+RUN pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.1.1' 'idna>=3.15' && \
     rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0*.json
 # ray vendors its own copies of aiohttp and idna inside thirdparty_files/ for the runtime_env
 # agent; those vendored copies are not upgraded by the pip installs above. Patching all copies
-# in-place (aiohttp>=3.13.4 closes prior CVE; idna>=3.15 closes CVE-2026-45409 / VCM 5012909).
+# in-place (aiohttp>=3.14.0 closes GHSA-hg6j-4rv6-33pg/GHSA-jg22-mg44-37j8; idna>=3.15 closes CVE-2026-45409 / VCM 5012909).
+# Also upgrade aiohttp in base (py3.13) and ptca (py3.10) envs to >=3.14.0.
+# GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8: aiohttp vulnerabilities; patched in >=3.14.0.
+RUN conda run -n base python -m pip install --no-cache-dir 'aiohttp>=3.14.0' && \
+    pip install --no-cache-dir 'aiohttp>=3.14.0'
 RUN find /opt/conda/envs/ptca/lib/python3.10/site-packages/ray -type d -name 'thirdparty_files' | while read dir; do \
       rm -rf "$dir"/aiohttp* "$dir"/idna*; \
-      pip install --no-cache-dir --target "$dir" 'aiohttp>=3.13.4' 'idna>=3.15'; \
+      pip install --no-cache-dir --target "$dir" 'aiohttp>=3.14.0' 'idna>=3.15'; \
     done
 COPY vllm_rollout /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/workers/rollout/vllm_rollout/vllm_rollout.py
 RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*

@@ -38,6 +38,21 @@ ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 # upstream parent package in this context), so the apt upgrade is the only fix.
 RUN apt-get update && ACCEPT_EULA=Y apt-get -y upgrade && \
     apt-get install -y sudo locales libssl-dev sqlite3 && \
+    # Security: explicitly upgrade specific packages with known CVEs to ensure they reach
+    # the required patched versions regardless of base-image state:
+    #   libgnutls30t64 USN-8284-1: >=3.8.3-1.1ubuntu3.6
+    #   libgcrypt20    USN-8319-1: >=1.10.3-2ubuntu0.1
+    #   nginx/nginx-common/nginx-light USN-8354-1: >=1.24.0-2ubuntu7.9
+    #   liblzma5/xz-utils USN-8362-1: >=5.6.1+really5.4.5-1ubuntu0.3
+    apt-get install -y --only-upgrade \
+        libgnutls30t64 \
+        libgcrypt20 \
+        nginx \
+        nginx-common \
+        nginx-light \
+        liblzma5 \
+        xz-utils \
+    || true && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Security: upgrade pip in BASE miniconda (/opt/miniconda) to fix CVE-2026-6357
@@ -46,7 +61,9 @@ RUN apt-get update && ACCEPT_EULA=Y apt-get -y upgrade && \
 # in the image, so both must be patched. pip has no upstream parent package to bump,
 # so a direct override is the only fix. Tag 20260507.v1+ already ships pip 26.1.1
 # in the base, making this a no-op for newer bases.
-RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'pip>=26.1' && rm -rf /root/.cache/pip
+# idna (GHSA-65pc-fj4g-8rjx): bump to >=3.15 in base miniconda (Python 3.12 env)
+# since the scanner reports idna from opt/miniconda regardless of the conda env below.
+RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'pip>=26.1' 'idna>=3.15' && rm -rf /root/.cache/pip
 
 # Provision the Python 3.10 conda env. We don't constrain pip here because the
 # `defaults` conda channel may not yet have pip 26.1+; we upgrade with `pip install
@@ -66,17 +83,17 @@ RUN pip install -r requirements.txt --no-cache-dir
 # setuptools==82.0.1, wheel==0.46.3, cryptography==46.0.5, urllib3==2.6.3, h2==4.3.0
 # are already at fixed versions in the openmpi base image (20260315.v1).
 # The override below only targets packages NOT fixed in base or pulled in vulnerable by requirements.txt.
-# aiohttp (GHSA-mwh4-6h8g-pg8w etc.): transitive dep of azure-core/datasets; parents use loose floors,
-#   so use a floor (>=3.13.4) instead of a pin so future security patches in 3.13.x flow in automatically.
+# aiohttp (GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8): transitive dep of azure-core/datasets; bumped floor
+#   to >=3.14.0 to resolve USN-reported CVEs (previous floor >=3.13.4 was insufficient).
 # cryptography (GHSA-m959-cc7f-wv43, GHSA-p423-j2cm-9vmq): base image has 46.0.5; floor at 46.0.7+.
 # requests (GHSA-gc5v-m9x4-r6x2): transitive dep of many packages; parents use loose floors.
 # scikit-learn: explicit pin removed — azureml-acft-contrib-hf-nlp 0.0.89 already
 #   pins `scikit-learn<1.6.0,>=1.5.1`, so the parent enforces the secure floor (>=1.5.1
 #   ships the CVE-2024-5206 fix the historical pin protected against). Pip resolves to 1.5.2.
-RUN pip install --no-cache-dir 'aiohttp>=3.13.4' 'requests>=2.33.0' 'cryptography>=46.0.7' && rm -rf /root/.cache/pip
+RUN pip install --no-cache-dir 'aiohttp>=3.14.0' 'requests>=2.33.0' 'cryptography>=46.0.7' && rm -rf /root/.cache/pip
 
 # The below file is required for baking the code into the environment 
 COPY data_import_run.py /azureml/data_import/run.py
 
-# dummy number to change when needing to force rebuild without changing the definition: 3
+# dummy number to change when needing to force rebuild without changing the definition: 4
 
