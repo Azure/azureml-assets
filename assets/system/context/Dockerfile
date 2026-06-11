@@ -1,7 +1,7 @@
 # Shared Go toolchain version used across builder stages.
 # Bumped to 1.26.3 to fix multiple stdlib CVEs (GO-2026-49xx / GO-2026-4918 / etc.)
 # affecting both the trivy and oras binaries when built from source.
-ARG GO_VERSION=1.26.3
+ARG GO_VERSION=1.26.4
 ARG TRIVY_VERSION=0.70.0
 ARG ORAS_VERSION=1.3.2
 
