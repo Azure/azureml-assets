@@ -2,9 +2,13 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 USER root
 
-# USN-8284-1/USN-8283-1: upgrade Ubuntu packages to patched Jammy versions.
+# USN-8284-1/USN-8283-1: libgnutls30/rsync; USN-8298-1: dotnet 8.0.26->8.0.27;
+# USN-8319-1: libgcrypt20; USN-8362-1: liblzma5/xz-utils.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libgnutls30 rsync \
+        dotnet-host-8.0 dotnet-hostfxr-8.0 dotnet-runtime-8.0 \
+        libgcrypt20 \
+        liblzma5 xz-utils \
  && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
@@ -18,14 +22,21 @@ RUN pip install numpy==2.2.5
 RUN pip install azureml-evaluate-mlflow=={{latest-pypi-version}}
 
 RUN pip install --no-cache-dir --force-reinstall "mlflow>=3.2.0,<4.0.0"
-# wandb>=0.26.0: fixes Go stdlib vulnerabilities (GO-2026-4864/4865/4866/4869/4870/4946/4947)
-# in bundled wandb-core binary (Go stdlib v1.26.1 -> v1.26.2)
-RUN pip install --no-cache-dir --upgrade "wandb>=0.26.0"
+# wandb>=0.27.2: fixes Go stdlib (GO-2026-5037/5038/5039: stdlib v1.26.3->v1.26.4),
+# golang.org/x/crypto (GO-2026-5005 through 5023,5033: v0.51.0->v0.52.0), and
+# golang.org/x/net (GO-2026-5026/5027/5028/5029/5030: v0.54.0->v0.55.0) in wandb-core binary.
+RUN pip install --no-cache-dir --upgrade "wandb>=0.27.2"
 # GHSA-7rgv-gqhr-fxg3: xgrammar stack exhaustion DoS; patched in 0.1.32
 RUN pip install xgrammar==0.1.32
 # GHSA-69w3-r845-3855 (CVE-2026-1839): arbitrary code execution in Trainer class;
 # patched only in transformers>=5.0.0rc3. Upgrading to latest stable 5.x.
 RUN pip install transformers==5.5.4
+# GHSA-86qp-5c8j-p5mr: starlette vulnerability; patched in >=1.0.1 (ptca env).
+RUN pip install --no-cache-dir 'starlette>=1.0.1'
+# GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8: aiohttp vulnerabilities; patched in >=3.14.0.
+# Upgrade in both the base (Python 3.13) and ptca (Python 3.10) conda envs.
+RUN conda run -n base python -m pip install --no-cache-dir 'aiohttp>=3.14.0' \
+ && pip install --no-cache-dir 'aiohttp>=3.14.0'
 # Python 3.13 conda env overrides for vulnerable preinstalled transitive deps
 # after checking latest parent metadata on 2026-05-25:
 #  - python-dotenv>=1.2.2 (GHSA-mf9w-mj56-hr94): metadata probes found

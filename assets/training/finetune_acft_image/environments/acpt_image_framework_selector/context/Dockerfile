@@ -2,7 +2,18 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 # Pull latest Ubuntu 22.04 security patches on each rebuild.
-RUN apt-get -y update && apt-get -y upgrade
+# Explicit package list ensures USN-8298-1 (.NET), USN-8319-1 (libgcrypt20),
+# and USN-8362-1 (xz-utils/liblzma5) patches are applied even when apt-get
+# upgrade would otherwise hold them back.
+RUN apt-get -y update && apt-get -y upgrade && \
+    apt-get -y install --only-upgrade \
+        dotnet-hostfxr-8.0 \
+        dotnet-host-8.0 \
+        dotnet-runtime-8.0 \
+        libgcrypt20 \
+        liblzma5 \
+        xz-utils && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # pip in both conda envs (base py3.13 and ptca py3.10) ships as 26.0.1 in the
 # upstream ACPT base image, which is vulnerable to GHSA-jp4c-xjxw-mgf9 (fixed
@@ -44,8 +55,17 @@ ENV AZURE_ML_CLI_PRIVATE_FEATURES_ENABLED=True
 #   with constraint `urllib3<3,>=1.26`; the latest requests release does not
 #   raise this floor either, so a parent upgrade cannot pull in urllib3>=2.7.0
 #   and a direct override is required.
+# - aiohttp: base ships 3.13.5; need >=3.14.0 for GHSA-jg22-mg44-37j8 and
+#   GHSA-hg6j-4rv6-33pg. No parent in the base env pins aiohttp to a safe
+#   floor, so a direct upgrade is required.
+# - click: base ships 8.2.1; need >=8.3.3 for GHSA-47fr-3ffg-hgmw. No parent
+#   in the base env forces click>=8.3.3, so a direct override is required.
+# - idna: base ships 3.11; need >=3.15 for GHSA-65pc-fj4g-8rjx. Transitive
+#   dep of httpx, requests, and others which all use loose floors; direct
+#   override is required.
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
-        'setuptools>=82.0.1' 'python-dotenv>=1.2.2' 'urllib3>=2.7.0'
+        'setuptools>=82.0.1' 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' \
+        'aiohttp>=3.14.0' 'click>=8.3.3' 'idna>=3.15'
 
 # Vulnerability overrides in ptca conda env (python3.10):
 # - urllib3: the ptca env ships urllib3 2.7.0 from the base image, but the
@@ -53,7 +73,15 @@ RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
 #   2.6.3 (vulnerable to GHSA-qccp-gfcp-xxvc / GHSA-mf9v-mfxr-j63j). Parents
 #   (requests 2.34.2, torchdata, fsspec) all use loose floors (>=1.25 / >=1.26)
 #   so they cannot force urllib3>=2.7.0; direct override is required.
+# - aiohttp: ptca env ships 3.13.5; need >=3.14.0 for GHSA-jg22-mg44-37j8 and
+#   GHSA-hg6j-4rv6-33pg. No parent pins aiohttp to a safe floor; direct
+#   override is required.
+# - starlette: ptca env ships 0.52.1; need >=1.0.1 for GHSA-86qp-5c8j-p5mr.
+#   No parent in the ptca env forces starlette>=1.0.1; direct override is
+#   required.
+# - click: ptca env ships 8.2.1; need >=8.3.3 for GHSA-47fr-3ffg-hgmw. No
+#   parent in the ptca env forces click>=8.3.3; direct override is required.
 RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade \
-        'urllib3>=2.7.0'
+        'urllib3>=2.7.0' 'aiohttp>=3.14.0' 'starlette>=1.0.1' 'click>=8.3.3'
 
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/

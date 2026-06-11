@@ -32,6 +32,10 @@ RUN pip install transformers==5.5.4
 RUN pip install --upgrade 'protobuf>=6.33.5,<7' 'xgrammar>=0.1.32' \
     'nltk>=3.9.4' 'pyasn1>=0.6.3' 'python-multipart>=0.0.22' 'ray>=2.55.0' \
     'mlflow>=3.8.1,<4.0.0' 'vllm>=0.20.1' 'pyOpenSSL>=26.0.0' 'urllib3>=2.7.0'
+# aiohttp: GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8 (fix in >=3.14.0)
+# starlette: GHSA-86qp-5c8j-p5mr (fix in >=1.0.1)
+# idna: GHSA-65pc-fj4g-8rjx (fix in >=3.15)
+RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' 'starlette>=1.0.1' 'idna>=3.15'
 # pip: GHSA-jp4c-xjxw-mgf9 (CVE-2026-6357); base image biweekly.202605.1 ships 26.0.1 in
 # both ptca (py3.10) and base (py3.13) conda envs, fixed in 26.1. pip is the Python
 # package installer itself — it has NO parent/transitive package that pulls it in
@@ -48,11 +52,14 @@ RUN rm -rf ~/.cache/pip
 # urllib3 in base conda env: see urllib3 note above; same direct-override rationale.
 # pip: see note above — bootstrap tool, must be upgraded directly in base env too
 # Also clean stale conda-meta/pip-*.json (see ptca env note above for scanner detail).
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'pip>=26.1.1' 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' && \
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'pip>=26.1.1' 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' \
+        'aiohttp>=3.14.0' 'click>=8.3.3' 'idna>=3.15' && \
     rm -f /opt/conda/conda-meta/pip-26.0*.json
-# ray vendors aiohttp for runtime_env agent under thirdparty_files; patch that copy too.
-RUN rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/ray/__private/runtime_env/agent/thirdparty_files/aiohttp* && \
-    pip install --no-cache-dir --target /opt/conda/envs/ptca/lib/python3.10/site-packages/ray/__private/runtime_env/agent/thirdparty_files 'aiohttp==3.13.5'
+# ray vendors aiohttp/idna under _private/runtime_env/agent/thirdparty_files (single underscore).
+# The actual Python module path is ray/_private (not ray/__private).
+RUN rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/ray/_private/runtime_env/agent/thirdparty_files/aiohttp* \
+           /opt/conda/envs/ptca/lib/python3.10/site-packages/ray/_private/runtime_env/agent/thirdparty_files/idna* && \
+    pip install --no-cache-dir --target /opt/conda/envs/ptca/lib/python3.10/site-packages/ray/_private/runtime_env/agent/thirdparty_files 'aiohttp>=3.14.0' 'idna>=3.15'
 # Patch log4j-core 2.25.3→2.25.4 inside ray's fat JAR (ray_dist.jar).
 # ray (all versions through 2.55.1) bundles log4j-core 2.25.3 in java/dependencies.bzl.
 # No ray release includes 2.25.4; manual JAR surgery is required.
