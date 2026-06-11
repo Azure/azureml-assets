@@ -38,6 +38,12 @@ RUN pip install --no-cache-dir --upgrade 'onnx>=1.21.0' pyasn1==0.6.3 'fastmcp>=
 # urllib3 in base conda env: same root cause as above — base ships 2.6.3 via
 #   requests/botocore transitive chain; override to >=2.7.0 for
 #   GHSA-qccp-gfcp-xxvc and GHSA-mf9v-mfxr-j63j.
+# idna in base conda env: base ships 3.11; need >=3.15 for GHSA-65pc-fj4g-8rjx
+#   (CVE-2026-45409, CRITICAL). Pulled transitively by requests/anyio/httpx with loose
+#   floors (idna>=2.5), so no parent upgrade forces the patched version.
+# click in base conda env: base ships 8.2.1; need >=8.3.3 for GHSA-47fr-3ffg-hgmw
+#   (CVE-2026-7246, click.edit() command injection). Pulled by typer/anaconda-cli-base which
+#   only require click>=8.2.1, so a direct override is required.
 # pip: package installer itself — there is no parent package that brings it in.
 #   Both conda envs (ptca python3.10, base python3.13) ship pip 26.0.1 from the base
 #   image, vulnerable to GHSA-jp4c-xjxw-mgf9. No parent upgrade is possible — pip is
@@ -45,7 +51,7 @@ RUN pip install --no-cache-dir --upgrade 'onnx>=1.21.0' pyasn1==0.6.3 'fastmcp>=
 #   We also remove the stale conda-meta json files for the old pip, otherwise SBOM
 #   scanners (trivy) read them from /opt/conda*/conda-meta and continue to report
 #   pip 26.0.1 even though the dist-info shows 26.1.x.
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'pip>=26.1' && \
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'pip>=26.1' && \
     rm -f /opt/conda/conda-meta/pip-26.0*.json && \
     python -m pip install --no-cache-dir --upgrade 'pip>=26.1' && \
     rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0*.json

@@ -55,4 +55,10 @@ RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.47' 'pyt
 # urllib3: same situation — /opt/conda Python 3.13 ships urllib3 2.6.3 from the base image and
 #   is not reached by ptca pip installs, so an explicit upgrade to >=2.7.0 is required to fix
 #   GHSA-qccp-gfcp-xxvc and GHSA-mf9v-mfxr-j63j in this env.
-RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'urllib3>=2.7.0'
+# idna: /opt/conda Python 3.13 ships idna 3.11 from the base image; need >=3.15 for
+#   GHSA-65pc-fj4g-8rjx (CVE-2026-45409, CRITICAL). Pulled transitively by requests/anyio/httpx
+#   with loose floors (idna>=2.5), so no parent upgrade forces the patched version.
+# click: /opt/conda Python 3.13 ships click 8.2.1; need >=8.3.3 for GHSA-47fr-3ffg-hgmw
+#   (CVE-2026-7246, click.edit() command injection). Pulled by typer/anaconda-cli-base which
+#   only require click>=8.2.1, so a direct override is required.
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3'
