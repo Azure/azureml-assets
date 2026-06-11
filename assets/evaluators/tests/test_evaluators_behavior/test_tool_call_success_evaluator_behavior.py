@@ -60,6 +60,11 @@ class TestToolCallSuccessEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, BaseT
 
     evaluator_type = ToolCallSuccessEvaluator
 
+    # Phase 1 ships only the prompty-level [STATUS] pass-through (asset version 8). The validator
+    # still rejects restricted built-in tool conversations because Tool Call Success grades the
+    # tool result payload, which the converter does not yet emit for restricted tools. The
+    # validator flip is deferred to Phase 2, which will add a synthesized tool_result body for
+    # the non-Bing restricted tools (azure_ai_search, azure_fabric, sharepoint_grounding).
     check_for_unsupported_tools = True
 
     # Test Configs
