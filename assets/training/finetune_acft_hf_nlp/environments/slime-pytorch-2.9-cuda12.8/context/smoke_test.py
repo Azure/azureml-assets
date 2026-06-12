@@ -12,6 +12,7 @@ import ray
 import sglang
 import slime
 import torch
+import transformer_engine.pytorch as te
 
 
 LOG4J_ARTIFACTS = ("log4j-api", "log4j-core", "log4j-slf4j-impl")
@@ -69,6 +70,7 @@ assert torch.__version__.startswith("2.9.1")
 assert Version(PIL.__version__) >= Version("12.2.0")
 assert sglang
 assert slime
+assert te
 
 # AML/Singularity jobs run as uid 9000 (aiscuser); /root is mode 700 so
 # slime must be editable-installed from a non-/root location. Pin the
@@ -85,6 +87,13 @@ for path in (
 slime_init = EXPECTED_SLIME_ROOT / "slime" / "__init__.py"
 if slime_init.exists():
     assert_world_accessible(slime_init)
+
+initialize_py = EXPECTED_SLIME_ROOT / "slime" / "backends" / "megatron_utils" / "initialize.py"
+model_provider_py = EXPECTED_SLIME_ROOT / "slime" / "backends" / "megatron_utils" / "model_provider.py"
+assert "Megatron does not support numpy 2.x" not in initialize_py.read_text(encoding="utf-8")
+assert "provider.attention_backend = args.attention_backend" in model_provider_py.read_text(
+    encoding="utf-8"
+)
 
 ray_dist = find_ray_dist()
 for artifact in LOG4J_ARTIFACTS:
