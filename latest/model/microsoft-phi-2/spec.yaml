@@ -9,7 +9,7 @@ properties:
   inference-recommended-sku: Standard_NC4as_T4_v3, Standard_NC8as_T4_v3, 
     Standard_NC16as_T4_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, 
     Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, 
-    Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
+    Standard_ND96amsr_A100_v4
   languages: en
   evaluation-min-sku-spec: 6|0|56|112
   evaluation-recommended-sku: Standard_DS5_v2, Standard_NC6s_v3, 
@@ -35,7 +35,7 @@ tags:
   inference_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC8as_T4_v3, 
       Standard_NC16as_T4_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, 
       Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, 
-      Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
+      Standard_ND96amsr_A100_v4]
   inference_supported_envs:
   - vllm
   model_specific_defaults:
@@ -46,7 +46,7 @@ tags:
     precision: 16
     max_seq_length: 2048
   benchmark: "quality"
-version: 21
+version: 22
 description: |
   ## **Microsoft Phi-2**
 
