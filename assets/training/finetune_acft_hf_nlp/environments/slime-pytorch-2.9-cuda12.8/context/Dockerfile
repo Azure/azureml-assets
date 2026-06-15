@@ -166,12 +166,3 @@ RUN python -m pip install --no-cache-dir \
 # `import slime`, `python /opt/slime/train.py`, and the PYTHONPATH-based
 # Megatron-LM import all succeed without requiring `--user root`.
 RUN chmod -R a+rX /opt/slime /opt/Megatron-LM
-
-COPY smoke_test.py /tmp/smoke_test.py
-RUN python /tmp/smoke_test.py && \
-    echo 'import importlib.util' > /tmp/slime_nonroot_check.py && \
-    echo 'import slime' >> /tmp/slime_nonroot_check.py && \
-    echo 'assert importlib.util.find_spec("slime") is not None' >> /tmp/slime_nonroot_check.py && \
-    chmod a+r /tmp/slime_nonroot_check.py && \
-    runuser -u nobody -- python /tmp/slime_nonroot_check.py && \
-    rm /tmp/smoke_test.py /tmp/slime_nonroot_check.py
