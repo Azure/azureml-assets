@@ -85,8 +85,6 @@ RUN python -m pip install --no-cache-dir \
 # Install the hosted wheel extracted from the tested canary image instead of
 # building transformer-engine-torch from source in the release pipeline.
 RUN python -m pip install --no-cache-dir \
-        https://github.com/yeshsurya/TransformerEngine/releases/download/transformer_engine_cu12-2.10.0-py3-none-manylinux_2_28_x86_64/transformer_engine_cu12-2.10.0-py3-none-manylinux_2_28_x86_64.whl && \
-    python -m pip install --no-cache-dir \
         https://github.com/yeshsurya/TransformerEngine/releases/download/transformer_engine-2.10.0%2B769ed77-cp312-cp312-linux_x86_64/transformer_engine-2.10.0+769ed77-cp312-cp312-linux_x86_64.whl && \
     python -m pip install --no-cache-dir transformer-engine==2.10.0
 
