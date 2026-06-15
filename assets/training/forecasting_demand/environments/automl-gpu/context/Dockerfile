@@ -30,7 +30,8 @@ RUN apt-get update && \
         libpam-modules-bin \
         libpam-modules \
         libpam-runtime \
-        libarchive13 && \
+        libarchive13 \
+        libgnutls30 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Create conda environment
