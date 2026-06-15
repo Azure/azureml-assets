@@ -110,3 +110,19 @@ RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' 'click>=8.3.3' 'idna>
  && /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' \
  && /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'click>=8.3.3' \
  && /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'idna>=3.15'
+
+# Upgrade PyJWT to >=2.13.0 in base env (py3.13) to fix GHSA-jq35-7prp-9v3f and GHSA-993g-76c3-p5m4.
+# Root cause (verified 2026-06 via importlib.metadata against the built image):
+#   - PyJWT is installed transitively in the base /opt/conda (py3.13) env by the upstream
+#     base image (pulled in by azureml-core / msal); no parent constrains it to < 2.13.0,
+#     so a direct upgrade is safe and sufficient.
+#   - PyJWT is not present in the ptca (py3.10) env, so only the base env needs patching.
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir 'PyJWT>=2.13.0'
+
+# Upgrade pyarrow to >=23.0.1 in ptca env (py3.10) to fix GHSA-rgxp-2hwp-jwgg.
+# Root cause (verified 2026-06 via importlib.metadata against the built image):
+#   - pyarrow is installed transitively in /opt/conda/envs/ptca (py3.10) as a dependency of
+#     datasets==2.15.0 and azureml-core; neither parent pins pyarrow to < 23.0.1, so a
+#     direct upgrade is safe.  pyarrow 23.0.1 maintains API compatibility with 20.x for the
+#     Arrow/Parquet operations used by datasets and azureml-core.
+RUN pip install --no-cache-dir 'pyarrow>=23.0.1'
