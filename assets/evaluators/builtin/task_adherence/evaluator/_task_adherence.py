@@ -69,7 +69,11 @@ class ContentType(str, Enum):
 
 
 class EvaluationLevel(str, Enum):
-    """Supported evaluation levels for TaskAdherenceEvaluator."""
+    """Supported evaluation levels for the evaluator.
+
+    - ``CONVERSATION``: Force conversation-level evaluation using the multi-turn path.
+    - ``TURN``: Force turn-level evaluation using the single-turn query/response path.
+    """
 
     CONVERSATION = "conversation"
     TURN = "turn"
@@ -98,7 +102,15 @@ def _resolve_evaluation_level(
     evaluation_level: Optional[Union[EvaluationLevel, str]],
     error_target: ErrorTarget,
 ) -> Optional[EvaluationLevel]:
-    """Validate and normalize the evaluation_level parameter."""
+    """Validate and normalize the evaluation_level parameter.
+
+    :param evaluation_level: The evaluation level to resolve.
+    :type evaluation_level: Optional[Union[EvaluationLevel, str]]
+    :param error_target: The error target for exceptions.
+    :type error_target: ErrorTarget
+    :return: The resolved EvaluationLevel or None for auto-detect.
+    :rtype: Optional[EvaluationLevel]
+    """
     valid = [level.value for level in EvaluationLevel]
     if evaluation_level is None or evaluation_level == '':
         return None
@@ -154,7 +166,7 @@ class ConversationValidator(ValidatorInterface):
         requires_query: bool = True,
         check_for_unsupported_tools: bool = False
     ):
-        """Initialize ConversationValidator."""
+        """Initialize with error target and query requirement."""
         self.requires_query = requires_query
         self.check_for_unsupported_tools = check_for_unsupported_tools
         self.error_target = error_target
@@ -175,6 +187,7 @@ class ConversationValidator(ValidatorInterface):
     def _validate_string_field(
         self, item: Dict[str, Any], field_name: str, context: str
     ) -> Optional[EvaluationException]:
+        """Validate that a field exists and is a string."""
         if field_name not in item:
             return EvaluationException(
                 message=f"Each {context} must contain a '{field_name}' field.",
@@ -194,6 +207,7 @@ class ConversationValidator(ValidatorInterface):
     def _validate_list_field(
         self, item: Dict[str, Any], field_name: str, context: str
     ) -> Optional[EvaluationException]:
+        """Validate that a field exists and is a list."""
         if field_name not in item:
             return EvaluationException(
                 message=f"Each {context} must contain a '{field_name}' field.",
@@ -213,6 +227,7 @@ class ConversationValidator(ValidatorInterface):
     def _validate_dict_field(
         self, item: Dict[str, Any], field_name: str, context: str
     ) -> Optional[EvaluationException]:
+        """Validate that a field exists and is a dictionary."""
         if field_name not in item:
             return EvaluationException(
                 message=f"Each {context} must contain a '{field_name}' field.",
@@ -230,6 +245,7 @@ class ConversationValidator(ValidatorInterface):
         return None
 
     def _validate_text_content_item(self, content_item: Dict[str, Any], role: str) -> Optional[EvaluationException]:
+        """Validate a text content item."""
         if "text" not in content_item:
             return EvaluationException(
                 message=f"Each content item must contain a 'text' field for message with role '{role}'.",
@@ -247,6 +263,7 @@ class ConversationValidator(ValidatorInterface):
         return None
 
     def _validate_tool_call_content_item(self, content_item: Dict[str, Any]) -> Optional[EvaluationException]:
+        """Validate a tool_call content item."""
         valid_tool_call_content_types = [
             ContentType.TOOL_CALL,
             ContentType.FUNCTION_CALL,
@@ -280,6 +297,7 @@ class ConversationValidator(ValidatorInterface):
         return None
 
     def _validate_user_or_system_message(self, message: Dict[str, Any], role: str) -> Optional[EvaluationException]:
+        """Validate user or system message content."""
         content = message["content"]
         if isinstance(content, list):
             for content_item in content:
@@ -300,6 +318,7 @@ class ConversationValidator(ValidatorInterface):
         return None
 
     def _validate_assistant_message(self, message: Dict[str, Any]) -> Optional[EvaluationException]:
+        """Validate assistant message content."""
         content = message["content"]
         if isinstance(content, list):
             valid_assistant_content_types = [
@@ -310,7 +329,7 @@ class ConversationValidator(ValidatorInterface):
                 ContentType.MCP_APPROVAL_REQUEST,
                 ContentType.OPENAPI_CALL
             ]
-            valid_assistant_content_type_values = [t.value for t in valid_assistant_content_types]
+            valid_assistant_content_types_as_strings = [t.value for t in valid_assistant_content_types]
             for content_item in content:
                 content_type = content_item["type"]
                 if content_type not in valid_assistant_content_types:
@@ -318,7 +337,7 @@ class ConversationValidator(ValidatorInterface):
                         message=(
                             f"Invalid content type '{content_type}' for message with "
                             f"role '{MessageRole.ASSISTANT.value}'. "
-                            f"Must be one of {valid_assistant_content_type_values}."
+                            f"Must be one of {valid_assistant_content_types_as_strings}."
                         ),
                         blame=ErrorBlame.USER_ERROR,
                         category=ErrorCategory.INVALID_VALUE,
@@ -353,11 +372,12 @@ class ConversationValidator(ValidatorInterface):
         return None
 
     def _validate_tool_message(self, message: Dict[str, Any]) -> Optional[EvaluationException]:
+        """Validate tool message content."""
         content = message["content"]
         if not isinstance(content, list):
             return EvaluationException(
                 message=(
-                    f"The 'content' field must be a list of dictionaries messages "
+                    "The 'content' field must be a list of dictionaries messages "
                     f"for role '{MessageRole.TOOL.value}'."
                 ),
                 blame=ErrorBlame.USER_ERROR,
@@ -369,15 +389,15 @@ class ConversationValidator(ValidatorInterface):
         )
         if error:
             return error
+        valid_tool_content_types = [
+            ContentType.TOOL_RESULT,
+            ContentType.FUNCTION_CALL_OUTPUT,
+            ContentType.MCP_APPROVAL_RESPONSE,
+            ContentType.OPENAPI_CALL_OUTPUT
+        ]
+        valid_tool_content_types_as_strings = [t.value for t in valid_tool_content_types]
         for content_item in content:
             content_type = content_item["type"]
-            valid_tool_content_types = [
-                ContentType.TOOL_RESULT,
-                ContentType.FUNCTION_CALL_OUTPUT,
-                ContentType.MCP_APPROVAL_RESPONSE,
-                ContentType.OPENAPI_CALL_OUTPUT
-            ]
-            valid_tool_content_types_as_strings = [t.value for t in valid_tool_content_types]
             if content_type not in valid_tool_content_types:
                 return EvaluationException(
                     message=(
@@ -400,6 +420,7 @@ class ConversationValidator(ValidatorInterface):
         return None
 
     def _validate_message_dict(self, message: Dict[str, Any]) -> Optional[EvaluationException]:
+        """Validate a single message dictionary."""
         if "role" not in message:
             return EvaluationException(
                 message="Each message must contain a 'role' field.",
@@ -441,7 +462,7 @@ class ConversationValidator(ValidatorInterface):
                     category=ErrorCategory.INVALID_VALUE,
                     target=self.error_target,
                 )
-        if role in [MessageRole.USER, MessageRole.SYSTEM]:
+        if role in [MessageRole.USER, MessageRole.SYSTEM, MessageRole.DEVELOPER]:
             error = self._validate_user_or_system_message(message, role)
             if error:
                 return error
@@ -500,6 +521,7 @@ class ConversationValidator(ValidatorInterface):
         return None
 
     def _validate_conversation(self, conversation: Any) -> Optional[EvaluationException]:
+        """Validate the conversation input."""
         if not isinstance(conversation, dict):
             return EvaluationException(
                 message="Conversation must be a dictionary.",
@@ -514,22 +536,26 @@ class ConversationValidator(ValidatorInterface):
         return self._validate_input_messages_list(messages, "Conversation messages")
 
     def _validate_query(self, query: Any) -> Optional[EvaluationException]:
+        """Validate the query input."""
         if not self.requires_query:
             return None
         return self._validate_input_messages_list(query, "Query")
 
     def _validate_response(self, response: Any) -> Optional[EvaluationException]:
+        """Validate the response input."""
         return self._validate_input_messages_list(response, "Response")
 
     @override
     def validate_eval_input(self, eval_input: Dict[str, Any]) -> bool:
-        """Validate evaluation input."""
+        """Validate the evaluation input dictionary."""
+        # Legacy conversation path
         conversation = eval_input.get("conversation")
         if conversation:
             conversation_validation_exception = self._validate_conversation(conversation)
             if conversation_validation_exception:
                 raise conversation_validation_exception
             return True
+        # Single-turn query/response path
         query = eval_input.get("query")
         response = eval_input.get("response")
         query_validation_exception = self._validate_query(query)
@@ -628,11 +654,38 @@ class ToolDefinitionsValidator(ConversationValidator):
 
 
 class MessagesOrQueryResponseInputValidator(ToolDefinitionsValidator):
-    """Validator that supports both single-turn (query/response) and multi-turn (messages) inputs."""
+    """Validator that supports both single-turn (query/response) and multi-turn (messages) inputs.
+
+    A single implementation serves all evaluators via two behavior flags:
+      - ``enforce_tool_definitions`` (default True): validate ``tool_definitions`` in both the
+        messages path and the query/response path. Set False for evaluators that do not accept
+        tool definitions (parity with a plain ``ConversationValidator``).
+      - ``deep_validate_messages`` (default False): additionally run full per-message
+        ``_validate_message_dict`` checks in the messages path.
+    """
+
+    enforce_tool_definitions: bool = True
+    deep_validate_messages: bool = False
+
+    def __init__(
+        self,
+        error_target: ErrorTarget,
+        requires_query: bool = True,
+        optional_tool_definitions: bool = True,
+        check_for_unsupported_tools: bool = False,
+        *,
+        enforce_tool_definitions: bool = True,
+        deep_validate_messages: bool = False,
+    ):
+        """Initialize MessagesOrQueryResponseInputValidator."""
+        super().__init__(error_target, requires_query, optional_tool_definitions, check_for_unsupported_tools)
+        self.enforce_tool_definitions = enforce_tool_definitions
+        self.deep_validate_messages = deep_validate_messages
 
     @override
     def validate_eval_input(self, eval_input: Dict[str, Any]) -> bool:
         """Validate evaluation input, supporting messages as an alternative to query/response."""
+        # Multi-turn path (messages list)
         messages = eval_input.get("messages")
         if messages is not None:
             if not isinstance(messages, list):
@@ -650,6 +703,7 @@ class MessagesOrQueryResponseInputValidator(ToolDefinitionsValidator):
                     target=self.error_target,
                 )
 
+            # Per-message structural checks
             valid_roles = {role.value for role in MessageRole}
             roles_present = set()
             for index, message in enumerate(messages):
@@ -683,6 +737,7 @@ class MessagesOrQueryResponseInputValidator(ToolDefinitionsValidator):
                     )
                 roles_present.add(role)
 
+            # Conversation-level checks
             if MessageRole.USER not in roles_present:
                 raise EvaluationException(
                     message="messages must contain at least one message with role 'user'.",
@@ -697,6 +752,7 @@ class MessagesOrQueryResponseInputValidator(ToolDefinitionsValidator):
                     category=ErrorCategory.INVALID_VALUE,
                     target=self.error_target,
                 )
+            # The final assistant message must contain text
             last_content = messages[-1].get("content", "")
             if isinstance(last_content, list):
                 has_text = any(
@@ -723,18 +779,22 @@ class MessagesOrQueryResponseInputValidator(ToolDefinitionsValidator):
                         target=self.error_target,
                     )
 
-            for message in messages:
-                error = self._validate_message_dict(message)
-                if error:
-                    raise error
+            if self.deep_validate_messages:
+                for message in messages:
+                    error = self._validate_message_dict(message)
+                    if error:
+                        raise error
 
-            tool_definitions = eval_input.get("tool_definitions")
-            tool_definitions_validation_exception = self._validate_tool_definitions(tool_definitions)
-            if tool_definitions_validation_exception:
-                raise tool_definitions_validation_exception
+            if self.enforce_tool_definitions:
+                tool_definitions = eval_input.get("tool_definitions")
+                tool_definitions_validation_exception = self._validate_tool_definitions(tool_definitions)
+                if tool_definitions_validation_exception:
+                    raise tool_definitions_validation_exception
             return True
 
-        return super().validate_eval_input(eval_input)
+        if self.enforce_tool_definitions:
+            return super().validate_eval_input(eval_input)
+        return ConversationValidator.validate_eval_input(self, eval_input)
 
 
 # endregion Validators
@@ -968,6 +1028,7 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         self._validator = MessagesOrQueryResponseInputValidator(
             error_target=ErrorTarget.TASK_ADHERENCE_EVALUATOR,
+            deep_validate_messages=True,
         )
 
         super().__init__(
