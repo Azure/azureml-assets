@@ -115,8 +115,8 @@ RUN LOG4J_VERSION=${LOG4J_VERSION} \
 RUN cd /opt/slime && \
     python -m pip install --no-cache-dir -e . --no-deps
 
-COPY slime_patches/slime/backends/megatron_utils/initialize.py /opt/slime/slime/backends/megatron_utils/initialize.py
-COPY slime_patches/slime/backends/megatron_utils/model_provider.py /opt/slime/slime/backends/megatron_utils/model_provider.py
+COPY initialize /opt/slime/slime/backends/megatron_utils/initialize.py
+COPY model_provider /opt/slime/slime/backends/megatron_utils/model_provider.py
 
 RUN cd /opt/slime/slime/backends/megatron_utils/kernels/int4_qat && \
     python -m pip install --no-cache-dir . --no-build-isolation
