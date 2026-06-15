@@ -88,6 +88,7 @@ class TestCollectFailedToolCalls:
     """Unit tests for the ``_collect_failed_tool_calls`` helper."""
 
     def test_no_status_anywhere_returns_empty(self):
+        """No status field anywhere returns an empty failed-tool list."""
         msgs = [
             _assistant_tool_call("c1", "fetch_weather", {"city": "Seattle"}),
             _tool_result("c1", "Sunny, 72F."),
@@ -95,6 +96,7 @@ class TestCollectFailedToolCalls:
         assert _collect_failed_tool_calls(msgs) == []
 
     def test_all_completed_returns_empty(self):
+        """All blocks marked ``completed`` returns an empty failed-tool list."""
         msgs = [
             _assistant_tool_call("c1", "fetch_weather", {"city": "Seattle"}, status="completed"),
             _tool_result("c1", "Sunny, 72F.", status="completed"),
@@ -102,6 +104,7 @@ class TestCollectFailedToolCalls:
         assert _collect_failed_tool_calls(msgs) == []
 
     def test_failed_status_on_tool_call_block(self):
+        """``failed`` status on the assistant tool_call block flags the tool as failed."""
         msgs = [
             _assistant_tool_call("c1", "send_email", {"to": "x@example.com"}, status="failed"),
             _tool_result("c1", ""),
@@ -109,6 +112,7 @@ class TestCollectFailedToolCalls:
         assert _collect_failed_tool_calls(msgs) == ["send_email"]
 
     def test_failed_status_on_tool_result_block(self):
+        """``failed`` status on the tool_result block flags the matched tool as failed."""
         msgs = [
             _assistant_tool_call("c1", "send_email", {"to": "x@example.com"}),
             _tool_result("c1", "", status="failed"),
@@ -116,12 +120,14 @@ class TestCollectFailedToolCalls:
         assert _collect_failed_tool_calls(msgs) == ["send_email"]
 
     def test_incomplete_status_is_treated_as_failure(self):
+        """``incomplete`` runtime status is treated as a failure, same as ``failed``."""
         msgs = [
             _assistant_tool_call("c1", "long_running_query", {}, status="incomplete"),
         ]
         assert _collect_failed_tool_calls(msgs) == ["long_running_query"]
 
     def test_failed_on_both_call_and_result_dedupes_to_single_entry(self):
+        """Failure annotated on both the call and result blocks dedupes to one entry."""
         msgs = [
             _assistant_tool_call("c1", "send_email", {"to": "x@example.com"}, status="failed"),
             _tool_result("c1", "", status="failed"),
@@ -129,6 +135,7 @@ class TestCollectFailedToolCalls:
         assert _collect_failed_tool_calls(msgs) == ["send_email"]
 
     def test_unknown_runtime_status_is_ignored(self):
+        """Statuses outside {failed, incomplete} fall through to the LLM rubric."""
         # Only "failed" and "incomplete" trigger the short-circuit; anything else
         # (including "error", "cancelled", "rate_limited", ...) falls through to
         # the LLM rubric for payload-based judgment, preserving back-compat with
@@ -140,6 +147,7 @@ class TestCollectFailedToolCalls:
         assert _collect_failed_tool_calls(msgs) == []
 
     def test_parallel_calls_one_failed_returns_only_the_failed_name(self):
+        """In a parallel-call turn, only the failing tool is reported."""
         msgs = [
             _assistant_parallel_tool_calls([
                 ("c1", "fetch_weather", {"city": "Seattle"}, "completed"),
@@ -153,6 +161,7 @@ class TestCollectFailedToolCalls:
         assert _collect_failed_tool_calls(msgs) == ["send_email"]
 
     def test_multiple_distinct_failures_preserve_order_and_dedupe(self):
+        """Multiple distinct failures are deduped while preserving discovery order."""
         msgs = [
             _assistant_parallel_tool_calls([
                 ("c1", "send_email", {"to": "x"}, "failed"),
@@ -175,6 +184,7 @@ class TestCollectFailedToolCalls:
         assert result.index("lookup_user") < result.index("fetch_weather")
 
     def test_failed_call_without_id_falls_back_to_name(self):
+        """A failed tool_call missing its id is labeled by the tool name fallback."""
         msgs = [
             {
                 "role": "assistant",
@@ -191,12 +201,14 @@ class TestCollectFailedToolCalls:
         assert _collect_failed_tool_calls(msgs) == ["anon_tool"]
 
     def test_failed_tool_result_without_assistant_call_uses_id_as_label(self):
+        """A failed tool_result with no matching call falls back to its id as label."""
         msgs = [
             _tool_result("c1", "", status="failed"),
         ]
         assert _collect_failed_tool_calls(msgs) == ["c1"]
 
     def test_nested_function_shape_failed_status(self):
+        """Nested ``tool_call.function.name`` shape is recognized as a failure."""
         # The "tool_call.function.name" shape is what _normalize_function_call_types
         # produces from OpenAI Responses-API function_call blocks.
         msgs = [
@@ -220,11 +232,13 @@ class TestCollectFailedToolCalls:
         assert _collect_failed_tool_calls(msgs) == ["send_email"]
 
     def test_non_list_input_returns_empty(self):
+        """Non-list inputs (None, dict, str) return an empty failed-tool list."""
         assert _collect_failed_tool_calls(None) == []
         assert _collect_failed_tool_calls({}) == []
         assert _collect_failed_tool_calls("not a list") == []
 
     def test_malformed_content_blocks_are_skipped_silently(self):
+        """Malformed/non-dict content blocks are skipped without raising."""
         msgs = [
             {"role": "assistant", "content": [None, "string", {"type": "text"}]},
             {"role": "tool", "tool_call_id": "c1", "content": [None]},
@@ -243,6 +257,7 @@ class TestGetToolCallsResultsNoStatusForward:
     """
 
     def test_status_on_tool_call_is_not_appended(self):
+        """Status on the tool_call block is not forwarded into the formatted LLM input."""
         msgs = [
             _assistant_tool_call("c1", "send_email", {"to": "x@example.com"}, status="failed"),
             _tool_result("c1", ""),
@@ -254,6 +269,7 @@ class TestGetToolCallsResultsNoStatusForward:
         ]
 
     def test_status_on_tool_result_is_not_appended(self):
+        """Status on the tool_result block is not forwarded into the formatted LLM input."""
         msgs = [
             _assistant_tool_call("c1", "send_email", {"to": "x@example.com"}),
             _tool_result("c1", "", status="failed"),
@@ -265,6 +281,7 @@ class TestGetToolCallsResultsNoStatusForward:
         ]
 
     def test_completed_status_is_not_appended(self):
+        """``completed`` status is not appended to the formatted LLM input."""
         msgs = [
             _assistant_tool_call("c1", "fetch_weather", {"city": "Seattle"}, status="completed"),
             _tool_result("c1", "Sunny, 72F.", status="completed"),
@@ -276,6 +293,7 @@ class TestGetToolCallsResultsNoStatusForward:
         ]
 
     def test_absent_status_back_compat_unchanged(self):
+        """Absent status preserves the pre-pass-through formatted output verbatim."""
         msgs = [
             _assistant_tool_call("c1", "fetch_weather", {"city": "Seattle"}),
             _tool_result("c1", "Sunny, 72F."),
@@ -287,6 +305,7 @@ class TestGetToolCallsResultsNoStatusForward:
         ]
 
     def test_parallel_tool_calls_in_one_message_no_status_in_output(self):
+        """Parallel tool calls render without any ``[STATUS]`` suffix in the output."""
         msgs = [
             _assistant_parallel_tool_calls([
                 ("c1", "fetch_weather", {"city": "Seattle"}, "completed"),
