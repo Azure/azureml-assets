@@ -109,23 +109,16 @@ RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
     apt-get update && \
     ACCEPT_EULA=Y apt-get install -y msodbcsql17 unixodbc-dev
 
-#Cmake Installation
+# cmake + rdma-core + autoremove in one layer to avoid redundant apt-get update calls
 RUN apt-get update && \
-    apt-get install -y cmake
-
-# rdma-core
-RUN apt-get update && \
+    apt-get install -y cmake && \
     apt-get install -y --no-install-recommends rdma-core && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# remove unused packages
-RUN apt-get autoremove -y && \
+    apt-get autoremove -y && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 #Install latest version of nccl-rdma-sharp-plugins
 RUN cd /tmp && \
     mkdir -p /usr/local/nccl-rdma-sharp-plugins && \
-    apt install -y dh-make zlib1g-dev && \
     git clone -b v2.1.0 https://github.com/Mellanox/nccl-rdma-sharp-plugins.git && \
     cd nccl-rdma-sharp-plugins && \
     ./autogen.sh && \
