@@ -87,8 +87,7 @@ RUN python -m pip install --no-cache-dir \
 RUN python -m pip install --no-cache-dir \
         https://github.com/yeshsurya/TransformerEngine/releases/download/transformer_engine_cu12-2.10.0-py3-none-manylinux_2_28_x86_64/transformer_engine_cu12-2.10.0-py3-none-manylinux_2_28_x86_64.whl && \
     python -m pip install --no-cache-dir \
-        https://github.com/yeshsurya/TransformerEngine/releases/download/transformer_engine-2.10.0%2B769ed77-cp312-cp312-linux_x86_64/transformer_engine-2.10.0+769ed77-cp312-cp312-linux_x86_64.whl && \
-    python -m pip install --no-cache-dir transformer-engine==2.10.0
+        https://github.com/yeshsurya/TransformerEngine/releases/download/transformer_engine-2.10.0%2B769ed77-cp312-cp312-linux_x86_64/transformer_engine-2.10.0+769ed77-cp312-cp312-linux_x86_64.whl
 
 COPY requirements.txt /tmp/slime-requirements.txt
 RUN python -m pip install --no-cache-dir -r /tmp/slime-requirements.txt && \
