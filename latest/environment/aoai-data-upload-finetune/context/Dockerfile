@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260609.v2
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260614.v1
 
 RUN apt-get update \
     && apt-get install -y --only-upgrade --no-install-recommends libgnutls30t64 \

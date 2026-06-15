@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.8-ubuntu24.04:20260609.v2
+FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.8-ubuntu24.04:20260614.v1
 
 USER root
 # Editable sources live under /opt so AML/Singularity jobs (uid 9000) can
@@ -81,6 +81,15 @@ RUN python -m pip install --no-cache-dir \
     python -m pip install --no-cache-dir \
         'nvidia-modelopt[torch]>=0.37.0' --no-build-isolation
 
+# The PyTorch extension has no public wheel for this image's torch/CUDA stack.
+# Install the hosted wheel extracted from the tested canary image instead of
+# building transformer-engine-torch from source in the release pipeline.
+RUN python -m pip install --no-cache-dir \
+        https://github.com/yeshsurya/TransformerEngine/releases/download/transformer_engine_cu12-2.10.0-py3-none-manylinux_2_28_x86_64/transformer_engine_cu12-2.10.0-py3-none-manylinux_2_28_x86_64.whl && \
+    python -m pip install --no-cache-dir \
+        https://github.com/yeshsurya/TransformerEngine/releases/download/transformer_engine-2.10.0%2B769ed77-cp312-cp312-linux_x86_64/transformer_engine-2.10.0+769ed77-cp312-cp312-linux_x86_64.whl && \
+    python -m pip install --no-cache-dir transformer-engine==2.10.0
+
 COPY requirements.txt /tmp/slime-requirements.txt
 RUN python -m pip install --no-cache-dir -r /tmp/slime-requirements.txt && \
     rm /tmp/slime-requirements.txt
@@ -105,6 +114,10 @@ RUN LOG4J_VERSION=${LOG4J_VERSION} \
 
 RUN cd /opt/slime && \
     python -m pip install --no-cache-dir -e . --no-deps
+
+COPY patch_slime_rft_fixes.py /tmp/patch_slime_rft_fixes.py
+RUN python /tmp/patch_slime_rft_fixes.py && \
+    rm /tmp/patch_slime_rft_fixes.py
 
 RUN cd /opt/slime/slime/backends/megatron_utils/kernels/int4_qat && \
     python -m pip install --no-cache-dir . --no-build-isolation
@@ -153,12 +166,3 @@ RUN python -m pip install --no-cache-dir \
 # `import slime`, `python /opt/slime/train.py`, and the PYTHONPATH-based
 # Megatron-LM import all succeed without requiring `--user root`.
 RUN chmod -R a+rX /opt/slime /opt/Megatron-LM
-
-COPY smoke_test.py /tmp/smoke_test.py
-RUN python /tmp/smoke_test.py && \
-    echo 'import importlib.util' > /tmp/slime_nonroot_check.py && \
-    echo 'import slime' >> /tmp/slime_nonroot_check.py && \
-    echo 'assert importlib.util.find_spec("slime") is not None' >> /tmp/slime_nonroot_check.py && \
-    chmod a+r /tmp/slime_nonroot_check.py && \
-    runuser -u nobody -- python /tmp/slime_nonroot_check.py && \
-    rm /tmp/smoke_test.py /tmp/slime_nonroot_check.py

@@ -1,5 +1,5 @@
 #PTCA image
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202606.1
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202606.2
 USER root
 
 # USN-8284-1/USN-8283-1: libgnutls30/rsync; USN-8298-1: dotnet 8.0.26->8.0.27;
