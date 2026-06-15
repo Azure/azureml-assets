@@ -154,6 +154,17 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+# USN-8292-1: libarchive13 >= 3.6.0-1ubuntu1.7 fixes CVE-2025-25724 / CVE-2025-1632
+# USN-8284-1: libgnutls30 >= 3.7.3-4ubuntu1.9 fixes CVE-2024-28835 / CVE-2025-32888
+# Both packages are patched in the jammy-security archive; installing them here ensures
+# the updated versions are present regardless of the base image's apt state.
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libarchive13 \
+        libgnutls30 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 # Create conda environment
 COPY conda_dependencies.yaml .
 RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
