@@ -940,4 +940,3 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Expected Actions List Non-String Element")
         self.assert_error(result_data, ErrorCategory.INVALID_VALUE.name)
-
