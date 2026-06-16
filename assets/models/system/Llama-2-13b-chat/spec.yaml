@@ -1,8 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-
 name: Llama-2-13b-chat
 path: ./
-
 properties:
   languages: EN
   evaluation-min-sku-spec: 12|2|224|1474
@@ -10,44 +8,64 @@ properties:
   evaluation-recommended-sku: Standard_NC12s_v3, Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   inference-recommended-sku: Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   azureml.copyRegistryFilesToWorkspace: true
-  SharedComputeCapacityEnabled: "True"
+  SharedComputeCapacityEnabled: 'True'
 tags:
-  Featured: ""
-  author: Meta
-  license: custom
-  disable-batch: "true"
-  task: chat-completion
-  InferenceLegacyDate: '2025-02-28'
-  InferenceDeprecationDate: '2025-03-31'
-  InferenceRetirementDate: '2025-06-30'
-  FinetuneDeprecationDate: '2025-03-31'
-  FinetuneRetirementDate: '2025-06-30'
-  hiddenlayerscanned: ""
+  disable-batch: 'true'
   training_datasets: Publicly available sources
-  maas-inference: "true"
-  SharedComputeCapacityEnabled: ""
-  evaluation_compute_allow_list:
+  maas-inference: 'true'
+  inference_supported_envs:
+  - vllm
+  - ds_mii
+system_metadata:
+  languages:
+  - en
+  sharedComputeCapacityEnabled: true
+  SKU:
+    evaluationRecommendedSkus:
     - Standard_NC12s_v3
     - Standard_NC24s_v3
     - Standard_ND40rs_v2
     - Standard_ND96asr_v4
     - Standard_ND96amsr_A100_v4
-  inference_compute_allow_list:
+    inferenceRecommendedSkus:
     - Standard_NC24s_v3
     - Standard_ND40rs_v2
     - Standard_ND96asr_v4
     - Standard_ND96amsr_A100_v4
-  sku_to_num_replicas_map:
+    evaluationMinSkuSpec: 12|2|224|1474
+    inferenceMinSkuSpec: 24|4|448|2900
+  publisher: Meta
+  benchmark: quality
+  evaluation: evaluation.md
+  hiddenLayerScanned: true
+  license: custom
+  notes: notes.md
+  featured: true
+  skuToNumReplicasMap:
     Standard_NC24s_v3: 1
     Standard_ND40rs_v2: 4
     Standard_ND96asr_v4: 8
     Standard_ND96amsr_A100_v4: 8
     Default: 1
-  inference_supported_envs:
-    - vllm
-    - ds_mii
-  benchmark: "quality"
-  notes: "notes.md"
-  evaluation: "evaluation.md"
-
+  tasks:
+    inferenceTasks:
+    - chat-completion
+  supportedComputes:
+    inferenceComputes:
+    - Standard_NC24s_v3
+    - Standard_ND40rs_v2
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
+    evaluationComputes:
+    - Standard_NC12s_v3
+    - Standard_NC24s_v3
+    - Standard_ND40rs_v2
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
+  deprecation:
+    finetuneDeprecationDate: '2025-03-31T00:00:00.000000Z'
+    finetuneRetirementDate: '2025-06-30T00:00:00.000000Z'
+    inferenceDeprecationDate: '2025-03-31T00:00:00.000000Z'
+    inferenceLegacyDate: '2025-02-28T00:00:00.000000Z'
+    inferenceRetirementDate: '2025-06-30T00:00:00.000000Z'
 version: 22

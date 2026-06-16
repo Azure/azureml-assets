@@ -1,35 +1,41 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: openai-whisper-small-generic-cpu
-version: 4
-isArchived: true
 path: ./
+isArchived: true
 tags:
-  foundryLocal: ""
-  license: apache-2.0
-  licenseDescription: "This model is provided under the License Terms available at https://www.apache.org/licenses/LICENSE-2.0.html."
-  author: Microsoft
-  inputModalities: audio
-  outputModalities: text
-  task: automatic-speech-recognition
-  maxOutputTokens: 2048
-  alias: whisper-small
-  directoryPath: v4
-  promptTemplate: "{\"prompt\": \"<|startoftranscript|> <|en|> <|transcribe|> <|notimestamps|>\"}"
   contextLength: 448
-  capabilities: ""
-  supportsReasoning: ""
-  reasoningStart: ""
-  reasoningEnd: ""
-  minFLVersion: "0.0.0"
-  disable-maap: "true"
-type: custom_model
+  capabilities: ''
+  supportsReasoning: ''
+  reasoningStart: ''
+  reasoningEnd: ''
+  minFLVersion: 0.0.0
+  disable-maap: 'true'
+system_metadata:
+  alias: whisper-small
+  publisher: Microsoft
+  directoryPath: v4
+  foundryLocal: ''
+  inputModalities:
+  - audio
+  license: apache-2.0
+  licenseDescription: This model is provided under the License Terms available at https://www.apache.org/licenses/LICENSE-2.0.html.
+  maxOutputTokens: 2048
+  outputModalities:
+  - text
+  promptTemplate: '{"prompt": "<|startoftranscript|> <|en|> <|transcribe|> <|notimestamps|>"}'
+  tasks:
+    inferenceTasks:
+    - automatic-speech-recognition
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/openai-whisper-small/versions/1
   variantMetadata:
-    modelType: 'ONNX'
-    quantization: ['RTN']
-    device: 'cpu'
-    executionProvider: 'CPUExecutionProvider'
+    modelType: ONNX
+    quantization:
+    - RTN
+    device: cpu
+    executionProvider: CPUExecutionProvider
     fileSizeBytes: 459461019
     vRamFootprintBytes: 459461019
+version: 4
+type: custom_model

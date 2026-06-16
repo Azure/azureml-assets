@@ -2,32 +2,46 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: ALLaM-2-7b-instruct
 path: ./
 properties:
-  SharedComputeCapacityEnabled: "True"
+  SharedComputeCapacityEnabled: 'True'
   languages: AR, EN
   inference-min-sku-spec: 24|1|220|64
   inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_NC96ads_A100_v4
 tags:
-  displayName: "ALLaM-2-7b-instruct"
-  summary: "ALLaM is a series of powerful language models designed to advance Arabic Language Technology."
-  disable-batch: "true"
-  maxOutputTokens: 4096
-  hiddenlayerscanned: ""
-  languages: "ar, en"
-  inputModalities: "text"
-  outputModalities: "text"
-  SharedComputeCapacityEnabled : ""
-  Featured: ""
-  license: apache-2.0
-  task: chat-completion
-  author: SDAIA
+  disable-batch: 'true'
   inference_supported_envs:
-    - vllm
-  inference_compute_allow_list:
-    [ 
-      Standard_NC24ads_A100_v4, 
-      Standard_NC48ads_A100_v4, 
-      Standard_ND96asr_v4, 
-      Standard_ND96amsr_A100_v4, 
-      Standard_NC96ads_A100_v4
-    ]
+  - vllm
+system_metadata:
+  languages:
+  - ar
+  - en
+  sharedComputeCapacityEnabled: true
+  SKU:
+    inferenceRecommendedSkus:
+    - Standard_NC24ads_A100_v4
+    - Standard_NC48ads_A100_v4
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
+    - Standard_NC96ads_A100_v4
+    inferenceMinSkuSpec: 24|1|220|64
+  publisher: SDAIA
+  displayName: ALLaM-2-7b-instruct
+  hiddenLayerScanned: true
+  inputModalities:
+  - text
+  license: apache-2.0
+  maxOutputTokens: 4096
+  outputModalities:
+  - text
+  summary: ALLaM is a series of powerful language models designed to advance Arabic Language Technology.
+  featured: true
+  tasks:
+    inferenceTasks:
+    - chat-completion
+  supportedComputes:
+    inferenceComputes:
+    - Standard_NC24ads_A100_v4
+    - Standard_NC48ads_A100_v4
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
+    - Standard_NC96ads_A100_v4
 version: 3
