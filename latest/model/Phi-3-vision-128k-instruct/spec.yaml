@@ -2,33 +2,46 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Phi-3-vision-128k-instruct
 path: ./
 properties:
-  SharedComputeCapacityEnabled: "True"
+  SharedComputeCapacityEnabled: 'True'
   languages: en
   inference-min-sku-spec: 48|2|440|128
   inference-recommended-sku: Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96amsr_A100_v4
+tags:
+  disable-batch: 'true'
+  inference_supported_envs:
+  - vllm
 system_metadata:
   deploymentOptions:
   - UnifiedEndpointMaaS
   - MaaP
-
-tags:
-  InferenceLegacyDate: '2025-06-09'
-  InferenceDeprecationDate: '2025-06-30'
-  InferenceRetirementDate: '2025-08-30'
-  FinetuneDeprecationDate: '2025-06-30'
-  FinetuneRetirementDate: '2025-08-30'
-  Featured: ""
+  languages:
+  - en
+  sharedComputeCapacityEnabled: true
+  SKU:
+    inferenceRecommendedSkus:
+    - Standard_NC48ads_A100_v4
+    - Standard_NC96ads_A100_v4
+    - Standard_ND96amsr_A100_v4
+    inferenceMinSkuSpec: 48|2|440|128
+  publisher: Microsoft
+  hiddenLayerScanned: true
   license: MIT
-  disable-batch: "true"
-  task: chat-completion
-  hiddenlayerscanned: ""
-  author: Microsoft
-  SharedComputeCapacityEnabled: ""
-  inference_compute_allow_list: [Standard_NC48ads_A100_v4, 
-      Standard_ND96amsr_A100_v4, Standard_NC96ads_A100_v4]
-  inference_supported_envs:
-  - vllm
+  featured: true
+  tasks:
+    inferenceTasks:
+    - chat-completion
+  supportedComputes:
+    inferenceComputes:
+    - Standard_NC48ads_A100_v4
+    - Standard_ND96amsr_A100_v4
+    - Standard_NC96ads_A100_v4
+  deprecation:
+    finetuneDeprecationDate: '2025-06-30T00:00:00.000000Z'
+    finetuneRetirementDate: '2025-08-30T00:00:00.000000Z'
+    inferenceDeprecationDate: '2025-06-30T00:00:00.000000Z'
+    inferenceLegacyDate: '2025-06-09T00:00:00.000000Z'
+    inferenceRetirementDate: '2025-08-30T00:00:00.000000Z'
 version: 2
 description: |
   ## Model Summary

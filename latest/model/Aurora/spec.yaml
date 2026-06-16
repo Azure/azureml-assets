@@ -1,142 +1,86 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-
 name: Aurora
 path: ./
-
-system_metadata:
-  domain:
-  - "Geospatial & Earth Science"
 properties:
   languages: EN
   inference-min-sku-spec: 24|1|220|64
   inference-recommended-sku: Standard_NC24ads_A100_v4
-  SharedComputeCapacityEnabled: "True"
+  SharedComputeCapacityEnabled: 'True'
 tags:
-  task: environmental-forecasting
-  Preview: ""
-  Featured: ""
-  author: Microsoft
+  disable-batch: 'true'
+system_metadata:
+  domain:
+  - Geospatial & Earth Science
+  languages:
+  - en
+  sharedComputeCapacityEnabled: true
+  SKU:
+    inferenceRecommendedSkus:
+    - Standard_NC24ads_A100_v4
+    inferenceMinSkuSpec: 24|1|220|64
+  publisher: Microsoft
+  displayName: Aurora
+  evaluation: evaluation.md
+  freePlayground: false
+  hiddenLayerScanned: true
+  inputModalities:
+  - data
   license: MIT
-  licenseDescription: "Microsoft.\nCopyright (c) Microsoft Corporation.\n\nMIT License\n\
-    \nPermission is hereby granted, free of charge, to any person obtaining a copy\n\
-    of this software and associated documentation files (the \"Software\"), to deal\n\
-    in the Software without restriction, including without limitation the rights\n\
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies
-    of the Software, and to permit persons to whom the Software is\nfurnished to do
-    so, subject to the following conditions:\n\nThe above copyright notice and this
-    permission notice shall be included in all\ncopies or substantial portions of
-    the Software.\n\nTHE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND,
-    EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n\
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n\
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY,
-    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR
-    IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
-  hiddenlayerscanned: ""
-  notes: |
-    ## Resources
+  licenseDescription: 'Microsoft.
 
-    * [Documentation of the Aurora Foundry Python API](https://microsoft.github.io/aurora/foundry/intro.html)
-    * [A full-fledged example that runs the model on Foundry](https://microsoft.github.io/aurora/foundry/demo_hres_t0.html).
-    * [Implementation of the Aurora model](https://github.com/microsoft/aurora)
-    * [Documentation of the Aurora implementation](https://microsoft.github.io/aurora/intro.html)
-    * [Paper with detailed evaluation](https://arxiv.org/abs/2405.13063)
-
-    ## Quickstart
-
-    First install the model:
-
-    ```bash
-    pip install microsoft-aurora
-    ```
-
-    Then you can make predictions with a Azure Foundry AI endpoint as follows:
-
-    ```python
-    from aurora import Batch
-
-    from aurora.foundry import BlobStorageChannel, FoundryClient, submit
+    Copyright (c) Microsoft Corporation.
 
 
-    initial_condition = Batch(...)  # Create initial condition for the model.
+    MIT License
 
-    for pred in submit(
-        initial_condition,
-        model_name="aurora-0.25-finetuned",
-        num_steps=4,  # Every step predicts six hours ahead.
-        foundry_client=FoundryClient(
-            endpoint="https://endpoint/",
-            token="ENDPOINT_TOKEN",
-        ),
-        # Communication with the endpoint happens via an intermediate blob storage container. You
-        # will need to create one and generate an URL with a SAS token that has both read and write
-        # rights.
-        channel=BlobStorageChannel(
-            "https://storageaccount.blob.core.windows.net/container?<READ_WRITE_SAS_TOKEN>"
-        ),
-    ):
-        pass  # Do something with `pred`, which is a `Batch`.
-    ```
 
-    ## License
+    Permission is hereby granted, free of charge, to any person obtaining a copy
 
-    This model and the associated model weights are released under the [MIT licence](https://spdx.org/licenses/MIT).
+    of this software and associated documentation files (the "Software"), to deal
 
-    ## Security
+    in the Software without restriction, including without limitation the rights
 
-    See [SECURITY](https://github.com/microsoft/aurora/blob/main/SECURITY.md).
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 
-    ## Responsible AI Transparency Documentation
+    copies of the Software, and to permit persons to whom the Software is
 
-    An AI system includes not only the technology, but also the people who will use it, the people who will be affected by it, and the environment in which it is deployed.
-    Creating a system that is fit for its intended purpose requires an understanding of how the technology works, its capabilities and limitations, and how to achieve the best performance.
-    Microsoft has a broad effort to put our AI principles into practice.
+    furnished to do so, subject to the following conditions:
 
-    To find out more, see [Responsible AI principles from Microsoft](https://www.microsoft.com/en-us/ai/responsible-ai).
 
-    ### Limitations
+    The above copyright notice and this permission notice shall be included in all
 
-    Although Aurora was trained to accurately predict future weather, air pollution, and ocean waves,
-    Aurora is based on neural networks, which means that there are no strict guarantees that predictions will always be accurate.
-    Altering the inputs, providing a sample that was not in the training set,
-    or even providing a sample that was in the training set but is simply unlucky may result in arbitrarily poor predictions.
-    In addition, even though Aurora was trained on a wide variety of data sets,
-    it is possible that Aurora inherits biases present in any one of those data sets.
-    A forecasting system like Aurora is only one piece of the puzzle in a weather prediction pipeline,
-    and its outputs are not meant to be directly used by people or businesses to plan their operations.
-    A series of additional verification tests are needed before it can become operationally useful.
+    copies or substantial portions of the Software.
 
-    ### Data
 
-    The models included in the code have been trained on a variety of publicly available data.
-    A description of all data, including download links, can be found in [Supplementary C of the paper](https://arxiv.org/pdf/2405.13063).
-    The checkpoints include data from ERA5, CMCC, IFS-HR, HRES T0, GFS T0, and GFS forecasts.
+    THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 
-    ## Trademarks
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 
-    This project may contain trademarks or logos for projects, products, or services.
-    Authorized use of Microsoft trademarks or logos is subject to and must follow [Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
-    Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
-    Any use of third-party trademarks or logos are subject to those third-party's policies.
-  evaluation: |
-    All versions of Aurora were extensively evaluated by evaluating predictions on data not seen during training.
-    These evaluations not only compare measures of accuracy, such as the root mean square error and anomaly correlation coefficient,
-    but also look at the behaviour in extreme situations, like extreme heat and cold, and rare events, like Storm Ciarán in 2023.
-    These evaluations are the main topic of [the paper](https://arxiv.org/pdf/2405.13063).
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 
-    *Note: The documentation included here is for informational purposes only and is not intended to supersede the applicable license terms.*
-  disable-batch: "true"
-  SharedComputeCapacityEnabled: ""
-  inference_compute_allow_list:
-  - Standard_NC24ads_A100_v4
-  sku_to_num_replicas_map:
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+
+    SOFTWARE.'
+  notes: notes.md
+  outputModalities:
+  - data
+  summary: Aurora is a machine learning model that can predict general 
+    environmental variables.
+  featured: true
+  preview: true
+  skuToNumReplicasMap:
     Standard_NC24ads_A100_v4: 1
     Default: 1
-  displayName: "Aurora"
-  summary: "Aurora is a machine learning model that can predict general environmental
-    variables."
-  inputModalities: "data"
-  outputModalities: "data"
-  freePlayground: "false"
+  tasks:
+    inferenceTasks:
+    - environmental-forecasting
+  supportedComputes:
+    inferenceComputes:
+    - Standard_NC24ads_A100_v4
 version: 4
 description: |
   Aurora is a machine learning model that can predict general environmental variables, such as temperature and wind speed.

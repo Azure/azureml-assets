@@ -1,41 +1,46 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: openai-whisper-large-v3-turbo-cuda-gpu
-version: 3
-isArchived: true
 path: ./
+isArchived: true
 tags:
-  foundryLocal: ""
-  license: apache-2.0
-  licenseDescription: "This model is provided under the License Terms available at
-    https://www.apache.org/licenses/LICENSE-2.0.html."
-  author: Microsoft
-  inputModalities: audio
-  outputModalities: text
-  task: automatic-speech-recognition
-  maxOutputTokens: 2048
-  alias: whisper-large-v3-turbo
-  directoryPath: v3
-  promptTemplate: "{\"prompt\": \"<|startoftranscript|> <|en|> <|transcribe|> <|notimestamps|>\"\
-    }"
   contextLength: 448
-  capabilities: ""
-  supportsReasoning: ""
-  reasoningStart: ""
-  reasoningEnd: ""
-  minFLVersion: "0.0.0"
-  disable-maap: "true"
-type: custom_model
+  capabilities: ''
+  supportsReasoning: ''
+  reasoningStart: ''
+  reasoningEnd: ''
+  minFLVersion: 0.0.0
+  disable-maap: 'true'
+system_metadata:
+  alias: whisper-large-v3-turbo
+  publisher: Microsoft
+  directoryPath: v3
+  foundryLocal: ''
+  inputModalities:
+  - audio
+  license: apache-2.0
+  licenseDescription: This model is provided under the License Terms available 
+    at https://www.apache.org/licenses/LICENSE-2.0.html.
+  maxOutputTokens: 2048
+  outputModalities:
+  - text
+  promptTemplate: '{"prompt": "<|startoftranscript|> <|en|> <|transcribe|> <|notimestamps|>"}'
+  tasks:
+    inferenceTasks:
+    - automatic-speech-recognition
 variantInfo:
   parents:
   - assetId: 
       azureml://registries/azureml/models/openai-whisper-large-v3-turbo/versions/1
   variantMetadata:
-    modelType: 'ONNX'
-    quantization: ['RTN']
-    device: 'gpu'
-    executionProvider: 'CUDAExecutionProvider'
+    modelType: ONNX
+    quantization:
+    - RTN
+    device: gpu
+    executionProvider: CUDAExecutionProvider
     fileSizeBytes: 842333753
     vRamFootprintBytes: 842333753
+version: 3
+type: custom_model
 description: |
   Whisper Large V3 Turbo is an advanced speech recognition model, optimized for high-performance GPU inference. It is suitable for automatic speech recognition (ASR) tasks in various domains, leveraging large-scale training data for robust multilingual transcription. This model is an optimized version of whisper-large-v3-turbo designed for scenarios to enable local inference on CUDA GPUs.
 

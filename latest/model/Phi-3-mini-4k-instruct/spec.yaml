@@ -3,7 +3,7 @@ name: Phi-3-mini-4k-instruct
 path: ./
 isArchived: true
 properties:
-  SharedComputeCapacityEnabled: "True"
+  SharedComputeCapacityEnabled: 'True'
   languages: en
   inference-min-sku-spec: 6|1|112|64
   inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, 
@@ -14,168 +14,19 @@ properties:
   finetune-min-sku-spec: 24|1|220|64
   finetune-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, 
     Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
-system_metadata:
-  deploymentOptions:
-  - UnifiedEndpointMaaS
-  - MaaP
-  - ServerlessMaaS
-
 tags:
-  InferenceLegacyDate: '2025-06-09'
-  InferenceDeprecationDate: '2025-06-30'
-  InferenceRetirementDate: '2025-08-30'
-  FinetuneDeprecationDate: '2025-06-30'
-  FinetuneRetirementDate: '2025-08-30'
-  notes: |-
-    ## License
-
-    The model is licensed under the MIT license.
-
-    ## Intended Uses
-
-    **Primary use cases**
-
-    The model is intended for broad commercial and research use in English. The model provides uses for general purpose AI systems and applications which require:
-
-    1) Memory/compute constrained environments
-    2) Latency bound scenarios
-    3) Strong reasoning (especially code, math and logic)
-
-    Our model is designed to accelerate research on language and multimodal models, for use as a building block for generative AI powered features.
-
-    **Out-of-scope use cases**
-
-    Our models are not specifically designed or evaluated for all downstream purposes. Developers should consider common limitations of language models as they select use cases, and evaluate and mitigate for accuracy, safety, and fairness before using within a specific downstream use case, particularly for high-risk scenarios.  
-
-    Developers should be aware of and adhere to applicable laws or regulations (including privacy, trade compliance laws, etc.) that are relevant to their use case.  
-
-    **Nothing contained in this Model Card should be interpreted as or deemed a restriction or modification to the license the model is released under.**  
-
-    ## Trademarks
-
-    This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft trademarks or logos is subject to and must follow [Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks). Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship. Any use of third-party trademarks or logos are subject to those third-party's policies.
-
-    ## Responsible AI Considerations
-
-    Like other language models, the Phi series models can potentially behave in ways that are unfair, unreliable, or offensive. Some of the limiting behaviors to be aware of include:
-
-    + Quality of Service: the Phi models are trained primarily on English text. Languages other than English will experience worse performance. English language varieties with less representation in the training data might experience worse performance than standard American English.   
-    + Representation of Harms & Perpetuation of Stereotypes: These models can over- or under-represent groups of people, erase representation of some groups, or reinforce demeaning or negative stereotypes. Despite safety post-training, these limitations may still be present due to differing levels of representation of different groups or prevalence of examples of negative stereotypes in training data that reflect real-world patterns and societal biases. 
-    + Inappropriate or Offensive Content: these models may produce other types of inappropriate or offensive content, which may make it inappropriate to deploy for sensitive contexts without additional mitigations that are specific to the use case. 
-    + Information Reliability: Language models can generate nonsensical content or fabricate content that might sound reasonable but is inaccurate or outdated.  
-    + Limited Scope for Code: Majority of Phi-3 training data is based in Python and use common packages such as "typing, math, random, collections, datetime, itertools". If the model generates Python scripts that utilize other packages or scripts in other languages, we strongly recommend users manually verify all API uses.   
-
-    Developers should apply responsible AI best practices and are responsible for ensuring that a specific use case complies with relevant laws and regulations (e.g. privacy, trade, etc.). Important areas for consideration include:
-
-    + Allocation: Models may not be suitable for scenarios that could have consequential impact on legal status or the allocation of resources or life opportunities (ex: housing, employment, credit, etc.) without further assessments and additional debiasing techniques.
-    + High-Risk Scenarios: Developers should assess suitability of using models in high-risk scenarios where unfair, unreliable or offensive outputs might be extremely costly or lead to harm. This includes providing advice in sensitive or expert domains where accuracy and reliability are critical (ex: legal or health advice). Additional safeguards should be implemented at the application level according to the deployment context. 
-    + Misinformation: Models may produce inaccurate information. Developers should follow transparency best practices and inform end-users they are interacting with an AI system. At the application level, developers can build feedback mechanisms and pipelines to ground responses in use-case specific, contextual information, a technique known as Retrieval Augmented Generation (RAG).   
-    + Generation of Harmful Content: Developers should assess outputs for their context and use available safety classifiers or custom solutions appropriate for their use case. 
-    + Misuse: Other forms of misuse such as fraud, spam, or malware production may be possible, and developers should ensure that their applications do not violate applicable laws and regulations.
-
-    ## Content Filtering
-
-    Prompts and completions are passed through a default configuration of Azure AI Content Safety classification models to detect and prevent the output of harmful content. Learn more about [Azure AI Content Safety](https://learn.microsoft.com/en-us/azure/ai-services/content-safety/overview). Configuration options for content filtering vary when you deploy a model for production in Azure AI; [learn more](https://learn.microsoft.com/en-us/azure/ai-studio/how-to/model-catalog-overview).
-  evaluation: |-
-    We report the results under completion format for Phi-3-Mini-4K-Instruct on standard open-source benchmarks measuring the model's reasoning ability (both common sense reasoning and logical reasoning). We compare to Mistral-7b-v0.1, Mixtral-8x7b, Gemma 7B, Llama-3-8B-Instruct, and GPT3.5-Turbo-1106.
-
-    All the reported numbers are produced with the exact same pipeline to ensure that the numbers are comparable. These numbers might differ from other published numbers due to slightly different choices in the evaluation.
-
-    As is now standard, we use few-shot prompts to evaluate the models, at temperature 0. 
-    The prompts and number of shots are part of a Microsoft internal tool to evaluate language models, and in particular we did no optimization to the pipeline for Phi-3.
-    More specifically, we do not change prompts, pick different few-shot examples, change prompt format, or do any other form of optimization for the model.
-
-    The number of k–shot examples is listed per-benchmark. 
-
-    | Category | Benchmark | Phi-3-Mini-4K-Ins | Gemma-7B | Mistral-7b | Mixtral-8x7b | Llama-3-8B-Ins | GPT3.5-Turbo-1106 |
-    |:----------|:-----------|:-------------------|:----------|:------------|:--------------|:----------------|:-------------------|
-    | Popular aggregated benchmark | AGI Eval <br>5-shot| 39.0 | 42.1 | 35.1 | 45.2 | 42 | 48.4 |
-    | | MMLU <br>5-shot | 70.9 | 63.6 | 61.7 | 70.5 | 66.5 | 71.4 |
-    | | BigBench Hard CoT<br>3-shot| 73.5 | 59.6 | 57.3 | 69.7 | 51.5 | 68.3 |
-    | Language Understanding | ANLI <br>7-shot | 53.6 | 48.7 | 47.1 | 55.2 | 57.3 | 58.1 |
-    | | HellaSwag <br>5-shot| 75.3 | 49.8 | 58.5 | 70.4 | 71.1 | 78.8 |
-    | Reasoning | ARC Challenge <br>10-shot | 86.3 | 78.3 | 78.6 | 87.3 | 82.8 | 87.4 |
-    | | BoolQ <br>0-shot | 78.1 | 66 | 72.2 | 76.6 | 80.9 | 79.1 |
-    | | MedQA <br>2-shot| 56.5 | 49.6 | 50 | 62.2 | 60.5 | 63.4 |
-    | | OpenBookQA <br>10-shot| 82.2 | 78.6 | 79.8 | 85.8 | 82.6 | 86 |
-    | | PIQA <br>5-shot| 83.5 | 78.1 | 77.7 | 86 | 75.7 | 86.6 |
-    | | GPQA <br>0-shot| 30.6 | 2.9 | 15 | 6.9 | 32.4 | 30.8 |
-    | | Social IQA <br>5-shot| 77.6 | 65.5 | 74.6 | 75.9 | 73.9 | 68.3 |
-    | | TruthfulQA (MC2) <br>10-shot| 64.7 | 52.1 | 53 | 60.1 | 63.2 | 67.7 |
-    | | WinoGrande <br>5-shot| 71.6 | 55.6 | 54.2 | 62 | 65 | 68.8 |
-    | Factual Knowledge | TriviaQA <br>5-shot| 61.4 | 72.3 | 75.2 | 82.2 | 67.7 | 85.8 |
-    | Math | GSM8K CoT <br>8-shot| 85.7 | 59.8 | 46.4 | 64.7 | 77.4 | 78.1 |
-    | Code Generation | HumanEval <br>0-shot| 57.3 | 34.1 | 28.0 | 37.8 | 60.4 | 62.2 |
-    | | MBPP <br>3-shot| 69.8 | 51.5 | 50.8 | 60.2 | 67.7 | 77.8 |
-    | **Average** | | **67.6** | **56.0** | **56.4** | **64.4** | **65.5** | **70.4** |
-
-
-    We take a closer look at different categories across 100 public benchmark datasets at the table below: 
-
-    | Category | Phi-3-Mini-4K-Instruct | Gemma-7B | Mistral-7B | Mixtral 8x7B | Llama-3-8B-Instruct | GPT-3.5-Turbo |
-    |:----------|:------------------------|:----------|:------------|:--------------|:---------------------|:---------------|
-    | Popular aggregated benchmark | 61.1 | 59.4 | 56.5 | 66.2 | 59.9 | 67.0 |
-    | Reasoning | 70.8 | 60.3 | 62.8 | 68.1 | 69.6 | 71.8 |
-    | Language understanding | 60.5 | 57.6 | 52.5 | 66.1 | 63.2 | 67.7 |
-    | Code generation | 60.7 | 45.6 | 42.9 | 52.7 | 56.4 | 70.4 |
-    | Math | 50.6 | 35.8 | 25.4 | 40.3 | 41.1 | 52.8 |
-    | Factual knowledge | 38.4 | 46.7 | 49.8 | 58.6 | 43.1 | 63.4 |
-    | Multilingual | 56.7 | 66.5 | 57.4 | 66.7 | 66.6 | 71.0 |
-    | Robustness | 61.1 | 38.4 | 40.6 | 51.0 | 64.5 | 69.3 |
-
-
-    Overall, the model with only 3.8B-param achieves a similar level of language understanding and reasoning ability as much larger models. However, it is still fundamentally limited by its size for certain tasks. The model simply does not have the capacity to store too much world knowledge, which can be seen for example with low performance on TriviaQA. However, we believe such weakness can be resolved by augmenting Phi-3-Mini with a search engine.   
-  freePlayground: "true"
-  displayName: "Phi-3-mini instruct (4k)"
-  summary: "Tiniest member of the Phi-3 family. Optimized for both quality and low
-    latency."
-  textContextWindow: 4096
-  maxOutputTokens: 4096
-  languages: "en"
-  inputModalities: "text"
-  outputModalities: "text"
-  trainingDataDate: "October 2023"
-  keywords: "Reasoning,Understanding,Low latency"
-  licenseDescription: "Microsoft.\nCopyright (c) Microsoft Corporation.\n\nMIT License\n\
-    \nPermission is hereby granted, free of charge, to any person obtaining a copy\n\
-    of this software and associated documentation files (the \"Software\"), to deal\n\
-    in the Software without restriction, including without limitation the rights\n\
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies
-    of the Software, and to permit persons to whom the Software is\nfurnished to do
-    so, subject to the following conditions:\n\nThe above copyright notice and this
-    permission notice shall be included in all\ncopies or substantial portions of
-    the Software.\n\nTHE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND,
-    EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n\
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n\
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY,
-    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR
-    IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
-  playgroundRateLimitTier: "low"
-  Featured: ""
-  maas-inference: "true"
-  SharedComputeCapacityEnabled: ''
-  license: MIT
-  disable-batch: "true"
-  task: chat-completion
-  author: Microsoft
-  hiddenlayerscanned: ""
-  _aml_system_vanity_registry: "azureml-phi"
-  inference_compute_allow_list: [Standard_NC6s_v3, Standard_NC12s_v3, 
-      Standard_NC24s_v3, Standard_ND40rs_v2, Standard_NC24ads_A100_v4, 
-      Standard_NC48ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, 
-      Standard_NC96ads_A100_v4]
-  finetune_compute_allow_list: [Standard_NC24ads_A100_v4, 
-      Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, 
-      Standard_ND96amsr_A100_v4]
+  maas-inference: 'true'
+  disable-batch: 'true'
+  _aml_system_vanity_registry: azureml-phi
   inference_supported_envs:
   - vllm
   model_specific_defaults:
-    apply_deepspeed: "true"
+    apply_deepspeed: 'true'
     deepspeed_stage: 2
-    apply_lora: "true"
-    apply_ort: "false"
+    apply_lora: 'true'
+    apply_ort: 'false'
     precision: 16
-    ignore_mismatched_sizes: "false"
+    ignore_mismatched_sizes: 'false'
     num_train_epochs: 1
     per_device_train_batch_size: 1
     per_device_eval_batch_size: 1
@@ -183,11 +34,127 @@ tags:
     learning_rate: 5e-6
     learning_rate_min: 5e-7
     learning_rate_max: 5e-5
-    lr_scheduler_type: "cosine"
-    logging_strategy: "steps"
+    lr_scheduler_type: cosine
+    logging_strategy: steps
     logging_steps: 10
     save_total_limit: 1
-  benchmark: "quality"
+system_metadata:
+  deploymentOptions:
+  - UnifiedEndpointMaaS
+  - MaaP
+  - ServerlessMaaS
+  languages:
+  - en
+  sharedComputeCapacityEnabled: true
+  tasks:
+    fineTuningTasks:
+    - chat-completion
+    inferenceTasks:
+    - chat-completion
+  SKU:
+    inferenceRecommendedSkus:
+    - Standard_NC6s_v3
+    - Standard_NC12s_v3
+    - Standard_NC24s_v3
+    - Standard_ND40rs_v2
+    - Standard_NC24ads_A100_v4
+    - Standard_NC48ads_A100_v4
+    - Standard_NC96ads_A100_v4
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
+    finetuneRecommendedSkus:
+    - Standard_NC24ads_A100_v4
+    - Standard_NC48ads_A100_v4
+    - Standard_NC96ads_A100_v4
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
+    inferenceMinSkuSpec: 6|1|112|64
+    finetuneMinSkuSpec: 24|1|220|64
+  publisher: Microsoft
+  benchmark: quality
+  displayName: Phi-3-mini instruct (4k)
+  evaluation: evaluation.md
+  freePlayground: true
+  hiddenLayerScanned: true
+  inputModalities:
+  - text
+  keywords:
+  - Reasoning
+  - Understanding
+  - Low latency
+  license: MIT
+  licenseDescription: 'Microsoft.
+
+    Copyright (c) Microsoft Corporation.
+
+
+    MIT License
+
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+
+    of this software and associated documentation files (the "Software"), to deal
+
+    in the Software without restriction, including without limitation the rights
+
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+
+    copies of the Software, and to permit persons to whom the Software is
+
+    furnished to do so, subject to the following conditions:
+
+
+    The above copyright notice and this permission notice shall be included in all
+
+    copies or substantial portions of the Software.
+
+
+    THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+
+    SOFTWARE.'
+  maxOutputTokens: 4096
+  notes: notes.md
+  outputModalities:
+  - text
+  playgroundRateLimitTier: low
+  summary: Tiniest member of the Phi-3 family. Optimized for both quality and 
+    low latency.
+  textContextWindow: 4096
+  trainingDataDate: October 2023
+  featured: true
+  supportedComputes:
+    inferenceComputes:
+    - Standard_NC6s_v3
+    - Standard_NC12s_v3
+    - Standard_NC24s_v3
+    - Standard_ND40rs_v2
+    - Standard_NC24ads_A100_v4
+    - Standard_NC48ads_A100_v4
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
+    - Standard_NC96ads_A100_v4
+    finetuneComputes:
+    - Standard_NC24ads_A100_v4
+    - Standard_NC48ads_A100_v4
+    - Standard_NC96ads_A100_v4
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
+  deprecation:
+    finetuneDeprecationDate: '2025-06-30T00:00:00.000000Z'
+    finetuneRetirementDate: '2025-08-30T00:00:00.000000Z'
+    inferenceDeprecationDate: '2025-06-30T00:00:00.000000Z'
+    inferenceLegacyDate: '2025-06-09T00:00:00.000000Z'
+    inferenceRetirementDate: '2025-08-30T00:00:00.000000Z'
 version: 15
 description: |-
   The Phi-3-Mini-4K-Instruct is a 3.8B parameters, lightweight, state-of-the-art open model trained with the Phi-3 datasets that includes both synthetic data and the filtered publicly available websites data with a focus on high-quality and reasoning dense properties.

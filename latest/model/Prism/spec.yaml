@@ -1,8 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-
 name: Prism
 path: ./
-
 properties:
   inference-min-sku-spec: 6|1|112|64
   inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, 
@@ -10,30 +8,55 @@ properties:
     Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, 
     Standard_ND40rs_v2
   languages: en
-  SharedComputeCapacityEnabled: "True"
+  SharedComputeCapacityEnabled: 'True'
 tags:
-  task: zero-shot-image-classification
-  industry: health-and-life-sciences
-  Preview: ""
   inference_supported_envs:
   - hf
+system_metadata:
+  languages:
+  - en
+  sharedComputeCapacityEnabled: true
+  SKU:
+    inferenceRecommendedSkus:
+    - Standard_NC6s_v3
+    - Standard_NC12s_v3
+    - Standard_NC24s_v3
+    - Standard_NC24ads_A100_v4
+    - Standard_NC48ads_A100_v4
+    - Standard_NC96ads_A100_v4
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
+    - Standard_ND40rs_v2
+    inferenceMinSkuSpec: 6|1|112|64
+  publisher: Paige
+  hiddenLayerScanned: true
+  industry: health-and-life-sciences
   license: custom
-  licenseDescription: "**PAIGE.AI, INC. EMBEDDING SERVICES TERMS OF USE** **Updated
-    as of November 11, 2025**\nThese terms of use (the “***Terms of Use***”) are between
-    Paige.AI, Inc. and its affiliates (collectively, “***Paige***”, “***us***”, “***we***”,
-    or “***our***”) and you and/or the entity or organization you represent.\nBy accessing
-    or using the Embeddings Service (defined below), you agree to be legally bound
-    by these Terms of Use. If you do not accept these Terms of Use, do not use the
-    Embeddings Service.\nYou are representing that you are lawfully able to enter
-    into contracts (e.g., you are not a minor) and have the capacity and authority
-    to enter into these Terms of Use. If you are entering into these Terms of Use
-    for an entity, such as the company you work for, you represent that you have authority
-    to bind that entity. You agree that “***you***”, “***your***” or “***user***”
-    as used in these Terms of Use includes you, personally, and, if applicable, any
-    entity you represent.\nWe reserve the right to change these Terms of Use from
-    time to time for any reason, which shall be affected by posting the updated Terms
-    of Use here. Your continued use of the Embeddings Services after any changes are
-    posted constitutes your acceptance of the new Terms of Use.\n**Arbitration**\n\
+  licenseDescription: '**PAIGE.AI, INC. EMBEDDING SERVICES TERMS OF USE** **Updated
+    as of November 11, 2025**
+
+    These terms of use (the “***Terms of Use***”) are between Paige.AI, Inc. and its
+    affiliates (collectively, “***Paige***”, “***us***”, “***we***”, or “***our***”)
+    and you and/or the entity or organization you represent.
+
+    By accessing or using the Embeddings Service (defined below), you agree to be
+    legally bound by these Terms of Use. If you do not accept these Terms of Use,
+    do not use the Embeddings Service.
+
+    You are representing that you are lawfully able to enter into contracts (e.g.,
+    you are not a minor) and have the capacity and authority to enter into these Terms
+    of Use. If you are entering into these Terms of Use for an entity, such as the
+    company you work for, you represent that you have authority to bind that entity.
+    You agree that “***you***”, “***your***” or “***user***” as used in these Terms
+    of Use includes you, personally, and, if applicable, any entity you represent.
+
+    We reserve the right to change these Terms of Use from time to time for any reason,
+    which shall be affected by posting the updated Terms of Use here. Your continued
+    use of the Embeddings Services after any changes are posted constitutes your acceptance
+    of the new Terms of Use.
+
+    **Arbitration**
+
     THESE TERMS OF USE CONTAIN A MANDATORY INDIVIDUAL ARBITRATION AND CLASS ACTION/JURY
     TRIAL WAIVER PROVISION THAT REQUIRES THE USE OF ARBITRATION ON AN INDIVIDUAL BASIS
     TO RESOLVE DISPUTES, RATHER THAN JURY TRIALS OR CLASS ACTIONS. You agree to resolve
@@ -42,159 +65,163 @@ tags:
     you seek more than $75,000 in damages, the payment of attorneys’ fees will be
     governed by the AAA Rules (as defined below). Any arbitration under these Terms
     of Use will take place on an individual basis; class arbitrations and class actions
-    are not permitted.\n# 1. Description. Paige provides an embeddings service where
-    Paige processes whole slide images you submit to Paige (“the “Input Data”) through
-    its Virchow2, Virchow2G, Virchow2G-mini and PRISM computer vision models (the
-    “Models”) to generate representations of the semantic meaning and relationships
-    of the Input Data in a high-dimensional vector space (the “Embeddings”), (the
-    “Embeddings Service”). The Embeddings Service is hosted on the Microsoft Azure
-    Managed Compute to enable you to access and use the Embeddings Service on the
-    web via the Microsoft Azure Managed Compute. # 2. License Grants. ## 2.1. Embeddings
-    Service. During the Term (defined herein), Paige grants you a personal, non-exclusive,
-    non-transferable, non-sublicensable right to access and use the Embedding Service
-    for the Intended Use (defined herein), subject to these Terms of Use. ## 2.2.
-    Input Data License. You hereby grant to Paige a perpetual, royalty-free, fully
-    paid-up, worldwide right and license to access, use, copy, reproduce, display,
-    alter and otherwise modify the Input Data to provide the Embeddings Service, and
-    to exercise its rights under these Terms of Use. # 3. Intended Use ## 3.1. You
-    may use the Embeddings Service and the Embeddings for your own lawful internal
-    business use, including any downstream use or application of the Embeddings, whether
-    for research or commercial purposes, and any downstream use or application thereof;
-    provided that, any such use is in a manner in compliance with these Terms of Use
-    and any materials or documents provided by Paige (“Intended Use”). ## 3.2. You
-    are solely responsible for your use of the Embeddings Service, the resulting Embeddings,
-    as well as any downstream use or application thereof, and that any such use is
-    consistent with the Intended Use, any documentation, limitations and restrictions
-    on use described herein. The Embeddings Service, and thus any resulting Embeddings
-    and any downstream use or application thereof, are not made available for use
-    as a medical device, clinical support tool, diagnostic tool, or any other technology
-    intended to be used in the diagnosis, cure, mitigation, treatment, or prevention
-    of disease or other conditions, including for Investigational Use Only (“IUO”),
-    Research Use Only (“RUO”), in commercial, clinical or other similar settings,
-    accordingly, any such use by you is at your own risk. ## 3.3. The Embeddings Service,
-    the Embeddings and any downstream use or application thereof, are not designed
-    or intended to be implemented or deployed as a substitute for professional medical
-    advice or healthcare opinion, diagnosis, treatment, or the clinical judgment of
-    a healthcare professional, and should not be used as such. ## 3.4. As is the case
-    with all complex software, the Embeddings Service and Embeddings are likely to
-    contain some errors. You must test for errors in the Embeddings Service and the
-    Embeddings. You are solely responsible for all testing and quality assurance of
-    the Embeddings Service and/or the Embeddings as they relate to your downstream
-    use or application thereof. # 4. Restrictions and Limitations. ## 4.1. Reverse
-    Engineering. You shall not, directly or indirectly, and you shall not permit any
-    third party, to reverse engineer, decompile, disassemble or otherwise attempt
-    to discover or reconstruct the object code, source code, or the underlying ideas,
-    algorithms or weights of the Models. Furthermore, the Embeddings may not be used
-    (i) to benchmark, train, fine-tune, or otherwise modify or improve any foundation
-    model; (ii) in machine learning analytics or to reverse engineer the Models in
-    any manner, including, but not limited to replicating the Models or using the
-    Embeddings to recreate data and/or images used to develop the Models. ## 4.2.
-    In addition, you may not, directly, or indirectly: ### 4.2.1. remove, alter, or
-    obscure any regulatory, copyright or proprietary notices contained in or required
-    to be displayed with the Embeddings Service; ### 4.2.2. interfere with or disrupt
-    the integrity or performance of the Embeddings Service; ### 4.2.3. send excessive
-    requests to or otherwise overload the servers that host or support the Embeddings
-    Service; ### 4.2.4. access, or attempt to access, any portions of Paige’s systems
-    as they relate to the Embeddings Service, or any data or systems accessible therefrom
-    that are intended for use by Paige or its internal personnel only; ### 4.2.5.
-    copy, reproduce, modify, make derivative works of, or excerpt any portion of the
-    Embeddings Service, other than the Embeddings themselves; ### 4.2.6. rent, lend,
-    sublicense, lease, distribute, sell, resell, assign, or otherwise transfer access
-    to the Embeddings Service, the Models or any Model weights or use the Embeddings
-    Service to provide services to any third-party for any purpose, except as otherwise
-    permitted herein; ### 4.2.7. use the Embeddings Service or Embeddings to infringe,
-    misappropriate or otherwise violate any intellectual property rights of Paige
-    or any third party; ### 4.2.8. use the Embeddings Service or the Embeddings in
-    a manner that is unethical, immoral, violates any applicable law, or causes bodily
-    injury; ### 4.2.9. introduce any malware into Paige’s systems or Embeddings Service
-    or use the Embeddings Service or Embeddings to create malware; ### 4.2.10. conduct
-    probes, scans, vulnerability, penetration, or other security testing of the Embeddings
-    Service or Embeddings; ### 4.2.11. use the Embeddings Service or the Embeddings
-    other than as expressly permitted under these Terms of Use; or ### 4.2.12. attempt
-    to gain unauthorized access to Paige’s systems.\nIn the event you violate any
-    of the terms set forth in this Section, in addition to any other remedies available
-    at law or in equity, Paige will have the right, in its discretion, to immediately
-    suspend your use and access to the Embeddings Service.\n# 5. Regional Use. You
-    may not use the Embeddings Service if you are a resident of a country embargoed
-    by the United States, or are a foreign person or entity blocked or denied by the
-    United States government. Paige makes no representations that the Embeddings Service
-    is appropriate or available for use in your region, you are entirely responsible
-    for compliance with all applicable local laws and regulations, including but not
-    limited to export and import regulations. # 6. Reservation of Rights; Ownership;
-    Feedback. ## 6.1. Paige Reservation of Rights and Ownership. You acknowledge that
-    in providing the Embeddings Services, Paige uses (i) the Paige name, the Paige
-    logo, the Paige domain name, the Foundation Model, other products and services
-    associated with the Embeddings Service, and other trademarks and service marks;
-    (ii) certain audio and visual information and images, documents, software and
-    other works of authorship; (iii) the Models, other technology, software, hardware,
-    products, processes, algorithms, user interfaces, know-how and other trade secrets,
-    techniques, designs, inventions, other tangible or intangible technical material
-    or information; and (iv) all improvements, enhancements, bug fixes, upgrades,
-    modifications, and derivative works of the Embeddings Service and of (i)-(iii),
-    ((i)-(iv) collectively, “Paige Technology”). Other than the rights expressly granted
-    to you under these Terms of Use, Paige retains all right, title, and interest
-    in and to the Paige Technology, including all worldwide patent rights, trademark
-    rights, copyrights, trade secrets and any other intellectual property rights,
-    including without limitation all enhancements, improvements, bug fixes, upgrades,
-    modifications, and derivative works thereof (collectively, “Paige IP Rights”).
-    Other than as expressly set forth in this Agreement, Paige does not grant or otherwise
-    convey any license or other right in or to the Paige Technology or Paige IP Rights
-    to you. Paige expressly reserves all rights to Paige Technology not expressly
-    granted under this Agreement. There are no implied licenses under this Agreement.
-    ## 6.2. Input Data Ownership. Other than the rights you expressly granted to Paige
-    under these Terms of Use, you retain all right, title, and interest in and to
-    the Input Data. ## 6.3. Embeddings Ownership. Embeddings generated through the
-    Embeddings Service shall be owned by you. You shall have the right to use the
-    Embeddings at your discretion subject to the Intended Use and the restrictions
-    hereunder. ## 6.4. Feedback. To the extent you provide any suggestions, ideas,
-    techniques, corrections, enhancement requests, recommendations, know-how, and
-    other feedback to Paige in connection with the Embeddings Services (“Feedback”),
-    Paige Technology and any services provided by Paige under these Terms of Use,
-    you shall, and hereby do, grant to Paige a worldwide, perpetual, irrevocable,
-    royalty-free, transferable, sublicensable, fully-paid up license and right to
-    use and exploit the Feedback for any purpose. # 7. Confidentiality. ## 7.1. As
-    used in these Terms of Use, “Confidential Information” means any information that
-    is proprietary or confidential to the Discloser (as defined below) or that the
-    Discloser is obligated to keep confidential (e.g., pursuant to a contractual or
-    other obligation owing to a third party). In the case of Paige, Confidential Information
-    includes, but is not limited to API details, performance metrics, documentation
-    and other materials provided to you by Paige. Confidential Information may be
-    of a technical, business or other nature. However, Confidential Information does
-    not include any information that: (i) was known to the Recipient (as defined below)
-    prior to receiving the same from the Discloser in connection with this Agreement;
-    (ii) is independently developed by the Recipient; (iii) is acquired by the Recipient
-    from another source without restriction as to use or disclosure; or (iv) is or
-    becomes part of the public domain through no fault or action of the Recipient.
-    ## 7.2. Each party reserves any and all right, title and interest (including any
-    intellectual property rights) that it may have in or to any Confidential Information
-    that it may disclose to the other party under this Agreement. The party that receives
-    any Confidential Information (the “Recipient”) of the other party (the “Discloser”)
-    will protect Confidential Information of the Discloser against any unauthorized
-    use or disclosure to the same extent that the Recipient protects its own Confidential
-    Information of a similar nature against unauthorized use or disclosure, but in
-    no event will use less than a reasonable standard of care to protect such Confidential
-    Information; provided that the Confidential Information of the Discloser is conspicuously
-    marked or otherwise identified as confidential or proprietary upon receipt by
-    the Recipient or the Recipient otherwise knows or has reason to know that the
-    same is Confidential Information of the Discloser. The Recipient will use any
-    Confidential Information of the Discloser solely for which it is provided by the
-    Discloser under these Terms of Use. This Section will not be interpreted or construed
-    to prohibit: (i) any use or disclosure which is necessary or appropriate in connection
-    with the Recipient’s performance of its obligations or exercise of its rights
-    under these Terms of Use or any other agreement between the parties; (ii) any
-    use or disclosure required by applicable law, provided that the Recipient uses
-    reasonable efforts to give the Discloser reasonable advance notice thereof to
-    afford the Discloser an opportunity to intervene and seek an order or other appropriate
-    relief for the protection of its Confidential Information; or (iii) any use or
-    disclosure made with the consent of the Discloser. In the event of any breach
-    or threatened breach by the Recipient of its obligations under this Section, the
-    Discloser will be entitled to injunctive and other equitable relief to enforce
-    such obligations. The obligations of confidentiality shall survive expiration
-    or termination of these Terms of Use. # 8. Input Data Responsibilities. ## 8.1.
-    You, not Paige, shall be solely responsible for the accuracy, quality, integrity,
-    legality, reliability, appropriateness of, and your right to use the Input Data
-    under these Terms of Use. You represent and warrant that you have obtained any
-    consents, authorizations, and/or any other rights necessary to transfer, collect,
+    are not permitted.
+
+    # 1. Description. Paige provides an embeddings service where Paige processes whole
+    slide images you submit to Paige (“the “Input Data”) through its Virchow2, Virchow2G,
+    Virchow2G-mini and PRISM computer vision models (the “Models”) to generate representations
+    of the semantic meaning and relationships of the Input Data in a high-dimensional
+    vector space (the “Embeddings”), (the “Embeddings Service”). The Embeddings Service
+    is hosted on the Microsoft Azure Managed Compute to enable you to access and use
+    the Embeddings Service on the web via the Microsoft Azure Managed Compute. # 2.
+    License Grants. ## 2.1. Embeddings Service. During the Term (defined herein),
+    Paige grants you a personal, non-exclusive, non-transferable, non-sublicensable
+    right to access and use the Embedding Service for the Intended Use (defined herein),
+    subject to these Terms of Use. ## 2.2. Input Data License. You hereby grant to
+    Paige a perpetual, royalty-free, fully paid-up, worldwide right and license to
+    access, use, copy, reproduce, display, alter and otherwise modify the Input Data
+    to provide the Embeddings Service, and to exercise its rights under these Terms
+    of Use. # 3. Intended Use ## 3.1. You may use the Embeddings Service and the Embeddings
+    for your own lawful internal business use, including any downstream use or application
+    of the Embeddings, whether for research or commercial purposes, and any downstream
+    use or application thereof; provided that, any such use is in a manner in compliance
+    with these Terms of Use and any materials or documents provided by Paige (“Intended
+    Use”). ## 3.2. You are solely responsible for your use of the Embeddings Service,
+    the resulting Embeddings, as well as any downstream use or application thereof,
+    and that any such use is consistent with the Intended Use, any documentation,
+    limitations and restrictions on use described herein. The Embeddings Service,
+    and thus any resulting Embeddings and any downstream use or application thereof,
+    are not made available for use as a medical device, clinical support tool, diagnostic
+    tool, or any other technology intended to be used in the diagnosis, cure, mitigation,
+    treatment, or prevention of disease or other conditions, including for Investigational
+    Use Only (“IUO”), Research Use Only (“RUO”), in commercial, clinical or other
+    similar settings, accordingly, any such use by you is at your own risk. ## 3.3.
+    The Embeddings Service, the Embeddings and any downstream use or application thereof,
+    are not designed or intended to be implemented or deployed as a substitute for
+    professional medical advice or healthcare opinion, diagnosis, treatment, or the
+    clinical judgment of a healthcare professional, and should not be used as such.
+    ## 3.4. As is the case with all complex software, the Embeddings Service and Embeddings
+    are likely to contain some errors. You must test for errors in the Embeddings
+    Service and the Embeddings. You are solely responsible for all testing and quality
+    assurance of the Embeddings Service and/or the Embeddings as they relate to your
+    downstream use or application thereof. # 4. Restrictions and Limitations. ## 4.1.
+    Reverse Engineering. You shall not, directly or indirectly, and you shall not
+    permit any third party, to reverse engineer, decompile, disassemble or otherwise
+    attempt to discover or reconstruct the object code, source code, or the underlying
+    ideas, algorithms or weights of the Models. Furthermore, the Embeddings may not
+    be used (i) to benchmark, train, fine-tune, or otherwise modify or improve any
+    foundation model; (ii) in machine learning analytics or to reverse engineer the
+    Models in any manner, including, but not limited to replicating the Models or
+    using the Embeddings to recreate data and/or images used to develop the Models.
+    ## 4.2. In addition, you may not, directly, or indirectly: ### 4.2.1. remove,
+    alter, or obscure any regulatory, copyright or proprietary notices contained in
+    or required to be displayed with the Embeddings Service; ### 4.2.2. interfere
+    with or disrupt the integrity or performance of the Embeddings Service; ### 4.2.3.
+    send excessive requests to or otherwise overload the servers that host or support
+    the Embeddings Service; ### 4.2.4. access, or attempt to access, any portions
+    of Paige’s systems as they relate to the Embeddings Service, or any data or systems
+    accessible therefrom that are intended for use by Paige or its internal personnel
+    only; ### 4.2.5. copy, reproduce, modify, make derivative works of, or excerpt
+    any portion of the Embeddings Service, other than the Embeddings themselves; ###
+    4.2.6. rent, lend, sublicense, lease, distribute, sell, resell, assign, or otherwise
+    transfer access to the Embeddings Service, the Models or any Model weights or
+    use the Embeddings Service to provide services to any third-party for any purpose,
+    except as otherwise permitted herein; ### 4.2.7. use the Embeddings Service or
+    Embeddings to infringe, misappropriate or otherwise violate any intellectual property
+    rights of Paige or any third party; ### 4.2.8. use the Embeddings Service or the
+    Embeddings in a manner that is unethical, immoral, violates any applicable law,
+    or causes bodily injury; ### 4.2.9. introduce any malware into Paige’s systems
+    or Embeddings Service or use the Embeddings Service or Embeddings to create malware;
+    ### 4.2.10. conduct probes, scans, vulnerability, penetration, or other security
+    testing of the Embeddings Service or Embeddings; ### 4.2.11. use the Embeddings
+    Service or the Embeddings other than as expressly permitted under these Terms
+    of Use; or ### 4.2.12. attempt to gain unauthorized access to Paige’s systems.
+
+    In the event you violate any of the terms set forth in this Section, in addition
+    to any other remedies available at law or in equity, Paige will have the right,
+    in its discretion, to immediately suspend your use and access to the Embeddings
+    Service.
+
+    # 5. Regional Use. You may not use the Embeddings Service if you are a resident
+    of a country embargoed by the United States, or are a foreign person or entity
+    blocked or denied by the United States government. Paige makes no representations
+    that the Embeddings Service is appropriate or available for use in your region,
+    you are entirely responsible for compliance with all applicable local laws and
+    regulations, including but not limited to export and import regulations. # 6.
+    Reservation of Rights; Ownership; Feedback. ## 6.1. Paige Reservation of Rights
+    and Ownership. You acknowledge that in providing the Embeddings Services, Paige
+    uses (i) the Paige name, the Paige logo, the Paige domain name, the Foundation
+    Model, other products and services associated with the Embeddings Service, and
+    other trademarks and service marks; (ii) certain audio and visual information
+    and images, documents, software and other works of authorship; (iii) the Models,
+    other technology, software, hardware, products, processes, algorithms, user interfaces,
+    know-how and other trade secrets, techniques, designs, inventions, other tangible
+    or intangible technical material or information; and (iv) all improvements, enhancements,
+    bug fixes, upgrades, modifications, and derivative works of the Embeddings Service
+    and of (i)-(iii), ((i)-(iv) collectively, “Paige Technology”). Other than the
+    rights expressly granted to you under these Terms of Use, Paige retains all right,
+    title, and interest in and to the Paige Technology, including all worldwide patent
+    rights, trademark rights, copyrights, trade secrets and any other intellectual
+    property rights, including without limitation all enhancements, improvements,
+    bug fixes, upgrades, modifications, and derivative works thereof (collectively,
+    “Paige IP Rights”). Other than as expressly set forth in this Agreement, Paige
+    does not grant or otherwise convey any license or other right in or to the Paige
+    Technology or Paige IP Rights to you. Paige expressly reserves all rights to Paige
+    Technology not expressly granted under this Agreement. There are no implied licenses
+    under this Agreement. ## 6.2. Input Data Ownership. Other than the rights you
+    expressly granted to Paige under these Terms of Use, you retain all right, title,
+    and interest in and to the Input Data. ## 6.3. Embeddings Ownership. Embeddings
+    generated through the Embeddings Service shall be owned by you. You shall have
+    the right to use the Embeddings at your discretion subject to the Intended Use
+    and the restrictions hereunder. ## 6.4. Feedback. To the extent you provide any
+    suggestions, ideas, techniques, corrections, enhancement requests, recommendations,
+    know-how, and other feedback to Paige in connection with the Embeddings Services
+    (“Feedback”), Paige Technology and any services provided by Paige under these
+    Terms of Use, you shall, and hereby do, grant to Paige a worldwide, perpetual,
+    irrevocable, royalty-free, transferable, sublicensable, fully-paid up license
+    and right to use and exploit the Feedback for any purpose. # 7. Confidentiality.
+    ## 7.1. As used in these Terms of Use, “Confidential Information” means any information
+    that is proprietary or confidential to the Discloser (as defined below) or that
+    the Discloser is obligated to keep confidential (e.g., pursuant to a contractual
+    or other obligation owing to a third party). In the case of Paige, Confidential
+    Information includes, but is not limited to API details, performance metrics,
+    documentation and other materials provided to you by Paige. Confidential Information
+    may be of a technical, business or other nature. However, Confidential Information
+    does not include any information that: (i) was known to the Recipient (as defined
+    below) prior to receiving the same from the Discloser in connection with this
+    Agreement; (ii) is independently developed by the Recipient; (iii) is acquired
+    by the Recipient from another source without restriction as to use or disclosure;
+    or (iv) is or becomes part of the public domain through no fault or action of
+    the Recipient. ## 7.2. Each party reserves any and all right, title and interest
+    (including any intellectual property rights) that it may have in or to any Confidential
+    Information that it may disclose to the other party under this Agreement. The
+    party that receives any Confidential Information (the “Recipient”) of the other
+    party (the “Discloser”) will protect Confidential Information of the Discloser
+    against any unauthorized use or disclosure to the same extent that the Recipient
+    protects its own Confidential Information of a similar nature against unauthorized
+    use or disclosure, but in no event will use less than a reasonable standard of
+    care to protect such Confidential Information; provided that the Confidential
+    Information of the Discloser is conspicuously marked or otherwise identified as
+    confidential or proprietary upon receipt by the Recipient or the Recipient otherwise
+    knows or has reason to know that the same is Confidential Information of the Discloser.
+    The Recipient will use any Confidential Information of the Discloser solely for
+    which it is provided by the Discloser under these Terms of Use. This Section will
+    not be interpreted or construed to prohibit: (i) any use or disclosure which is
+    necessary or appropriate in connection with the Recipient’s performance of its
+    obligations or exercise of its rights under these Terms of Use or any other agreement
+    between the parties; (ii) any use or disclosure required by applicable law, provided
+    that the Recipient uses reasonable efforts to give the Discloser reasonable advance
+    notice thereof to afford the Discloser an opportunity to intervene and seek an
+    order or other appropriate relief for the protection of its Confidential Information;
+    or (iii) any use or disclosure made with the consent of the Discloser. In the
+    event of any breach or threatened breach by the Recipient of its obligations under
+    this Section, the Discloser will be entitled to injunctive and other equitable
+    relief to enforce such obligations. The obligations of confidentiality shall survive
+    expiration or termination of these Terms of Use. # 8. Input Data Responsibilities.
+    ## 8.1. You, not Paige, shall be solely responsible for the accuracy, quality,
+    integrity, legality, reliability, appropriateness of, and your right to use the
+    Input Data under these Terms of Use. You represent and warrant that you have obtained
+    any consents, authorizations, and/or any other rights necessary to transfer, collect,
     submit, use and process Input Data through the Models in connection with the Embeddings
     Service, and to use and display elements or derivatives of such Input Data in
     the Embeddings. # 9. Term & Termination. ## 9.1. Term. The term of these Terms
@@ -362,15 +389,24 @@ tags:
     by events beyond its reasonable control. These Terms of Use together with any
     Microsoft agreement or any Paige addenda shall constitute the entire agreement
     regarding the Embedding Service. If you have any questions about these Terms of
-    Use, please contact info@paige.ai\n**If you have any questions about these Terms
-    of Use, please contact info@paige.ai**"
-  author: Paige
-  hiddenlayerscanned: ""
-  SharedComputeCapacityEnabled: ""
-  inference_compute_allow_list: [Standard_NC6s_v3, Standard_NC12s_v3, 
-      Standard_NC24s_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, 
-      Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, 
-      Standard_ND40rs_v2]
+    Use, please contact info@paige.ai
+
+    **If you have any questions about these Terms of Use, please contact info@paige.ai**'
+  preview: true
+  tasks:
+    inferenceTasks:
+    - zero-shot-image-classification
+  supportedComputes:
+    inferenceComputes:
+    - Standard_NC6s_v3
+    - Standard_NC12s_v3
+    - Standard_NC24s_v3
+    - Standard_NC24ads_A100_v4
+    - Standard_NC48ads_A100_v4
+    - Standard_NC96ads_A100_v4
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
+    - Standard_ND40rs_v2
 version: 2
 description: |
   PRISM is a multi-modal generative foundation model for slide-level analysis of H&E-stained histopathology images. Utilizing Virchow tile embeddings and clinical report texts for pre-training, PRISM combines these embeddings into a single slide embedding and generates a text-based diagnostic report. These can be used for tasks such as cancer detection, sub-typing, and biomarker identification. The model's slide encoder can be fine-tuned for specific classification tasks, leveraging both image and text data to enhance diagnostic performance and robustness.

@@ -2,23 +2,33 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: snowflake-arctic-instruct
 path: ./
 properties:
-  SharedComputeCapacityEnabled: "True"
+  SharedComputeCapacityEnabled: 'True'
   inference-min-sku-spec: 96|8|1900|1024
   inference-recommended-sku: Standard_ND96isr_H100_v5
 tags:
-  huggingface_model_id: Snowflake/snowflake-arctic-instruct
-  license: apache-2.0
-  disable-batch: "true"
-  task: chat-completion
-  SharedComputeCapacityEnabled: ""
-  author: Snowflake
-  InferenceLegacyDate: '2026-03-16'
-  InferenceDeprecationDate: '2026-04-16'
-  InferenceRetirementDate: '2026-07-31'
-  hiddenlayerscanned: ""
-  inference_compute_allow_list: [Standard_ND96isr_H100_v5]
+  disable-batch: 'true'
   inference_supported_envs:
   - vllm
+system_metadata:
+  sharedComputeCapacityEnabled: true
+  SKU:
+    inferenceRecommendedSkus:
+    - Standard_ND96isr_H100_v5
+    inferenceMinSkuSpec: 96|8|1900|1024
+  publisher: Snowflake
+  hiddenLayerScanned: true
+  huggingFaceModelId: Snowflake/snowflake-arctic-instruct
+  license: apache-2.0
+  tasks:
+    inferenceTasks:
+    - chat-completion
+  supportedComputes:
+    inferenceComputes:
+    - Standard_ND96isr_H100_v5
+  deprecation:
+    inferenceDeprecationDate: '2026-04-16T00:00:00.000000Z'
+    inferenceLegacyDate: '2026-03-16T00:00:00.000000Z'
+    inferenceRetirementDate: '2026-07-31T00:00:00.000000Z'
 version: 3
 description: |
   # Model Overview

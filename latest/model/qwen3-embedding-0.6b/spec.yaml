@@ -1,10 +1,10 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen3-embedding-0.6b
-version: 1
-isArchived: true
 path: ./
-tags:
-  foundryLocal: ""
+isArchived: true
+system_metadata:
+  foundryLocal: ''
+version: 1
 type: custom_model
 description: |
   # Qwen3 Embedding 0.6B

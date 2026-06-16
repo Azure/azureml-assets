@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Deci-DeciLM-7B-instruct
 path: ./
 properties:
-  SharedComputeCapacityEnabled: "True"
+  SharedComputeCapacityEnabled: 'True'
   SHA: d4aa148911823924d7b91e36535260decb190179
   inference-recommended-sku: Standard_NC12s_v3, Standard_NC24s_v3, 
     Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
@@ -11,27 +11,48 @@ properties:
     Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   evaluation-min-sku-spec: 12|2|224|1474
   languages: EN
-tags:
-  Featured: ''
-  inference_compute_allow_list:
-  - Standard_NC12s_v3
-  - Standard_NC24s_v3
-  - Standard_ND40rs_v2
-  - Standard_ND96asr_v4
-  - Standard_ND96amsr_A100_v4
-  evaluation_compute_allow_list:
-  - Standard_NC12s_v3
-  - Standard_NC24s_v3
-  - Standard_ND40rs_v2
-  - Standard_ND96asr_v4
-  - Standard_ND96amsr_A100_v4
-  SharedComputeCapacityEnabled: ''
-  task: text-generation
-  hiddenlayerscanned: ""
+system_metadata:
+  languages:
+  - en
+  sharedComputeCapacityEnabled: true
+  SKU:
+    evaluationRecommendedSkus:
+    - Standard_NC12s_v3
+    - Standard_NC24s_v3
+    - Standard_ND40rs_v2
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
+    inferenceRecommendedSkus:
+    - Standard_NC12s_v3
+    - Standard_NC24s_v3
+    - Standard_ND40rs_v2
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
+    evaluationMinSkuSpec: 12|2|224|1474
+    inferenceMinSkuSpec: 12|2|224|1474
+  publisher: Deci AI
+  datasets:
+  - Open-Orca/SlimOrca
+  hiddenLayerScanned: true
+  huggingFaceModelId: Deci/DeciLM-7B-instruct
   license: apache-2.0
-  author: "Deci AI"
-  huggingface_model_id: Deci/DeciLM-7B-instruct
-  datasets: Open-Orca/SlimOrca
+  featured: true
+  tasks:
+    inferenceTasks:
+    - text-generation
+  supportedComputes:
+    inferenceComputes:
+    - Standard_NC12s_v3
+    - Standard_NC24s_v3
+    - Standard_ND40rs_v2
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
+    evaluationComputes:
+    - Standard_NC12s_v3
+    - Standard_NC24s_v3
+    - Standard_ND40rs_v2
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
 version: 7
 description: |-
   DeciLM-7B-instruct is a model for short-form instruction following, built by LoRA fine-tuning on the SlimOrca dataset. It is a derivative of the recently released DeciLM-7B language model, a pre-trained, high-efficiency generative text model with 7 billion parameters. DeciLM-7B-instruct is one of the best 7B instruct models obtained using simple LoRA fine-tuning, without relying on preference optimization techniques such as RLHF and DPO. DeciLM-7B-instruct is intended for commercial and research use in English. However, like all large language models, its outputs are unpredictable and may generate responses that are inaccurate, biased, or otherwise objectionable. Developers planning to use DeciLM-7B-instruct should undertake thorough safety testing and tuning designed explicitly for their intended applications of the model before deployment.

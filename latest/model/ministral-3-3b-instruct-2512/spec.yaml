@@ -1,10 +1,10 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: ministral-3-3b-instruct-2512
-version: 1
-isArchived: true
 path: ./
-tags:
-  foundryLocal: ""
+isArchived: true
+system_metadata:
+  foundryLocal: ''
+version: 1
 type: custom_model
 description: |-
   This model is an optimized version of Ministral-3-3B-Instruct-2512 for local inference. Optimized models are published here in ONNX format to run on CPU and GPU across devices, including server platforms, Windows, Linux and Mac desktops, and mobile CPUs, with the precision best suited to each of these targets.

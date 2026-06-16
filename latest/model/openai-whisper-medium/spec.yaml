@@ -1,10 +1,10 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: openai-whisper-medium
-version: 1
-isArchived: true
 path: ./
-tags:
-  foundryLocal: ""
+isArchived: true
+system_metadata:
+  foundryLocal: ''
+version: 1
 type: custom_model
 description: |
   This model is an optimized version of Whisper Medium for local inference. Optimized models are published here in ONNX format to run on CPU, GPU, and NPU across devices, including server platforms, desktops, and mobile, with the precision best suited to each of these targets.
