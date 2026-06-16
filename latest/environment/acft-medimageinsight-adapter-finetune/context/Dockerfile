@@ -73,4 +73,10 @@ RUN /opt/conda/bin/pip uninstall -y py-rattler conda-rattler-solver && \
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' && \
     conda run -n ptca python -m pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0'
 
+# Upgrade pyarrow in ptca env to patched version (GHSA-rgxp-2hwp-jwgg)
+RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade 'pyarrow>=23.0.1'
+
+# Upgrade PyJWT in base env to patched version (GHSA-jq35-7prp-9v3f, GHSA-993g-76c3-p5m4)
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.13.0'
+
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/

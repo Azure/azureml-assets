@@ -53,9 +53,12 @@ RUN conda run -n base python -m pip install --no-cache-dir 'aiohttp>=3.14.0' \
 #    Python envs. Pip self-upgrade leaves a stale
 #    conda-meta/pip-26.0.1-*.json record that the SCA scanner still flags; remove
 #    it explicitly after the upgrade.
+#  - PyJWT>=2.13.0 (GHSA-993g-76c3-p5m4, GHSA-jq35-7prp-9v3f): two CVEs fixed in 2.13.0;
+#    installed as transitive dep at 2.12.1 in both Python envs.
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
         'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'pip>=26.1' \
- && pip install --no-cache-dir --upgrade 'pip>=26.1' \
+        'PyJWT>=2.13.0' \
+ && pip install --no-cache-dir --upgrade 'pip>=26.1' 'PyJWT>=2.13.0' \
  && rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0.1-*.json \
           /opt/conda/conda-meta/pip-26.0.1-*.json
 # clean conda and pip caches

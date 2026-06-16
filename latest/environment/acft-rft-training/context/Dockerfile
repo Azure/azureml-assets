@@ -86,10 +86,14 @@ RUN pip install --upgrade cryptography==46.0.7 'fastmcp>=3.2.0' 'Mako>=1.3.11' '
 #   by typer/uvicorn/black/flask/etc.; none of these pin click>=8.3.3 in published releases
 #   (verified PyPI requires_dist 2026-05-23). Direct override is the only remediation.
 #   (Note: requirements.txt also pins click==8.3.3 to cover the ptca env install path.)
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.1.1' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' && \
+# PyJWT>=2.13.0 (base env, py3.13): GHSA-993g-76c3-p5m4, GHSA-jq35-7prp-9v3f / VCM 5013533,
+#   5013521. PyJWT is pulled transitively by various auth/azure packages; no parent pins
+#   >=2.13.0 in published releases. Direct override is the only remediation.
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.1.1' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'PyJWT>=2.13.0' && \
     rm -f /opt/conda/conda-meta/pip-26.0*.json
 # GHSA-65pc-fj4g-8rjx: idna>=3.15 for ptca env (base env covered above)
-RUN pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.1.1' 'idna>=3.15' && \
+# GHSA-993g-76c3-p5m4, GHSA-jq35-7prp-9v3f: PyJWT>=2.13.0 for ptca env (base env covered above)
+RUN pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.1.1' 'idna>=3.15' 'PyJWT>=2.13.0' && \
     rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0*.json
 # ray vendors its own copies of aiohttp and idna inside thirdparty_files/ for the runtime_env
 # agent; those vendored copies are not upgraded by the pip installs above. Patching all copies

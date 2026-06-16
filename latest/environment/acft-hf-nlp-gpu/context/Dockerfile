@@ -52,7 +52,9 @@ RUN pip install --upgrade --no-cache-dir pyasn1==0.6.3 'python-multipart>=0.0.26
 # - click: anaconda-cli-base 0.8.2, typer 0.25.1 and extras from httpx/python-dotenv/cryptography accept 8.2.1.
 # python-dotenv has no installed parent in base; it is a vulnerable base package itself. Upgrading parents
 # does not force patched child versions, and conda updates would introduce py-rattler, so use pip in base.
-RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.0'
+# PyJWT: base env ships 2.12.1 which has GHSA-jq35-7prp-9v3f and GHSA-993g-76c3-p5m4 (fixed in 2.13.0);
+#        no parent in base pins PyJWT to a safe floor, so explicit override is required.
+RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.0' 'PyJWT>=2.13.0'
 
 # pip is the package manager in both base and ptca conda envs. defaults has no pip>=26.1.1 package,
 # while a normal conda-forge solve pulls unrelated conda updates and py-rattler. Install only the

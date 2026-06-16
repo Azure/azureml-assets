@@ -90,7 +90,8 @@ RUN pip install -r requirements.txt --no-cache-dir
 # scikit-learn: explicit pin removed — azureml-acft-contrib-hf-nlp 0.0.89 already
 #   pins `scikit-learn<1.6.0,>=1.5.1`, so the parent enforces the secure floor (>=1.5.1
 #   ships the CVE-2024-5206 fix the historical pin protected against). Pip resolves to 1.5.2.
-RUN pip install --no-cache-dir 'aiohttp>=3.14.0' 'requests>=2.33.0' 'cryptography>=46.0.7' && rm -rf /root/.cache/pip
+# pyarrow (GHSA-rgxp-2hwp-jwgg): transitive dep; bump to >=23.0.1 to fix the CVE.
+RUN pip install --no-cache-dir 'aiohttp>=3.14.0' 'requests>=2.33.0' 'cryptography>=46.0.7' 'pyarrow>=23.0.1' && rm -rf /root/.cache/pip
 
 # The below file is required for baking the code into the environment 
 COPY data_import_run.py /azureml/data_import/run.py

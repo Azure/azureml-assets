@@ -63,9 +63,12 @@ ENV AZURE_ML_CLI_PRIVATE_FEATURES_ENABLED=True
 # - idna: base ships 3.11; need >=3.15 for GHSA-65pc-fj4g-8rjx. Transitive
 #   dep of httpx, requests, and others which all use loose floors; direct
 #   override is required.
+# - PyJWT: base ships 2.12.1; need >=2.13.0 for GHSA-993g-76c3-p5m4 and
+#   GHSA-jq35-7prp-9v3f. No parent in the base env pins PyJWT to a safe
+#   floor, so a direct upgrade is required.
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
         'setuptools>=82.0.1' 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' \
-        'aiohttp>=3.14.0' 'click>=8.3.3' 'idna>=3.15'
+        'aiohttp>=3.14.0' 'click>=8.3.3' 'idna>=3.15' 'PyJWT>=2.13.0'
 
 # Vulnerability overrides in ptca conda env (python3.10):
 # - urllib3: the ptca env ships urllib3 2.7.0 from the base image, but the
@@ -81,7 +84,11 @@ RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
 #   required.
 # - click: ptca env ships 8.2.1; need >=8.3.3 for GHSA-47fr-3ffg-hgmw. No
 #   parent in the ptca env forces click>=8.3.3; direct override is required.
+# - pyarrow: ptca env ships 20.0.0; need >=23.0.1 for GHSA-rgxp-2hwp-jwgg.
+#   No parent in the ptca env forces pyarrow>=23.0.1; direct override is
+#   required.
 RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade \
-        'urllib3>=2.7.0' 'aiohttp>=3.14.0' 'starlette>=1.0.1' 'click>=8.3.3'
+        'urllib3>=2.7.0' 'aiohttp>=3.14.0' 'starlette>=1.0.1' 'click>=8.3.3' \
+        'pyarrow>=23.0.1'
 
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
