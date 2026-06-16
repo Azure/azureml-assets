@@ -737,14 +737,14 @@ class MessagesOrQueryResponseInputValidator(ToolDefinitionsValidator):
                 roles_present.add(role)
 
             # Conversation-level checks
-            if MessageRole.USER not in roles_present:
+            if MessageRole.USER.value not in roles_present:
                 raise EvaluationException(
                     message="messages must contain at least one message with role 'user'.",
                     blame=ErrorBlame.USER_ERROR,
                     category=ErrorCategory.INVALID_VALUE,
                     target=self.error_target,
                 )
-            if MessageRole.ASSISTANT not in roles_present:
+            if MessageRole.ASSISTANT.value not in roles_present:
                 raise EvaluationException(
                     message="messages must contain at least one message with role 'assistant'.",
                     blame=ErrorBlame.USER_ERROR,
