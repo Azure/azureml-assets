@@ -26,7 +26,11 @@ ENV NCCL_DEBUG=INFO
 ENV HOROVOD_GPU_ALLREDUCE=NCCL
 
 # Install Common Dependencies
+# apt-get upgrade -y clears the base image's overdue Ubuntu OS-package CVEs (kerberos,
+# glibc, libtasn1, sqlite, perl, binutils, gnupg, dpkg, libcap2, pam, etc.). Run before the
+# UCX/Open-MPI/Horovod source builds so they compile against the patched toolchain.
 RUN apt-get update && \
+    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
     curl \
     git \
@@ -109,23 +113,16 @@ RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
     apt-get update && \
     ACCEPT_EULA=Y apt-get install -y msodbcsql17 unixodbc-dev
 
-#Cmake Installation
+# cmake + rdma-core + autoremove in one layer to avoid redundant apt-get update calls
 RUN apt-get update && \
-    apt-get install -y cmake
-
-# rdma-core
-RUN apt-get update && \
+    apt-get install -y cmake && \
     apt-get install -y --no-install-recommends rdma-core && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# remove unused packages
-RUN apt-get autoremove -y && \
+    apt-get autoremove -y && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 #Install latest version of nccl-rdma-sharp-plugins
 RUN cd /tmp && \
     mkdir -p /usr/local/nccl-rdma-sharp-plugins && \
-    apt install -y dh-make zlib1g-dev && \
     git clone -b v2.1.0 https://github.com/Mellanox/nccl-rdma-sharp-plugins.git && \
     cd nccl-rdma-sharp-plugins && \
     ./autogen.sh && \
@@ -142,15 +139,24 @@ ENV CONDA_PREFIX=/azureml-envs/tensorflow-2.16-cuda12
 ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
 ENV PATH=$CONDA_PREFIX/bin:$PATH
 
-# Enable debug + USN-8222-1 OpenSSH upgrade
-# USN-8222-1 (CVE-2026-35385/35386/35387/35388/35414) requires openssh >= 1:8.9p1-3ubuntu0.15.
-# openssh-client/openssh-server/openssh-sftp-server are root-level OS packages from the
-# 'openssh' Debian source package (no transitive parent); the fixed parent is published in
-# the jammy-security archive (2026-04-29), so we install them directly to pick up the patched
-# version (plain `apt-get install` after `apt-get update` resolves to the latest candidate).
+# USN-8222-1 (CVE-2026-35385/35386/35387/35388/35414): openssh >= 1:8.9p1-3ubuntu0.15.
+# Installed directly from jammy-security to pick up patched openssh-{server,client,sftp-server}.
 RUN apt-get update && \
     apt-get install --reinstall -y openssl libssl-dev && \
     apt-get install -y openssh-server openssh-client openssh-sftp-server && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# USN-8354-1: nginx packages >= 1.18.0-6ubuntu14.12. nginx-light is installed in the
+# inferencing layer above (after the top apt-get upgrade), so the nginx packages are
+# re-upgraded here. Base libs (libarchive13/libgnutls30/libgcrypt20/liblzma5/xz-utils) are
+# already covered by the top apt-get upgrade -y.
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        nginx-common \
+        nginx-light \
+        libnginx-mod-http-geoip2 \
+        libnginx-mod-http-echo && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -167,16 +173,16 @@ RUN HOROVOD_WITH_TENSORFLOW=1  HOROVOD_CUDA_HOME=/usr/local/cuda pip  install --
 # Reinstall OpenSSL inside Conda
 RUN conda run -p $CONDA_PREFIX conda install -c conda-forge openssl
 
-# Security vulnerability fixes
-# NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
-# setuptools vendors jaraco.context internally; >=82.0.1 bundles the patched version (GHSA-58pv-8j8x-9vj2)
-# Upgrade vulnerable packages in the conda env
+# Security vulnerability fixes in the conda env (azureml-mlflow pins cryptography<46; overridden for the CVE):
 # cryptography>=46.0.7 fixes GHSA-m959-cc7f-wv43 and GHSA-p423-j2cm-9vmq
+# setuptools>=82.0.1 fixes GHSA-58pv-8j8x-9vj2
 # requests>=2.33.0 fixes GHSA-gc5v-m9x4-r6x2
 # pillow>=12.2.0 fixes GHSA-whj4-6x5x-4v2j
 # pip>=26.1 fixes GHSA-jp4c-xjxw-mgf9 / CVE-2026-6357 (bumped from >=26.0 which resolved to 26.0.1)
 # starlette>=1.0.1 (GHSA-86qp-5c8j-p5mr) / idna>=3.15 (GHSA-65pc-fj4g-8rjx): transitive via fastapi / requests; drop when parent bumps
-RUN conda run -p $CONDA_PREFIX pip install --upgrade 'pip>=26.1' 'cryptography>=46.0.7' 'setuptools>=82.0.1' 'protobuf>=5.29.6' 'requests>=2.33.0' 'pillow>=12.2.0' 'starlette>=1.0.1' 'idna>=3.15'
+# PyJWT>=2.13.0 fixes GHSA-993g-76c3-p5m4 and GHSA-jq35-7prp-9v3f
+# pyarrow>=23.0.1 fixes GHSA-rgxp-2hwp-jwgg
+RUN conda run -p $CONDA_PREFIX pip install --upgrade 'pip>=26.1' 'cryptography>=46.0.7' 'setuptools>=82.0.1' 'protobuf>=5.29.6' 'requests>=2.33.0' 'pillow>=12.2.0' 'starlette>=1.0.1' 'idna>=3.15' 'PyJWT>=2.13.0' 'pyarrow>=23.0.1'
 
 # Upgrade vulnerable packages in the base miniconda env (python3.10)
 # Use the absolute path to /opt/miniconda's pip because $CONDA_PREFIX/bin precedes /opt/miniconda/bin in PATH.

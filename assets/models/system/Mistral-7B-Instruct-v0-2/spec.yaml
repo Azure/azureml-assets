@@ -2,29 +2,40 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: mistralai-Mistral-7B-Instruct-v0-2
 path: ./
 properties:
-  SharedComputeCapacityEnabled: "True"
+  SharedComputeCapacityEnabled: 'True'
   SHA: 41b61a33a2483885c981aa79e0df6b32407ed873
   inference-min-sku-spec: 24|1|220|64
-  inference-recommended-sku: Standard_ND40rs_v2, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
+  inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
   languages: EN
 tags:
-  Featured: ""
-  SharedComputeCapacityEnabled: ""
-  hiddenlayerscanned: ""
-  disable-batch: "true"
-  inference_compute_allow_list:
-    [
-      Standard_ND40rs_v2,
-      Standard_NC24ads_A100_v4,
-      Standard_NC48ads_A100_v4,
-      Standard_NC96ads_A100_v4,
-      Standard_ND96amsr_A100_v4,
-      Standard_ND96asr_v4,
-    ]
+  disable-batch: 'true'
   inference_supported_envs:
-    - vllm
+  - vllm
+system_metadata:
+  languages:
+  - en
+  sharedComputeCapacityEnabled: true
+  SKU:
+    inferenceRecommendedSkus:
+    - Standard_NC24ads_A100_v4
+    - Standard_NC48ads_A100_v4
+    - Standard_NC96ads_A100_v4
+    - Standard_ND96amsr_A100_v4
+    - Standard_ND96asr_v4
+    inferenceMinSkuSpec: 24|1|220|64
+  publisher: Mistral AI
+  benchmark: quality
+  hiddenLayerScanned: true
   license: apache-2.0
-  task: chat-completion
-  author: "Mistral AI"
-  benchmark: "quality"
-version: 8
+  featured: true
+  tasks:
+    inferenceTasks:
+    - chat-completion
+  supportedComputes:
+    inferenceComputes:
+    - Standard_NC24ads_A100_v4
+    - Standard_NC48ads_A100_v4
+    - Standard_NC96ads_A100_v4
+    - Standard_ND96amsr_A100_v4
+    - Standard_ND96asr_v4
+version: 9

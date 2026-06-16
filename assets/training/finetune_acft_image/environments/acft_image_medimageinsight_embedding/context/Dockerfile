@@ -34,7 +34,9 @@ RUN pip uninstall -y fastmcp mcp
 #   mlflow-skinny has no release that pins gitpython>=3.1.47, so explicit override is required.
 # aiohttp: transitive dep; resolves to 3.13.5 which has GHSA-jg22-mg44-37j8, GHSA-hg6j-4rv6-33pg.
 #   No parent release floors aiohttp>=3.14.0, so explicit override is required.
-RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.47' 'aiohttp>=3.14.0'
+# pyarrow: resolves to 20.0.0 which has GHSA-rgxp-2hwp-jwgg; no parent release floors
+#   pyarrow>=23.0.1, so explicit override is required.
+RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.47' 'aiohttp>=3.14.0' 'pyarrow>=23.0.1'
 
 # Upgrade vulnerable packages in the system Python (3.13)
 # urllib3: transitive dep via requests; loose floor (urllib3<3,>=1.21.1) resolves to vulnerable 2.6.3
@@ -49,4 +51,6 @@ RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.47' 'aio
 #   CVE-2026-7246). No parent release floors click>=8.3.3, so explicit override is required.
 # aiohttp: resolves to 3.13.5 which has GHSA-jg22-mg44-37j8, GHSA-hg6j-4rv6-33pg. No parent
 #   release floors aiohttp>=3.14.0, so explicit override is required.
-RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'urllib3>=2.7.0' 'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.0'
+# PyJWT: resolves to 2.12.1 which has GHSA-jq35-7prp-9v3f and GHSA-993g-76c3-p5m4. No parent
+#   release floors PyJWT>=2.13.0, so explicit override is required.
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'urllib3>=2.7.0' 'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.0' 'PyJWT>=2.13.0'
