@@ -96,8 +96,10 @@ RUN python -m pip install --no-cache-dir \
 # backend is available for the provided inputs". cuDNN-fused does not cover this
 # thd + padding_causal config on sm80, and the Unfused backend does not support
 # thd, so flash-attn is required. No public wheel exists for this torch 2.9 /
-# cu12.8 / cp312 stack, so build from source. TE 2.10 supports flash-attn <= 2.8.3.
-RUN MAX_JOBS=4 python -m pip install --no-cache-dir --no-build-isolation flash-attn==2.8.3
+# cu12.8 / cp312 stack, so install the hosted prebuilt wheel (TE 2.10 supports
+# flash-attn <= 2.8.3) instead of building from source in the release pipeline.
+RUN python -m pip install --no-cache-dir \
+        https://github.com/yeshsurya/flash-attention/releases/download/flash_attn-2.8.3-cp312-cp312-linux_x86_64/flash_attn-2.8.3-cp312-cp312-linux_x86_64.whl
 
 COPY requirements.txt /tmp/slime-requirements.txt
 RUN python -m pip install --no-cache-dir -r /tmp/slime-requirements.txt && \
