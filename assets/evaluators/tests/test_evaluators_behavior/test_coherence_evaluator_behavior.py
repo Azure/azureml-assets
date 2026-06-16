@@ -246,6 +246,69 @@ class TestCoherenceMultiturnBehavior:
         evaluator._multi_turn_flow.assert_called_once()
         evaluator._flow.assert_not_called()
 
+    def test_messages_empty_list_raises_error(self):
+        """Empty messages list raises validation error."""
+        evaluator = _create_mocked_coherence_evaluator()
+        with pytest.raises(EvaluationException):
+            evaluator(messages=[])
+
+    def test_messages_invalid_type_raises_error(self):
+        """Non-list messages raises validation error."""
+        evaluator = _create_mocked_coherence_evaluator()
+        with pytest.raises(EvaluationException):
+            evaluator(messages="not a list")
+
+    def test_messages_with_non_dict_items_raises_error(self):
+        """Messages list containing non-dict items raises validation error."""
+        evaluator = _create_mocked_coherence_evaluator()
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "Hello"}]},
+            "not a dict",
+            {"role": "assistant", "content": [{"type": "text", "text": "Hi there!"}]},
+        ]
+        with pytest.raises(EvaluationException):
+            evaluator(messages=messages)
+
+    def test_messages_rejects_invalid_role(self):
+        """Messages with an invalid role raise validation error."""
+        evaluator = _create_mocked_coherence_evaluator()
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "Hello"}]},
+            {"role": "narrator", "content": [{"type": "text", "text": "The agent paused."}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "Hi!"}]},
+        ]
+        with pytest.raises(EvaluationException):
+            evaluator(messages=messages)
+
+    def test_messages_rejects_missing_role_key(self):
+        """Messages missing the role key raise validation error."""
+        evaluator = _create_mocked_coherence_evaluator()
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "Hello"}]},
+            {"content": [{"type": "text", "text": "No role here"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "Hi!"}]},
+        ]
+        with pytest.raises(EvaluationException):
+            evaluator(messages=messages)
+
+    def test_messages_rejects_no_user_message(self):
+        """Messages without any user message raise validation error."""
+        evaluator = _create_mocked_coherence_evaluator()
+        messages = [
+            {"role": "assistant", "content": [{"type": "text", "text": "Hello!"}]},
+        ]
+        with pytest.raises(EvaluationException):
+            evaluator(messages=messages)
+
+    def test_messages_rejects_no_assistant_message(self):
+        """Messages without any assistant message raise validation error."""
+        evaluator = _create_mocked_coherence_evaluator()
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "Hello"}]},
+        ]
+        with pytest.raises(EvaluationException):
+            evaluator(messages=messages)
+
     def test_query_response_uses_single_turn_flow(self):
         """Verify that query/response path still calls _flow."""
         evaluator = _create_mocked_coherence_evaluator()

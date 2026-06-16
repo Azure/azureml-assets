@@ -340,6 +340,17 @@ class TestGroundednessMultiturnBehavior:
         with pytest.raises(EvaluationException, match="Invalid role"):
             evaluator(messages=messages)
 
+    def test_messages_rejects_missing_role_key(self):
+        """Messages missing the role key raise validation error."""
+        evaluator = _create_mocked_groundedness_evaluator()
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "Hello"}]},
+            {"content": [{"type": "text", "text": "No role here"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "Hi!"}]},
+        ]
+        with pytest.raises(EvaluationException, match="role"):
+            evaluator(messages=messages)
+
     def test_messages_rejects_no_user_message(self):
         """Messages without any 'user' role raise validation error."""
         evaluator = _create_mocked_groundedness_evaluator()

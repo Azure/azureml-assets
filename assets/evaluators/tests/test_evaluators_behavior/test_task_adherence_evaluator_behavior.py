@@ -275,6 +275,43 @@ class TestTaskAdherenceMultiturnBehavior:
         with pytest.raises(EvaluationException, match="Invalid role"):
             evaluator(messages=messages)
 
+    def test_messages_with_non_dict_items_raises_error(self):
+        """Messages list containing non-dict items raises validation error."""
+        evaluator = _create_mocked_evaluator()
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "Hello"}]},
+            "not a dict",
+            {"role": "assistant", "content": [{"type": "text", "text": "Hi there!"}]},
+        ]
+        with pytest.raises(EvaluationException):
+            evaluator(messages=messages)
+
+    def test_messages_rejects_missing_role_key(self):
+        """Messages missing the role key raise validation error."""
+        evaluator = _create_mocked_evaluator()
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "Hello"}]},
+            {"content": [{"type": "text", "text": "No role here"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "Hi!"}]},
+        ]
+        with pytest.raises(EvaluationException, match="role"):
+            evaluator(messages=messages)
+
+    def test_messages_string_content(self):
+        """Messages with string content (not list) are handled and serialized."""
+        evaluator = _create_mocked_evaluator()
+        messages = [
+            {"role": "user", "content": "Plan a trip to Paris."},
+            {"role": "assistant", "content": "Sure, here is your itinerary."},
+        ]
+        result = evaluator(messages=messages)
+
+        assert "task_adherence" in result
+        assert result["task_adherence"] in (0.0, 1.0)
+        call_kwargs = evaluator._multi_turn_flow.call_args
+        conversation_text = call_kwargs.kwargs.get("messages", "")
+        assert "Plan a trip to Paris." in conversation_text
+
     def test_messages_rejects_no_user_message(self):
         """Messages without user role raise validation error."""
         evaluator = _create_mocked_evaluator()
