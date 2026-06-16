@@ -26,7 +26,13 @@ ENV NCCL_DEBUG=INFO
 ENV HOROVOD_GPU_ALLREDUCE=NCCL
 
 # Install Common Dependencies
+# `apt-get upgrade -y` pulls all jammy-security patches shipped after the base CUDA
+# image was cut, clearing the batch of overdue Ubuntu OS-package CVEs (e.g. kerberos
+# USN-7257-1, glibc USN-7259-1, libtasn1 USN-7275-1). Run here — before the UCX /
+# Open-MPI / Horovod source builds — so everything compiles against the patched
+# toolchain and no ABI mismatch is introduced.
 RUN apt-get update && \
+    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
     curl \
     git \
@@ -149,12 +155,23 @@ RUN apt-get update && \
 
 # USN-8292-1: libarchive13 >= 3.6.0-1ubuntu1.7 fixes CVE-2025-25724 / CVE-2025-1632
 # USN-8284-1: libgnutls30 >= 3.7.3-4ubuntu1.9 fixes CVE-2024-28835 / CVE-2025-32888
-# Both packages are patched in the jammy-security archive; installing them here ensures
+# USN-8319-1: libgcrypt20 >= 1.9.4-3ubuntu3.2
+# USN-8362-1: liblzma5/xz-utils >= 5.2.5-2ubuntu1.1
+# USN-8354-1: nginx packages >= 1.18.0-6ubuntu14.12 (nginx-common, nginx-light,
+#             libnginx-mod-http-geoip2, libnginx-mod-http-echo)
+# All packages are patched in the jammy-security archive; installing them here ensures
 # the updated versions are present regardless of the base image's apt state.
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         libarchive13 \
-        libgnutls30 && \
+        libgnutls30 \
+        libgcrypt20 \
+        liblzma5 \
+        xz-utils \
+        nginx-common \
+        nginx-light \
+        libnginx-mod-http-geoip2 \
+        libnginx-mod-http-echo && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -180,7 +197,9 @@ RUN conda run -p $CONDA_PREFIX conda install -c conda-forge openssl
 # pillow>=12.2.0 fixes GHSA-whj4-6x5x-4v2j
 # pip>=26.1 fixes GHSA-jp4c-xjxw-mgf9 / CVE-2026-6357 (bumped from >=26.0 which resolved to 26.0.1)
 # starlette>=1.0.1 (GHSA-86qp-5c8j-p5mr) / idna>=3.15 (GHSA-65pc-fj4g-8rjx): transitive via fastapi / requests; drop when parent bumps
-RUN conda run -p $CONDA_PREFIX pip install --upgrade 'pip>=26.1' 'cryptography>=46.0.7' 'setuptools>=82.0.1' 'protobuf>=5.29.6' 'requests>=2.33.0' 'pillow>=12.2.0' 'starlette>=1.0.1' 'idna>=3.15'
+# PyJWT>=2.13.0 fixes GHSA-993g-76c3-p5m4 and GHSA-jq35-7prp-9v3f
+# pyarrow>=23.0.1 fixes GHSA-rgxp-2hwp-jwgg
+RUN conda run -p $CONDA_PREFIX pip install --upgrade 'pip>=26.1' 'cryptography>=46.0.7' 'setuptools>=82.0.1' 'protobuf>=5.29.6' 'requests>=2.33.0' 'pillow>=12.2.0' 'starlette>=1.0.1' 'idna>=3.15' 'PyJWT>=2.13.0' 'pyarrow>=23.0.1'
 
 # Upgrade vulnerable packages in the base miniconda env (python3.10)
 # Use the absolute path to /opt/miniconda's pip because $CONDA_PREFIX/bin precedes /opt/miniconda/bin in PATH.
