@@ -26,11 +26,9 @@ ENV NCCL_DEBUG=INFO
 ENV HOROVOD_GPU_ALLREDUCE=NCCL
 
 # Install Common Dependencies
-# `apt-get upgrade -y` pulls all jammy-security patches shipped after the base CUDA
-# image was cut, clearing the batch of overdue Ubuntu OS-package CVEs (e.g. kerberos
-# USN-7257-1, glibc USN-7259-1, libtasn1 USN-7275-1). Run here — before the UCX /
-# Open-MPI / Horovod source builds — so everything compiles against the patched
-# toolchain and no ABI mismatch is introduced.
+# apt-get upgrade -y clears the base image's overdue Ubuntu OS-package CVEs (kerberos,
+# glibc, libtasn1, sqlite, perl, binutils, gnupg, dpkg, libcap2, pam, etc.). Run before the
+# UCX/Open-MPI/Horovod source builds so they compile against the patched toolchain.
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
@@ -141,33 +139,20 @@ ENV CONDA_PREFIX=/azureml-envs/tensorflow-2.16-cuda12
 ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
 ENV PATH=$CONDA_PREFIX/bin:$PATH
 
-# Enable debug + USN-8222-1 OpenSSH upgrade
-# USN-8222-1 (CVE-2026-35385/35386/35387/35388/35414) requires openssh >= 1:8.9p1-3ubuntu0.15.
-# openssh-client/openssh-server/openssh-sftp-server are root-level OS packages from the
-# 'openssh' Debian source package (no transitive parent); the fixed parent is published in
-# the jammy-security archive (2026-04-29), so we install them directly to pick up the patched
-# version (plain `apt-get install` after `apt-get update` resolves to the latest candidate).
+# USN-8222-1 (CVE-2026-35385/35386/35387/35388/35414): openssh >= 1:8.9p1-3ubuntu0.15.
+# Installed directly from jammy-security to pick up patched openssh-{server,client,sftp-server}.
 RUN apt-get update && \
     apt-get install --reinstall -y openssl libssl-dev && \
     apt-get install -y openssh-server openssh-client openssh-sftp-server && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# USN-8292-1: libarchive13 >= 3.6.0-1ubuntu1.7 fixes CVE-2025-25724 / CVE-2025-1632
-# USN-8284-1: libgnutls30 >= 3.7.3-4ubuntu1.9 fixes CVE-2024-28835 / CVE-2025-32888
-# USN-8319-1: libgcrypt20 >= 1.9.4-3ubuntu3.2
-# USN-8362-1: liblzma5/xz-utils >= 5.2.5-2ubuntu1.1
-# USN-8354-1: nginx packages >= 1.18.0-6ubuntu14.12 (nginx-common, nginx-light,
-#             libnginx-mod-http-geoip2, libnginx-mod-http-echo)
-# All packages are patched in the jammy-security archive; installing them here ensures
-# the updated versions are present regardless of the base image's apt state.
+# USN-8354-1: nginx packages >= 1.18.0-6ubuntu14.12. nginx-light is installed in the
+# inferencing layer above (after the top apt-get upgrade), so the nginx packages are
+# re-upgraded here. Base libs (libarchive13/libgnutls30/libgcrypt20/liblzma5/xz-utils) are
+# already covered by the top apt-get upgrade -y.
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        libarchive13 \
-        libgnutls30 \
-        libgcrypt20 \
-        liblzma5 \
-        xz-utils \
         nginx-common \
         nginx-light \
         libnginx-mod-http-geoip2 \
@@ -188,11 +173,9 @@ RUN HOROVOD_WITH_TENSORFLOW=1  HOROVOD_CUDA_HOME=/usr/local/cuda pip  install --
 # Reinstall OpenSSL inside Conda
 RUN conda run -p $CONDA_PREFIX conda install -c conda-forge openssl
 
-# Security vulnerability fixes
-# NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
-# setuptools vendors jaraco.context internally; >=82.0.1 bundles the patched version (GHSA-58pv-8j8x-9vj2)
-# Upgrade vulnerable packages in the conda env
+# Security vulnerability fixes in the conda env (azureml-mlflow pins cryptography<46; overridden for the CVE):
 # cryptography>=46.0.7 fixes GHSA-m959-cc7f-wv43 and GHSA-p423-j2cm-9vmq
+# setuptools>=82.0.1 fixes GHSA-58pv-8j8x-9vj2
 # requests>=2.33.0 fixes GHSA-gc5v-m9x4-r6x2
 # pillow>=12.2.0 fixes GHSA-whj4-6x5x-4v2j
 # pip>=26.1 fixes GHSA-jp4c-xjxw-mgf9 / CVE-2026-6357 (bumped from >=26.0 which resolved to 26.0.1)
