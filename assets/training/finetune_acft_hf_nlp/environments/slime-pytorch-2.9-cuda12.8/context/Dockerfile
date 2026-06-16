@@ -90,6 +90,15 @@ RUN python -m pip install --no-cache-dir \
         https://github.com/yeshsurya/TransformerEngine/releases/download/transformer_engine-2.10.0%2B769ed77-cp312-cp312-linux_x86_64/transformer_engine-2.10.0+769ed77-cp312-cp312-linux_x86_64.whl && \
     python -m pip install --no-cache-dir transformer-engine==2.10.0
 
+# transformer-engine needs the FlashAttention backend for thd/packed (varlen)
+# attention on A100 (sm80). Without flash-attn, TE finds no usable attention
+# backend and aborts the first training forward with "No dot product attention
+# backend is available for the provided inputs". cuDNN-fused does not cover this
+# thd + padding_causal config on sm80, and the Unfused backend does not support
+# thd, so flash-attn is required. No public wheel exists for this torch 2.9 /
+# cu12.8 / cp312 stack, so build from source. TE 2.10 supports flash-attn <= 2.8.3.
+RUN MAX_JOBS=4 python -m pip install --no-cache-dir --no-build-isolation flash-attn==2.8.3
+
 COPY requirements.txt /tmp/slime-requirements.txt
 RUN python -m pip install --no-cache-dir -r /tmp/slime-requirements.txt && \
     rm /tmp/slime-requirements.txt
@@ -115,6 +124,9 @@ RUN LOG4J_VERSION=${LOG4J_VERSION} \
 RUN cd /opt/slime && \
     python -m pip install --no-cache-dir -e . --no-deps
 
+# Apply Retail RFT compatibility patches: slime numpy/attention/GLM-4.6V fixes and
+# neutralize transformer-engine 2.10's import-time PyPI-metadata / duplicate-.so
+# checks (the meta package is a platlib wheel; the libraries themselves load fine).
 COPY patch_slime_rft_fixes.py /tmp/patch_slime_rft_fixes.py
 RUN python /tmp/patch_slime_rft_fixes.py && \
     rm /tmp/patch_slime_rft_fixes.py
