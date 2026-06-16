@@ -1,8 +1,8 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen3-4b
-version: 2
-isArchived: true
 path: ./
-tags:
-  foundryLocal: ""
+isArchived: true
+system_metadata:
+  foundryLocal: ''
+version: 2
 type: custom_model
