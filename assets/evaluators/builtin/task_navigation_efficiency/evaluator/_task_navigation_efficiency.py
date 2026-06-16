@@ -64,6 +64,7 @@ class ContentType(str, Enum):
 class TaskNavigationEfficiencyValidator(ValidatorInterface):
     """
     Validate task navigation efficiency inputs (actions and expected_actions).
+
     Validates:
     - actions (alias ``response``): List of assistant messages containing tool calls
     - expected_actions (alias ``ground_truth``): Either a list of expected tool names, or a
