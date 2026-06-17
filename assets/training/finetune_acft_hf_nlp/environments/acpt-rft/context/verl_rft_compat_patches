@@ -1,0 +1,311 @@
+#!/usr/bin/env python3
+"""verl RFT (GRPO) compatibility patches for the acft-rft-training image.
+
+The image bundles components from several lineages (kernels, transformers, vLLM,
+verl, flash-attn). This script applies a small set of idempotent, anchor-verified
+source patches to the installed packages so the verl Reinforced Fine-Tuning (GRPO)
+recipe runs end-to-end: model load, FSDP2, async vLLM agentic rollout, validation,
+and the GRPO policy update.
+
+Each patch locates its target by an exact source anchor and is safe to re-run; an
+applied patch is detected and skipped. If an anchor is missing (e.g. a bundled
+package version changed), the script fails loudly so the mismatch is visible at
+image-build time rather than at job runtime.
+
+Run inside the image's training conda env, e.g.:
+    /opt/conda/envs/ptca/bin/python verl_rft_compat_patches.py
+"""
+import importlib.util
+import io
+import sys
+
+MARKER = "ACFT-RFT-COMPAT"
+
+
+def _module_path(modname):
+    spec = importlib.util.find_spec(modname)
+    if spec is None or not spec.origin:
+        sys.exit(f"ERROR: could not locate module {modname}")
+    return spec.origin
+
+
+def _read(path):
+    with io.open(path, "r", encoding="utf-8") as f:
+        return f.read()
+
+
+def _write(path, src):
+    with io.open(path, "w", encoding="utf-8") as f:
+        f.write(src)
+
+
+def _replace(modname, old, new, *, occurrences=1):
+    """Replace an exact source anchor in a module's file (idempotent)."""
+    path = _module_path(modname)
+    src = _read(path)
+    if MARKER in src and old not in src:
+        print(f"[skip] already applied: {modname}")
+        return
+    if old not in src:
+        sys.exit(
+            f"ERROR: expected anchor not found in {path} ({modname}); "
+            "the bundled package version may differ from the one this patch targets."
+        )
+    _write(path, src.replace(old, new, occurrences))
+    print(f"[ok]   patched: {modname}")
+
+
+def _append(modname, block, *, require):
+    """Append a block to a module's file once (idempotent)."""
+    path = _module_path(modname)
+    src = _read(path)
+    if MARKER in src:
+        print(f"[skip] already applied: {modname}")
+        return
+    if require not in src:
+        sys.exit(
+            f"ERROR: expected '{require}' not found in {path} ({modname}); "
+            "the bundled package version may differ from the one this patch targets."
+        )
+    _write(path, src.rstrip("\n") + block)
+    print(f"[ok]   patched: {modname}")
+
+
+# --------------------------------------------------------------------------------------
+# kernels >= 0.13 made revision/version mandatory; transformers (<=5.12) registers its
+# hub kernels without either. Restore the historical default of revision="main" on both
+# the repository constructors and the runtime resolver so transformers imports and the
+# flash-attention hub fallback both work without changing package versions.
+# --------------------------------------------------------------------------------------
+_KERNELS_REPO_OLD = '''        if revision is None and version is None:
+            raise ValueError("Either a revision or a version must be specified.")'''
+_KERNELS_REPO_NEW = '''        if revision is None and version is None:
+            # ACFT-RFT-COMPAT: transformers (<=5.12) registers hub kernels via
+            # LayerRepository/FuncRepository without a revision/version; kernels>=0.13
+            # made one mandatory. Restore the historical default of revision="main".
+            revision = "main"'''
+
+_KERNELS_RESOLVER_OLD = '''    else:
+        raise ValueError(
+            "A kernel version or revision must be specified. "
+            "Use `version=<major>` for a stable kernel API version or `revision=<branch/tag/commit>` "
+            "for an explicit Hub revision. See: https://huggingface.co/docs/kernels/migration"
+        )'''
+_KERNELS_RESOLVER_NEW = '''    else:
+        # ACFT-RFT-COMPAT: the flash-attention hub fallback calls the resolver with neither
+        # version nor revision; restore the historical kernels<0.13 default of "main".
+        return "main"'''
+
+
+# --------------------------------------------------------------------------------------
+# transformers 5.6.0 flash-attention integration dereferences the optional attention-sink
+# tensor s_aux without a None guard; models without sinks (e.g. Qwen3) pass None. Guard it
+# (matches the upstream transformers 5.12.1 fix).
+# --------------------------------------------------------------------------------------
+_TF_SAUX_OLD = "        s_aux=s_aux.to(query.dtype),  # FA only accepts half precision"
+_TF_SAUX_NEW = (
+    "        # ACFT-RFT-COMPAT: guard None s_aux (models without attention sinks, e.g. Qwen3);\n"
+    "        # matches the upstream transformers 5.12.1 fix.\n"
+    "        s_aux=(s_aux.to(query.dtype) if s_aux is not None else None),  # FA only accepts half precision"
+)
+
+
+# --------------------------------------------------------------------------------------
+# vLLM's RoPE helper imports the flash-attn 2.x triton rotary kernel when a flash_attn
+# namespace is present, but the image ships flash-attn 4 (no flash_attn.ops). The kernel
+# is an optional acceleration; fall back to vLLM's native rotary when it is absent.
+# --------------------------------------------------------------------------------------
+_VLLM_ROTARY_OLD = '''        self.apply_rotary_emb_flash_attn = None
+        if find_spec("flash_attn") is not None:
+            from flash_attn.ops.triton.rotary import apply_rotary
+
+            self.apply_rotary_emb_flash_attn = apply_rotary'''
+_VLLM_ROTARY_NEW = '''        self.apply_rotary_emb_flash_attn = None
+        if find_spec("flash_attn") is not None:
+            try:
+                from flash_attn.ops.triton.rotary import apply_rotary
+
+                self.apply_rotary_emb_flash_attn = apply_rotary
+            except ImportError:
+                # ACFT-RFT-COMPAT: image ships flash-attn 4 (flash_attn.cute), which lacks the
+                # flash-attn 2.x flash_attn.ops.triton.rotary kernel. This is an optional
+                # acceleration; fall back to vLLM's native rotary.
+                self.apply_rotary_emb_flash_attn = None'''
+
+
+# --------------------------------------------------------------------------------------
+# The image vendors a newer (post-0.8.0) vLLM rollout subsystem onto a verl 0.7.1 worker
+# layer. The remaining stale 0.7.1 files reference symbols/classes the newer rollout no
+# longer matches. Re-export the helpers, fix the package export, the registry entry, the
+# FSDP2 wrap-class handling, the worker server-mode methods, and the vLLM dispatch call.
+# --------------------------------------------------------------------------------------
+_VERL_UTILS_REQUIRE = "def run_uvicorn"
+_VERL_UTILS_APPEND = (
+    "\n\n"
+    "# ACFT-RFT-COMPAT: the vendored (post-0.8.0) vLLM rollout imports these names from\n"
+    "# this module, but the file was left at verl 0.7.1. get_free_port/is_valid_ipv6_address\n"
+    "# live in verl.utils.net_utils; run_unvicorn is a typo-named alias of run_uvicorn above.\n"
+    "from verl.utils.net_utils import (  # noqa: E402,F401\n"
+    "    get_free_port,\n"
+    "    is_valid_ipv6_address,\n"
+    ")\n"
+    "\n"
+    "run_unvicorn = run_uvicorn  # noqa: F811  (name expected by the vendored async server)\n"
+)
+
+_VERL_INIT_OLD = "from .vllm_rollout import ServerAdapter  # noqa: F401"
+_VERL_INIT_NEW = (
+    "# ACFT-RFT-COMPAT: the bundled vllm_rollout defines vLLMAsyncRollout (not ServerAdapter);\n"
+    "# the async server imports vLLMAsyncRollout from this package. Export what exists.\n"
+    "from .vllm_rollout import vLLMAsyncRollout  # noqa: F401"
+)
+
+_VERL_REGISTRY_OLD = '("vllm", "async"): "verl.workers.rollout.vllm_rollout.ServerAdapter",'
+_VERL_REGISTRY_NEW = (
+    '("vllm", "async"): "verl.workers.rollout.vllm_rollout.vLLMAsyncRollout",'
+    "  # ACFT-RFT-COMPAT: bundled vllm_rollout defines vLLMAsyncRollout, not ServerAdapter"
+)
+
+_VERL_FSDP2_OLD = '''    if isinstance(fsdp_transformer_layer_cls_to_wrap, str):
+        fsdp_transformer_layer_cls_to_wrap = [fsdp_transformer_layer_cls_to_wrap]
+
+    assert len(fsdp_transformer_layer_cls_to_wrap) > 0 and fsdp_transformer_layer_cls_to_wrap[0] is not None'''
+_VERL_FSDP2_NEW = '''    if isinstance(fsdp_transformer_layer_cls_to_wrap, str):
+        fsdp_transformer_layer_cls_to_wrap = [fsdp_transformer_layer_cls_to_wrap]
+    elif not isinstance(fsdp_transformer_layer_cls_to_wrap, list) and fsdp_transformer_layer_cls_to_wrap is not None:
+        # ACFT-RFT-COMPAT: transformers 5.x exposes _no_split_modules as a set (not
+        # subscriptable); verl indexes [0] below. Coerce any non-list iterable to list.
+        fsdp_transformer_layer_cls_to_wrap = list(fsdp_transformer_layer_cls_to_wrap)
+
+    assert len(fsdp_transformer_layer_cls_to_wrap) > 0 and fsdp_transformer_layer_cls_to_wrap[0] is not None'''
+
+_VERL_DISPATCH_OLD = '''        else:
+            return self.inference_engine.execute_method(method, *args, **kwargs)'''
+_VERL_DISPATCH_NEW = '''        else:
+            # ACFT-RFT-COMPAT: vLLM 0.20.1 removed WorkerWrapperBase.execute_method; use
+            # vLLM's run_method() dispatcher (getattr(obj, method)(*args, **kwargs)).
+            from vllm.v1.serial_utils import run_method
+            return run_method(self.inference_engine, method, args, kwargs)'''
+
+# Worker server-mode methods the vendored async vLLM HTTP server calls on the hybrid
+# worker actors (two anchors in verl.workers.fsdp_workers).
+_VERL_TRAINER_OLD = '''        self.base_sync_done = True
+        set_expandable_segments(True)
+
+    @register(dispatch_mode=Dispatch.ONE_TO_ALL)
+    def init_model(self):'''
+_VERL_TRAINER_NEW = '''        self.base_sync_done = True
+        set_expandable_segments(True)
+
+    async def trainer_mode(self):
+        # ACFT-RFT-COMPAT: inverse of rollout_mode(); the shipped fsdp_workers calls
+        # self.trainer_mode() but never defines it. Matches this build's rollout_mode.
+        if self.config.rollout.free_cache_engine:
+            await self.rollout.release()
+        self.actor_module_fsdp.train()
+        aggressive_empty_cache(force_sync=True)
+        set_expandable_segments(True)
+
+    @register(dispatch_mode=Dispatch.ONE_TO_ALL)
+    def init_model(self):'''
+
+_VERL_ASYNC_OLD = '''class AsyncActorRolloutRefWorker(ActorRolloutRefWorker):
+    @register(dispatch_mode=Dispatch.ONE_TO_ALL, blocking=False)
+    async def update_weights(self, global_steps: int = None):
+        await self.rollout_mode()
+        return True'''
+_VERL_ASYNC_NEW = '''class AsyncActorRolloutRefWorker(ActorRolloutRefWorker):
+    @register(dispatch_mode=Dispatch.ONE_TO_ALL, blocking=False)
+    async def update_weights(self, global_steps: int = None):
+        await self.rollout_mode()
+        return True
+
+    # ACFT-RFT-COMPAT: server-mode methods the vendored async vLLM HTTP server calls on
+    # the hybrid worker actors.
+    @register(dispatch_mode=Dispatch.DIRECT_ROLLOUT_METHOD)
+    async def wake_up(self):
+        await self.rollout_mode()
+        return True
+
+    @register(dispatch_mode=Dispatch.DIRECT_ROLLOUT_METHOD)
+    async def sleep(self):
+        await self.trainer_mode()
+        return True
+
+    @register(dispatch_mode=Dispatch.DIRECT_ROLLOUT_METHOD)
+    def get_zeromq_address(self):
+        return self.rollout.get_zeromq_address()'''
+
+
+# --------------------------------------------------------------------------------------
+# verl actor forward expects flash-attn 2.x bert_padding helpers; the image ships
+# flash-attn 4. verl already vendors the same pure-torch implementations; use them when
+# flash_attn.bert_padding is unavailable.
+# --------------------------------------------------------------------------------------
+_VERL_BERT_OLD = '''    else:
+        from flash_attn.bert_padding import index_first_axis, pad_input, rearrange, unpad_input'''
+_VERL_BERT_NEW = '''    else:
+        try:
+            from flash_attn.bert_padding import index_first_axis, pad_input, rearrange, unpad_input
+        except ModuleNotFoundError:
+            # ACFT-RFT-COMPAT: image ships flash-attn 4 (no flash_attn.bert_padding). verl's
+            # npu_flash_attn_utils has the same pure-torch impls (device-agnostic, work on CUDA).
+            from verl.utils.npu_flash_attn_utils import index_first_axis, pad_input, rearrange, unpad_input'''
+
+
+# --------------------------------------------------------------------------------------
+# With activation offload enabled, the actor's logits are returned as-is by a custom
+# autograd Function, so the squeezed view cannot be scaled in-place. Scale out-of-place.
+# --------------------------------------------------------------------------------------
+_VERL_LOGITS_OLD = '''                    logits_rmpad = output.logits.squeeze(0)  # (total_nnz, vocab_size)
+                    logits_rmpad.div_(temperature)'''
+_VERL_LOGITS_NEW = '''                    logits_rmpad = output.logits.squeeze(0)  # (total_nnz, vocab_size)
+                    # ACFT-RFT-COMPAT: out-of-place scaling. With activation offload, output.logits
+                    # is returned as-is by a custom autograd Function, so the squeeze(0) view cannot
+                    # be modified in-place (div_). Produce a fresh tensor instead.
+                    logits_rmpad = logits_rmpad / temperature'''
+
+
+def main():
+    # kernels <-> transformers
+    _replace("kernels.layer.layer", _KERNELS_REPO_OLD, _KERNELS_REPO_NEW)
+    _replace("kernels.layer.func", _KERNELS_REPO_OLD, _KERNELS_REPO_NEW)
+    _replace("kernels._versions", _KERNELS_RESOLVER_OLD, _KERNELS_RESOLVER_NEW)
+
+    # vLLM <-> flash-attn 4 / transformers FA integration
+    _replace("vllm.model_executor.layers.rotary_embedding.common", _VLLM_ROTARY_OLD, _VLLM_ROTARY_NEW)
+    _replace("transformers.integrations.flash_attention", _TF_SAUX_OLD, _TF_SAUX_NEW)
+
+    # verl 0.7.1 worker layer <-> vendored post-0.8.0 vLLM rollout
+    _append("verl.workers.rollout.utils", _VERL_UTILS_APPEND, require=_VERL_UTILS_REQUIRE)
+    _replace("verl.workers.rollout.vllm_rollout", _VERL_INIT_OLD, _VERL_INIT_NEW)
+    _replace("verl.workers.rollout.base", _VERL_REGISTRY_OLD, _VERL_REGISTRY_NEW)
+    _replace("verl.utils.fsdp_utils", _VERL_FSDP2_OLD, _VERL_FSDP2_NEW)
+    _replace("verl.workers.rollout.vllm_rollout.vllm_rollout", _VERL_DISPATCH_OLD, _VERL_DISPATCH_NEW)
+
+    # verl async worker server-mode methods (two anchors in one file)
+    fsdp_workers_path = _module_path("verl.workers.fsdp_workers")
+    src = _read(fsdp_workers_path)
+    if MARKER in src:
+        print("[skip] already applied: verl.workers.fsdp_workers")
+    else:
+        for anchor, new in ((_VERL_TRAINER_OLD, _VERL_TRAINER_NEW), (_VERL_ASYNC_OLD, _VERL_ASYNC_NEW)):
+            if anchor not in src:
+                sys.exit(
+                    f"ERROR: expected anchor not found in {fsdp_workers_path} "
+                    "(verl.workers.fsdp_workers); the bundled verl may differ."
+                )
+            src = src.replace(anchor, new, 1)
+        _write(fsdp_workers_path, src)
+        print("[ok]   patched: verl.workers.fsdp_workers")
+
+    # verl actor forward <-> flash-attn 4 / activation offload
+    _replace("verl.utils.attention_utils", _VERL_BERT_OLD, _VERL_BERT_NEW)
+    _replace("verl.workers.actor.dp_actor", _VERL_LOGITS_OLD, _VERL_LOGITS_NEW)
+
+    print("All verl RFT (GRPO) compatibility patches applied.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
