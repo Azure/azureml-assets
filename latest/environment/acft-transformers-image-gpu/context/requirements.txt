@@ -2,7 +2,7 @@ azureml-metrics[image]~=0.0.91
 azureml-acft-accelerator==0.0.91
 azureml-acft-common-components[image]~=0.0.91
 azureml-acft-image-components==0.0.91
-azureml-core==1.61.0.post3
+azureml-core==1.61.0.post4
 requests>=2.33.0
 datasets==2.19.0
 transformers>=5.3.0

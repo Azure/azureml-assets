@@ -32,7 +32,7 @@ RUN conda create -p $CONDA_PREFIX -q -y python=3.10 pip=26.1.1 'pandas~=1.5.3' '
 # starlette>=1.0.1 (GHSA-86qp-5c8j-p5mr) / idna>=3.15 (GHSA-65pc-fj4g-8rjx): transitive via fastapi / requests; drop when parent bumps
 RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
     scikit-learn-intelex==2026.1.0 \
-    azureml-core==1.61.0.post3 \
+    azureml-core==1.61.0.post4 \
     azureml-defaults==1.62.0 \
     azureml-inference-server-http==1.5.1 \
     azureml-mlflow==1.62.0.post3 \
