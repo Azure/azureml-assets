@@ -17,6 +17,8 @@ Run inside the image's training conda env, e.g.:
 """
 import importlib.util
 import io
+import os
+import shutil
 import sys
 
 MARKER = "ACFT-RFT-COMPAT"
@@ -266,8 +268,73 @@ _VERL_LOGITS_NEW = '''                    logits_rmpad = output.logits.squeeze(0
                     logits_rmpad = logits_rmpad / temperature'''
 
 
+# --------------------------------------------------------------------------------------
+# The image's Ray build ships without its dashboard frontend (ray/dashboard/client/build),
+# so on Linux the dashboard process fails to start and Ray agents repeatedly log
+# "Dashboard http address not found in InternalKV". Install the bundled frontend build,
+# and enable the dashboard on port 8265 in any bundled RFT driver. (The recipe-supplied
+# driver copy is enabled separately at submit time.)
+# --------------------------------------------------------------------------------------
+_RAY_DASHBOARD_SRC_ENV = "RAY_DASHBOARD_BUILD_SRC"
+_RAY_DASHBOARD_SRC_DEFAULT = "/tmp/ray_dashboard_build"
+
+_DRIVER_DASH_OLD = '''                    "--disable-usage-stats",
+                    "--include-dashboard=false",
+                ], stdout=subprocess.PIPE,'''
+_DRIVER_DASH_NEW = '''                    "--disable-usage-stats",
+                    # ACFT-RFT-COMPAT: start the Ray dashboard on port 8265 (requires the
+                    # dashboard frontend build under ray/dashboard/client/build).
+                    "--include-dashboard=true",
+                    "--dashboard-host=0.0.0.0",
+                    "--dashboard-port=8265",
+                ], stdout=subprocess.PIPE,'''
+
+
+def _install_ray_dashboard_frontend():
+    src = os.environ.get(_RAY_DASHBOARD_SRC_ENV, _RAY_DASHBOARD_SRC_DEFAULT)
+    if not (os.path.isdir(src) and os.path.isfile(os.path.join(src, "index.html"))):
+        print(f"[skip] ray dashboard frontend asset not found at {src} "
+              f"(set {_RAY_DASHBOARD_SRC_ENV})")
+        return
+    spec = importlib.util.find_spec("ray")
+    if spec is None or not spec.submodule_search_locations:
+        sys.exit("ERROR: could not locate the 'ray' package")
+    ray_dir = list(spec.submodule_search_locations)[0]
+    build_dir = os.path.join(ray_dir, "dashboard", "client", "build")
+    if os.path.isdir(build_dir) and os.path.isfile(os.path.join(build_dir, "index.html")):
+        print("[skip] already applied: ray dashboard frontend")
+        return
+    os.makedirs(os.path.dirname(build_dir), exist_ok=True)
+    if os.path.isdir(build_dir):
+        shutil.rmtree(build_dir)
+    shutil.copytree(src, build_dir)
+    print(f"[ok]   installed ray dashboard frontend -> {build_dir}")
+
+
+def _enable_bundled_driver_dashboard():
+    import sysconfig
+    roots = {p for p in (sysconfig.get_paths().get(k) for k in ("purelib", "platlib")) if p}
+    found = False
+    for root in roots:
+        for dirpath, _dirs, files in os.walk(root):
+            if "reasoning_train_rft.py" not in files:
+                continue
+            path = os.path.join(dirpath, "reasoning_train_rft.py")
+            src = _read(path)
+            if MARKER in src and _DRIVER_DASH_OLD not in src:
+                print(f"[skip] already applied: {path}")
+                found = True
+                continue
+            if _DRIVER_DASH_OLD in src:
+                _write(path, src.replace(_DRIVER_DASH_OLD, _DRIVER_DASH_NEW, 1))
+                print(f"[ok]   ray dashboard enabled in bundled driver: {path}")
+                found = True
+    if not found:
+        print("[skip] no bundled reasoning_train_rft.py with the expected anchor found "
+              "(recipe-supplied driver is patched at submit time)")
+
+
 def main():
-    # kernels <-> transformers
     _replace("kernels.layer.layer", _KERNELS_REPO_OLD, _KERNELS_REPO_NEW)
     _replace("kernels.layer.func", _KERNELS_REPO_OLD, _KERNELS_REPO_NEW)
     _replace("kernels._versions", _KERNELS_RESOLVER_OLD, _KERNELS_RESOLVER_NEW)
@@ -302,6 +369,10 @@ def main():
     # verl actor forward <-> flash-attn 4 / activation offload
     _replace("verl.utils.attention_utils", _VERL_BERT_OLD, _VERL_BERT_NEW)
     _replace("verl.workers.actor.dp_actor", _VERL_LOGITS_OLD, _VERL_LOGITS_NEW)
+
+    # Ray dashboard: install the missing frontend build and enable it on :8265
+    _install_ray_dashboard_frontend()
+    _enable_bundled_driver_dashboard()
 
     print("All verl RFT (GRPO) compatibility patches applied.")
     return 0
