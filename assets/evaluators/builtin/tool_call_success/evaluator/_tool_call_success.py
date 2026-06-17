@@ -869,7 +869,7 @@ class ToolCallSuccessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         failed_list = ",".join(failed_tools)
         reason = (
             f"Tool call(s) [{failed_list}] reported a non-success runtime status "
-            "(failed or incomplete). Short-circuited without invoking the LLM judge."
+            "(failed or incomplete)."
         )
         token_metadata = self._get_token_metadata({})
         result = {
@@ -1212,3 +1212,4 @@ def _reformat_tool_definitions(tool_definitions, logger=None):
             )
             logger.debug(f"Original tool definitions: {tool_definitions}")
         return tool_definitions
+
