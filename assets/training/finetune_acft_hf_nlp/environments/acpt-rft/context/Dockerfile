@@ -114,10 +114,9 @@ COPY vllm_rollout /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/workers
 # small set of idempotent, anchor-verified source patches and fails the build if any
 # target anchor is missing. Run in the training conda env.
 COPY verl_rft_compat_patches /tmp/verl_rft_compat_patches.py
-COPY ray_dashboard_build /tmp/ray_dashboard_build
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir -U "accelerate==1.14.0" && \
-    RAY_DASHBOARD_BUILD_SRC=/tmp/ray_dashboard_build /opt/conda/envs/ptca/bin/python /tmp/verl_rft_compat_patches.py && \
-    rm -rf /tmp/verl_rft_compat_patches.py /tmp/ray_dashboard_build
+    /opt/conda/envs/ptca/bin/python /tmp/verl_rft_compat_patches.py && \
+    rm -f /tmp/verl_rft_compat_patches.py
 RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
 ENV PYTHONHASHSEED=random \
     PYTHONDONTWRITEBYTECODE=1
