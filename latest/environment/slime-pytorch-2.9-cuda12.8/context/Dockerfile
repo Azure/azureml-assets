@@ -159,11 +159,13 @@ RUN apt-get update && \
 
 # Security: upgrade Python packages with known vulnerabilities
 # (aiohttp GHSA-jg22-mg44-37j8 / GHSA-hg6j-4rv6-33pg, starlette GHSA-86qp-5c8j-p5mr,
-#  idna GHSA-65pc-fj4g-8rjx in main site-packages and ray's vendored thirdparty copy)
+#  idna GHSA-65pc-fj4g-8rjx in main site-packages and ray's vendored thirdparty copy;
+#  pyarrow GHSA-rgxp-2hwp-jwgg / CVE-2026-25087 use-after-free in Apache Arrow C++)
 RUN python -m pip install --no-cache-dir \
         "aiohttp>=3.14.0" \
         "starlette>=1.0.1" \
-        "idna>=3.15"
+        "idna>=3.15" \
+        "pyarrow>=23.0.1"
 
 COPY patch_ray_thirdparty.py /tmp/patch_ray_thirdparty.py
 # Upgrade vulnerable packages inside ray's vendored thirdparty_files directory and
