@@ -10,10 +10,6 @@ properties:
   languages: en
   SharedComputeCapacityEnabled: 'True'
 tags:
-  disable-batch: 'true'
-  inference_supported_envs:
-  - vllm
-  maas-inference: 'true'
   model_specific_defaults:
     apply_deepspeed: 'true'
     deepspeed_stage: 3
@@ -189,4 +185,9 @@ system_metadata:
     - Standard_NC40ads_H100_v5
     - Standard_NC80adis_H100_v5
     - Standard_ND96isr_H100_v5
+  inferenceSupportedEnvs:
+  - vllm
+  platformCapabilities:
+    enableBatch: false
+    maasInference: true
 version: 8

@@ -9,7 +9,6 @@ tags:
   reasoningStart: ''
   reasoningEnd: ''
   minFLVersion: 0.0.0
-  disable-maap: 'true'
 system_metadata:
   alias: mistral-7b-v0.2
   publisher: Microsoft
@@ -26,6 +25,8 @@ system_metadata:
   tasks:
     inferenceTasks:
     - chat-completion
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/mistralai-Mistral-7B-Instruct-v0-2/versions/6
@@ -37,5 +38,5 @@ variantInfo:
     executionProvider: CUDAExecutionProvider
     fileSizeBytes: 4273492459
     vRamFootprintBytes: 4273717196
-version: 2
 type: custom_model
+version: 2

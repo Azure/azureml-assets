@@ -6,9 +6,6 @@ properties:
   inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   languages: en
   SharedComputeCapacityEnabled: 'True'
-tags:
-  inference_supported_envs:
-  - vllm
 system_metadata:
   languages:
   - en
@@ -45,4 +42,6 @@ system_metadata:
     inferenceDeprecationDate: '2026-04-16T00:00:00.000000Z'
     inferenceLegacyDate: '2026-03-16T00:00:00.000000Z'
     inferenceRetirementDate: '2026-07-31T00:00:00.000000Z'
+  inferenceSupportedEnvs:
+  - vllm
 version: 3

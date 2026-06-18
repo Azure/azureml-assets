@@ -16,14 +16,10 @@ properties:
   baseWeightsId: Llama-2-7b
 tags:
   training_datasets: Publicly available sources
-  maas-inference: 'true'
   model_specific_defaults:
     apply_deepspeed: 'false'
     apply_lora: 'true'
     precision: '4'
-  inference_supported_envs:
-  - vllm
-  - ds_mii
 system_metadata:
   baseModelWeightsVersion: 1.0
   languages:
@@ -98,4 +94,9 @@ system_metadata:
     inferenceDeprecationDate: '2025-03-31T00:00:00.000000Z'
     inferenceLegacyDate: '2025-02-28T00:00:00.000000Z'
     inferenceRetirementDate: '2025-06-30T00:00:00.000000Z'
+  inferenceSupportedEnvs:
+  - vllm
+  - ds_mii
+  platformCapabilities:
+    maasInference: true
 version: 23

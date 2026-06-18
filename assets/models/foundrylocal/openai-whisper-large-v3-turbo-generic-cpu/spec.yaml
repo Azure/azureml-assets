@@ -9,7 +9,6 @@ tags:
   reasoningStart: ''
   reasoningEnd: ''
   minFLVersion: 0.0.0
-  disable-maap: 'true'
 system_metadata:
   alias: whisper-large-v3-turbo
   publisher: Microsoft
@@ -26,6 +25,8 @@ system_metadata:
   tasks:
     inferenceTasks:
     - automatic-speech-recognition
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/openai-whisper-large-v3-turbo/versions/1
@@ -37,5 +38,5 @@ variantInfo:
     executionProvider: CPUExecutionProvider
     fileSizeBytes: 1346943518
     vRamFootprintBytes: 1346943518
-version: 4
 type: custom_model
+version: 4
