@@ -9,7 +9,6 @@ tags:
   reasoningStart: ''
   reasoningEnd: ''
   minFLVersion: 0.0.0
-  disable-maap: 'true'
 system_metadata:
   alias: whisper-tiny
   publisher: Microsoft
@@ -26,6 +25,8 @@ system_metadata:
   tasks:
     inferenceTasks:
     - automatic-speech-recognition
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/openai-whisper-tiny/versions/1
@@ -37,5 +38,5 @@ variantInfo:
     executionProvider: CUDAExecutionProvider
     fileSizeBytes: 89899070
     vRamFootprintBytes: 89899070
-version: 3
 type: custom_model
+version: 3

@@ -9,7 +9,6 @@ tags:
   reasoningEnd: </think>
   contextLength: 262144
   minFLVersion: 0.0.0
-  disable-maap: 'true'
 system_metadata:
   alias: qwen3-vl-4b-instruct
   publisher: Microsoft
@@ -34,6 +33,8 @@ system_metadata:
   tasks:
     inferenceTasks:
     - vision-language-chat
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/qwen3-vl-4b-instruct/versions/1
@@ -45,5 +46,5 @@ variantInfo:
     executionProvider: CUDAExecutionProvider
     fileSizeBytes: 3734890165
     vRamFootprintBytes: 3734890165
-version: 2
 type: custom_model
+version: 2

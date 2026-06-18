@@ -9,7 +9,6 @@ tags:
   reasoningEnd: ''
   contextLength: 0
   minFLVersion: 1.2.1
-  disable-maap: 'true'
 system_metadata:
   alias: nemotron-3.5-asr-streaming-0.6b
   publisher: Microsoft
@@ -26,6 +25,8 @@ system_metadata:
   tasks:
     inferenceTasks:
     - automatic-speech-recognition
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/nemotron-3.5-asr-streaming-0.6b/versions/1
@@ -37,5 +38,5 @@ variantInfo:
     executionProvider: CUDAExecutionProvider
     fileSizeBytes: 793344782
     vRamFootprintBytes: 793344782
-version: 2
 type: custom_model
+version: 2

@@ -16,7 +16,6 @@ properties:
   baseWeightsId: Llama-2-13b
 tags:
   training_datasets: Publicly available sources
-  maas-inference: 'true'
   model_specific_defaults:
     apply_lora: 'true'
     apply_deepspeed: 'true'
@@ -24,9 +23,6 @@ tags:
     precision: '16'
     max_seq_length: '2048'
     ignore_mismatched_sizes: 'false'
-  inference_supported_envs:
-  - vllm
-  - ds_mii
 system_metadata:
   baseModelWeightsVersion: 1.0
   languages:
@@ -96,4 +92,9 @@ system_metadata:
     inferenceDeprecationDate: '2025-03-31T00:00:00.000000Z'
     inferenceLegacyDate: '2025-02-28T00:00:00.000000Z'
     inferenceRetirementDate: '2025-06-30T00:00:00.000000Z'
+  inferenceSupportedEnvs:
+  - vllm
+  - ds_mii
+  platformCapabilities:
+    maasInference: true
 version: 25

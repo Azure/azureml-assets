@@ -9,7 +9,6 @@ tags:
   reasoningEnd: </think>
   contextLength: 4096
   minFLVersion: 0.0.0
-  disable-maap: 'true'
 system_metadata:
   alias: deepseek-r1-14b
   publisher: Microsoft
@@ -26,6 +25,8 @@ system_metadata:
   tasks:
     inferenceTasks:
     - chat-completion
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/deepseek-r1-distill-qwen-14b/versions/1
@@ -38,5 +39,5 @@ variantInfo:
     executionProvider: QNNExecutionProvider
     fileSizeBytes: 7644884500
     vRamFootprintBytes: 7644884500
-version: 2
 type: custom_model
+version: 2

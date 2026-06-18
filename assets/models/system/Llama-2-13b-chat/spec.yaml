@@ -10,12 +10,7 @@ properties:
   azureml.copyRegistryFilesToWorkspace: true
   SharedComputeCapacityEnabled: 'True'
 tags:
-  disable-batch: 'true'
   training_datasets: Publicly available sources
-  maas-inference: 'true'
-  inference_supported_envs:
-  - vllm
-  - ds_mii
 system_metadata:
   languages:
   - en
@@ -68,4 +63,10 @@ system_metadata:
     inferenceDeprecationDate: '2025-03-31T00:00:00.000000Z'
     inferenceLegacyDate: '2025-02-28T00:00:00.000000Z'
     inferenceRetirementDate: '2025-06-30T00:00:00.000000Z'
+  inferenceSupportedEnvs:
+  - vllm
+  - ds_mii
+  platformCapabilities:
+    enableBatch: false
+    maasInference: true
 version: 22
