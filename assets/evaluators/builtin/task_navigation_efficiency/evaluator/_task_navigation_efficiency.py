@@ -42,6 +42,7 @@ class MessageRole(str, Enum):
     ASSISTANT = "assistant"
     SYSTEM = "system"
     TOOL = "tool"
+    DEVELOPER = "developer"
 
 
 class ContentType(str, Enum):
@@ -65,15 +66,33 @@ class TaskNavigationEfficiencyValidator(ValidatorInterface):
     Validate task navigation efficiency inputs (actions and expected_actions).
 
     Validates:
-    - actions: List of assistant messages containing tool calls
-    - expected_actions: Either a list of expected tool names, or a tuple of (tool names, parameters dict)
+    - actions (alias ``response``): List of assistant messages containing tool calls
+    - expected_actions (alias ``ground_truth``): Either a list of expected tool names, or a
+      tuple of (tool names, parameters dict)
     """
 
     error_target: ErrorTarget
 
+    # Canonical input key -> accepted alternate (SDK) key name.
+    _INPUT_ALIASES: Dict[str, str] = {
+        "actions": "response",
+        "expected_actions": "ground_truth",
+    }
+
     def __init__(self, error_target: ErrorTarget):
         """Initialize with error target."""
         self.error_target = error_target
+
+    def _normalize_input_aliases(self, eval_input: Dict[str, Any]) -> None:
+        """Map SDK-style input keys onto the canonical keys in place.
+
+        If a canonical key (``actions``/``expected_actions``) is absent but its alias
+        (``response``/``ground_truth``) is provided, copy the alias value to the canonical
+        key so the rest of the pipeline can rely on a single set of names.
+        """
+        for canonical, alias in self._INPUT_ALIASES.items():
+            if eval_input.get(canonical) is None and eval_input.get(alias) is not None:
+                eval_input[canonical] = eval_input[alias]
 
     def _validate_actions(self, actions: Any) -> Optional[EvaluationException]:
         """Validate the actions parameter."""
@@ -290,7 +309,8 @@ class TaskNavigationEfficiencyValidator(ValidatorInterface):
         Validate task navigation evaluation input.
 
         Args:
-            eval_input: Dictionary containing 'actions' and 'expected_actions'.
+            eval_input: Dictionary containing 'actions'/'expected_actions' (or their
+                'response'/'ground_truth' aliases).
 
         Returns:
             True if validation passes.
@@ -298,6 +318,9 @@ class TaskNavigationEfficiencyValidator(ValidatorInterface):
         Raises:
             EvaluationException: If validation fails.
         """
+        # Normalize SDK-style aliases ('response'/'ground_truth') onto the canonical keys.
+        self._normalize_input_aliases(eval_input)
+
         # If actions or expected_actions is a string, try to parse it as a JSON list
         for key in ("actions", "expected_actions"):
             value = eval_input.get(key)
