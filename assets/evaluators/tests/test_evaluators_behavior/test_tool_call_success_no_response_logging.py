@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """Regression tests guarding against credential / PII leaks via response logging.
 
 Several evaluator fallback paths previously logged the full raw payload
