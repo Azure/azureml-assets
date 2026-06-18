@@ -15,19 +15,40 @@ image-build time rather than at job runtime.
 Run inside the image's training conda env, e.g.:
     /opt/conda/envs/ptca/bin/python verl_rft_compat_patches.py
 """
-import importlib.util
 import io
 import os
 import sys
+import sysconfig
 
 MARKER = "ACFT-RFT-COMPAT"
 
 
+def _site_dirs():
+    dirs = []
+    for key in ("purelib", "platlib"):
+        p = sysconfig.get_paths().get(key)
+        if p and os.path.isdir(p) and p not in dirs:
+            dirs.append(p)
+    for p in sys.path:
+        if p and p.endswith("site-packages") and os.path.isdir(p) and p not in dirs:
+            dirs.append(p)
+    return dirs
+
+
 def _module_path(modname):
-    spec = importlib.util.find_spec(modname)
-    if spec is None or not spec.origin:
-        sys.exit(f"ERROR: could not locate module {modname}")
-    return spec.origin
+    # Resolve a module's source file by path WITHOUT importing it. Importing the target
+    # packages (kernels / transformers / vllm / verl) during patching can load stale,
+    # pre-patch code into memory and trigger import-time failures mid-build (e.g. a
+    # find_spec that pulls in transformers -> kernels before its file is patched).
+    rel = modname.replace(".", os.sep)
+    for base in _site_dirs():
+        cand = os.path.join(base, rel + ".py")
+        if os.path.isfile(cand):
+            return cand
+        cand_init = os.path.join(base, rel, "__init__.py")
+        if os.path.isfile(cand_init):
+            return cand_init
+    sys.exit(f"ERROR: could not locate source file for module {modname} in site-packages")
 
 
 def _read(path):
@@ -40,8 +61,8 @@ def _write(path, src):
         f.write(src)
 
 
-def _replace(modname, old, new, *, occurrences=1):
-    """Replace an exact source anchor in a module's file (idempotent)."""
+def _replace(modname, old, new):
+    """Replace an exact source anchor in a module's file (idempotent, all occurrences)."""
     path = _module_path(modname)
     src = _read(path)
     if MARKER in src and old not in src:
@@ -52,7 +73,7 @@ def _replace(modname, old, new, *, occurrences=1):
             f"ERROR: expected anchor not found in {path} ({modname}); "
             "the bundled package version may differ from the one this patch targets."
         )
-    _write(path, src.replace(old, new, occurrences))
+    _write(path, src.replace(old, new))
     print(f"[ok]   patched: {modname}")
 
 
