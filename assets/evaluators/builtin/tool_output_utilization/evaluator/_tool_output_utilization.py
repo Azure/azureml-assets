@@ -716,8 +716,12 @@ def reformat_conversation_history(query, logger=None, include_system_messages=Fa
         #   Lower percentage of mode in Likert scale (73.4% vs 75.4%)
         #   Lower pairwise agreement between LLMs (85% vs 90% at the pass/fail level with threshold of 3)
         if logger:
-            logger.warning(f"Conversation history could not be parsed, falling back to original query: {query}")
-            print(e)
+            logger.warning(
+                "Conversation history could not be parsed; falling back to raw input. "
+                "Evaluator accuracy will degrade. Input shape: %s. Error: %s",
+                _describe_payload(query),
+                e,
+            )
         return query
 
 
@@ -823,10 +827,41 @@ def reformat_tool_definitions(tool_definitions, logger=None):
         # See comments on reformat_conversation_history for more details.
         if logger:
             logger.warning(
-                "Tool definitions could not be parsed, falling back to original definitions"
-                f": {tool_definitions}. Error: {e}"
+                "Tool definitions could not be parsed; falling back to raw definitions. "
+                "Input shape: %s. Error: %s",
+                _describe_payload(tool_definitions),
+                e,
             )
         return tool_definitions
+
+
+def _describe_payload(obj):
+    """Return a non-sensitive structural summary of a payload for safe logging.
+
+    The raw payload may contain customer-controlled data (conversation history,
+    tool definitions, tool arguments/results, file content, etc.) which can
+    include credentials or PII. This helper returns shape-only metadata - type,
+    length, top-level roles/keys - sufficient to diagnose schema drift without
+    exposing values.
+    """
+    try:
+        type_name = type(obj).__name__
+        if isinstance(obj, list):
+            roles = []
+            for item in obj[:10]:
+                if isinstance(item, dict):
+                    role = item.get("role")
+                    if isinstance(role, str):
+                        roles.append(role)
+            roles_summary = roles if roles else "n/a"
+            return f"type={type_name} len={len(obj)} roles={roles_summary}"
+        if isinstance(obj, dict):
+            keys = sorted(k for k in obj.keys() if isinstance(k, str))[:10]
+            return f"type={type_name} top_keys={keys}"
+        length = len(obj) if hasattr(obj, "__len__") else "n/a"
+        return f"type={type_name} len={length}"
+    except Exception:
+        return f"type={type(obj).__name__} (summary unavailable)"
 
 
 # ```
