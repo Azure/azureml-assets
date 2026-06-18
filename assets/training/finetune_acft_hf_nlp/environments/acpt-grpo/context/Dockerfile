@@ -53,8 +53,12 @@ RUN rm -rf ~/.cache/pip
 # pip: see note above — bootstrap tool, must be upgraded directly in base env too
 # Also clean stale conda-meta/pip-*.json (see ptca env note above for scanner detail).
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'pip>=26.1.1' 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' \
-        'aiohttp>=3.14.0' 'click>=8.3.3' 'idna>=3.15' && \
+        'aiohttp>=3.14.0' 'click>=8.3.3' 'idna>=3.15' \
+        'PyJWT>=2.13.0' && \
     rm -f /opt/conda/conda-meta/pip-26.0*.json
+# pyarrow: GHSA-rgxp-2hwp-jwgg (fix in >=23.0.1); ptca env ships 20.0.0 via vllm transitive dep.
+# PyJWT: GHSA-jq35-7prp-9v3f, GHSA-993g-76c3-p5m4 (fix in >=2.13.0); base env ships 2.12.1.
+RUN pip install --no-cache-dir --upgrade 'pyarrow>=23.0.1'
 # ray vendors aiohttp/idna under _private/runtime_env/agent/thirdparty_files (single underscore).
 # The actual Python module path is ray/_private (not ray/__private).
 RUN rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/ray/_private/runtime_env/agent/thirdparty_files/aiohttp* \

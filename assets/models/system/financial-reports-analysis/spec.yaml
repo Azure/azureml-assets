@@ -1,37 +1,48 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-
 name: financial-reports-analysis
 path: ./
-
 properties:
   inference-min-sku-spec: 24|1|220|64
   inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   languages: en
-  SharedComputeCapacityEnabled: "True"
+  SharedComputeCapacityEnabled: 'True'
 tags:
-  author: Microsoft
-  Preview: ""
-  Featured: ""
-  languages: "en"
-  inputModalities: "text"
-  outputModalities: "text"
-  industry: financial-services
   inference_supported_envs:
-    - vllm
+  - vllm
+system_metadata:
+  languages:
+  - en
+  sharedComputeCapacityEnabled: true
+  SKU:
+    inferenceRecommendedSkus:
+    - Standard_NC24ads_A100_v4
+    - Standard_NC48ads_A100_v4
+    - Standard_NC96ads_A100_v4
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
+    inferenceMinSkuSpec: 24|1|220|64
+  publisher: Microsoft
+  hiddenLayerScanned: true
+  industry: financial-services
+  inputModalities:
+  - text
   license: MIT
-  task: chat-completion
-  hiddenlayerscanned: ""
-  SharedComputeCapacityEnabled: ""
-  InferenceLegacyDate: '2026-03-16'
-  InferenceDeprecationDate: '2026-04-16'
-  InferenceRetirementDate: '2026-07-31'
-  inference_compute_allow_list:
-    [
-      Standard_NC24ads_A100_v4,
-      Standard_NC48ads_A100_v4,
-      Standard_NC96ads_A100_v4,
-      Standard_ND96asr_v4,
-      Standard_ND96amsr_A100_v4
-    ]
-
+  outputModalities:
+  - text
+  featured: true
+  preview: true
+  tasks:
+    inferenceTasks:
+    - chat-completion
+  supportedComputes:
+    inferenceComputes:
+    - Standard_NC24ads_A100_v4
+    - Standard_NC48ads_A100_v4
+    - Standard_NC96ads_A100_v4
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
+  deprecation:
+    inferenceDeprecationDate: '2026-04-16T00:00:00.000000Z'
+    inferenceLegacyDate: '2026-03-16T00:00:00.000000Z'
+    inferenceRetirementDate: '2026-07-31T00:00:00.000000Z'
 version: 2

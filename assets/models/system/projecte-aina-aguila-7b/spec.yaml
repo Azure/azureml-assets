@@ -2,27 +2,42 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: projecte-aina-aguila-7b
 path: ./
 properties:
-  SharedComputeCapacityEnabled: "True"
+  SharedComputeCapacityEnabled: 'True'
   SHA: e4c1ffc92762d12946e850e765b866b0ab2d864b
   datasets: ''
   inference-min-sku-spec: 24|1|220|64
   inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   languages: en, es, ca
 tags:
-  SharedComputeCapacityEnabled: ''
-  hiddenlayerscanned: ''
-  huggingface_model_id: projecte-aina/aguila-7b
-  inference_compute_allow_list:
-   [
-      Standard_NC24ads_A100_v4,
-      Standard_NC48ads_A100_v4,
-      Standard_NC96ads_A100_v4,
-      Standard_ND96asr_v4,
-      Standard_ND96amsr_A100_v4
-    ]
   inference_supported_envs:
-    - vllm
+  - vllm
+  disable-batch: 'true'
+system_metadata:
+  datasets: []
+  languages:
+  - en
+  - es
+  - ca
+  sharedComputeCapacityEnabled: true
+  SKU:
+    inferenceRecommendedSkus:
+    - Standard_NC24ads_A100_v4
+    - Standard_NC48ads_A100_v4
+    - Standard_NC96ads_A100_v4
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
+    inferenceMinSkuSpec: 24|1|220|64
+  hiddenLayerScanned: true
+  huggingFaceModelId: projecte-aina/aguila-7b
   license: apache-2.0
-  disable-batch: "true"
-  task: text-generation
+  tasks:
+    inferenceTasks:
+    - text-generation
+  supportedComputes:
+    inferenceComputes:
+    - Standard_NC24ads_A100_v4
+    - Standard_NC48ads_A100_v4
+    - Standard_NC96ads_A100_v4
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
 version: 2

@@ -1,35 +1,41 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Phi-3-mini-128k-instruct-generic-cpu
-version: 3
-isArchived: true
 path: ./
+isArchived: true
 tags:
-  foundryLocal: ""
-  license: "MIT"
-  licenseDescription: "This model is provided under the License Terms available at <https://huggingface.co/microsoft/Phi-3-mini-128k-instruct/blob/main/LICENSE>."
-  author: Microsoft
-  inputModalities: "text"
-  outputModalities: "text"
-  task: chat-completion
-  maxOutputTokens: 2048
-  alias: phi-3-mini-128k
-  directoryPath: v3
-  promptTemplate: "{\"system\": \"<|system|>\\n{Content}<|end|>\", \"user\": \"<|user|>\\n{Content}<|end|>\", \"assistant\": \"<|assistant|>\\n{Content}<|end|>\", \"prompt\": \"<|user|>\\n{Content}<|end|>\\n<|assistant|>\"}"
   contextLength: 131072
-  capabilities: ""
-  supportsReasoning: ""
-  reasoningStart: ""
-  reasoningEnd: ""
-  minFLVersion: "0.0.0"
-  disable-maap: "true"
-type: custom_model
+  capabilities: ''
+  supportsReasoning: ''
+  reasoningStart: ''
+  reasoningEnd: ''
+  minFLVersion: 0.0.0
+  disable-maap: 'true'
+system_metadata:
+  alias: phi-3-mini-128k
+  publisher: Microsoft
+  directoryPath: v3
+  foundryLocal: ''
+  inputModalities:
+  - text
+  license: MIT
+  licenseDescription: This model is provided under the License Terms available at <https://huggingface.co/microsoft/Phi-3-mini-128k-instruct/blob/main/LICENSE>.
+  maxOutputTokens: 2048
+  outputModalities:
+  - text
+  promptTemplate: '{"system": "<|system|>\n{Content}<|end|>", "user": "<|user|>\n{Content}<|end|>", "assistant": "<|assistant|>\n{Content}<|end|>", "prompt": "<|user|>\n{Content}<|end|>\n<|assistant|>"}'
+  tasks:
+    inferenceTasks:
+    - chat-completion
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/Phi-3-mini-128k-instruct/versions/13
   variantMetadata:
-    modelType: 'ONNX'
-    quantization: ['RTN']
-    device: 'cpu'
-    executionProvider: 'CPUExecutionProvider'
+    modelType: ONNX
+    quantization:
+    - RTN
+    device: cpu
+    executionProvider: CPUExecutionProvider
     fileSizeBytes: 2727304232
     vRamFootprintBytes: 2727517409
+version: 3
+type: custom_model

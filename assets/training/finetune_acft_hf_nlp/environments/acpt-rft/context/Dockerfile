@@ -86,10 +86,14 @@ RUN pip install --upgrade cryptography==46.0.7 'fastmcp>=3.2.0' 'Mako>=1.3.11' '
 #   by typer/uvicorn/black/flask/etc.; none of these pin click>=8.3.3 in published releases
 #   (verified PyPI requires_dist 2026-05-23). Direct override is the only remediation.
 #   (Note: requirements.txt also pins click==8.3.3 to cover the ptca env install path.)
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.1.1' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' && \
+# PyJWT>=2.13.0 (base env, py3.13): GHSA-993g-76c3-p5m4, GHSA-jq35-7prp-9v3f / VCM 5013533,
+#   5013521. PyJWT is pulled transitively by various auth/azure packages; no parent pins
+#   >=2.13.0 in published releases. Direct override is the only remediation.
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.1.1' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'PyJWT>=2.13.0' && \
     rm -f /opt/conda/conda-meta/pip-26.0*.json
 # GHSA-65pc-fj4g-8rjx: idna>=3.15 for ptca env (base env covered above)
-RUN pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.1.1' 'idna>=3.15' && \
+# GHSA-993g-76c3-p5m4, GHSA-jq35-7prp-9v3f: PyJWT>=2.13.0 for ptca env (base env covered above)
+RUN pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.1.1' 'idna>=3.15' 'PyJWT>=2.13.0' && \
     rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0*.json
 # ray vendors its own copies of aiohttp and idna inside thirdparty_files/ for the runtime_env
 # agent; those vendored copies are not upgraded by the pip installs above. Patching all copies
@@ -103,6 +107,16 @@ RUN find /opt/conda/envs/ptca/lib/python3.10/site-packages/ray -type d -name 'th
       pip install --no-cache-dir --target "$dir" 'aiohttp>=3.14.0' 'idna>=3.15'; \
     done
 COPY vllm_rollout /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/workers/rollout/vllm_rollout/vllm_rollout.py
+# ---- verl RFT (GRPO) compatibility patches ----------------------------------
+# Reconciles the bundled kernels / transformers / vLLM / verl / flash-attn lineages
+# so the verl Reinforced Fine-Tuning (GRPO) recipe runs end-to-end (model load,
+# FSDP2, async vLLM agentic rollout, validation, GRPO update). The script applies a
+# small set of idempotent, anchor-verified source patches and fails the build if any
+# target anchor is missing. Run in the training conda env.
+COPY verl_rft_compat_patches /tmp/verl_rft_compat_patches.py
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir "accelerate==1.14.0" && \
+    /opt/conda/envs/ptca/bin/python /tmp/verl_rft_compat_patches.py && \
+    rm -f /tmp/verl_rft_compat_patches.py
 RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
 ENV PYTHONHASHSEED=random \
     PYTHONDONTWRITEBYTECODE=1

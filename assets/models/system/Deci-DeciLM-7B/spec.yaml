@@ -2,31 +2,51 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Deci-DeciLM-7B
 path: ./
 properties:
-  SharedComputeCapacityEnabled: "True"
+  SharedComputeCapacityEnabled: 'True'
   SHA: e790e338832d40275d34b174075bc87f44354497
   inference-recommended-sku: Standard_NC12s_v3, Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   inference-min-sku-spec: 12|2|224|1474
   evaluation-recommended-sku: Standard_NC12s_v3, Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   evaluation-min-sku-spec: 12|2|224|1474
   languages: EN
-tags:
-  Featured: ''
-  inference_compute_allow_list:
-  - Standard_NC12s_v3
-  - Standard_NC24s_v3
-  - Standard_ND40rs_v2
-  - Standard_ND96asr_v4
-  - Standard_ND96amsr_A100_v4
-  evaluation_compute_allow_list:
-  - Standard_NC12s_v3
-  - Standard_NC24s_v3
-  - Standard_ND40rs_v2
-  - Standard_ND96asr_v4
-  - Standard_ND96amsr_A100_v4
-  SharedComputeCapacityEnabled: ''
-  task: text-generation
-  hiddenlayerscanned: ""
+system_metadata:
+  languages:
+  - en
+  sharedComputeCapacityEnabled: true
+  SKU:
+    evaluationRecommendedSkus:
+    - Standard_NC12s_v3
+    - Standard_NC24s_v3
+    - Standard_ND40rs_v2
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
+    inferenceRecommendedSkus:
+    - Standard_NC12s_v3
+    - Standard_NC24s_v3
+    - Standard_ND40rs_v2
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
+    evaluationMinSkuSpec: 12|2|224|1474
+    inferenceMinSkuSpec: 12|2|224|1474
+  publisher: Deci AI
+  hiddenLayerScanned: true
+  huggingFaceModelId: Deci/DeciLM-7B
   license: apache-2.0
-  author: "Deci AI"
-  huggingface_model_id: Deci/DeciLM-7B
+  featured: true
+  tasks:
+    inferenceTasks:
+    - text-generation
+  supportedComputes:
+    inferenceComputes:
+    - Standard_NC12s_v3
+    - Standard_NC24s_v3
+    - Standard_ND40rs_v2
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
+    evaluationComputes:
+    - Standard_NC12s_v3
+    - Standard_NC24s_v3
+    - Standard_ND40rs_v2
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
 version: 7

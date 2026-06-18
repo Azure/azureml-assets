@@ -51,10 +51,14 @@ RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
     'idna>=3.15' \
     'click>=8.3.3' \
     'python-dotenv>=1.2.2' \
-    'aiohttp>=3.14.0'
+    'aiohttp>=3.14.0' \
+    'PyJWT>=2.13.0'
 
 # aiohttp is also present in the ptca env (GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8).
-RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0'
+# pyarrow <23.0.1 is vulnerable (GHSA-rgxp-2hwp-jwgg).
+RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade \
+    'aiohttp>=3.14.0' \
+    'pyarrow>=23.0.1'
 
 # The conda pip upgrade can reinstall the rattler solver. The base image does
 # not need it for runtime, and its compiled extension currently carries Rust CVEs.
