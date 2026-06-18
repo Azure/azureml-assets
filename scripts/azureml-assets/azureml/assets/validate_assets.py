@@ -1172,7 +1172,7 @@ def validate_assets(input_dirs: List[Path],
             continue
 
         # Extract fields not supported in SDK from spec
-        unsupported_fields = ["variantInfo", "defaultDeploymentTemplate", "isArchived"]
+        unsupported_fields = ["variantInfo", "defaultDeploymentTemplate", "isArchived", "intellectualProperty"]
         unsupported_fields_mapping = {}
 
         if asset_config.type == assets.AssetType.MODEL:

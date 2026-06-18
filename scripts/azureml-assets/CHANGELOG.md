@@ -1,3 +1,7 @@
+## 1.17.6 (2026-06-17)
+### 🚀 New Features
+- [#5154](https://github.com/Azure/azureml-assets/pull/5154) Add isArchived to unsupported SDK fields list
+
 ## 1.17.5 (2026-06-04)
 ### 🐛 Bugs Fixed
 - [#5111](https://github.com/Azure/azureml-assets/pull/5111) Use system_metadata equivalents for tags/properties in MLFlow model spec validation
