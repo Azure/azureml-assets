@@ -11,7 +11,7 @@ exporters, customer telemetry).
 
 These tests assert that for each known fallback / debug path, the raw payload
 never appears in captured log output at any level. They cover one file per
-leak site; the synthetic ``SECRET`` placeholder stands in for any sensitive
+leak site; the synthetic ``LEAK_CANARY`` placeholder stands in for any sensitive
 substring that might be present in real customer payloads.
 """
 
@@ -39,11 +39,11 @@ from ...builtin.tool_output_utilization.evaluator._tool_output_utilization impor
 )
 
 
-SECRET = "sk-SUPERSECRET-API-KEY-DO-NOT-LOG"
+LEAK_CANARY = "leak-canary-xyzzy-do-not-log"
 
 
 def _assert_secret_not_logged(caplog):
-    leaks = [r for r in caplog.records if SECRET in r.getMessage()]
+    leaks = [r for r in caplog.records if LEAK_CANARY in r.getMessage()]
     assert not leaks, (
         "Payload was written to logs - this leaks credentials / PII. "
         f"Offending records: {[(r.levelname, r.getMessage()) for r in leaks]}"
@@ -60,7 +60,7 @@ def test_tcs_exception_branch_does_not_log_response(caplog):
         """Response that triggers a TypeError inside _get_tool_calls_results."""
 
         def __repr__(self):
-            return f"<Response token={SECRET}>"
+            return f"<Response marker={LEAK_CANARY}>"
 
         def __iter__(self):
             raise TypeError("cannot iterate")
@@ -78,7 +78,7 @@ def test_tcs_empty_extraction_branch_does_not_log_response(caplog):
     response = [
         {
             "role": "assistant",
-            "content": [{"type": "text", "text": f"my key is {SECRET}"}],
+            "content": [{"type": "text", "text": f"observed value {LEAK_CANARY}"}],
         }
     ]
 
@@ -95,7 +95,7 @@ def test_tcs_tool_definitions_exception_does_not_log_payload(caplog):
 
     class BoomDefs:
         def __repr__(self):
-            return f"<ToolDefs secret={SECRET}>"
+            return f"<ToolDefs marker={LEAK_CANARY}>"
 
         def __iter__(self):
             raise TypeError("cannot iterate")
@@ -120,7 +120,7 @@ def _make_unparseable_query():
 
     class BoomQuery:
         def __repr__(self):
-            return f"<Query password='{SECRET}'>"
+            return f"<Query marker='{LEAK_CANARY}'>"
 
         def __iter__(self):
             raise TypeError("cannot iterate")
@@ -158,7 +158,7 @@ def test_tou_tool_definitions_exception_does_not_log_payload(caplog):
 
     class BoomDefs:
         def __repr__(self):
-            return f"<ToolDefs secret={SECRET}>"
+            return f"<ToolDefs marker={LEAK_CANARY}>"
 
         def __iter__(self):
             raise TypeError("cannot iterate")
@@ -191,20 +191,20 @@ DESCRIBE_HELPERS = [
 
 class _BadLen(list):
     def __len__(self):
-        raise RuntimeError(f"len boom containing {SECRET}")
+        raise RuntimeError(f"len boom containing {LEAK_CANARY}")
 
 
 class _BadDict(dict):
     def keys(self):
-        raise RuntimeError(f"keys boom containing {SECRET}")
+        raise RuntimeError(f"keys boom containing {LEAK_CANARY}")
 
 
 class _BadObj:
     def __len__(self):
-        raise ValueError(f"len boom containing {SECRET}")
+        raise ValueError(f"len boom containing {LEAK_CANARY}")
 
     def __repr__(self):
-        return f"<BadObj {SECRET}>"
+        return f"<BadObj marker={LEAK_CANARY}>"
 
 
 def _adversarial_inputs():
@@ -215,20 +215,20 @@ def _adversarial_inputs():
         ("none", None),
         ("empty_list", []),
         ("empty_dict", {}),
-        ("list_of_strings", [f"payload {SECRET}", "x"]),
+        ("list_of_strings", [f"payload {LEAK_CANARY}", "x"]),
         ("list_of_ints", [1, 2, 3]),
-        ("list_of_mixed", [{"role": "user"}, f"stray {SECRET}", 42, None]),
+        ("list_of_mixed", [{"role": "user"}, f"stray {LEAK_CANARY}", 42, None]),
         ("list_with_non_string_roles", [{"role": 1}, {"role": None}, {"role": ["weird"]}]),
-        ("dict_with_int_keys", {1: f"value {SECRET}", 2: "b"}),
-        ("dict_with_mixed_keys", {"a": 1, 2: f"value {SECRET}", (1, 2): "c"}),
+        ("dict_with_int_keys", {1: f"value {LEAK_CANARY}", 2: "b"}),
+        ("dict_with_mixed_keys", {"a": 1, 2: f"value {LEAK_CANARY}", (1, 2): "c"}),
         ("recursive_dict", rec),
-        ("bytes_payload", f"sk-{SECRET}".encode("utf-8")),
-        ("bytearray_payload", bytearray(SECRET.encode("utf-8"))),
-        ("set_payload", {f"a {SECRET}", "b"}),
-        ("tuple_payload", (f"a {SECRET}", "b")),
+        ("bytes_payload", f"prefix-{LEAK_CANARY}".encode("utf-8")),
+        ("bytearray_payload", bytearray(LEAK_CANARY.encode("utf-8"))),
+        ("set_payload", {f"a {LEAK_CANARY}", "b"}),
+        ("tuple_payload", (f"a {LEAK_CANARY}", "b")),
         ("huge_list", [{"role": "user"}] * 10_000),
         ("bad_len_list", _BadLen([1, 2, 3])),
-        ("bad_dict_keys", _BadDict({"a": SECRET})),
+        ("bad_dict_keys", _BadDict({"a": LEAK_CANARY})),
         ("bad_obj_with_len_raising", _BadObj()),
     ]
 
@@ -236,15 +236,15 @@ def _adversarial_inputs():
 @pytest.mark.parametrize("helper_name,helper", DESCRIBE_HELPERS)
 @pytest.mark.parametrize("label,value", _adversarial_inputs())
 def test_describe_helper_never_raises_and_never_leaks(helper_name, helper, label, value):
-    """Every describe helper must (1) never raise and (2) never include SECRET."""
+    """Every describe helper must (1) never raise and (2) never include the canary marker."""
     try:
         out = helper(value)
     except Exception as e:  # pragma: no cover - defensive
         pytest.fail(f"{helper_name} raised on input {label!r}: {type(e).__name__}: {e}")
 
     assert isinstance(out, str), f"{helper_name} returned non-str for {label!r}: {type(out)}"
-    assert SECRET not in out, (
-        f"{helper_name} leaked SECRET in output for input {label!r}: {out!r}"
+    assert LEAK_CANARY not in out, (
+        f"{helper_name} leaked the canary marker in output for input {label!r}: {out!r}"
     )
 
 
