@@ -1065,7 +1065,7 @@ def _reformat_tool_calls_results(response, logger=None):
         # This is a fallback to ensure that the evaluation can still proceed.
         # See comments on reformat_conversation_history for more details.
         if logger:
-            logger.warning(f"Agent response could not be parsed, falling back to original response. Error: {e}")
+            logger.warning("Agent response could not be parsed, falling back to original response.")
             logger.debug(f"Original response: {response}")
         return response
 
