@@ -4,8 +4,8 @@ path: ./
 properties:
   SharedComputeCapacityEnabled: 'True'
   SHA: 5c79a376139be989ef1838f360bf4f1f256d7aec
-  inference-min-sku-spec: 40|4|672|256
-  inference-recommended-sku: Standard_ND40rs_v2, Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
+  inference-min-sku-spec: 96|4|880|256
+  inference-recommended-sku: Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
   languages: EN
 tags:
   disable-batch: 'true'
@@ -17,11 +17,10 @@ system_metadata:
   sharedComputeCapacityEnabled: true
   SKU:
     inferenceRecommendedSkus:
-    - Standard_ND40rs_v2
     - Standard_NC96ads_A100_v4
     - Standard_ND96amsr_A100_v4
     - Standard_ND96asr_v4
-    inferenceMinSkuSpec: 40|4|672|256
+    inferenceMinSkuSpec: 96|4|880|256
   publisher: Mistral AI
   benchmark: quality
   hiddenLayerScanned: true
@@ -33,8 +32,7 @@ system_metadata:
     - chat-completion
   supportedComputes:
     inferenceComputes:
-    - Standard_ND40rs_v2
     - Standard_NC96ads_A100_v4
     - Standard_ND96amsr_A100_v4
     - Standard_ND96asr_v4
-version: 11
+version: 12
