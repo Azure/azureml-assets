@@ -9,7 +9,6 @@ tags:
   reasoningStart: ''
   reasoningEnd: ''
   minFLVersion: 0.0.0
-  disable-maap: 'true'
 system_metadata:
   alias: phi-3-mini-4k
   publisher: Microsoft
@@ -26,6 +25,8 @@ system_metadata:
   tasks:
     inferenceTasks:
     - chat-completion
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/Phi-3-mini-4k-instruct/versions/15
@@ -37,5 +38,5 @@ variantInfo:
     executionProvider: CPUExecutionProvider
     fileSizeBytes: 2716566814
     vRamFootprintBytes: 3237709086
-version: 3
 type: custom_model
+version: 3

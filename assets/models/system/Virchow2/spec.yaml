@@ -6,9 +6,6 @@ properties:
   inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
   languages: en
   SharedComputeCapacityEnabled: 'True'
-tags:
-  inference_supported_envs:
-  - hf
 system_metadata:
   languages:
   - en
@@ -67,4 +64,6 @@ system_metadata:
     - Standard_ND96asr_v4
     - Standard_ND96amsr_A100_v4
     - Standard_ND40rs_v2
+  inferenceSupportedEnvs:
+  - hf
 version: 3

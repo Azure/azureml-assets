@@ -9,7 +9,6 @@ tags:
   reasoningStart: ''
   reasoningEnd: ''
   minFLVersion: 0.0.0
-  disable-maap: 'true'
 system_metadata:
   alias: gpt-oss-20b
   publisher: Microsoft
@@ -25,6 +24,8 @@ system_metadata:
   tasks:
     inferenceTasks:
     - chat-completion
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml-openai-oss/models/gpt-oss-20b/versions/11
@@ -36,5 +37,5 @@ variantInfo:
     executionProvider: WebGPUExecutionProvider
     fileSizeBytes: 12651956521
     vRamFootprintBytes: 12651956521
-version: 1
 type: custom_model
+version: 1
