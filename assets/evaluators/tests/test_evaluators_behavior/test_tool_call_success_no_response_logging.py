@@ -25,20 +25,24 @@ import pytest
 from ...builtin.tool_call_success.evaluator._tool_call_success import (
     _reformat_tool_calls_results,
     _reformat_tool_definitions as _tcs_reformat_tool_definitions,
-    _describe_response,
+    _log_safe_summary as _tcs_log_safe_summary,
 )
 from ...builtin.tool_selection.evaluator._tool_selection import (
     reformat_conversation_history as _ts_reformat_conversation_history,
-    _describe_payload as _ts_describe_payload,
+    _log_safe_summary as _ts_log_safe_summary,
 )
 from ...builtin.tool_input_accuracy.evaluator._tool_input_accuracy import (
     reformat_conversation_history as _tia_reformat_conversation_history,
-    _describe_payload as _tia_describe_payload,
+    _log_safe_summary as _tia_log_safe_summary,
 )
 from ...builtin.tool_output_utilization.evaluator._tool_output_utilization import (
     reformat_conversation_history as _tou_reformat_conversation_history,
     reformat_tool_definitions as _tou_reformat_tool_definitions,
-    _describe_payload as _tou_describe_payload,
+    _log_safe_summary as _tou_log_safe_summary,
+)
+from ...builtin.quality_grader.evaluator._quality_grader import (
+    QualityGraderEvaluator,
+    _log_safe_summary as _qg_log_safe_summary,
 )
 
 
@@ -180,7 +184,35 @@ def test_tou_tool_definitions_exception_does_not_log_payload(caplog):
 # endregion
 
 
-# region _describe_payload / _describe_response adversarial robustness
+# region quality_grader._parse_prompty_json_output
+
+
+def test_quality_grader_json_parse_failure_does_not_log_llm_output(caplog):
+    """JSON parse failure in quality_grader must not log the raw LLM output.
+
+    ``llm_output`` is the judge LLM's freeform text, which routinely echoes
+    customer input (questions, responses, tool results) inside its
+    explanation fields. Logging it on parse failure leaks that content.
+    """
+    leaky_llm_output = (
+        f"Sure! Here is my analysis of the request involving {LEAK_CANARY}:\n\n"
+        '{"properties": {"relevance": 5'  # truncated, will fail json.loads
+    )
+    # Realistic prompty wrapper - the function unwraps via .get("llm_output", ...)
+    prompty_output = {"llm_output": leaky_llm_output}
+
+    with caplog.at_level(logging.DEBUG, logger="root"):
+        result = QualityGraderEvaluator._parse_prompty_json_output(prompty_output)
+
+    # Fallback contract: empty dict returned on parse failure.
+    assert result == {}
+    _assert_secret_not_logged(caplog)
+
+
+# endregion
+
+
+# region _log_safe_summary adversarial robustness
 
 
 # All four describe-helper copies must behave identically under hostile input:
@@ -188,10 +220,11 @@ def test_tou_tool_definitions_exception_does_not_log_payload(caplog):
 # must always produce a short, structural-only string. Parametrize over each
 # helper so a regression in any one copy is caught.
 DESCRIBE_HELPERS = [
-    ("tool_call_success._describe_response", _describe_response),
-    ("tool_selection._describe_payload", _ts_describe_payload),
-    ("tool_input_accuracy._describe_payload", _tia_describe_payload),
-    ("tool_output_utilization._describe_payload", _tou_describe_payload),
+    ("tool_call_success._log_safe_summary", _tcs_log_safe_summary),
+    ("tool_selection._log_safe_summary", _ts_log_safe_summary),
+    ("tool_input_accuracy._log_safe_summary", _tia_log_safe_summary),
+    ("tool_output_utilization._log_safe_summary", _tou_log_safe_summary),
+    ("quality_grader._log_safe_summary", _qg_log_safe_summary),
 ]
 
 

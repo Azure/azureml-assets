@@ -914,13 +914,13 @@ def reformat_conversation_history(query, logger=None, include_system_messages=Fa
             logger.warning(
                 "Conversation history could not be parsed; falling back to raw input. "
                 "Evaluator accuracy will degrade. Input shape: %s. Error: %s",
-                _describe_payload(query),
+                _log_safe_summary(query),
                 e,
             )
         return query
 
 
-def _describe_payload(obj):
+def _log_safe_summary(obj):
     """Return a non-sensitive structural summary of a payload for safe logging.
 
     The raw payload may contain customer-controlled data (conversation history,
