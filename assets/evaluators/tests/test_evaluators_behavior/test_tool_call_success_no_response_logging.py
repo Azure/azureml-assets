@@ -118,8 +118,11 @@ def test_tcs_tool_definitions_exception_does_not_log_payload(caplog):
 
 
 def _make_unparseable_query():
-    """A query object whose iteration raises - reliably triggers the except branch
-    of ``reformat_conversation_history`` across all three evaluator copies."""
+    """Build a query object that triggers the except branch.
+
+    Iteration raises ``TypeError``, which reliably triggers the except branch
+    of ``reformat_conversation_history`` across all three evaluator copies.
+    """
 
     class BoomQuery:
         def __repr__(self):
@@ -211,7 +214,7 @@ class _BadObj:
 
 
 def _adversarial_inputs():
-    """Inputs that historically broke naive describe-by-repr implementations."""
+    """Return inputs that historically broke naive describe-by-repr implementations."""
     rec = {}
     rec["self"] = rec  # recursive dict - would blow up json.dumps / repr
     return [
