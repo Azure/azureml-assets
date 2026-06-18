@@ -8,8 +8,6 @@ properties:
     Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   languages: en
   SharedComputeCapacityEnabled: 'True'
-tags:
-  disable-batch: 'true'
 system_metadata:
   domain:
   - Chemistry & Materials
@@ -46,6 +44,8 @@ system_metadata:
     - Standard_NC96ads_A100_v4
     - Standard_ND96asr_v4
     - Standard_ND96amsr_A100_v4
+  platformCapabilities:
+    enableBatch: false
 version: 2
 description: |
   MatterSim is a large-scale pretrained deep learning model for efficient materials emulations and property predictions.

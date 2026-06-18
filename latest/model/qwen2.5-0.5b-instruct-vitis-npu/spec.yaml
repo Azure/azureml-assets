@@ -9,7 +9,6 @@ tags:
   reasoningEnd: ''
   contextLength: 32768
   minFLVersion: 0.0.0
-  disable-maap: 'true'
 system_metadata:
   alias: qwen2.5-0.5b
   publisher: Microsoft
@@ -38,6 +37,8 @@ system_metadata:
   tasks:
     inferenceTasks:
     - chat-completion
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: 
@@ -50,8 +51,8 @@ variantInfo:
     executionProvider: VitisAIExecutionProvider
     fileSizeBytes: 554455531
     vRamFootprintBytes: 554623477
-version: 3
 type: custom_model
+version: 3
 description: |-
   This model is an optimized version of Qwen2.5-0.5B-Instruct to enable local inference on AMD NPUs. This model uses RTN quantization.
 

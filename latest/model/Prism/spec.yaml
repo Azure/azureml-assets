@@ -9,9 +9,6 @@ properties:
     Standard_ND40rs_v2
   languages: en
   SharedComputeCapacityEnabled: 'True'
-tags:
-  inference_supported_envs:
-  - hf
 system_metadata:
   languages:
   - en
@@ -407,6 +404,8 @@ system_metadata:
     - Standard_ND96asr_v4
     - Standard_ND96amsr_A100_v4
     - Standard_ND40rs_v2
+  inferenceSupportedEnvs:
+  - hf
 version: 2
 description: |
   PRISM is a multi-modal generative foundation model for slide-level analysis of H&E-stained histopathology images. Utilizing Virchow tile embeddings and clinical report texts for pre-training, PRISM combines these embeddings into a single slide embedding and generates a text-based diagnostic report. These can be used for tasks such as cancer detection, sub-typing, and biomarker identification. The model's slide encoder can be fine-tuned for specific classification tasks, leveraging both image and text data to enhance diagnostic performance and robustness.

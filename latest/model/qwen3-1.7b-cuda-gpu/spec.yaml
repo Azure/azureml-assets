@@ -9,7 +9,6 @@ tags:
   reasoningEnd: </think>
   contextLength: 40960
   minFLVersion: 0.0.0
-  disable-maap: 'true'
 system_metadata:
   alias: qwen3-1.7b
   publisher: Microsoft
@@ -35,6 +34,8 @@ system_metadata:
   tasks:
     inferenceTasks:
     - chat-completion
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/qwen3-1.7b/versions/1
@@ -46,8 +47,8 @@ variantInfo:
     executionProvider: CUDAExecutionProvider
     fileSizeBytes: 1382801735
     vRamFootprintBytes: 1382801735
-version: 2
 type: custom_model
+version: 2
 description: |
   This model is an optimized version of Qwen3-1.7B to enable local inference on CUDA GPUs. This model uses KLD Gradient quantization.
 

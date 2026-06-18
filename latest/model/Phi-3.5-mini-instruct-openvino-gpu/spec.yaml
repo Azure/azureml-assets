@@ -9,7 +9,6 @@ tags:
   reasoningStart: ''
   reasoningEnd: ''
   minFLVersion: 0.0.0
-  disable-maap: 'true'
 system_metadata:
   alias: phi-3.5-mini
   publisher: Microsoft
@@ -29,6 +28,8 @@ system_metadata:
   tasks:
     inferenceTasks:
     - chat-completion
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: 
@@ -41,8 +42,8 @@ variantInfo:
     executionProvider: OpenVINOExecutionProvider
     fileSizeBytes: 2089885566
     vRamFootprintBytes: 2089885566
-version: 2
 type: custom_model
+version: 2
 description: |-
   This model is an optimized version of Phi-3.5-Mini-Instruct to enable local inference on Intel GPUs.
 

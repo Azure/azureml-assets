@@ -12,10 +12,6 @@ properties:
   finetune-min-sku-spec: 96|4|880|256
   finetune-recommended-sku: Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
 tags:
-  maas-inference: 'true'
-  disable-batch: 'true'
-  inference_supported_envs:
-  - vllm
   model_specific_defaults:
     apply_deepspeed: 'true'
     deepspeed_stage: 3
@@ -135,6 +131,11 @@ system_metadata:
     inferenceDeprecationDate: '2025-06-30T00:00:00.000000Z'
     inferenceLegacyDate: '2025-06-09T00:00:00.000000Z'
     inferenceRetirementDate: '2025-08-30T00:00:00.000000Z'
+  inferenceSupportedEnvs:
+  - vllm
+  platformCapabilities:
+    enableBatch: false
+    maasInference: true
 version: 5
 description: |-
   The Phi-3-Small-128K-Instruct is a 7B parameters, lightweight, state-of-the-art open model trained with the Phi-3 datasets that includes both synthetic data and the filtered publicly available websites data with a focus on high-quality and reasoning dense properties. The model supports 128K context length (in tokens).

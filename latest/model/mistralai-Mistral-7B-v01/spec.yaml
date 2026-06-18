@@ -31,9 +31,6 @@ tags:
     apply_ort: 'true'
     apply_lora: 'true'
     ignore_mismatched_sizes: 'false'
-  inference_supported_envs:
-  - vllm
-  - ds_mii
 system_metadata:
   languages:
   - en
@@ -99,6 +96,9 @@ system_metadata:
     - Standard_NC96ads_A100_v4
     - Standard_ND96amsr_A100_v4
     - Standard_ND96asr_v4
+  inferenceSupportedEnvs:
+  - vllm
+  - ds_mii
 version: 20
 description: |
   # **Model Details**

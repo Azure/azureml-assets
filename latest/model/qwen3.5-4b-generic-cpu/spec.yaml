@@ -9,7 +9,6 @@ tags:
   reasoningEnd: </think>
   contextLength: 262144
   minFLVersion: 1.1.0
-  disable-maap: 'true'
 system_metadata:
   alias: qwen3.5-4b
   publisher: Microsoft
@@ -36,6 +35,8 @@ system_metadata:
   tasks:
     inferenceTasks:
     - vision-language-chat
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/qwen3.5-4b/versions/1
@@ -47,8 +48,8 @@ variantInfo:
     executionProvider: CPUExecutionProvider
     fileSizeBytes: 4599784965
     vRamFootprintBytes: 4599784965
-version: 2
 type: custom_model
+version: 2
 description: |
   This model is an optimized version of Qwen3.5-4B to enable local inference on CPUs. This model uses RTN quantization.
 

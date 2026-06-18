@@ -9,7 +9,6 @@ tags:
   reasoningStart: ''
   reasoningEnd: ''
   minFLVersion: 0.0.0
-  disable-maap: 'true'
 system_metadata:
   alias: whisper-large-v3-turbo
   publisher: Microsoft
@@ -27,6 +26,8 @@ system_metadata:
   tasks:
     inferenceTasks:
     - automatic-speech-recognition
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: 
@@ -39,8 +40,8 @@ variantInfo:
     executionProvider: CPUExecutionProvider
     fileSizeBytes: 1346943518
     vRamFootprintBytes: 1346943518
-version: 4
 type: custom_model
+version: 4
 description: |
   Whisper Large V3 Turbo is an advanced speech recognition model, optimized for high-performance CPU inference. It is suitable for automatic speech recognition (ASR) tasks in various domains, leveraging large-scale training data for robust multilingual transcription. This model is designed for scenarios requiring fast and accurate transcription on generic CPUs.
 

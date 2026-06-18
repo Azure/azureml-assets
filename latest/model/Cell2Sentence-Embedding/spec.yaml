@@ -11,9 +11,6 @@ properties:
     Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5
   languages: en
   SharedComputeCapacityEnabled: 'True'
-tags:
-  inference_supported_envs:
-  - hf
 system_metadata:
   languages:
   - en
@@ -65,6 +62,8 @@ system_metadata:
     - Standard_NC40ads_H100_v5
     - Standard_NC80adis_H100_v5
     - Standard_ND96isr_H100_v5
+  inferenceSupportedEnvs:
+  - hf
 version: 5
 description: |-
   Cell2Sentence (C2S) is a framework designed to apply Large Language Models (LLMs) to single-cell transcriptomics. It transforms single-cell RNA sequencing (scRNA-seq) data into a format that LLMs can natively understand. The core idea is to convert the gene expression vector of each cell into a "cell sentence"—a string of gene names ordered by their expression levels. This allows powerful LLMs to process, analyze, and generate insights from vast amounts of transcriptomic data.

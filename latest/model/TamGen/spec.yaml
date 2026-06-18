@@ -9,8 +9,6 @@ properties:
     Standard_ND40rs_v2
   languages: en
   SharedComputeCapacityEnabled: 'True'
-tags:
-  disable-batch: 'true'
 system_metadata:
   domain:
   - Biomedical Sciences
@@ -63,6 +61,8 @@ system_metadata:
     - Standard_ND96asr_v4
     - Standard_ND96amsr_A100_v4
     - Standard_ND40rs_v2
+  platformCapabilities:
+    enableBatch: false
 version: 3
 description: |
   The TamGen is a 100 million-parameter model that can generate compounds based on the input protein information. TamGen is pre-trained on 10 million compounds from PubChem and fine-tuned on CrossDocked and PDB datasets. We evaluate TamGen on existing benchmarks and achieve top performance. Furthermore, TamGen has successfully identified novel inhibitors for Tuberculosis, which have been subsequently validated through wet-lab experiments.

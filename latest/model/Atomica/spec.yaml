@@ -11,9 +11,6 @@ properties:
     Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5
   languages: en
   SharedComputeCapacityEnabled: 'True'
-tags:
-  inference_supported_envs:
-  - hf
 system_metadata:
   languages:
   - en
@@ -87,6 +84,8 @@ system_metadata:
     - Standard_NC40ads_H100_v5
     - Standard_NC80adis_H100_v5
     - Standard_ND96isr_H100_v5
+  inferenceSupportedEnvs:
+  - hf
 version: 3
 description: |-
   ATOMICA is a hierarchical geometric deep learning model trained on over 2.1 million molecular interaction interfaces. It represents interaction complexes using an all-atom graph structure, where nodes correspond to atoms or grouped chemical blocks, and edges reflect both intra- and intermolecular spatial relationships. The model uses SE(3)-equivariant message passing to ensure that learned embeddings are invariant to rotations and translations of molecular structures. The architecture produces embeddings at multiple scales—atom, block, and graph—that capture fine-grained structural detail and broader functional motifs. [Project Website](https://zitniklab.hms.harvard.edu/projects/ATOMICA/)

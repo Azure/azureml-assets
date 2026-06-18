@@ -9,10 +9,6 @@ properties:
   inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
     Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   languages: en, es, ca
-tags:
-  inference_supported_envs:
-  - vllm
-  disable-batch: 'true'
 system_metadata:
   datasets: []
   languages:
@@ -41,6 +37,10 @@ system_metadata:
     - Standard_NC96ads_A100_v4
     - Standard_ND96asr_v4
     - Standard_ND96amsr_A100_v4
+  inferenceSupportedEnvs:
+  - vllm
+  platformCapabilities:
+    enableBatch: false
 version: 2
 description: |
   ## Model Description

@@ -9,7 +9,6 @@ tags:
   reasoningStart: <think>
   reasoningEnd: </think>
   minFLVersion: 0.0.0
-  disable-maap: 'true'
 system_metadata:
   alias: qwen3-0.6b-generic-cpu-dq44
   publisher: Microsoft
@@ -28,6 +27,8 @@ system_metadata:
   tasks:
     inferenceTasks:
     - chat-completion
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/qwen3-0.6b/versions/1
@@ -39,8 +40,8 @@ variantInfo:
     executionProvider: CPUExecutionProvider
     fileSizeBytes: 369753534
     vRamFootprintBytes: 369753534
-version: 2
 type: custom_model
+version: 2
 description: |-
   This model is an optimized version of Qwen3-0.6B to enable local inference on CPUs. This model uses DiscQuant quantization.
 

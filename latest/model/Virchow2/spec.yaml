@@ -9,9 +9,6 @@ properties:
     Standard_ND40rs_v2
   languages: en
   SharedComputeCapacityEnabled: 'True'
-tags:
-  inference_supported_envs:
-  - hf
 system_metadata:
   languages:
   - en
@@ -407,6 +404,8 @@ system_metadata:
     - Standard_ND96asr_v4
     - Standard_ND96amsr_A100_v4
     - Standard_ND40rs_v2
+  inferenceSupportedEnvs:
+  - hf
 version: 3
 description: |
   Virchow2 is a self-supervised vision transformer pretrained using 3.1M whole slide histopathology images. The model can be used as a tile-level feature extractor (frozen or finetuned) to achieve state-of-the-art results for a wide variety of downstream computational pathology use cases.

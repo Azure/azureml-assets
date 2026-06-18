@@ -15,11 +15,7 @@ properties:
   finetune-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, 
     Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
 tags:
-  maas-inference: 'true'
-  disable-batch: 'true'
   _aml_system_vanity_registry: azureml-phi
-  inference_supported_envs:
-  - vllm
   model_specific_defaults:
     apply_deepspeed: 'true'
     deepspeed_stage: 2
@@ -155,6 +151,11 @@ system_metadata:
     inferenceDeprecationDate: '2025-06-30T00:00:00.000000Z'
     inferenceLegacyDate: '2025-06-09T00:00:00.000000Z'
     inferenceRetirementDate: '2025-08-30T00:00:00.000000Z'
+  inferenceSupportedEnvs:
+  - vllm
+  platformCapabilities:
+    enableBatch: false
+    maasInference: true
 version: 15
 description: |-
   The Phi-3-Mini-4K-Instruct is a 3.8B parameters, lightweight, state-of-the-art open model trained with the Phi-3 datasets that includes both synthetic data and the filtered publicly available websites data with a focus on high-quality and reasoning dense properties.

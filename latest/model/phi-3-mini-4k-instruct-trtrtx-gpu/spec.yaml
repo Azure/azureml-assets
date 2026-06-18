@@ -9,7 +9,6 @@ tags:
   reasoningStart: ''
   reasoningEnd: ''
   minFLVersion: 0.0.0
-  disable-maap: 'true'
 system_metadata:
   alias: phi-3-mini-4k
   publisher: Microsoft
@@ -28,6 +27,8 @@ system_metadata:
   tasks:
     inferenceTasks:
     - chat-completion
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: 
@@ -40,8 +41,8 @@ variantInfo:
     executionProvider: NvTensorRTRTXExecutionProvider
     fileSizeBytes: 2287070085
     vRamFootprintBytes: 2287293675
-version: 2
 type: custom_model
+version: 2
 description: |-
   This model is an optimized version of phi-3-mini-4k-instruct to enable local inference on TensorRT-RTX GPUs.
 

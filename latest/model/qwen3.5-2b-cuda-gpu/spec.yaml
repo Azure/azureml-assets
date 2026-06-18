@@ -9,7 +9,6 @@ tags:
   reasoningEnd: </think>
   contextLength: 262144
   minFLVersion: 1.1.0
-  disable-maap: 'true'
 system_metadata:
   alias: qwen3.5-2b
   publisher: Microsoft
@@ -36,6 +35,8 @@ system_metadata:
   tasks:
     inferenceTasks:
     - vision-language-chat
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/qwen3.5-2b/versions/1
@@ -47,8 +48,8 @@ variantInfo:
     executionProvider: CUDAExecutionProvider
     fileSizeBytes: 3357039819
     vRamFootprintBytes: 3357039819
-version: 2
 type: custom_model
+version: 2
 description: |
   This model is an optimized version of Qwen3.5-2B to enable local inference on CUDA GPUs. This model uses RTN quantization.
 

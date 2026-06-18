@@ -9,10 +9,6 @@ properties:
     Standard_ND40rs_v2, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, 
     Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
   languages: EN
-tags:
-  disable-batch: 'true'
-  inference_supported_envs:
-  - vllm
 system_metadata:
   languages:
   - en
@@ -45,6 +41,10 @@ system_metadata:
     - Standard_NC96ads_A100_v4
     - Standard_ND96amsr_A100_v4
     - Standard_ND96asr_v4
+  inferenceSupportedEnvs:
+  - vllm
+  platformCapabilities:
+    enableBatch: false
 version: 2
 description: |
   The Mistral-7B-Instruct-v0.3 Large Language Model (LLM) is an instruct fine-tuned version of the Mistral-7B-v0.3.

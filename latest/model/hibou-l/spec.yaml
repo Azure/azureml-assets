@@ -11,9 +11,6 @@ properties:
     Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5
   languages: en
   SharedComputeCapacityEnabled: 'True'
-tags:
-  inference_supported_envs:
-  - hf
 system_metadata:
   languages:
   - en
@@ -76,7 +73,7 @@ system_metadata:
     include NOTICE file contents if applicable. You may add Your own attribution notices.
     5. Submission of Contributions: unless stated otherwise, Contributions submitted
     are under this License. 6. Trademarks: this License does not grant rights to use
-    Licensor’s trademarks. 7. Disclaimer of Warranty: the Work is provided "AS IS",
+    Licensorâ€™s trademarks. 7. Disclaimer of Warranty: the Work is provided "AS IS",
     without warranties or conditions, express or implied, including title, non-infringement,
     merchantability, or fitness for a purpose. 8. Limitation of Liability: Contributors
     are not liable for damages arising from this License or use of the Work. 9. Accepting
@@ -112,6 +109,8 @@ system_metadata:
     - Standard_NC40ads_H100_v5
     - Standard_NC80adis_H100_v5
     - Standard_ND96isr_H100_v5
+  inferenceSupportedEnvs:
+  - hf
 version: 2
 description: |-
   Hibou-L is a foundational vision transformer developed for digital pathology, designed to generate high-quality feature representations from histology image patches. These representations can be leveraged for a range of downstream tasks, including classification, segmentation, and detection.

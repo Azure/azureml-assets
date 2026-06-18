@@ -9,7 +9,6 @@ tags:
   reasoningStart: ''
   reasoningEnd: ''
   minFLVersion: 0.0.0
-  disable-maap: 'true'
 system_metadata:
   alias: phi-3.5-mini
   publisher: Microsoft
@@ -30,6 +29,8 @@ system_metadata:
   tasks:
     inferenceTasks:
     - chat-completion
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: 
@@ -43,8 +44,8 @@ variantInfo:
     executionProvider: QNNExecutionProvider
     fileSizeBytes: 2164067858
     vRamFootprintBytes: 2164067858
-version: 3
 type: custom_model
+version: 3
 description: |
   This model is an optimized version of phi-3.5-mini-instruct to enable local inference on QNN NPUs.
 

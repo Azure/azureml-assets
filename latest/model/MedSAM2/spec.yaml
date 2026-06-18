@@ -11,9 +11,6 @@ properties:
     Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5
   languages: en
   SharedComputeCapacityEnabled: 'True'
-tags:
-  inference_supported_envs:
-  - hf
 system_metadata:
   languages:
   - en
@@ -65,6 +62,8 @@ system_metadata:
     - Standard_NC40ads_H100_v5
     - Standard_NC80adis_H100_v5
     - Standard_ND96isr_H100_v5
+  inferenceSupportedEnvs:
+  - hf
 version: 4
 description: |
   MedSAM2 is a breakthrough medical image segmentation foundation model that addresses the critical need for efficient and accurate segmentation in precision medicine. Built upon the Segment Anything Model (SAM) 2.1 architecture, it uniquely bridges the gap between 2D and 3D medical image segmentation, offering a unified solution for both volumetric scans and video data. The model stands out for its ability to reduce manual annotation costs by over 85% while maintaining high accuracy across diverse medical imaging applications.

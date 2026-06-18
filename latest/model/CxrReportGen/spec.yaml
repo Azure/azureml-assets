@@ -9,9 +9,6 @@ properties:
     Standard_ND96isr_H100_v5
   languages: en
   SharedComputeCapacityEnabled: 'True'
-tags:
-  inference_supported_envs:
-  - hf
 system_metadata:
   languages:
   - en
@@ -45,6 +42,8 @@ system_metadata:
     - Standard_NC40ads_H100_v5
     - Standard_NC80adis_H100_v5
     - Standard_ND96isr_H100_v5
+  inferenceSupportedEnvs:
+  - hf
 version: 12
 description: |
   ## Overview

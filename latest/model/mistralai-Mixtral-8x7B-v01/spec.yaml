@@ -12,9 +12,6 @@ properties:
   finetuning-tasks: text-generation
   languages: EN
 tags:
-  disable-batch: 'true'
-  inference_supported_envs:
-  - vllm
   model_specific_defaults:
     max_seq_length: 2048
     apply_lora: 'true'
@@ -59,6 +56,10 @@ system_metadata:
     - Standard_NC96ads_A100_v4
     - Standard_ND96asr_v4
     - Standard_ND96amsr_A100_v4
+  inferenceSupportedEnvs:
+  - vllm
+  platformCapabilities:
+    enableBatch: false
 version: 16
 description: |
   # **Model Details**

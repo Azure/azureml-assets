@@ -9,7 +9,6 @@ tags:
   reasoningEnd: ''
   contextLength: 0
   minFLVersion: 1.2.1
-  disable-maap: 'true'
 system_metadata:
   alias: nemotron-3.5-asr-streaming-0.6b
   publisher: Microsoft
@@ -28,6 +27,8 @@ system_metadata:
   tasks:
     inferenceTasks:
     - automatic-speech-recognition
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: 
@@ -40,8 +41,8 @@ variantInfo:
     executionProvider: CPUExecutionProvider
     fileSizeBytes: 793344362
     vRamFootprintBytes: 793344362
-version: 3
 type: custom_model
+version: 3
 description: |
   This model is an optimized version of nemotron-3.5-asr-streaming-0.6b to enable local inference on CPUs. This model uses RTN quantization.
 

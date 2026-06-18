@@ -9,7 +9,6 @@ tags:
   reasoningEnd: ''
   contextLength: 0
   minFLVersion: 1.2.0
-  disable-maap: 'true'
 system_metadata:
   alias: parakeet-tdt-0.6b-v2
   publisher: Microsoft
@@ -27,6 +26,8 @@ system_metadata:
   tasks:
     inferenceTasks:
     - automatic-speech-recognition
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/parakeet-tdt-0.6b-v2/versions/1
@@ -38,8 +39,8 @@ variantInfo:
     executionProvider: CPUExecutionProvider
     fileSizeBytes: 725652479
     vRamFootprintBytes: 725652479
-version: 1
 type: custom_model
+version: 1
 description: |-
   This model is an optimized version of parakeet-tdt-0.6b-v2 for local inference. Optimized models are published here in ONNX format to run on CPU across devices, including server platforms, Windows, Linux and Mac desktops, and mobile CPUs.
 

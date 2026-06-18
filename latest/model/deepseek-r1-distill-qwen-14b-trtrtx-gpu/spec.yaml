@@ -9,7 +9,6 @@ tags:
   reasoningEnd: </think>
   contextLength: 131072
   minFLVersion: 0.0.0
-  disable-maap: 'true'
 system_metadata:
   alias: deepseek-r1-14b
   publisher: Microsoft
@@ -29,6 +28,8 @@ system_metadata:
   tasks:
     inferenceTasks:
     - chat-completion
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: 
@@ -41,8 +42,8 @@ variantInfo:
     executionProvider: NvTensorRTRTXExecutionProvider
     fileSizeBytes: 10554882129
     vRamFootprintBytes: 10555257559
-version: 2
 type: custom_model
+version: 2
 description: |-
   This model is an optimized version of deepseek-r1-distill-qwen-14b to enable local inference on TensorRT-RTX GPUs.
 

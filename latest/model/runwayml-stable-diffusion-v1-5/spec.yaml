@@ -15,8 +15,6 @@ properties:
     Standard_ND96asr_v4
 tags:
   training_dataset: LAION-2B (en)
-  inference_supported_envs:
-  - ds_mii
 system_metadata:
   sharedComputeCapacityEnabled: true
   tasks:
@@ -60,6 +58,8 @@ system_metadata:
     - Standard_ND40rs_v2
     - Standard_ND96amsr_A100_v4
     - Standard_ND96asr_v4
+  inferenceSupportedEnvs:
+  - ds_mii
 version: 12
 description: |
   Stable Diffusion is a latent text-to-image diffusion model capable of generating photo-realistic images given any text input. The **Stable-Diffusion-v1-5** checkpoint was initialized with the weights of the Stable-Diffusion-v1-2 checkpoint and subsequently fine-tuned on 595k steps at resolution 512x512 on "laion-aesthetics v2 5+" and 10% dropping of the text-conditioning to improve [classifier-free guidance sampling](https://arxiv.org/abs/2207.12598).

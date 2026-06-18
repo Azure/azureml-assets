@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: microsoft-phi-1-5
 path: ./
 properties:
-  SharedComputeCapacityEnabled: "True"
+  SharedComputeCapacityEnabled: 'True'
   SHA: 92557d03bb12543040c8bb5f0475cbdd9968f05f
   datasets: StackOverflow, Stackv1.2, CodeContests, gpt-3.5-turbo-0301
   inference-min-sku-spec: 4|0|14|28
@@ -15,32 +15,63 @@ properties:
     Standard_DS12_v2, Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3, 
     Standard_NC24rs_v3, Standard_ND40rs_v2, Standard_ND96asr_v4, 
     Standard_ND96amsr_A100_v4
-tags:
-  SharedComputeCapacityEnabled: ''
+system_metadata:
+  datasets:
+  - StackOverflow
+  - Stackv1.2
+  - CodeContests
+  - gpt-3.5-turbo-0301
+  languages:
+  - en
+  sharedComputeCapacityEnabled: true
+  SKU:
+    evaluationRecommendedSkus:
+    - Standard_DS4_v2
+    - Standard_DS5_v2
+    - Standard_DS12_v2
+    - Standard_NC6s_v3
+    - Standard_NC12s_v3
+    - Standard_NC24s_v3
+    - Standard_NC24rs_v3
+    - Standard_ND40rs_v2
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
+    inferenceRecommendedSkus:
+    - Standard_DS3_v2
+    - Standard_DS4_v2
+    - Standard_NC6s_v3
+    - Standard_NC12s_v3
+    - Standard_NC24s_v3
+    - Standard_ND40rs_v2
+    - Standard_ND96asr_v4
+    evaluationMinSkuSpec: 4|0|28|56
+    inferenceMinSkuSpec: 4|0|14|28
+  publisher: Microsoft
+  hiddenLayerScanned: true
   license: other
-  task: text-generation
-  hiddenlayerscanned: ""
-  author: Microsoft
-  evaluation_compute_allow_list:
-  - Standard_DS4_v2
-  - Standard_DS5_v2
-  - Standard_DS12_v2
-  - Standard_NC6s_v3
-  - Standard_NC12s_v3
-  - Standard_NC24s_v3
-  - Standard_NC24rs_v3
-  - Standard_ND40rs_v2
-  - Standard_ND96asr_v4
-  - Standard_ND96amsr_A100_v4
-  inference_compute_allow_list:
-  - Standard_DS3_v2
-  - Standard_DS4_v2
-  - Standard_NC6s_v3
-  - Standard_NC12s_v3
-  - Standard_NC24s_v3
-  - Standard_ND40rs_v2
-  - Standard_ND96asr_v4
-
+  tasks:
+    inferenceTasks:
+    - text-generation
+  supportedComputes:
+    inferenceComputes:
+    - Standard_DS3_v2
+    - Standard_DS4_v2
+    - Standard_NC6s_v3
+    - Standard_NC12s_v3
+    - Standard_NC24s_v3
+    - Standard_ND40rs_v2
+    - Standard_ND96asr_v4
+    evaluationComputes:
+    - Standard_DS4_v2
+    - Standard_DS5_v2
+    - Standard_DS12_v2
+    - Standard_NC6s_v3
+    - Standard_NC12s_v3
+    - Standard_NC24s_v3
+    - Standard_NC24rs_v3
+    - Standard_ND40rs_v2
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
 version: 11
 description: |-
   ## **Microsoft Phi-1.5**

@@ -9,7 +9,6 @@ tags:
   reasoningEnd: ''
   contextLength: 131072
   minFLVersion: 0.0.0
-  disable-maap: 'true'
 system_metadata:
   alias: phi-4-mini
   publisher: Microsoft
@@ -35,6 +34,8 @@ system_metadata:
   tasks:
     inferenceTasks:
     - chat-completion
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/Phi-4-mini-instruct/versions/1
@@ -46,8 +47,8 @@ variantInfo:
     executionProvider: CPUExecutionProvider
     fileSizeBytes: 5153960755
     vRamFootprintBytes: 5206105439
-version: 5
 type: custom_model
+version: 5
 description: |-
   This model is an optimized version of Phi-4-mini-instruct to enable local inference on CPUs. This model uses RTN quantization.
 

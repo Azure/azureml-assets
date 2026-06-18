@@ -12,11 +12,7 @@ properties:
   azureml.copyRegistryFilesToWorkspace: true
   SharedComputeCapacityEnabled: 'True'
 tags:
-  disable-batch: 'true'
   training_datasets: Publicly available sources
-  maas-inference: 'true'
-  inference_supported_envs:
-  - vllm
 system_metadata:
   languages:
   - en
@@ -61,6 +57,11 @@ system_metadata:
     inferenceDeprecationDate: '2025-03-31T00:00:00.000000Z'
     inferenceLegacyDate: '2025-02-28T00:00:00.000000Z'
     inferenceRetirementDate: '2025-06-30T00:00:00.000000Z'
+  inferenceSupportedEnvs:
+  - vllm
+  platformCapabilities:
+    enableBatch: false
+    maasInference: true
 version: 22
 description: |
   Meta has developed and publicly released the Llama 2 family of large language models (LLMs), a collection of pretrained and fine-tuned generative text models ranging in scale from 7 billion to 70 billion parameters. Our fine-tuned LLMs, called Llama-2-Chat, are optimized for dialogue use cases. Llama-2-Chat models outperform open-source chat models on most benchmarks we tested, and in our human evaluations for helpfulness and safety, are on par with some popular closed-source models like ChatGPT and PaLM. We provide a detailed description of our approach to fine-tuning and safety improvements of Llama-2-Chat in order to enable the community to build on our work and contribute to the responsible development of LLMs.

@@ -9,7 +9,6 @@ tags:
   reasoningStart: ''
   reasoningEnd: ''
   minFLVersion: 0.0.0
-  disable-maap: 'true'
 system_metadata:
   alias: qwen2.5-coder-1.5b
   publisher: Microsoft
@@ -36,6 +35,8 @@ system_metadata:
   tasks:
     inferenceTasks:
     - chat-completion
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: 
@@ -48,8 +49,8 @@ variantInfo:
     executionProvider: NvTensorRTRTXExecutionProvider
     fileSizeBytes: 1342177280
     vRamFootprintBytes: 1342374410
-version: 2
 type: custom_model
+version: 2
 description: |-
   This model is an optimized version of Qwen2.5-Coder-1.5B-Instruct to enable local inference on TensorRT-RTX GPUs. This model uses RTN quantization.
 

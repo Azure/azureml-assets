@@ -9,7 +9,6 @@ tags:
   reasoningEnd: </think>
   contextLength: 131072
   minFLVersion: 0.0.0
-  disable-maap: 'true'
 system_metadata:
   alias: deepseek-r1-14b
   publisher: Microsoft
@@ -28,6 +27,8 @@ system_metadata:
   tasks:
     inferenceTasks:
     - chat-completion
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: 
@@ -40,8 +41,8 @@ variantInfo:
     executionProvider: OpenVINOExecutionProvider
     fileSizeBytes: 8448881508
     vRamFootprintBytes: 8448881508
-version: 2
 type: custom_model
+version: 2
 description: |
   This model is an optimized version of DeepSeek-R1-Distill-Qwen-14B to enable local inference on Intel GPUs.
 

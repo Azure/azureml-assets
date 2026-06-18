@@ -9,7 +9,6 @@ tags:
   reasoningEnd: ''
   contextLength: 0
   minFLVersion: 1.1.0
-  disable-maap: 'true'
 system_metadata:
   alias: nemotron-speech-streaming-en-0.6b
   publisher: Microsoft
@@ -28,6 +27,8 @@ system_metadata:
   tasks:
     inferenceTasks:
     - automatic-speech-recognition
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: 
@@ -40,8 +41,8 @@ variantInfo:
     executionProvider: CUDAExecutionProvider
     fileSizeBytes: 730746955
     vRamFootprintBytes: 730746955
-version: 1
 type: custom_model
+version: 1
 description: |
   This model is an optimized version of nemotron-speech-streaming-en-0.6b to enable local inference on GPUs. This model uses RTN quantization.
 

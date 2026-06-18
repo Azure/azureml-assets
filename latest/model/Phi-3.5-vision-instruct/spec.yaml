@@ -9,11 +9,7 @@ properties:
   inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
     Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
 tags:
-  maas-inference: 'true'
-  disable-batch: 'true'
   _aml_system_vanity_registry: azureml-phi
-  inference_supported_envs:
-  - vllm
   model_specific_defaults:
     apply_deepspeed: 'true'
     deepspeed_stage: 2
@@ -120,6 +116,11 @@ system_metadata:
     inferenceDeprecationDate: '2025-06-30T00:00:00.000000Z'
     inferenceLegacyDate: '2025-06-09T00:00:00.000000Z'
     inferenceRetirementDate: '2025-08-30T00:00:00.000000Z'
+  inferenceSupportedEnvs:
+  - vllm
+  platformCapabilities:
+    enableBatch: false
+    maasInference: true
 version: 2
 description: |
   Phi-3.5-vision is a lightweight, state-of-the-art open multimodal model built upon datasets which include - synthetic data and filtered publicly available websites - with a focus on very high-quality, reasoning dense data both on text and vision. The model belongs to the Phi-3 model family, and the multimodal version comes with 128K context length (in tokens) it can support. The model underwent a rigorous enhancement process, incorporating both supervised fine-tuning and direct preference optimization to ensure precise instruction adherence and robust safety measures.

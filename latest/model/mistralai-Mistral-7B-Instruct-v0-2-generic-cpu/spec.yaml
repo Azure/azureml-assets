@@ -9,7 +9,6 @@ tags:
   reasoningStart: ''
   reasoningEnd: ''
   minFLVersion: 0.0.0
-  disable-maap: 'true'
 system_metadata:
   alias: mistral-7b-v0.2
   publisher: Microsoft
@@ -28,6 +27,8 @@ system_metadata:
   tasks:
     inferenceTasks:
     - chat-completion
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: 
@@ -40,8 +41,8 @@ variantInfo:
     executionProvider: CPUExecutionProvider
     fileSizeBytes: 4370129223
     vRamFootprintBytes: 4491341762
-version: 3
 type: custom_model
+version: 3
 description: |
   This model is an optimized version of Mistral-7B-Instruct-v0.2 to enable local inference on CPUs. This model uses RTN quantization.
 
