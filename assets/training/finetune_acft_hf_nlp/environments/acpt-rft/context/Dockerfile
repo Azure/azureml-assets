@@ -107,6 +107,16 @@ RUN find /opt/conda/envs/ptca/lib/python3.10/site-packages/ray -type d -name 'th
       pip install --no-cache-dir --target "$dir" 'aiohttp>=3.14.0' 'idna>=3.15'; \
     done
 COPY vllm_rollout /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/workers/rollout/vllm_rollout/vllm_rollout.py
+# ---- verl RFT (GRPO) compatibility patches ----------------------------------
+# Reconciles the bundled kernels / transformers / vLLM / verl / flash-attn lineages
+# so the verl Reinforced Fine-Tuning (GRPO) recipe runs end-to-end (model load,
+# FSDP2, async vLLM agentic rollout, validation, GRPO update). The script applies a
+# small set of idempotent, anchor-verified source patches and fails the build if any
+# target anchor is missing. Run in the training conda env.
+COPY verl_rft_compat_patches /tmp/verl_rft_compat_patches.py
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir "accelerate==1.14.0" && \
+    /opt/conda/envs/ptca/bin/python /tmp/verl_rft_compat_patches.py && \
+    rm -f /tmp/verl_rft_compat_patches.py
 RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
 ENV PYTHONHASHSEED=random \
     PYTHONDONTWRITEBYTECODE=1
