@@ -1,4 +1,3 @@
-# openmpi image
 FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
 
 USER root
@@ -90,11 +89,9 @@ RUN pip install -r requirements.txt --no-cache-dir
 # scikit-learn: explicit pin removed — azureml-acft-contrib-hf-nlp 0.0.89 already
 #   pins `scikit-learn<1.6.0,>=1.5.1`, so the parent enforces the secure floor (>=1.5.1
 #   ships the CVE-2024-5206 fix the historical pin protected against). Pip resolves to 1.5.2.
-# pyarrow (GHSA-rgxp-2hwp-jwgg): transitive dep; bump to >=23.0.1 to fix the CVE.
+# pyarrow (GHSA-rgxp-2hwp-jwgg): pinned transitive dep of azureml-acft-contrib-hf-nlp
+#   via datasets; bump to >=23.0.1 to fix the CVE.
 RUN pip install --no-cache-dir 'aiohttp>=3.14.0' 'requests>=2.33.0' 'cryptography>=46.0.7' 'pyarrow>=23.0.1' && rm -rf /root/.cache/pip
 
-# The below file is required for baking the code into the environment 
+# Required for baking the code into the environment.
 COPY data_import_run.py /azureml/data_import/run.py
-
-# dummy number to change when needing to force rebuild without changing the definition: 4
-
