@@ -138,12 +138,12 @@ _TF_SAUX_NEW = (
 # is an optional acceleration; fall back to vLLM's native rotary when it is absent.
 # --------------------------------------------------------------------------------------
 _VLLM_ROTARY_OLD = '''        self.apply_rotary_emb_flash_attn = None
-        if find_spec("flash_attn") is not None:
+        if not current_platform.is_cpu() and find_spec("flash_attn") is not None:
             from flash_attn.ops.triton.rotary import apply_rotary
 
             self.apply_rotary_emb_flash_attn = apply_rotary'''
 _VLLM_ROTARY_NEW = '''        self.apply_rotary_emb_flash_attn = None
-        if find_spec("flash_attn") is not None:
+        if not current_platform.is_cpu() and find_spec("flash_attn") is not None:
             try:
                 from flash_attn.ops.triton.rotary import apply_rotary
 

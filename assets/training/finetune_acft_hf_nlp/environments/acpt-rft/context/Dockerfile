@@ -40,10 +40,8 @@ COPY __init__ /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/rewar
 COPY azure_grader /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/reward_score/azure_grader.py
 COPY azure_python_grader /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/reward_score/azure_python_grader.py
 COPY utils /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/vllm/utils.py
-# vllm is a direct top-level runtime dependency in this image. PyPI metadata checks show
-# verl only declares vllm under the unused [vllm] extra, so there is no parent package to
-# upgrade for GHSA-hpv8-x276-m59f / GHSA-83vm-p52w-f9pw.
-RUN pip install --no-cache-dir vllm==0.20.1
+# vllm is a direct top-level runtime dependency in this image; 0.22.0 fixes GHSA-3ww4-5jv9-j5gm.
+RUN pip install --no-cache-dir vllm==0.22.0
 # Keep xgrammar at the patched floor even when pulled transitively by vllm.
 RUN pip install --no-cache-dir 'xgrammar>=0.1.32'
 RUN pip install openai==2.14.0
@@ -89,7 +87,8 @@ RUN pip install --upgrade cryptography==46.0.7 'fastmcp>=3.2.0' 'Mako>=1.3.11' '
 # PyJWT>=2.13.0 (base env, py3.13): GHSA-993g-76c3-p5m4, GHSA-jq35-7prp-9v3f / VCM 5013533,
 #   5013521. PyJWT is pulled transitively by various auth/azure packages; no parent pins
 #   >=2.13.0 in published releases. Direct override is the only remediation.
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.1.1' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'PyJWT>=2.13.0' && \
+# py-rattler>=0.24.0 (base env, py3.13): pinned transitive dep of the base image's conda stack; fixes GHSA-q53q-5r4j-5729.
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.1.1' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'PyJWT>=2.13.0' 'py-rattler>=0.24.0' && \
     rm -f /opt/conda/conda-meta/pip-26.0*.json
 # GHSA-65pc-fj4g-8rjx: idna>=3.15 for ptca env (base env covered above)
 # GHSA-993g-76c3-p5m4, GHSA-jq35-7prp-9v3f: PyJWT>=2.13.0 for ptca env (base env covered above)
@@ -127,4 +126,3 @@ RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
 ENV PYTHONHASHSEED=random \
     PYTHONDONTWRITEBYTECODE=1
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/ /opt/conda/pkgs/
-
