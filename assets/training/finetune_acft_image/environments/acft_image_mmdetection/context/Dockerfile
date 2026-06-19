@@ -16,15 +16,12 @@ RUN apt-get -y update && apt-get -y upgrade \
  || true \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install required packages from pypi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 # openmim still imports pkg_resources, which is removed from setuptools>=82.
 # Keep a temporary compatibility pin for mim installation, then restore setuptools.
 RUN pip install --no-cache-dir 'setuptools<82'
 
-# # # Install mmdet
-# # Note that MMDet installs pycocotools
 # Note: mmdet should be installed via mim to access the model zoo config folder.
 RUN mim install mmdet==3.3.0
 # Temporary workaround for https://github.com/open-mmlab/mmdetection/issues/11668 (when mmdet updated, remove lines below)
@@ -42,8 +39,7 @@ RUN pip uninstall -y onnx && pip install --no-cache-dir 'onnx-weekly>=1.22.0.dev
 RUN conda install -n ptca -y -c conda-forge --freeze-installed 'pip=26.1.1' \
  && conda install -n base -y -c conda-forge --freeze-installed 'pip=26.1.1'
 
-# Base env packages are outside requirements.txt. Metadata checks show their
-# parents allow patched versions but do not require them, so keep direct floors.
+# Base env packages are outside requirements.txt; apply security floors allowed by their parents.
 # urllib3 is pulled by conda/requests-style tooling and must be >=2.7.0 for
 # GHSA-qccp-gfcp-xxvc and GHSA-mf9v-mfxr-j63j.
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
@@ -52,13 +48,12 @@ RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
     'click>=8.3.3' \
     'python-dotenv>=1.2.2' \
     'aiohttp>=3.14.0' \
-    'PyJWT>=2.13.0'
+    'PyJWT>=2.13.0' # pinned transitive dep of base image; fixes GHSA-jq35-7prp-9v3f and GHSA-993g-76c3-p5m4
 
 # aiohttp is also present in the ptca env (GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8).
-# pyarrow <23.0.1 is vulnerable (GHSA-rgxp-2hwp-jwgg).
 RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade \
     'aiohttp>=3.14.0' \
-    'pyarrow>=23.0.1'
+    'pyarrow>=23.0.1' # pinned transitive dep of datasets; fixes GHSA-rgxp-2hwp-jwgg
 
 # The conda pip upgrade can reinstall the rattler solver. The base image does
 # not need it for runtime, and its compiled extension currently carries Rust CVEs.
