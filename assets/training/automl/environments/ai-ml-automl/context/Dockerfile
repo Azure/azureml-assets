@@ -102,12 +102,17 @@ RUN pip install \
 #   mlflow-skinny declares python-dotenv<2,>=0.19.0 but the pinned mlflow-skinny==2.16.0
 #   does not; it is brought in by another transitive path). No parent constraint
 #   blocks 1.2.2, so override directly.
+#
+# pyarrow>=23.0.1 (GHSA-rgxp-2hwp-jwgg / CVE-2026-25087): use-after-free
+#   in Apache Arrow C++. Parent packages still resolve pyarrow 17.0.0 in this
+#   image, so override directly until upstream pins move to a patched version.
 RUN pip install --upgrade \
     'distributed>=2026.1.0' \
     'bokeh>=3.8.2' \
     'onnx>=1.21.0' \
     'pillow>=12.2.0' \
-    'python-dotenv>=1.2.2'
+    'python-dotenv>=1.2.2' \
+    'pyarrow>=23.0.1'
 RUN pip install --no-deps --force-reinstall 'skl2onnx==1.19.1'
 RUN pip install --no-deps --force-reinstall 'onnxconverter-common==1.16.0'
 RUN pip install --no-deps --force-reinstall 'onnxmltools==1.14.0'
