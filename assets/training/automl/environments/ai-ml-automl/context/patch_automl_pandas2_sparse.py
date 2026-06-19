@@ -170,6 +170,7 @@ class FeaturizationPhase:
 
 
 def main() -> None:
+    """Apply the AutoML pandas 2 sparse compatibility patch."""
     site_packages = _site_packages()
     print(f"Patching AutoML runtime under {site_packages}")
     _patch_runtime_utilities(site_packages)
