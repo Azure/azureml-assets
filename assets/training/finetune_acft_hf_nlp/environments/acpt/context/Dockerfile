@@ -1,4 +1,3 @@
-#PTCA image
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 USER root
@@ -50,11 +49,13 @@ RUN pip install --upgrade --no-cache-dir pyasn1==0.6.3 'python-multipart>=0.0.26
 # - urllib3: requests 2.33.1 declares urllib3<3,>=1.26.
 # - idna: requests 2.33.1, httpx 0.28.1, anyio 4.12.1 and yarl 1.23.0 accept vulnerable 3.11.
 # - click: anaconda-cli-base 0.8.2, typer 0.25.1 and extras from httpx/python-dotenv/cryptography accept 8.2.1.
+# - py-rattler: pinned transitive dep brought in by the base image; fixes GHSA-q53q-5r4j-5729.
+# - cryptography: pinned transitive dep brought in by the base image; fixes GHSA-537c-gmf6-5ccf.
 # python-dotenv has no installed parent in base; it is a vulnerable base package itself. Upgrading parents
-# does not force patched child versions, and conda updates would introduce py-rattler, so use pip in base.
+# does not force patched child versions, and conda updates would touch unrelated packages, so use pip in base.
 # PyJWT: base env ships 2.12.1 which has GHSA-jq35-7prp-9v3f and GHSA-993g-76c3-p5m4 (fixed in 2.13.0);
 #        no parent in base pins PyJWT to a safe floor, so explicit override is required.
-RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.0' 'PyJWT>=2.13.0'
+RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.0' 'PyJWT>=2.13.0' 'py-rattler>=0.24.0' 'cryptography>=48.0.1'
 
 # pip is the package manager in both base and ptca conda envs. defaults has no pip>=26.1.1 package,
 # while a normal conda-forge solve pulls unrelated conda updates and py-rattler. Install only the
@@ -64,9 +65,9 @@ RUN conda install -n base -c conda-forge --no-deps -y 'pip>=26.1.1' && \
 
 # aiohttp in ptca env (Python 3.10): requirements.txt sets >=3.14.0 for main installs, but
 # the ptca env may still have 3.13.5 from the base image; force upgrade here explicitly.
-RUN conda run -n ptca python -m pip install --upgrade --no-cache-dir 'aiohttp>=3.14.0'
+# cryptography: pinned transitive dep brought in by the base image; fixes GHSA-537c-gmf6-5ccf.
+RUN conda run -n ptca python -m pip install --upgrade --no-cache-dir 'aiohttp>=3.14.0' 'cryptography>=48.0.1'
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
-
