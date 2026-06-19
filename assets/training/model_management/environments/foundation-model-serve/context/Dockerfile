@@ -19,8 +19,12 @@ RUN rm -rf /opt/nvidia/nsight-compute || true
 ENV LD_LIBRARY_PATH=/usr/local/cuda/compat:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64
 
 # git is needed by some pip editable installs / VCS deps.
+# Upgrade nginx packages to patch CVE-2026-49975 (USN-8398-3).
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends git && \
+    apt-get install -y --no-install-recommends git \
+        nginx=1.24.0-2ubuntu7.12 \
+        nginx-common=1.24.0-2ubuntu7.12 \
+        nginx-light=1.24.0-2ubuntu7.12 && \
     rm -rf /var/lib/apt/lists/*
 
 # Create the AzureML-conventional conda environment so app deps stay isolated from the
@@ -39,12 +43,18 @@ ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH \
 
 RUN python3.12 -m pip install --upgrade pip==26.1
 
+# Install torch with CUDA support from PyTorch index
+RUN python3.12 -m pip install torch --index-url https://download.pytorch.org/whl/cu118 --no-cache-dir
+
 WORKDIR /
 
 COPY . .
 # Use `python3.12 -m pip` (not bare `pip`) so the install always targets the
 # /azureml-envs/default interpreter even if PATH ordering changes later.
 RUN python3.12 -m pip install -e ./ --no-cache-dir && \
+    rm -rf ~/.cache/pip
+
+RUN python3.12 -m pip install --no-cache-dir "vllm>=0.20.2" && \
     rm -rf ~/.cache/pip
 
 # The MCR base ships its AzureML scoring services (gunicorn/nginx/rsyslog)
