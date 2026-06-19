@@ -2,7 +2,20 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 
 USER root
 
-RUN apt-get -y update && apt-get -y upgrade && apt-get -y install unzip && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Explicitly upgrade vulnerable packages from the ACPT Ubuntu 22.04 base image:
+# xz-utils/liblzma5 (USN-8362-1), systemd/udev libs (USN-8402-1), OpenSSL
+# (USN-8414-1), .NET 8 runtime packages (USN-8298-1), and libgcrypt20 (USN-8319-1).
+RUN apt-get -y update && \
+    apt-get -y upgrade && \
+    apt-get -y install unzip && \
+    apt-get -y install --only-upgrade \
+        liblzma5 xz-utils \
+        libsystemd0 libudev1 udev \
+        openssl libssl-dev libssl3 \
+        dotnet-hostfxr-8.0 dotnet-host-8.0 dotnet-runtime-8.0 \
+        libgcrypt20 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # pip 26.0.1 in both conda envs has GHSA-jp4c-xjxw-mgf9. pip is the bootstrap installer,
 # not a runtime dependency from requirements.txt or their transitive deps. The current ACPT
