@@ -38,23 +38,25 @@ RUN pip install azureml-acft-accelerator=={{latest-pypi-version}}
 # - pyOpenSSL>=26.0.0 and urllib3>=2.7.0 are transitive through azure/requests
 #   stacks; no parent package pins only fixed versions.
 RUN pip install --no-cache-dir --upgrade 'setuptools>=82.0.1' 'nltk>=3.9.4' 'transformers>=5.0.0' 'onnx>=1.21.0' 'pyOpenSSL>=26.0.0' 'urllib3>=2.7.0'
-# Checked 2026-05-25: root-env overrides cover packages whose installed parents
+# Checked 2026-06-19: root-env overrides cover packages whose installed parents
 # accept vulnerable ranges instead of requiring fixed versions. pip has no
 # Python parent package; python-dotenv is accepted by mlflow-skinny's broad
 # range; idna/click/urllib3 are accepted by requests/cryptography/anyio/httpx
-# and mlflow/typer/uvicorn/jupyter stacks. Use pip here because the scanner
+# and mlflow/typer/uvicorn/jupyter stacks; PyJWT is accepted by auth stacks.
+# py-rattler is pinned transitive dep of conda-rattler-solver brought in by the
+# ACPT base image; fixes GHSA-q53q-5r4j-5729. Use pip here because the scanner
 # records root-env dist-info metadata, and conda solving the root env can change
 # unrelated solver packages.
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
     'setuptools>=82.0.1' 'pyOpenSSL>=26.0.0' 'urllib3>=2.7.0' \
     'python-dotenv>=1.2.2' 'pip>=26.1.1' 'idna>=3.15' 'click>=8.3.3' \
-    'aiohttp>=3.14.0' 'PyJWT>=2.13.0'
+    'aiohttp>=3.14.0' 'PyJWT>=2.13.0' 'py-rattler>=0.24.0'
 
 # Checked 2026-06-16: ptca-env overrides for packages not yet pinned to fixed
 # versions by their parents inside the ptca conda environment.
 # - idna>=3.15 patches GHSA-65pc-fj4g-8rjx (ReDoS via crafted domain labels).
 # - aiohttp>=3.14.0 patches GHSA-hg6j-4rv6-33pg and GHSA-jg22-mg44-37j8
 #   (request smuggling / header-injection vulnerabilities).
-# - PyJWT>=2.13.0 patches GHSA-993g-76c3-p5m4.
+# - PyJWT>=2.13.0 patches GHSA-993g-76c3-p5m4 and GHSA-jq35-7prp-9v3f.
 RUN conda run -n ptca pip install --no-cache-dir --upgrade \
     'idna>=3.15' 'aiohttp>=3.14.0' 'PyJWT>=2.13.0'
