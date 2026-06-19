@@ -12,16 +12,15 @@ RUN apt-get -y update && apt-get -y upgrade \
       dotnet-runtime-8.0 \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install required packages from pypi
+# Install required packages from PyPI.
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
-
 
 # transformers: fix GHSA-69w3-r845-3855 (CVE-2026-1839, arbitrary code execution in Trainer).
 # --no-deps keeps the pinned HF stack intact (transformers is a direct requirements.txt pin).
 RUN pip install --no-cache-dir --no-deps 'transformers==5.5.4'
 
-# vulnerability fixes - this will be removed once we update to MMTracking's latest version
+# Vulnerability fixes to keep the MMTracking stack patched.
 RUN pip install scipy==1.10.1
 RUN pip install gunicorn==23.0.0
 RUN pip install onnx==1.21.0
@@ -61,8 +60,8 @@ RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' 'click>=8.3.3' 'idna>
  && /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'click>=8.3.3' \
  && /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'idna>=3.15'
 
-# PyJWT>=2.13.0 in base env (py3.13): fix GHSA-jq35-7prp-9v3f, GHSA-993g-76c3-p5m4 (not present in ptca env).
-# pyarrow>=23.0.1 in ptca env (py3.10): fix GHSA-rgxp-2hwp-jwgg (API-compatible with 20.x).
-# Both are transitive deps with no parent pinning a safe floor.
-RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir 'PyJWT>=2.13.0' \
- && pip install --no-cache-dir 'pyarrow>=23.0.1'
+# PyJWT is a transitive dep in the base image py3.13 env; fixes GHSA-jq35-7prp-9v3f, GHSA-993g-76c3-p5m4.
+# py-rattler is a transitive dep in the base image py3.13 env; fixes GHSA-q53q-5r4j-5729.
+# pyarrow is a transitive dep of datasets in the ptca py3.10 env; fixes GHSA-rgxp-2hwp-jwgg.
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'PyJWT==2.13.0' 'py-rattler==0.24.0' \
+ && pip install --no-cache-dir --upgrade 'pyarrow==23.0.1'
