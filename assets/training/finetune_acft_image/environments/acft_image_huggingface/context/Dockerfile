@@ -1,4 +1,3 @@
-# PTCA image
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 USER root
@@ -66,11 +65,10 @@ RUN conda install -n ptca -y -c conda-forge --freeze-installed 'pip=26.1.1' \
 #   no parent package to upgrade — explicit override required (>=8.3.3).
 # idna in base conda env: base image ships 3.11 which has GHSA-65pc-fj4g-8rjx;
 #   no parent package to upgrade — explicit override required (>=3.15).
-# PyJWT: base image ships 2.12.1 which has GHSA-jq35-7prp-9v3f and GHSA-993g-76c3-p5m4;
-#   no parent package to upgrade — explicit override required (>=2.13.0).
+# PyJWT: pinned base-image dep; base ships 2.12.1, fixes GHSA-jq35-7prp-9v3f and GHSA-993g-76c3-p5m4 (>=2.13.0).
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'aiohttp>=3.14.0' 'click>=8.3.3' 'idna>=3.15' 'PyJWT>=2.13.0'
 # aiohttp in ptca env: same CVEs as base env — GHSA-jg22-mg44-37j8 and GHSA-hg6j-4rv6-33pg.
-# pyarrow in ptca env: ships 20.0.0 which has GHSA-rgxp-2hwp-jwgg; override to >=23.0.1.
+# pyarrow: pinned base PTCA env dep; base ships 20.0.0, fixes GHSA-rgxp-2hwp-jwgg (>=23.0.1).
 RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' 'pyarrow>=23.0.1'
 # The conda pip upgrade can reinstall the rattler solver. The base image does
 # not need it for runtime, and its compiled extension currently carries Rust CVEs.
