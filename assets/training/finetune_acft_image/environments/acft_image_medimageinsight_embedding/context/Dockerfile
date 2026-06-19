@@ -13,7 +13,6 @@ RUN /opt/conda/bin/conda install -n ptca -c conda-forge -y --no-deps 'pip>=26.1'
     /opt/conda/bin/conda install -n base -c conda-forge -y --no-deps 'pip>=26.1' && \
     /opt/conda/bin/conda clean -afy
 
-# Install required packages from pypi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
@@ -53,4 +52,6 @@ RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.47' 'aio
 #   release floors aiohttp>=3.14.0, so explicit override is required.
 # PyJWT: resolves to 2.12.1 which has GHSA-jq35-7prp-9v3f and GHSA-993g-76c3-p5m4. No parent
 #   release floors PyJWT>=2.13.0, so explicit override is required.
-RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'urllib3>=2.7.0' 'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.0' 'PyJWT>=2.13.0'
+# py-rattler: brought in by the ACPT base image; base resolves to vulnerable 0.23.1
+#   (GHSA-q53q-5r4j-5729). No parent release floors py-rattler>=0.24.0, so explicit override is required.
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'urllib3>=2.7.0' 'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.0' 'PyJWT>=2.13.0' 'py-rattler>=0.24.0'
