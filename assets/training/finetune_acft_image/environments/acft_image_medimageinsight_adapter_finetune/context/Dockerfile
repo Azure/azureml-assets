@@ -26,7 +26,6 @@ RUN conda install -y -n base -c conda-forge pip==26.1.1 && \
     rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0*.json && \
     conda clean -ay
 
-# Install required packages from pypi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
@@ -69,14 +68,18 @@ RUN /opt/conda/bin/pip uninstall -y py-rattler conda-rattler-solver && \
     rm -f /opt/conda/conda-meta/py-rattler-*.json \
           /opt/conda/conda-meta/conda-rattler-solver-*.json
 
-# Upgrade aiohttp to patched version in both envs (GHSA-jg22-mg44-37j8, GHSA-hg6j-4rv6-33pg)
+# aiohttp is pulled in by the base image in both envs; fixes GHSA-jg22-mg44-37j8 and GHSA-hg6j-4rv6-33pg.
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' && \
     conda run -n ptca python -m pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0'
 
-# Upgrade pyarrow in ptca env to patched version (GHSA-rgxp-2hwp-jwgg)
-RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade 'pyarrow>=23.0.1'
+# pyarrow is pulled in by the base image in ptca; fixes GHSA-rgxp-2hwp-jwgg.
+RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade 'pyarrow==23.0.1'
 
-# Upgrade PyJWT in base env to patched version (GHSA-jq35-7prp-9v3f, GHSA-993g-76c3-p5m4)
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.13.0'
+# PyJWT is pulled in by the base image in base; fixes GHSA-jq35-7prp-9v3f and GHSA-993g-76c3-p5m4.
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'PyJWT==2.13.0'
+
+# cryptography is pulled in by the base image in both envs; fixes GHSA-537c-gmf6-5ccf.
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'cryptography==48.0.1' && \
+    conda run -n ptca python -m pip install --no-cache-dir --upgrade 'cryptography==48.0.1'
 
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
