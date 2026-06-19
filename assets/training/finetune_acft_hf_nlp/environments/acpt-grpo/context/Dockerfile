@@ -1,4 +1,3 @@
-#PTCA image
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 USER root
@@ -51,10 +50,12 @@ RUN rm -rf ~/.cache/pip
 #   parent packages: uvicorn (>=0.13), pydantic-settings (>=0.21.0) — both use loose floors
 # urllib3 in base conda env: see urllib3 note above; same direct-override rationale.
 # pip: see note above — bootstrap tool, must be upgraded directly in base env too
+# py-rattler: pinned transitive dep of conda-rattler-solver; brought in by ACPT base image,
+#             fixes GHSA-q53q-5r4j-5729.
 # Also clean stale conda-meta/pip-*.json (see ptca env note above for scanner detail).
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'pip>=26.1.1' 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' \
         'aiohttp>=3.14.0' 'click>=8.3.3' 'idna>=3.15' \
-        'PyJWT>=2.13.0' && \
+        'PyJWT>=2.13.0' 'py-rattler>=0.24.0' && \
     rm -f /opt/conda/conda-meta/pip-26.0*.json
 # pyarrow: GHSA-rgxp-2hwp-jwgg (fix in >=23.0.1); ptca env ships 20.0.0 via vllm transitive dep.
 # PyJWT: GHSA-jq35-7prp-9v3f, GHSA-993g-76c3-p5m4 (fix in >=2.13.0); base env ships 2.12.1.
