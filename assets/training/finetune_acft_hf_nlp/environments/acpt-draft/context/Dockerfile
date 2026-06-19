@@ -1,14 +1,16 @@
-#PTCA image
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 USER root
 
 # USN-8284-1/USN-8283-1: libgnutls30/rsync; USN-8298-1: dotnet 8.0.26->8.0.27;
-# USN-8319-1: libgcrypt20; USN-8362-1: liblzma5/xz-utils.
+# USN-8319-1: libgcrypt20; USN-8362-1: liblzma5/xz-utils;
+# USN-8402-1: libsystemd0/libudev1/udev; USN-8414-1: openssl/libssl-dev/libssl3.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libgnutls30 rsync \
         dotnet-host-8.0 dotnet-hostfxr-8.0 dotnet-runtime-8.0 \
         libgcrypt20 \
         liblzma5 xz-utils \
+        libsystemd0 libudev1 udev \
+        openssl libssl-dev libssl3 \
  && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
@@ -55,13 +57,14 @@ RUN conda run -n base python -m pip install --no-cache-dir 'aiohttp>=3.14.0' \
 #    it explicitly after the upgrade.
 #  - PyJWT>=2.13.0 (GHSA-993g-76c3-p5m4, GHSA-jq35-7prp-9v3f): two CVEs fixed in 2.13.0;
 #    installed as transitive dep at 2.12.1 in both Python envs.
+#  - py-rattler>=0.24.0 (GHSA-q53q-5r4j-5729): pinned transitive dep from base image.
+#  - cryptography>=48.0.1 (GHSA-537c-gmf6-5ccf): pinned transitive dep from base image.
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
         'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'pip>=26.1' \
-        'PyJWT>=2.13.0' \
+        'PyJWT>=2.13.0' 'py-rattler>=0.24.0' 'cryptography>=48.0.1' \
  && pip install --no-cache-dir --upgrade 'pip>=26.1' 'PyJWT>=2.13.0' \
  && rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0.1-*.json \
           /opt/conda/conda-meta/pip-26.0.1-*.json
-# clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 COPY loss /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/core/loss.py
 COPY eagle3 /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/core/eagle3.py
