@@ -9,7 +9,6 @@ tags:
   reasoningEnd: ''
   contextLength: 32768
   minFLVersion: 0.0.0
-  disable-maap: 'true'
 system_metadata:
   alias: qwen2.5-7b
   publisher: Microsoft
@@ -33,6 +32,8 @@ system_metadata:
   tasks:
     inferenceTasks:
     - chat-completion
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/qwen2.5-7b-instruct/versions/1
@@ -44,5 +45,5 @@ variantInfo:
     executionProvider: WebGPUExecutionProvider
     fileSizeBytes: 5583457484
     vRamFootprintBytes: 5583775037
-version: 4
 type: custom_model
+version: 4

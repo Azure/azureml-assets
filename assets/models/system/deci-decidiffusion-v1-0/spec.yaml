@@ -2,36 +2,51 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: deci-decidiffusion-v1-0
 path: ./
 properties:
-  SharedComputeCapacityEnabled: "True"
+  SharedComputeCapacityEnabled: 'True'
   SHA: 10c31ce02b006ae5ceb774dcafdc3a0bcba992ef
   datasets: LAION-v2
   inference-min-sku-spec: 4|1|28|176
-  inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
-    Standard_NC16as_T4_v3, Standard_NC4as_T4_v3, Standard_NC64as_T4_v3, Standard_NC8as_T4_v3, Standard_NC96ads_A100_v4,
-    Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
-tags:
-  SharedComputeCapacityEnabled: ''
+  inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC16as_T4_v3, Standard_NC4as_T4_v3, Standard_NC64as_T4_v3, Standard_NC8as_T4_v3, Standard_NC96ads_A100_v4, Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
+system_metadata:
+  datasets:
+  - LAION-v2
+  sharedComputeCapacityEnabled: true
+  SKU:
+    inferenceRecommendedSkus:
+    - Standard_NC6s_v3
+    - Standard_NC12s_v3
+    - Standard_NC24s_v3
+    - Standard_NC16as_T4_v3
+    - Standard_NC4as_T4_v3
+    - Standard_NC64as_T4_v3
+    - Standard_NC8as_T4_v3
+    - Standard_NC96ads_A100_v4
+    - Standard_ND40rs_v2
+    - Standard_ND96amsr_A100_v4
+    - Standard_ND96asr_v4
+    inferenceMinSkuSpec: 4|1|28|176
+  publisher: Deci AI
+  hiddenLayerScanned: true
+  huggingFaceModelId: Deci/DeciDiffusion-v1-0
   license: creativeml-openrail++-m
-  task: text-to-image
-  hiddenlayerscanned: ""
-  author: "Deci AI"
-  huggingface_model_id: Deci/DeciDiffusion-v1-0
-  InferenceLegacyDate: '2026-03-16'
-  InferenceDeprecationDate: '2026-04-16'
-  InferenceRetirementDate: '2026-07-31'
-  inference_compute_allow_list:
-    [
-      Standard_NC6s_v3,
-      Standard_NC12s_v3,
-      Standard_NC24s_v3,
-      Standard_NC16as_T4_v3,
-      Standard_NC4as_T4_v3,
-      Standard_NC64as_T4_v3,
-      Standard_NC8as_T4_v3,
-      Standard_NC96ads_A100_v4,
-      Standard_ND40rs_v2,
-      Standard_ND96amsr_A100_v4,
-      Standard_ND96asr_v4,
-    ]
-
+  tasks:
+    inferenceTasks:
+    - text-to-image
+  supportedComputes:
+    inferenceComputes:
+    - Standard_NC6s_v3
+    - Standard_NC12s_v3
+    - Standard_NC24s_v3
+    - Standard_NC16as_T4_v3
+    - Standard_NC4as_T4_v3
+    - Standard_NC64as_T4_v3
+    - Standard_NC8as_T4_v3
+    - Standard_NC96ads_A100_v4
+    - Standard_ND40rs_v2
+    - Standard_ND96amsr_A100_v4
+    - Standard_ND96asr_v4
+  deprecation:
+    inferenceDeprecationDate: '2026-04-16T00:00:00.000000Z'
+    inferenceLegacyDate: '2026-03-16T00:00:00.000000Z'
+    inferenceRetirementDate: '2026-07-31T00:00:00.000000Z'
 version: 7

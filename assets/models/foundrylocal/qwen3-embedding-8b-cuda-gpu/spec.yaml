@@ -9,7 +9,6 @@ tags:
   reasoningEnd: ''
   contextLength: 32768
   minFLVersion: 1.1.0
-  disable-maap: 'true'
 system_metadata:
   alias: qwen3-embedding-8b
   publisher: Microsoft
@@ -27,6 +26,8 @@ system_metadata:
   tasks:
     inferenceTasks:
     - embeddings
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/qwen3-embedding-8b/versions/1
@@ -38,5 +39,5 @@ variantInfo:
     executionProvider: CUDAExecutionProvider
     fileSizeBytes: 5914497024
     vRamFootprintBytes: 5914982491
-version: 1
 type: custom_model
+version: 1
