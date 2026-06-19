@@ -20,8 +20,11 @@ pyarrow==21.0.0
 pybind11==3.0.0
 pylatexenc==2.10
 qwen-vl-utils==0.0.10
-# ray[default] from PyPI: >=2.53.0 resolves the aiohttp/log4j vulnerabilities and the wheel
-# ships the prebuilt dashboard frontend, so no separate dashboard build is needed.
+# ray[default] from PyPI: >=2.53.0 resolves the aiohttp vulnerabilities and the wheel ships
+# the prebuilt dashboard frontend, so no separate dashboard build is needed.
+# NOTE: Ray (incl. 2.55.1) still bundles log4j-core 2.25.3 inside ray/jars/ray_dist.jar, which
+# is vulnerable to CVE-2026-34478 / CVE-2026-34480. No Ray release ships the 2.25.4 fix yet
+# (ray-project/ray#62845), so the jar is patched in place by context/patch_log4j in the Dockerfile.
 ray[default]==2.55.1
 tensorboard==2.20.0
 tensordict==0.9.1

@@ -1,0 +1,90 @@
+#!/usr/bin/env python
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Patch the log4j-core classes bundled inside Ray's uber jar (ray/jars/ray_dist.jar).
+
+Ray vendors log4j-core 2.25.3 inside its shaded distribution jar. That version is
+vulnerable to CVE-2026-34478 / CVE-2026-34480 (GHSA-445c-vh5m-36rj,
+GHSA-3pxv-7cmr-fjr4), both fixed in log4j-core 2.25.4. No released Ray version ships
+2.25.4 yet (ray-project/ray#62845, PR #63844), so we surgically replace the shaded
+log4j-core entries inside ray_dist.jar with the 2.25.4 ones downloaded from Maven
+Central. Only log4j-core artifacts are touched; Ray's own manifest/classes are left
+untouched. This is binary compatible (2.25.3 -> 2.25.4 is a patch release).
+"""
+
+import glob
+import io
+import os
+import sys
+import urllib.request
+import zipfile
+
+L4J_VER = "2.25.4"
+MAVEN_URL = (
+    "https://repo1.maven.org/maven2/org/apache/logging/log4j/"
+    f"log4j-core/{L4J_VER}/log4j-core-{L4J_VER}.jar"
+)
+RAY_JAR_GLOB = "/opt/conda/envs/*/lib/python*/site-packages/ray/jars/ray_dist.jar"
+
+# Only entries under these prefixes belong to log4j-core and are safe to overwrite.
+# This deliberately excludes log4j-core's own META-INF/MANIFEST.MF, LICENSE and NOTICE
+# so we never clobber Ray's uber-jar manifest.
+INCLUDE_PREFIXES = (
+    "org/apache/logging/log4j/core/",
+    "META-INF/maven/org.apache.logging.log4j/log4j-core/",
+    "META-INF/org/apache/logging/log4j/core/",  # Log4j2Plugins.dat
+)
+
+
+def _wanted(name: str) -> bool:
+    return any(name.startswith(p) for p in INCLUDE_PREFIXES)
+
+
+def main() -> int:
+    print(f"Downloading log4j-core {L4J_VER} from {MAVEN_URL}")
+    data = urllib.request.urlopen(MAVEN_URL).read()  # noqa: S310 (trusted Maven Central)
+    with zipfile.ZipFile(io.BytesIO(data)) as new_jar:
+        new_entries = {
+            n: new_jar.read(n)
+            for n in new_jar.namelist()
+            if not n.endswith("/") and _wanted(n)
+        }
+    if not new_entries:
+        print("ERROR: no log4j-core entries found in downloaded jar", file=sys.stderr)
+        return 1
+    print(f"Loaded {len(new_entries)} log4j-core entries from {L4J_VER}")
+
+    ray_jars = glob.glob(RAY_JAR_GLOB)
+    if not ray_jars:
+        print(f"ERROR: no ray_dist.jar found at {RAY_JAR_GLOB}", file=sys.stderr)
+        return 1
+
+    for jar_path in ray_jars:
+        tmp_path = jar_path + ".tmp"
+        replaced = set()
+        with zipfile.ZipFile(jar_path) as zin, zipfile.ZipFile(
+            tmp_path, "w", zipfile.ZIP_DEFLATED
+        ) as zout:
+            for item in zin.infolist():
+                name = item.filename
+                if name in new_entries:
+                    zout.writestr(item, new_entries[name])
+                    replaced.add(name)
+                else:
+                    zout.writestr(item, zin.read(name))
+            # Add any log4j-core entries that are new in 2.25.4.
+            for name, content in new_entries.items():
+                if name not in replaced:
+                    zout.writestr(name, content)
+        os.replace(tmp_path, jar_path)
+        print(
+            f"Patched {jar_path}: replaced {len(replaced)}, "
+            f"added {len(new_entries) - len(replaced)} log4j-core entries -> {L4J_VER}"
+        )
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
