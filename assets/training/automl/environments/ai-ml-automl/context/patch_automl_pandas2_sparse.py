@@ -10,7 +10,6 @@ those attributes no longer exist. Patch only the affected runtime files in
 place until the runtime wheels contain the fix.
 """
 
-import os
 import py_compile
 import site
 from pathlib import Path
@@ -145,21 +144,28 @@ class FeaturizationPhase:
         fixed_markers=("_to_dense_if_sparse", "data.sparse.to_dense()"),
     )
 
-    old_conversion = """                if automl_settings.iterations == constants.RuleBasedValidation.AUTOFEATURIZATION_ITERATION_COUNT:
-                    if issparse(td_ctx.X):
-                        td_ctx.X = td_ctx.X.todense()
-                    if issparse(td_ctx.X_valid):
-                        td_ctx.X_valid = td_ctx.X_valid.todense()
-"""
-    new_conversion = """                if automl_settings.iterations == constants.RuleBasedValidation.AUTOFEATURIZATION_ITERATION_COUNT:
-                    td_ctx.X = _to_dense_if_sparse(td_ctx.X)
-                    td_ctx.X_valid = _to_dense_if_sparse(td_ctx.X_valid)
-"""
+    old_conversion = (
+        "                if automl_settings.iterations == "
+        "constants.RuleBasedValidation.AUTOFEATURIZATION_ITERATION_COUNT:\n"
+        "                    if issparse(td_ctx.X):\n"
+        "                        td_ctx.X = td_ctx.X.todense()\n"
+        "                    if issparse(td_ctx.X_valid):\n"
+        "                        td_ctx.X_valid = td_ctx.X_valid.todense()\n"
+    )
+    new_conversion = (
+        "                if automl_settings.iterations == "
+        "constants.RuleBasedValidation.AUTOFEATURIZATION_ITERATION_COUNT:\n"
+        "                    td_ctx.X = _to_dense_if_sparse(td_ctx.X)\n"
+        "                    td_ctx.X_valid = _to_dense_if_sparse(td_ctx.X_valid)\n"
+    )
     _replace_once(
         path,
         old_conversion,
         new_conversion,
-        fixed_markers=("td_ctx.X = _to_dense_if_sparse(td_ctx.X)", "td_ctx.X_valid = _to_dense_if_sparse(td_ctx.X_valid)"),
+        fixed_markers=(
+            "td_ctx.X = _to_dense_if_sparse(td_ctx.X)",
+            "td_ctx.X_valid = _to_dense_if_sparse(td_ctx.X_valid)",
+        ),
     )
 
 
