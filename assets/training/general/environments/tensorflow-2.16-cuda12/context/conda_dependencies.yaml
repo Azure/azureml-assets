@@ -15,17 +15,16 @@ dependencies:
   - psutil~=5.8.0
   - tqdm~=4.66.3
   - ipykernel~=6.20.2
-  - azureml-core=={{latest-pypi-version}}
-  - azureml-defaults=={{latest-pypi-version}}
-  - azureml-mlflow=={{latest-pypi-version}}
-  - azureml-telemetry=={{latest-pypi-version}}
+  - azureml-core==1.61.0.post4
+  - azureml-defaults==1.62.0
+  - azureml-mlflow==1.62.0.post3
+  - azureml-telemetry==1.62.0
   - tensorboard~=2.16.0
   - tensorflow[and-cuda]==2.16.2
   - tensorflow-datasets~=4.9.0
   - keras>=3.13.2  # CVE-2026-1669 (HIGH 7.5) - bumped from 3.13.1
   - tf-keras==2.16.0
   - debugpy~=1.6.3
-  - idna>=3.15  # GHSA-65pc-fj4g-8rjx
+  - idna>=3.15  # pinned transitive dep of requests/azureml packages; fixes GHSA-65pc-fj4g-8rjx
   - flask-cors==6.0.0
   - pillow>=12.2.0  # GHSA-whj4-6x5x-4v2j - bumped from 12.1.1
-  
