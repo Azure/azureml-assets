@@ -65,9 +65,9 @@ RUN conda run -n base python -m pip install --upgrade \
     'PyJWT>=2.13.0'
 
 # pip>=26.1.1 in base env: GHSA-jp4c-xjxw-mgf9. pip is a root tool with no
-# parent package. py-rattler>=0.24.0 is a transitive dep of conda from the base
-# image; fixes GHSA-q53q-5r4j-5729.
-RUN conda install -n base -c conda-forge -y 'pip>=26.1.1' 'conda=26.3.2' && \
-    conda run -n base python -m pip install --upgrade 'py-rattler>=0.24.0'
+# parent package. py-rattler>=0.24.0: pinned transitive dep of conda; brought in
+# by the base image, fixes GHSA-q53q-5r4j-5729.
+RUN conda install -n base -c conda-forge -y \
+    'pip>=26.1.1' 'conda=26.3.2' 'py-rattler>=0.24.0'
 
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
