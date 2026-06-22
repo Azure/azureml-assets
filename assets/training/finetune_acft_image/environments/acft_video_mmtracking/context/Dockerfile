@@ -45,6 +45,9 @@ RUN /opt/conda/bin/conda install -y -n base --override-channels -c defaults -c c
  && /opt/conda/bin/conda install -y -n ptca --override-channels -c defaults -c conda-forge 'conda-forge::pip=26.1.1' \
  && /opt/conda/bin/conda clean -afy
 
+# py-rattler: pinned transitive dep of conda-rattler-solver brought in by base ACPT image; fixes GHSA-q53q-5r4j-5729.
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'py-rattler>=0.24.0,<0.25'
+
 # diffusers 0.24.0 -> 0.38.0 to fix GHSA-98h9-4798-4q5v (CVE-2026-44513).
 # --no-deps keeps the pinned HF stack intact (diffusers is a direct requirements.txt pin).
 RUN pip install --no-cache-dir --no-deps 'diffusers==0.38.0'
