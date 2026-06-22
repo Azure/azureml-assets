@@ -5,7 +5,12 @@ import os
 import logging
 from typing import Dict, Union, List, Optional
 from typing_extensions import overload, override
-from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
+from azure.ai.evaluation._exceptions import (
+    EvaluationException,
+    ErrorBlame,
+    ErrorCategory,
+    ErrorTarget,
+)
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 from azure.ai.evaluation._common._experimental import experimental
 from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
@@ -69,14 +74,14 @@ class ConversationValidator(ValidatorInterface):
         "azure_fabric",
         "openapi_call",
         "sharepoint_grounding",
-        "web_search"
+        "web_search",
     ]
 
     def __init__(
         self,
         error_target: ErrorTarget,
         requires_query: bool = True,
-        check_for_unsupported_tools: bool = False
+        check_for_unsupported_tools: bool = False,
     ):
         """Initialize ConversationValidator."""
         self.requires_query = requires_query
@@ -153,7 +158,9 @@ class ConversationValidator(ValidatorInterface):
             )
         return None
 
-    def _validate_text_content_item(self, content_item: Dict[str, Any], role: str) -> Optional[EvaluationException]:
+    def _validate_text_content_item(
+        self, content_item: Dict[str, Any], role: str
+    ) -> Optional[EvaluationException]:
         if "text" not in content_item:
             return EvaluationException(
                 message=f"Each content item must contain a 'text' field for message with role '{role}'.",
@@ -170,15 +177,22 @@ class ConversationValidator(ValidatorInterface):
             )
         return None
 
-    def _validate_tool_call_content_item(self, content_item: Dict[str, Any]) -> Optional[EvaluationException]:
+    def _validate_tool_call_content_item(
+        self, content_item: Dict[str, Any]
+    ) -> Optional[EvaluationException]:
         valid_tool_call_content_types = [
             ContentType.TOOL_CALL,
             ContentType.FUNCTION_CALL,
             ContentType.OPENAPI_CALL,
-            ContentType.MCP_APPROVAL_REQUEST
+            ContentType.MCP_APPROVAL_REQUEST,
         ]
-        valid_tool_call_content_types_as_strings = [t.value for t in valid_tool_call_content_types]
-        if "type" not in content_item or content_item["type"] not in valid_tool_call_content_types:
+        valid_tool_call_content_types_as_strings = [
+            t.value for t in valid_tool_call_content_types
+        ]
+        if (
+            "type" not in content_item
+            or content_item["type"] not in valid_tool_call_content_types
+        ):
             return EvaluationException(
                 message=(
                     f"The content item must be of type {valid_tool_call_content_types_as_strings} "
@@ -192,18 +206,26 @@ class ConversationValidator(ValidatorInterface):
         if content_item["type"] == ContentType.MCP_APPROVAL_REQUEST:
             return None
 
-        error = self._validate_string_field(content_item, "name", "tool_call content items")
+        error = self._validate_string_field(
+            content_item, "name", "tool_call content items"
+        )
         if error:
             return error
-        error = self._validate_dict_field(content_item, "arguments", "tool_call content items")
+        error = self._validate_dict_field(
+            content_item, "arguments", "tool_call content items"
+        )
         if error:
             return error
-        error = self._validate_string_field(content_item, "tool_call_id", "tool_call content items")
+        error = self._validate_string_field(
+            content_item, "tool_call_id", "tool_call content items"
+        )
         if error:
             return error
         return None
 
-    def _validate_user_or_system_message(self, message: Dict[str, Any], role: str) -> Optional[EvaluationException]:
+    def _validate_user_or_system_message(
+        self, message: Dict[str, Any], role: str
+    ) -> Optional[EvaluationException]:
         content = message["content"]
         if isinstance(content, list):
             for content_item in content:
@@ -223,7 +245,9 @@ class ConversationValidator(ValidatorInterface):
                     return error
         return None
 
-    def _validate_assistant_message(self, message: Dict[str, Any]) -> Optional[EvaluationException]:
+    def _validate_assistant_message(
+        self, message: Dict[str, Any]
+    ) -> Optional[EvaluationException]:
         content = message["content"]
         if isinstance(content, list):
             valid_assistant_content_types = [
@@ -232,9 +256,11 @@ class ConversationValidator(ValidatorInterface):
                 ContentType.TOOL_CALL,
                 ContentType.FUNCTION_CALL,
                 ContentType.MCP_APPROVAL_REQUEST,
-                ContentType.OPENAPI_CALL
+                ContentType.OPENAPI_CALL,
             ]
-            valid_assistant_content_type_values = [t.value for t in valid_assistant_content_types]
+            valid_assistant_content_type_values = [
+                t.value for t in valid_assistant_content_types
+            ]
             for content_item in content:
                 content_type = content_item["type"]
                 if content_type not in valid_assistant_content_types:
@@ -249,19 +275,29 @@ class ConversationValidator(ValidatorInterface):
                         target=self.error_target,
                     )
                 if content_type in [ContentType.TEXT, ContentType.OUTPUT_TEXT]:
-                    error = self._validate_text_content_item(content_item, MessageRole.ASSISTANT)
+                    error = self._validate_text_content_item(
+                        content_item, MessageRole.ASSISTANT
+                    )
                     if error:
                         return error
-                elif content_type in [ContentType.TOOL_CALL, ContentType.FUNCTION_CALL, ContentType.OPENAPI_CALL]:
+                elif content_type in [
+                    ContentType.TOOL_CALL,
+                    ContentType.FUNCTION_CALL,
+                    ContentType.OPENAPI_CALL,
+                ]:
                     error = self._validate_tool_call_content_item(content_item)
                     if error:
                         return error
 
                     # Raise error in case of unsupported tools for evaluators that enabled check_for_unsupported_tools
                     if self.check_for_unsupported_tools:
-                        if content_type == ContentType.TOOL_CALL or content_type == ContentType.OPENAPI_CALL:
+                        if (
+                            content_type == ContentType.TOOL_CALL
+                            or content_type == ContentType.OPENAPI_CALL
+                        ):
                             name = (
-                                "openapi_call" if content_type == ContentType.OPENAPI_CALL
+                                "openapi_call"
+                                if content_type == ContentType.OPENAPI_CALL
                                 else content_item["name"].lower()
                             )
                             if name in self.UNSUPPORTED_TOOLS:
@@ -276,7 +312,9 @@ class ConversationValidator(ValidatorInterface):
                                 )
         return None
 
-    def _validate_tool_message(self, message: Dict[str, Any]) -> Optional[EvaluationException]:
+    def _validate_tool_message(
+        self, message: Dict[str, Any]
+    ) -> Optional[EvaluationException]:
         content = message["content"]
         if not isinstance(content, list):
             return EvaluationException(
@@ -289,7 +327,9 @@ class ConversationValidator(ValidatorInterface):
                 target=self.error_target,
             )
         error = self._validate_string_field(
-            message, "tool_call_id", f"content items for role '{MessageRole.TOOL.value}'"
+            message,
+            "tool_call_id",
+            f"content items for role '{MessageRole.TOOL.value}'",
         )
         if error:
             return error
@@ -299,9 +339,11 @@ class ConversationValidator(ValidatorInterface):
                 ContentType.TOOL_RESULT,
                 ContentType.FUNCTION_CALL_OUTPUT,
                 ContentType.MCP_APPROVAL_RESPONSE,
-                ContentType.OPENAPI_CALL_OUTPUT
+                ContentType.OPENAPI_CALL_OUTPUT,
             ]
-            valid_tool_content_types_as_strings = [t.value for t in valid_tool_content_types]
+            valid_tool_content_types_as_strings = [
+                t.value for t in valid_tool_content_types
+            ]
             if content_type not in valid_tool_content_types:
                 return EvaluationException(
                     message=(
@@ -314,16 +356,22 @@ class ConversationValidator(ValidatorInterface):
                 )
 
             if content_type in [
-                ContentType.TOOL_RESULT, ContentType.OPENAPI_CALL_OUTPUT, ContentType.FUNCTION_CALL_OUTPUT
+                ContentType.TOOL_RESULT,
+                ContentType.OPENAPI_CALL_OUTPUT,
+                ContentType.FUNCTION_CALL_OUTPUT,
             ]:
                 error = self._validate_field_exists(
-                    content_item, content_type, f"content items for role '{MessageRole.TOOL.value}'"
+                    content_item,
+                    content_type,
+                    f"content items for role '{MessageRole.TOOL.value}'",
                 )
                 if error:
                     return error
         return None
 
-    def _validate_message_dict(self, message: Dict[str, Any]) -> Optional[EvaluationException]:
+    def _validate_message_dict(
+        self, message: Dict[str, Any]
+    ) -> Optional[EvaluationException]:
         if "role" not in message:
             return EvaluationException(
                 message="Each message must contain a 'role' field.",
@@ -341,7 +389,8 @@ class ConversationValidator(ValidatorInterface):
         role = message["role"]
         content = message["content"]
         content_is_string_or_list_of_dicts = isinstance(content, str) or (
-            isinstance(content, list) and all(item and isinstance(item, dict) for item in content)
+            isinstance(content, list)
+            and all(item and isinstance(item, dict) for item in content)
         )
         if not content_is_string_or_list_of_dicts:
             return EvaluationException(
@@ -379,7 +428,9 @@ class ConversationValidator(ValidatorInterface):
                 return error
         return None
 
-    def _validate_input_messages_list(self, input_messages: Any, input_name: str) -> Optional[EvaluationException]:
+    def _validate_input_messages_list(
+        self, input_messages: Any, input_name: str
+    ) -> Optional[EvaluationException]:
         if input_messages is None:
             return EvaluationException(
                 message=f"{input_name} is a required input and cannot be None.",
@@ -423,7 +474,9 @@ class ConversationValidator(ValidatorInterface):
                 return error
         return None
 
-    def _validate_conversation(self, conversation: Any) -> Optional[EvaluationException]:
+    def _validate_conversation(
+        self, conversation: Any
+    ) -> Optional[EvaluationException]:
         if not isinstance(conversation, dict):
             return EvaluationException(
                 message="Conversation must be a dictionary.",
@@ -450,7 +503,9 @@ class ConversationValidator(ValidatorInterface):
         """Validate evaluation input."""
         conversation = eval_input.get("conversation")
         if conversation:
-            conversation_validation_exception = self._validate_conversation(conversation)
+            conversation_validation_exception = self._validate_conversation(
+                conversation
+            )
             if conversation_validation_exception:
                 raise conversation_validation_exception
             return True
@@ -475,13 +530,15 @@ class ToolDefinitionsValidator(ConversationValidator):
         error_target: ErrorTarget,
         requires_query: bool = True,
         optional_tool_definitions: bool = True,
-        check_for_unsupported_tools: bool = False
+        check_for_unsupported_tools: bool = False,
     ):
         """Initialize ToolDefinitionsValidator."""
         super().__init__(error_target, requires_query, check_for_unsupported_tools)
         self.optional_tool_definitions = optional_tool_definitions
 
-    def _validate_tool_definition(self, tool_definition) -> Optional[EvaluationException]:
+    def _validate_tool_definition(
+        self, tool_definition
+    ) -> Optional[EvaluationException]:
         if not isinstance(tool_definition, dict):
             return EvaluationException(
                 message="Each tool definition must be a dictionary.",
@@ -492,12 +549,16 @@ class ToolDefinitionsValidator(ConversationValidator):
         error = self._validate_string_field(tool_definition, "name", "tool definitions")
         if error:
             return error
-        error = self._validate_dict_field(tool_definition, "parameters", "tool definitions")
+        error = self._validate_dict_field(
+            tool_definition, "parameters", "tool definitions"
+        )
         if error:
             return error
         return None
 
-    def _validate_tool_definitions(self, tool_definitions) -> Optional[EvaluationException]:
+    def _validate_tool_definitions(
+        self, tool_definitions
+    ) -> Optional[EvaluationException]:
         if not tool_definitions:
             if not self.optional_tool_definitions:
                 return EvaluationException(
@@ -526,7 +587,9 @@ class ToolDefinitionsValidator(ConversationValidator):
                     target=self.error_target,
                 )
             if tool_definition and tool_definition.get("type") == "openapi":
-                error = self._validate_list_field(tool_definition, "functions", "openapi tool definition")
+                error = self._validate_list_field(
+                    tool_definition, "functions", "openapi tool definition"
+                )
                 if error:
                     return error
                 functions_tool_definitions = tool_definition.get("functions", [])
@@ -545,7 +608,9 @@ class ToolDefinitionsValidator(ConversationValidator):
         """Validate evaluation input with tool definitions."""
         if super().validate_eval_input(eval_input):
             tool_definitions = eval_input.get("tool_definitions")
-            tool_definitions_validation_exception = self._validate_tool_definitions(tool_definitions)
+            tool_definitions_validation_exception = self._validate_tool_definitions(
+                tool_definitions
+            )
             if tool_definitions_validation_exception:
                 raise tool_definitions_validation_exception
         return True
@@ -578,8 +643,10 @@ def _is_intermediate_response(response):
             content = last_msg.get("content", [])
             if isinstance(content, list) and len(content) > 0:
                 last_content = content[-1]
-                if (isinstance(last_content, dict) and
-                        last_content.get("type") in ("function_call", "mcp_approval_request")):
+                if isinstance(last_content, dict) and last_content.get("type") in (
+                    "function_call",
+                    "mcp_approval_request",
+                ):
                     return True
     return False
 
@@ -589,15 +656,26 @@ def _drop_mcp_approval_messages(messages):
     if not isinstance(messages, list):
         return messages
     return [
-        msg for msg in messages
+        msg
+        for msg in messages
         if not (
             isinstance(msg, dict)
             and isinstance(msg.get("content"), list)
             and (
-                (msg.get("role") == "assistant" and any(
-                    isinstance(c, dict) and c.get("type") == "mcp_approval_request" for c in msg["content"]))
-                or (msg.get("role") == "tool" and any(
-                    isinstance(c, dict) and c.get("type") == "mcp_approval_response" for c in msg["content"]))
+                (
+                    msg.get("role") == "assistant"
+                    and any(
+                        isinstance(c, dict) and c.get("type") == "mcp_approval_request"
+                        for c in msg["content"]
+                    )
+                )
+                or (
+                    msg.get("role") == "tool"
+                    and any(
+                        isinstance(c, dict) and c.get("type") == "mcp_approval_response"
+                        for c in msg["content"]
+                    )
+                )
             )
         )
     ]
@@ -754,7 +832,9 @@ class ToolCallSuccessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                             result_key = f"{base_key}_result"
                             threshold_key = f"{base_key}_threshold"
                             threshold_value = (
-                                self._threshold.get(base_key) if isinstance(self._threshold, dict) else self._threshold
+                                self._threshold.get(base_key)
+                                if isinstance(self._threshold, dict)
+                                else self._threshold
                             )
                             if not isinstance(threshold_value, (int, float)):
                                 raise EvaluationException(
@@ -770,14 +850,22 @@ class ToolCallSuccessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                             if not contains_result_key:
                                 if self._higher_is_better:
                                     if float(score_value) >= threshold_value:
-                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[True]
+                                        result[result_key] = (
+                                            EVALUATION_PASS_FAIL_MAPPING[True]
+                                        )
                                     else:
-                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[False]
+                                        result[result_key] = (
+                                            EVALUATION_PASS_FAIL_MAPPING[False]
+                                        )
                                 else:
                                     if float(score_value) <= threshold_value:
-                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[True]
+                                        result[result_key] = (
+                                            EVALUATION_PASS_FAIL_MAPPING[True]
+                                        )
                                     else:
-                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[False]
+                                        result[result_key] = (
+                                            EVALUATION_PASS_FAIL_MAPPING[False]
+                                        )
             except Exception as e:
                 logger.warning(f"Error calculating binary result: {e}")
             per_turn_results.append(result)
@@ -852,7 +940,51 @@ class ToolCallSuccessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             f"{self._result_key}_properties": None,
         }
         # Add top-level token metadata fields for backward compatibility.
-        result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+        result.update(
+            {
+                f"{self._result_key}_{key}": value
+                for key, value in token_metadata.items()
+            }
+        )
+        return result
+
+    def _return_short_circuit_failure_result(
+        self, failed_tools: List[str]
+    ) -> Dict[str, Union[str, float, Dict, None]]:
+        """Return a deterministic fail result without invoking the LLM judge.
+
+        Used when the runtime explicitly marks one or more tool calls as
+        failed/incomplete via the ``status`` field on a ``tool_call`` or
+        ``tool_result`` content block. The LLM call is skipped because the
+        runtime signal is authoritative; token-metadata fields are emitted
+        with zero/empty values for schema compatibility with the LLM path.
+        """
+        failed_list = ",".join(failed_tools)
+        reason = (
+            f"Tool call(s) [{failed_list}] reported a non-success runtime status "
+            "(failed or incomplete)."
+        )
+        token_metadata = self._get_token_metadata({})
+        result = {
+            self._result_key: 0.0,
+            f"{self._result_key}_score": 0.0,
+            f"{self._result_key}_passed": False,
+            f"{self._result_key}_result": "fail",
+            f"{self._result_key}_reason": reason,
+            f"{self._result_key}_status": "completed",
+            f"{self._result_key}_threshold": self._threshold,
+            f"{self._result_key}_properties": {
+                "failed_tools": failed_list,
+                **token_metadata,
+            },
+        }
+        # Add top-level token metadata fields for backward compatibility with the LLM path.
+        result.update(
+            {
+                f"{self._result_key}_{key}": value
+                for key, value in token_metadata.items()
+            }
+        )
         return result
 
     @staticmethod
@@ -902,7 +1034,19 @@ class ToolCallSuccessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         if isinstance(eval_input.get("response"), list):
             eval_input["response"] = _preprocess_messages(eval_input["response"])
-            eval_input["tool_calls"] = _reformat_tool_calls_results(eval_input["response"], logger)
+            # Short-circuit: when the runtime explicitly marks any tool_call or
+            # tool_result with a non-success status (e.g. ``failed`` or
+            # ``incomplete``) there is no point asking the LLM judge to
+            # re-derive the failure from the payload -- the runtime signal is
+            # authoritative. Return a deterministic fail result and skip the
+            # LLM call entirely. The prompty rubric is now only consulted on
+            # the success path (status ``completed`` or absent).
+            failed_tools = _collect_failed_tool_calls(eval_input["response"])
+            if failed_tools:
+                return self._return_short_circuit_failure_result(failed_tools)
+            eval_input["tool_calls"] = _reformat_tool_calls_results(
+                eval_input["response"], logger
+            )
         # If response is a string, pass directly without reformatting
         elif isinstance(eval_input["response"], str):
             eval_input["tool_calls"] = eval_input["response"]
@@ -918,7 +1062,9 @@ class ToolCallSuccessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             eval_input["query"] = _preprocess_messages(eval_input["query"])
 
         # If tool definitions are string, pass directly without reformatting, else format it.
-        if "tool_definitions" in eval_input and not isinstance(eval_input["tool_definitions"], str):
+        if "tool_definitions" in eval_input and not isinstance(
+            eval_input["tool_definitions"], str
+        ):
             tool_definitions = eval_input["tool_definitions"]
             # Only if response is not a string, we filter tool definitions to only tools needed.
             if not isinstance(eval_input["response"], str):
@@ -927,9 +1073,13 @@ class ToolCallSuccessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                     msgs_list=eval_input["response"],
                     logger=logger,
                 )
-            eval_input["tool_definitions"] = _reformat_tool_definitions(tool_definitions, logger)
+            eval_input["tool_definitions"] = _reformat_tool_definitions(
+                tool_definitions, logger
+            )
 
-        prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
+        prompty_output_dict = await self._flow(
+            timeout=self._LLM_CALL_TIMEOUT, **eval_input
+        )
         llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
 
         if isinstance(llm_output, dict):
@@ -957,7 +1107,12 @@ class ToolCallSuccessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 f"{self._result_key}_properties": llm_properties,
             }
             # Add top-level token metadata fields for backward compatibility.
-            result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+            result.update(
+                {
+                    f"{self._result_key}_{key}": value
+                    for key, value in token_metadata.items()
+                }
+            )
             return result
         raise EvaluationException(
             message="Evaluator returned invalid output.",
@@ -978,21 +1133,30 @@ def _filter_to_used_tools(tool_definitions, msgs_list, logger=None):
                 for content in msg.get("content", []):
                     if content.get("type") == "tool_call":
                         any_tools_used = True
-                        if "tool_call" in content and "function" in content["tool_call"]:
+                        if (
+                            "tool_call" in content
+                            and "function" in content["tool_call"]
+                        ):
                             used_tool_names.add(content["tool_call"]["function"])
                         elif "name" in content:
                             used_tool_names.add(content["name"])
 
-        filtered_tools = [tool for tool in tool_definitions if tool.get("name") in used_tool_names]
+        filtered_tools = [
+            tool for tool in tool_definitions if tool.get("name") in used_tool_names
+        ]
         if any_tools_used and not filtered_tools:
             if logger:
-                logger.warning("No tool definitions matched the tools used in the messages. Returning original list.")
+                logger.warning(
+                    "No tool definitions matched the tools used in the messages. Returning original list."
+                )
             filtered_tools = tool_definitions
 
         return filtered_tools
     except Exception as e:
         if logger:
-            logger.warning(f"Failed to filter tool definitions, returning original list. Error: {e}")
+            logger.warning(
+                f"Failed to filter tool definitions, returning original list. Error: {e}"
+            )
         return tool_definitions
 
 
@@ -1004,14 +1168,90 @@ def _format_value(v):
     return v
 
 
+_FAILED_RUNTIME_STATUSES = frozenset({"failed", "incomplete"})
+
+
+def _collect_failed_tool_calls(messages):
+    """Return ordered, unique tool names whose runtime status indicates failure.
+
+    A tool call is treated as a runtime failure when either its assistant
+    ``tool_call`` content block or its matched tool ``tool_result`` content
+    block carries a ``status`` field in ``{failed, incomplete}``. The check
+    runs in Python so the LLM judge is only invoked on the success path
+    (status ``completed`` or absent); failed/incomplete calls are short-
+    circuited deterministically.
+
+    When the failing block carries no resolvable function name, the tool
+    ``tool_call_id`` is used as a stable identifier instead so the caller can
+    still surface it in ``properties.failed_tools``.
+    """
+    if not isinstance(messages, list):
+        return []
+
+    id_to_name = {}
+    failed_ids = []
+    failed_names_without_id = []
+
+    for msg in messages:
+        if not isinstance(msg, dict) or msg.get("role") != "assistant":
+            continue
+        for content in msg.get("content", []) or []:
+            if not isinstance(content, dict) or content.get("type") != "tool_call":
+                continue
+            if "tool_call" in content and "function" in content.get("tool_call", {}):
+                tc = content["tool_call"]
+                name = tc.get("function", {}).get("name", "") or ""
+                call_id = tc.get("id")
+            else:
+                name = content.get("name", "") or ""
+                call_id = content.get("tool_call_id")
+            if call_id is not None:
+                id_to_name[call_id] = name
+            status = content.get("status")
+            if isinstance(status, str) and status in _FAILED_RUNTIME_STATUSES:
+                if call_id is not None:
+                    failed_ids.append(call_id)
+                elif name:
+                    failed_names_without_id.append(name)
+
+    for msg in messages:
+        if not isinstance(msg, dict) or msg.get("role") != "tool":
+            continue
+        call_id = msg.get("tool_call_id")
+        for content in msg.get("content", []) or []:
+            if not isinstance(content, dict) or content.get("type") != "tool_result":
+                continue
+            status = content.get("status")
+            if (
+                isinstance(status, str)
+                and status in _FAILED_RUNTIME_STATUSES
+                and call_id is not None
+            ):
+                failed_ids.append(call_id)
+
+    ordered = []
+    seen = set()
+    for call_id in failed_ids:
+        label = id_to_name.get(call_id) or call_id
+        if label and label not in seen:
+            seen.add(label)
+            ordered.append(label)
+    for name in failed_names_without_id:
+        if name and name not in seen:
+            seen.add(name)
+            ordered.append(name)
+    return ordered
+
+
 def _get_tool_calls_results(agent_response_msgs):
     """Extract formatted agent tool calls and results from response.
 
-    Each emitted ``[TOOL_CALL]`` / ``[TOOL_RESULT]`` line is suffixed with
-    ``[STATUS] <value>`` when the source content block carries a ``status``
-    field. The prompty rubric uses this annotation as a strong failure signal
-    (see ``tool_call_success.prompty``). When ``status`` is absent the suffix
-    is omitted and the rubric falls back to payload-only judgment.
+    The output uses the original ``[TOOL_CALL]`` / ``[TOOL_RESULT]`` line
+    format only; runtime ``status`` is no longer forwarded to the LLM judge.
+    Failed/incomplete tool calls are short-circuited in Python by
+    :func:`_collect_failed_tool_calls` before this formatter runs, so by the
+    time the LLM sees the response every remaining call has either no status
+    or a ``completed`` status -- the rubric judges those by payload alone.
     """
     agent_response_text = []
     tool_results = {}
@@ -1023,8 +1263,7 @@ def _get_tool_calls_results(agent_response_msgs):
             for content in msg.get("content", []):
                 if content.get("type") == "tool_result":
                     result = content.get("tool_result")
-                    status_suffix = _format_status_suffix(content.get("status"))
-                    tool_results[msg["tool_call_id"]] = f"[TOOL_RESULT] {result}{status_suffix}"
+                    tool_results[msg["tool_call_id"]] = f"[TOOL_RESULT] {result}"
 
     # Second pass: parse assistant messages and tool calls
     for msg in agent_response_msgs:
@@ -1033,7 +1272,9 @@ def _get_tool_calls_results(agent_response_msgs):
             for content in msg.get("content", []):
 
                 if content.get("type") == "tool_call":
-                    if "tool_call" in content and "function" in content.get("tool_call", {}):
+                    if "tool_call" in content and "function" in content.get(
+                        "tool_call", {}
+                    ):
                         tc = content.get("tool_call", {})
                         func_name = tc.get("function", {}).get("name", "")
                         args = tc.get("function", {}).get("arguments", {})
@@ -1042,25 +1283,15 @@ def _get_tool_calls_results(agent_response_msgs):
                         tool_call_id = content.get("tool_call_id")
                         func_name = content.get("name", "")
                         args = content.get("arguments", {})
-                    args_str = ", ".join(f"{k}={_format_value(v)}" for k, v in args.items())
-                    status_suffix = _format_status_suffix(content.get("status"))
-                    call_line = f"[TOOL_CALL] {func_name}({args_str}){status_suffix}"
+                    args_str = ", ".join(
+                        f"{k}={_format_value(v)}" for k, v in args.items()
+                    )
+                    call_line = f"[TOOL_CALL] {func_name}({args_str})"
                     agent_response_text.append(call_line)
                     if tool_call_id in tool_results:
                         agent_response_text.append(tool_results[tool_call_id])
 
     return agent_response_text
-
-
-def _format_status_suffix(status):
-    """Build the trailing ``[STATUS] <value>`` annotation for a content block.
-
-    Returns the empty string when ``status`` is absent or not a string, so
-    callers can unconditionally concatenate the return value.
-    """
-    if isinstance(status, str) and status:
-        return f" [STATUS] {status}"
-    return ""
 
 
 def _reformat_tool_calls_results(response, logger=None):
@@ -1084,7 +1315,9 @@ def _reformat_tool_calls_results(response, logger=None):
         # This is a fallback to ensure that the evaluation can still proceed.
         # See comments on reformat_conversation_history for more details.
         if logger:
-            logger.warning(f"Agent response could not be parsed, falling back to original response. Error: {e}")
+            logger.warning(
+                f"Agent response could not be parsed, falling back to original response. Error: {e}"
+            )
             logger.debug(f"Original response: {response}")
         return response
 

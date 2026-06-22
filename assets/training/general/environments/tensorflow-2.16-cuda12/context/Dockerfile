@@ -77,9 +77,9 @@ RUN if [ "$BUILD_NUMBER" != "None" ] && [ "$IMAGE_NAME" != "None" ]; then echo "
 ENV MINICONDA_VERSION py310_23.10.0-1
 ENV PATH /opt/miniconda/bin:$PATH
 RUN wget -qO /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh && \
-    bash /tmp/miniconda.sh -bf -p /opt/miniconda && \
-    conda update --all -c conda-forge -y && \
-    conda clean -ay && \
+    bash /tmp/miniconda.sh -bf -p /opt/miniconda > /tmp/miniconda-install.log 2>&1 || (cat /tmp/miniconda-install.log && false) && \
+    conda update --all -c conda-forge -y -q && \
+    conda clean -ay -q && \
     rm -rf /opt/miniconda/pkgs && \
     rm /tmp/miniconda.sh && \
     find / -type d -name __pycache__ | xargs rm -rf   
@@ -142,21 +142,43 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 # USN-8222-1 (CVE-2026-35385/35386/35387/35388/35414): openssh >= 1:8.9p1-3ubuntu0.15.
 # Installed directly from jammy-security to pick up patched openssh-{server,client,sftp-server}.
 RUN apt-get update && \
-    apt-get install --reinstall -y openssl libssl-dev && \
-    apt-get install -y openssh-server openssh-client openssh-sftp-server && \
+    apt-get install -y openssh-server openssh-client openssh-sftp-server > /tmp/openssh-install.log 2>&1 || (cat /tmp/openssh-install.log && false) && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /tmp/openssh-install.log /var/lib/apt/lists/*
 
-# USN-8354-1: nginx packages >= 1.18.0-6ubuntu14.12. nginx-light is installed in the
+# Upgrade vulnerable OS packages installed by the Ubuntu/CUDA/inferencing base layers:
+# OpenSSL (USN-8414-1), systemd (USN-8402-1), xz-utils (USN-8362-1),
+# libgcrypt (USN-8319-1), libarchive (USN-8292-1), and GnuTLS (USN-8284-1).
+RUN apt-get update && \
+    apt-get install --only-upgrade -y --no-install-recommends \
+        libarchive13 \
+        libgcrypt20 \
+        libgnutls30 \
+        liblzma5 \
+        libnss-systemd \
+        libpam-systemd \
+        libssl-dev \
+        libssl3 \
+        libsystemd0 \
+        libudev1 \
+        openssl \
+        systemd \
+        systemd-sysv \
+        systemd-timesyncd \
+        udev \
+        xz-utils > /tmp/os-security-upgrade.log 2>&1 || (cat /tmp/os-security-upgrade.log && false) && \
+    apt-get clean && \
+    rm -rf /tmp/os-security-upgrade.log /var/lib/apt/lists/*
+
+# USN-8354-1/USN-8398-1/USN-8398-3: nginx packages >= 1.18.0-6ubuntu14.15. nginx-light is installed in the
 # inferencing layer above (after the top apt-get upgrade), so the nginx packages are
-# re-upgraded here. Base libs (libarchive13/libgnutls30/libgcrypt20/liblzma5/xz-utils) are
-# already covered by the top apt-get upgrade -y.
+# re-upgraded here.
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        nginx-common \
-        nginx-light \
-        libnginx-mod-http-geoip2 \
-        libnginx-mod-http-echo && \
+        nginx-common=1.18.0-6ubuntu14.15 \
+        nginx-light=1.18.0-6ubuntu14.15 \
+        libnginx-mod-http-geoip2=1.18.0-6ubuntu14.15 \
+        libnginx-mod-http-echo=1.18.0-6ubuntu14.15 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -187,7 +209,21 @@ RUN conda run -p $CONDA_PREFIX pip install --upgrade 'pip>=26.1' 'cryptography>=
 # Upgrade vulnerable packages in the base miniconda env (python3.10)
 # Use the absolute path to /opt/miniconda's pip because $CONDA_PREFIX/bin precedes /opt/miniconda/bin in PATH.
 # pip>=26.1 fixes GHSA-jp4c-xjxw-mgf9 / CVE-2026-6357 in the base miniconda env install path.
-RUN /opt/miniconda/bin/pip install --upgrade 'pip>=26.1' 'cryptography>=46.0.7' 'requests>=2.33.0' 'idna>=3.15' && \
+# py-rattler is a transitive dep of conda-rattler-solver in the Miniconda base env; remove it after
+# build-time conda use because the current wheel embeds vulnerable pyo3 (GHSA-36hh-v3qg-5jq4/GHSA-chgr-c6px-7xpp).
+RUN /opt/miniconda/bin/pip install --upgrade \
+        'pip>=26.1' \
+        'cryptography>=46.0.7' \
+        'requests>=2.33.0' \
+        'idna>=3.15' && \
+    conda config --system --set solver classic && \
+    /opt/miniconda/bin/pip uninstall -y py-rattler conda-rattler-solver && \
+    rm -rf /opt/miniconda/lib/python3.10/site-packages/rattler* \
+           /opt/miniconda/lib/python3.10/site-packages/conda_rattler_solver* \
+           /opt/miniconda/lib/python3.10/site-packages/py__rattler* \
+           /opt/miniconda/lib/python3.10/site-packages/py_rattler* \
+           /opt/miniconda/conda-meta/py-rattler-*.json \
+           /opt/miniconda/conda-meta/conda-rattler-solver-*.json && \
     # Remove the conda pkgs cache — conda env create / conda install repopulate it with
     # pip-26.0.1-pyh8b19718__0 which still ships vulnerable pip 26.0.1 metadata
     # (scanned at opt/miniconda/pkgs/pip-26.0.1-pyh8b19718__0/site-packages/pip-26.0.1.dist-info).

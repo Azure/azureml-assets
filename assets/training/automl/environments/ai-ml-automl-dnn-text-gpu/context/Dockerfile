@@ -1,7 +1,6 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl-dnn-text-gpu
-# Prepend path to AzureML conda environment
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
 COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/ /var/mlflow_resources/
@@ -120,7 +119,6 @@ RUN pip install pyarrow==14.0.2 \
 # pins transformers==4.53.0; cannot upgrade parent.
 RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.5.4'
 
-
 # Security: upgrade pip to fix CVE-2026-6357 / GHSA-jp4c-xjxw-mgf9 (vulnerable
 # self-update behaviour in pip < 26.1) in the AZUREML conda env. The `conda create`
 # above seeds the env with pip==26.0.1 from conda-forge. pip is its own parent,
@@ -160,7 +158,18 @@ RUN /opt/conda/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setup
 # Current base tag biweekly.202605.2 ships click 8.2.1. Latest parents
 # (`typer==0.25.1`, `anaconda-cli-base==0.8.2`, and httpx's CLI extra)
 # still use loose click ranges, so parent upgrades cannot force click>=8.3.3.
-RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3'
+#
+# PyJWT>=2.13.0: pinned transitive dep of ACPT base image; fixes
+# GHSA-993g-76c3-p5m4 and GHSA-jq35-7prp-9v3f.
+#
+# py-rattler>=0.24.0: pinned transitive dep of ACPT base image; fixes
+# GHSA-q53q-5r4j-5729.
+RUN /opt/conda/bin/pip install --no-cache-dir --upgrade \
+    'urllib3>=2.7.0' \
+    'idna>=3.15' \
+    'click>=8.3.3' \
+    'PyJWT>=2.13.0' \
+    'py-rattler>=0.24.0'
 
 # Security: python-dotenv 1.2.1 -> >=1.2.2 fixes GHSA-mf9w-mj56-hr94 (set_key()/
 # unset_key() follow symlinks on cross-device .env writes -> arbitrary file
