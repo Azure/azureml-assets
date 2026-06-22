@@ -1,5 +1,3 @@
-torch
-vllm
 azure-ai-contentsafety==1.0.0b1
 azure-ai-ml==1.13.0
 azureml-mlflow==1.60.0
