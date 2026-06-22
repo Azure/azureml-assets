@@ -43,18 +43,12 @@ ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH \
 
 RUN python3.12 -m pip install --upgrade pip==26.1
 
-# Install torch with CUDA support from PyTorch index
-RUN python3.12 -m pip install torch --index-url https://download.pytorch.org/whl/cu118 --no-cache-dir
-
 WORKDIR /
 
 COPY . .
 # Use `python3.12 -m pip` (not bare `pip`) so the install always targets the
 # /azureml-envs/default interpreter even if PATH ordering changes later.
 RUN python3.12 -m pip install -e ./ --no-cache-dir && \
-    rm -rf ~/.cache/pip
-
-RUN python3.12 -m pip install --no-cache-dir "vllm>=0.20.2" && \
     rm -rf ~/.cache/pip
 
 # The MCR base ships its AzureML scoring services (gunicorn/nginx/rsyslog)
