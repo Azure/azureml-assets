@@ -133,11 +133,16 @@ RUN pip install \
 #   Override is required to remediate the vulnerability.
 #   Chain: azureml-automl-runtime / azureml-train-automl-runtime -> onnx<=1.17.0
 #
+# pyarrow>=23.0.1 — GHSA-rgxp-2hwp-jwgg
+#   Pinned transitive dep of azureml-dataset-runtime; fixes the vulnerable
+#   pyarrow 17.0.0 resolved in this image.
+#
 # starlette>=1.0.1 — GHSA-86qp-5c8j-p5mr; transitive via fastapi (loose floor), drop when parent bumps
 # idna>=3.15 — GHSA-65pc-fj4g-8rjx; transitive via requests/yarl (loose floor), drop when parent bumps
 RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0' \
     'bokeh>=3.8.2' \
     'onnx>=1.21.0' \
+    'pyarrow>=23.0.1' \
     'starlette>=1.0.1' \
     'idna>=3.15'
 
