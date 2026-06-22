@@ -110,6 +110,9 @@ RUN pip install --no-cache-dir \
 # NOTE: starlette>=1.0.1 (GHSA-86qp-5c8j-p5mr): starlette 0.52.1 is installed as a
 #       transitive dep into the azureml-automl-dnn-vision-gpu conda env. No parent
 #       release pins the patched floor; explicit override required.
+# NOTE: pyarrow>=23.0.1 (GHSA-rgxp-2hwp-jwgg / CVE-2026-25087): pyarrow 17.0.0
+#       is installed transitively via azureml-dataset-runtime in this conda env;
+#       explicit override required until the AzureML parent pins a patched floor.
 RUN pip install --no-cache-dir --upgrade \
                 'cryptography>=46.0.7' \
                 'distributed>=2026.1.0' \
@@ -121,10 +124,8 @@ RUN pip install --no-cache-dir --upgrade \
                 'idna>=3.15' \
                 'pyOpenSSL>=26.0.0' \
                 'wheel>=0.46.2' \
-                'starlette>=1.0.1'
-
-
-
+                'starlette>=1.0.1' \
+                'pyarrow>=23.0.1'
 
 # Vulnerability patches for ptca environment
 # pip>=26.1 (CVE-2026-6357 / GHSA-jp4c-xjxw-mgf9): pip < 26.1 deferred imports of
@@ -164,13 +165,21 @@ RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-d
 # aiohttp>=3.14.0 (GHSA-hg6j-4rv6-33pg / GHSA-jg22-mg44-37j8): aiohttp 3.13.5 is
 #   shipped in the base conda env (py3.13) of the ACPT base image. Two CVEs require
 #   3.14.0; no parent release pins the patched floor, so explicit override required.
+# PyJWT>=2.13.0 (GHSA-993g-76c3-p5m4 / GHSA-jq35-7prp-9v3f): PyJWT 2.12.1 is
+#   shipped in the base conda env (py3.13) of the ACPT base image; explicit
+#   override required until the base image is rebuilt with a patched floor.
+# py-rattler>=0.24.0 (GHSA-q53q-5r4j-5729): py-rattler 0.23.1 is shipped in the
+#   base conda env (py3.13) of the ACPT base image; explicit override required
+#   until the base image is rebuilt with a patched floor.
 RUN conda run -n base pip install --no-cache-dir --upgrade \
                 'python-dotenv>=1.2.2' \
                 'pip>=26.1' \
                 'urllib3>=2.7.0' \
                 'idna>=3.15' \
                 'click>=8.3.3' \
-                'aiohttp>=3.14.0'
+                'aiohttp>=3.14.0' \
+                'PyJWT>=2.13.0' \
+                'py-rattler>=0.24.0'
 # Fix vendored jaraco.context (GHSA-58pv-8j8x-9vj2) and wheel (GHSA-8rrh-rw8j-w5fx) in base setuptools
 # setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced
 RUN /opt/conda/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'

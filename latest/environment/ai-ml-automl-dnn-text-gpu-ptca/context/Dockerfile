@@ -7,7 +7,7 @@ RUN apt-get update && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     apt-get autoremove -y
 
-RUN pip install --no-cache-dir \ 
+RUN pip install --no-cache-dir \
     'azureml-automl-dnn-nlp==1.62.0' \
     'azureml-defaults==1.62.0'
 
@@ -21,7 +21,7 @@ RUN TORCH_CUDA_ARCH_LIST="5.2;6.0;7.0;8.0;8.6;9.0" python -m onnxruntime.trainin
 RUN pip install torch-ort==1.18.0 && TORCH_CUDA_ARCH_LIST="5.2;6.0;7.0;8.0;8.6;9.0" python -m torch_ort.configure
 RUN pip uninstall -y onnxruntime
 
-RUN pip install \ 
+RUN pip install \
     optimum==1.23.3 \
     accelerate==1.12.0 \
     deepspeed~=0.15.1
@@ -49,13 +49,16 @@ RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.5
 # aiohttp 3.13.5 -> >=3.14.0 (GHSA-jg22-mg44-37j8, GHSA-hg6j-4rv6-33pg): aiohttp
 #   is pulled in transitively with no parent pinning it to <3.14.0, so direct
 #   override is required.
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade \
+# pyarrow 17.0.0 -> >=23.0.1 (GHSA-rgxp-2hwp-jwgg / CVE-2026-25087): pinned
+#   transitive dep of azureml-automl-dnn-nlp via AzureML dataset/runtime packages.
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
     'pip>=26.1.1' \
     'setuptools>=82.0.1' \
     'onnx>=1.21.0' \
     'bokeh>=3.8.2' \
     'distributed>=2026.1.0' \
-    'aiohttp>=3.14.0' && \
+    'aiohttp>=3.14.0' \
+    'pyarrow>=23.0.1' && \
     rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0.1-*.json
 
 # Vulnerability patches for conda base env (python 3.13 at /opt/conda)
@@ -80,16 +83,22 @@ RUN /opt/conda/envs/ptca/bin/pip install --upgrade \
 # aiohttp 3.13.5 -> >=3.14.0 (GHSA-jg22-mg44-37j8, GHSA-hg6j-4rv6-33pg): aiohttp
 #   is pulled in transitively with no parent pinning it to <3.14.0, so direct
 #   override is required.
+# PyJWT 2.12.1 -> >=2.13.0 (GHSA-jq35-7prp-9v3f, GHSA-993g-76c3-p5m4): pinned
+#   transitive dep brought in by the ACPT base image conda environment.
+# py-rattler 0.23.1 -> >=0.24.0 (GHSA-q53q-5r4j-5729): pinned transitive dep
+#   brought in by the ACPT base image conda tooling.
 # Stale conda pkgs-cache entries for click, idna, pip, and python-dotenv are removed
 #   so scanners do not re-flag the old versions from the package cache directories.
-RUN /opt/conda/bin/pip install --upgrade \
+RUN /opt/conda/bin/pip install --no-cache-dir --upgrade \
     'pip>=26.1.1' \
     'urllib3>=2.7.0' \
     'idna>=3.15' \
     'click>=8.3.3' \
     'setuptools>=82.0.1' \
     'python-dotenv>=1.2.2' \
-    'aiohttp>=3.14.0' && \
+    'aiohttp>=3.14.0' \
+    'PyJWT>=2.13.0' \
+    'py-rattler>=0.24.0' && \
     rm -rf /opt/conda/pkgs/click-8.2.1-* \
            /opt/conda/pkgs/idna-3.11-* \
            /opt/conda/pkgs/pip-26.0.1-* \

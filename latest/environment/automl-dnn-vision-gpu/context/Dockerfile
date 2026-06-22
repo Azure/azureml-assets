@@ -1,6 +1,5 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch271:biweekly.202601.1
 
-
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-vision-gpu
 # Prepend path to AzureML conda environment
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
@@ -21,7 +20,7 @@ RUN apt-get update && \
         rsyslog \
         runit \
         unzip && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*&& \
+    apt-get clean && rm -rf /var/lib/apt/lists/* && \
     cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
     cp /var/configuration/nginx.conf /etc/nginx/sites-available/app && \
     ln -sf /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
@@ -78,23 +77,22 @@ RUN /opt/conda/bin/conda install -n ptca -c conda-forge 'pip>=26.1' -y && \
     'aiohttp>=3.14.0' 'pytest>=9.0.3' 'idna>=3.15'
 
 # Fix security vulnerabilities in active conda env (azureml-automl-dnn-vision-gpu, python 3.10)
-# aiohttp, bokeh, distributed, protobuf, cryptography, filelock, setuptools, PyJWT, urllib3, pillow, onnx,
+# aiohttp, bokeh, distributed, protobuf, cryptography, filelock, setuptools, PyJWT, urllib3, pillow, onnx, pyarrow,
 # requests, python-dotenv — all transitive deps of azureml SDK packages pinned with template
 # versions (cannot upgrade parent during template rendering).
 # cryptography>=46.0.7: azure-identity (via azureml-dataprep) only requires cryptography>=2.5.
+# pyarrow>=23.0.1: pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg / CVE-2026-25087.
 # python-dotenv>=1.2.2: CVE-2026-28684; pydantic-settings (<=2.14.0) requires >=0.21.0 only.
 # idna>=3.15 and click>=8.3.3 are direct overrides because requests/yarl/dask parents keep
 # loose dependency ranges that allow vulnerable versions.
 RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' 'distributed>=2026.1.0' 'protobuf>=6.33.5' 'cryptography>=46.0.7' \
     'filelock>=3.20.3' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'urllib3>=2.7.0' 'pillow>=12.2.0' \
     'onnx>=1.21.0' 'requests>=2.33.0' 'python-dotenv>=1.2.2' \
-    'bokeh>=3.8.2' 'idna>=3.15' 'click>=8.3.3'
+    'bokeh>=3.8.2' 'idna>=3.15' 'click>=8.3.3' 'pyarrow>=23.0.1'
 # Remove stale vendored metadata that scanners pick up
 RUN rm -rf /opt/conda/lib/python3.13/site-packages/setuptools/__vendor/jaraco.context-5.3.0.dist-info \
     /opt/conda/lib/python3.13/site-packages/setuptools/__vendor/wheel-0.45.1.dist-info \
     /opt/conda/envs/ptca/lib/python3.10/site-packages/setuptools/__vendor/jaraco.context-5.3.0.dist-info \
     /opt/conda/envs/ptca/lib/python3.10/site-packages/setuptools/__vendor/wheel-0.45.1.dist-info \
     /opt/conda/envs/ptca/lib/python3.10/site-packages/wheel-0.41.2.dist-info
-
-
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH

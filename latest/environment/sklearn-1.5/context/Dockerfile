@@ -63,10 +63,12 @@ RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
 #   <46.0.0 in 1.62.0); cap no longer prevents 46.x but pip's resolver may still pick
 #   an older 46.x patch via transitive constraints (azureml-core -> pyopenssl<26.0.0,
 #   pyopenssl -> cryptography>=...). Pin 46.0.7 explicitly to ensure latest patch.
-# aiohttp / distributed: kept overrides to ensure latest patched versions; transitive
-#   parent constraints (mlflow-skinny, dask) don't require these specific patches.
+# aiohttp / distributed / pyarrow: kept overrides to ensure latest patched versions;
+#   transitive parent constraints (mlflow-skinny, dask, azureml-dataset-runtime)
+#   don't require these specific patches.
+# pyarrow>=23.0.1: pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg.
 RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
-    'aiohttp>=3.14.0' cryptography==46.0.7 'distributed>=2026.1.0'
+    'aiohttp>=3.14.0' cryptography==46.0.7 'distributed>=2026.1.0' 'pyarrow>=23.0.1'
 
 # idna>=3.15 (GHSA-65pc-fj4g-8rjx): base-image miniconda ships idna<3.15; drop once base image updates
 RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'idna>=3.15'
