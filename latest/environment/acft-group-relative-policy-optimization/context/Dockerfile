@@ -1,4 +1,3 @@
-#PTCA image
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202606.2.v1
 
 USER root
@@ -38,7 +37,7 @@ RUN pip install --upgrade 'protobuf>=6.33.5,<7' 'xgrammar>=0.1.32' \
 RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' 'starlette>=1.0.1' 'idna>=3.15'
 # pip: GHSA-jp4c-xjxw-mgf9 (CVE-2026-6357); base image biweekly.202605.1 ships 26.0.1 in
 # both ptca (py3.10) and base (py3.13) conda envs, fixed in 26.1. pip is the Python
-# package installer itself — it has NO parent/transitive package that pulls it in
+# package installer itself - it has NO parent/transitive package that pulls it in
 # (it is bootstrapped by the conda/python distribution), so the only available
 # remediation is to upgrade pip directly in each conda environment.
 # Also remove stale conda-meta/pip-*.json from ptca env: `pip install --upgrade pip`
@@ -48,13 +47,14 @@ RUN pip install --no-cache-dir --upgrade 'pip>=26.1.1' && \
     rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0*.json
 RUN rm -rf ~/.cache/pip
 # python-dotenv in base conda env: GHSA-mf9w-mj56-hr94; base ships 1.2.1, need >=1.2.2
-#   parent packages: uvicorn (>=0.13), pydantic-settings (>=0.21.0) — both use loose floors
+#   parent packages: uvicorn (>=0.13), pydantic-settings (>=0.21.0) - both use loose floors
 # urllib3 in base conda env: see urllib3 note above; same direct-override rationale.
-# pip: see note above — bootstrap tool, must be upgraded directly in base env too
+# pip: see note above - bootstrap tool, must be upgraded directly in base env too
+# py-rattler: pinned transitive dep from base image conda tooling; fixes GHSA-q53q-5r4j-5729
 # Also clean stale conda-meta/pip-*.json (see ptca env note above for scanner detail).
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'pip>=26.1.1' 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' \
         'aiohttp>=3.14.0' 'click>=8.3.3' 'idna>=3.15' \
-        'PyJWT>=2.13.0' && \
+        'PyJWT>=2.13.0' 'py-rattler>=0.24.0' && \
     rm -f /opt/conda/conda-meta/pip-26.0*.json
 # pyarrow: GHSA-rgxp-2hwp-jwgg (fix in >=23.0.1); ptca env ships 20.0.0 via vllm transitive dep.
 # PyJWT: GHSA-jq35-7prp-9v3f, GHSA-993g-76c3-p5m4 (fix in >=2.13.0); base env ships 2.12.1.
@@ -64,7 +64,7 @@ RUN pip install --no-cache-dir --upgrade 'pyarrow>=23.0.1'
 RUN rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/ray/_private/runtime_env/agent/thirdparty_files/aiohttp* \
            /opt/conda/envs/ptca/lib/python3.10/site-packages/ray/_private/runtime_env/agent/thirdparty_files/idna* && \
     pip install --no-cache-dir --target /opt/conda/envs/ptca/lib/python3.10/site-packages/ray/_private/runtime_env/agent/thirdparty_files 'aiohttp>=3.14.0' 'idna>=3.15'
-# Patch log4j-core 2.25.3→2.25.4 inside ray's fat JAR (ray_dist.jar).
+# Patch log4j-core 2.25.3 to 2.25.4 inside ray's fat JAR (ray_dist.jar).
 # ray (all versions through 2.55.1) bundles log4j-core 2.25.3 in java/dependencies.bzl.
 # No ray release includes 2.25.4; manual JAR surgery is required.
 # Fixes: GHSA-3pxv-7cmr-fjr4, GHSA-445c-vh5m-36rj, GHSA-6hg6-v5c8-fphq
