@@ -45,5 +45,4 @@ variantInfo:
     executionProvider: VitisAIExecutionProvider
     fileSizeBytes: 5078798827
     vRamFootprintBytes: 5078995599
-type: custom_model
 version: 2
