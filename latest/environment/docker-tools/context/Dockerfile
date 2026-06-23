@@ -129,7 +129,7 @@ FROM trivy-${TRIVY_MODE} AS trivy-final
 # =========================================
 # Runtime: AzureML base + Docker + Trivy + conda
 # =========================================
-FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260614.v1
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260621.v1
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Docker APT repo + minimal install (no recommends) + cleanup
