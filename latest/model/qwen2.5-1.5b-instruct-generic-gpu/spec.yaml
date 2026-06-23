@@ -48,7 +48,6 @@ variantInfo:
     executionProvider: WebGPUExecutionProvider
     fileSizeBytes: 1621350154
     vRamFootprintBytes: 1621666242
-type: custom_model
 version: 4
 description: |-
   This model is an optimized version of Qwen2.5-1.5B-Instruct to enable local inference on GPUs. This model uses RTN quantization.

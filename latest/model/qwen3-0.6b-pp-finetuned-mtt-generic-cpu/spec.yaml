@@ -47,7 +47,6 @@ variantInfo:
     executionProvider: CPUExecutionProvider
     fileSizeBytes: 529864172
     vRamFootprintBytes: 529864172
-type: custom_model
 version: 1
 description: |
   This model is an optimized version of Qwen3-0.6B-MTT-Finetuned to enable local inference on CPUs. This model uses DiscQuant mixed-precision quantization.

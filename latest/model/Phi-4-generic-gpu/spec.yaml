@@ -40,7 +40,6 @@ variantInfo:
     executionProvider: WebGPUExecutionProvider
     fileSizeBytes: 8987219066
     vRamFootprintBytes: 8987577896
-type: custom_model
 version: 2
 description: |-
   This model is an optimized version of Phi-4 to enable local inference on GPUs. This model uses RTN quantization.

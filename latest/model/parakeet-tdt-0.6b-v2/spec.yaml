@@ -5,7 +5,6 @@ isArchived: true
 system_metadata:
   foundryLocal: ''
 version: 1
-type: custom_model
 description: |-
   This model is an optimized version of parakeet-tdt-0.6b-v2 for local inference. Optimized models are published here in ONNX format to run on CPU and CUDA GPU across devices, including server platforms, Windows, Linux and Mac desktops, and mobile CPUs.
 

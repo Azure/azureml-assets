@@ -48,7 +48,6 @@ variantInfo:
     executionProvider: CUDAExecutionProvider
     fileSizeBytes: 3734890165
     vRamFootprintBytes: 3734890165
-type: custom_model
 version: 2
 description: |
   This model is an optimized version of Qwen3-VL-4B-Instruct to enable local inference on CUDA GPUs. This model uses RTN quantization.

@@ -50,7 +50,6 @@ variantInfo:
     executionProvider: QNNExecutionProvider
     fileSizeBytes: 1139116915
     vRamFootprintBytes: 1139116915
-type: custom_model
 version: 3
 description: |
   This model is an optimized version of qwen2.5-1.5b-instruct to enable local inference on QNN NPUs.

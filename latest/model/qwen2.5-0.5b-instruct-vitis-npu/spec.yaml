@@ -51,7 +51,6 @@ variantInfo:
     executionProvider: VitisAIExecutionProvider
     fileSizeBytes: 554455531
     vRamFootprintBytes: 554623477
-type: custom_model
 version: 3
 description: |-
   This model is an optimized version of Qwen2.5-0.5B-Instruct to enable local inference on AMD NPUs. This model uses RTN quantization.

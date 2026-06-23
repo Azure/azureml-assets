@@ -42,7 +42,6 @@ variantInfo:
     executionProvider: CPUExecutionProvider
     fileSizeBytes: 2727304232
     vRamFootprintBytes: 2727517409
-type: custom_model
 version: 3
 description: |-
   This model is an optimized version of Phi-3-Mini-128K-Instruct to enable local inference on CPUs. This model uses RTN quantization.

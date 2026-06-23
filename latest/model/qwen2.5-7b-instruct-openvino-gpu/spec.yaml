@@ -47,7 +47,6 @@ variantInfo:
     executionProvider: OpenVINOExecutionProvider
     fileSizeBytes: 5141766983
     vRamFootprintBytes: 5141766983
-type: custom_model
 version: 2
 description: |-
   This model is an optimized version of Qwen2.5-7B-Instruct to enable local inference on Intel GPUs.

@@ -44,7 +44,6 @@ variantInfo:
     executionProvider: QNNExecutionProvider
     fileSizeBytes: 3799254479
     vRamFootprintBytes: 3799254479
-type: custom_model
 version: 4
 description: |
   This model is an optimized version of phi-3-mini-128k-instruct to enable local inference on QNN NPUs.

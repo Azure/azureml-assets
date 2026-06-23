@@ -39,7 +39,6 @@ variantInfo:
     executionProvider: CUDAExecutionProvider
     fileSizeBytes: 316267734
     vRamFootprintBytes: 316267734
-type: custom_model
 version: 3
 description: |-
   This model is an optimized version of Whisper Small for local inference. Optimized models are published here in ONNX format to run on CUDA devices, including server platforms, desktops, and mobile, with the precision best suited to each of these targets.

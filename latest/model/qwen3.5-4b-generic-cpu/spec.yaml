@@ -48,7 +48,6 @@ variantInfo:
     executionProvider: CPUExecutionProvider
     fileSizeBytes: 4599784965
     vRamFootprintBytes: 4599784965
-type: custom_model
 version: 2
 description: |
   This model is an optimized version of Qwen3.5-4B to enable local inference on CPUs. This model uses RTN quantization.

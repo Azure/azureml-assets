@@ -48,7 +48,6 @@ variantInfo:
     executionProvider: CPUExecutionProvider
     fileSizeBytes: 2933198883
     vRamFootprintBytes: 2933198883
-type: custom_model
 version: 3
 description: |
   This model is an optimized version of Qwen3-VL-4B-Instruct to enable local inference on CPUs. This model uses RTN quantization.

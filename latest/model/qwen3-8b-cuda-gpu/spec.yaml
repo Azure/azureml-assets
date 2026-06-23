@@ -47,7 +47,6 @@ variantInfo:
     executionProvider: CUDAExecutionProvider
     fileSizeBytes: 5949724801
     vRamFootprintBytes: 5949724801
-type: custom_model
 version: 2
 description: |
   This model is an optimized version of Qwen3-8B to enable local inference on CUDA GPUs. This model uses KLD Gradient quantization.

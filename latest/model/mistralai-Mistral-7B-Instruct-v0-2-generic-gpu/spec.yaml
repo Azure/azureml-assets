@@ -41,7 +41,6 @@ variantInfo:
     executionProvider: WebGPUExecutionProvider
     fileSizeBytes: 4370129223
     vRamFootprintBytes: 4382250762
-type: custom_model
 version: 2
 description: |
   This model is an optimized version of Mistral-7B-Instruct-v0.2 to enable local inference on GPUs. This model uses RTN quantization.

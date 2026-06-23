@@ -48,7 +48,6 @@ variantInfo:
     executionProvider: WebGPUExecutionProvider
     fileSizeBytes: 7828528461
     vRamFootprintBytes: 7828528461
-type: custom_model
 version: 1
 description: |-
   This model is an optimized version of Mistral-Nemo-Instruct-2407 to enable local inference on GPUs. This model uses GPTQ quantization.

@@ -47,7 +47,6 @@ variantInfo:
     executionProvider: WebGPUExecutionProvider
     fileSizeBytes: 6446815751
     vRamFootprintBytes: 6446815751
-type: custom_model
 version: 2
 description: |
   This model is an optimized version of Qwen3-8B to enable local inference on GPUs. This model uses KLD Gradient quantization.

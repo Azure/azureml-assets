@@ -47,7 +47,6 @@ variantInfo:
     executionProvider: CUDAExecutionProvider
     fileSizeBytes: 9753861389
     vRamFootprintBytes: 9753861389
-type: custom_model
 version: 2
 description: |
   This model is an optimized version of Qwen3-14B to enable local inference on CUDA GPUs. This model uses GPTQ quantization.

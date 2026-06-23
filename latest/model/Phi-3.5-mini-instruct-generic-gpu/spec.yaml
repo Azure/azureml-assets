@@ -42,7 +42,6 @@ variantInfo:
     executionProvider: WebGPUExecutionProvider
     fileSizeBytes: 2319282339
     vRamFootprintBytes: 2319568660
-type: custom_model
 version: 2
 description: |-
   This model is an optimized version of Phi-3.5-mini-instruct to enable local inference on GPUs. This model uses RTN quantization.

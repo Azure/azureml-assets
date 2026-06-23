@@ -51,7 +51,6 @@ variantInfo:
     executionProvider: OpenVINOExecutionProvider
     fileSizeBytes: 384272642
     vRamFootprintBytes: 384272642
-type: custom_model
 version: 2
 description: |-
   This model is an optimized version of Qwen2.5-0.5B-Instruct to enable local inference on Intel GPUs. This model uses RTN quantization.

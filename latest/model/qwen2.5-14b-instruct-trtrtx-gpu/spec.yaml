@@ -47,7 +47,6 @@ variantInfo:
     executionProvider: NvTensorRTRTXExecutionProvider
     fileSizeBytes: 9438190632
     vRamFootprintBytes: 9438526003
-type: custom_model
 version: 2
 description: |-
   This model is an optimized version of Qwen2.5-14B-Instruct to enable local inference on TensorRT-RTX GPUs. This model uses RTN quantization.

@@ -5,7 +5,6 @@ isArchived: true
 system_metadata:
   foundryLocal: ''
 version: 1
-type: custom_model
 description: |
   This model is an optimized version of nemotron-3.5-asr-streaming-0.6b for local inference. Optimized models are published here in ONNX format to run on CPU across devices, including server platforms, Windows, Linux and Mac desktops, and mobile CPUs.
 

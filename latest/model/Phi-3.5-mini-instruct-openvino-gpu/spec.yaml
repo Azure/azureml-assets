@@ -42,7 +42,6 @@ variantInfo:
     executionProvider: OpenVINOExecutionProvider
     fileSizeBytes: 2089885566
     vRamFootprintBytes: 2089885566
-type: custom_model
 version: 2
 description: |-
   This model is an optimized version of Phi-3.5-Mini-Instruct to enable local inference on Intel GPUs.

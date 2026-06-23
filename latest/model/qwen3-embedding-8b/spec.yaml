@@ -5,7 +5,6 @@ isArchived: true
 system_metadata:
   foundryLocal: ''
 version: 1
-type: custom_model
 description: |
   # Qwen3 Embedding 8B
 

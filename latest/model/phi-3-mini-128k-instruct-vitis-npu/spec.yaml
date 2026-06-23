@@ -42,7 +42,6 @@ variantInfo:
     executionProvider: VitisAIExecutionProvider
     fileSizeBytes: 2287070085
     vRamFootprintBytes: 2287293675
-type: custom_model
 version: 2
 description: |-
   This model is an optimized version of Phi-3-mini-128k-instruct to enable local inference on AMD NPUs. This model uses RTN quantization.

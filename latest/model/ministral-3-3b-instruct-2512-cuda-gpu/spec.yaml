@@ -49,7 +49,6 @@ variantInfo:
     executionProvider: CUDAExecutionProvider
     fileSizeBytes: 3857772715
     vRamFootprintBytes: 3857772715
-type: custom_model
 version: 1
 description: |-
   This model is an optimized version of Ministral-3-3B-Instruct-2512 for local inference on CUDA GPUs. This optimized model is published here in ONNX format to run on CUDA-capable GPU devices, with the precision best suited to this target.

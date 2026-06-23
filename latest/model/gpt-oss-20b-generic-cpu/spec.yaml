@@ -39,7 +39,6 @@ variantInfo:
     executionProvider: CPUExecutionProvider
     fileSizeBytes: 13161936965
     vRamFootprintBytes: 13161936965
-type: custom_model
 version: 1
 description: |-
   This model is an optimized version of gpt-oss-20b to enable local inference on CPUs. This model uses RTN quantization.

@@ -47,7 +47,6 @@ variantInfo:
     executionProvider: WebGPUExecutionProvider
     fileSizeBytes: 2358834783
     vRamFootprintBytes: 2358834783
-type: custom_model
 version: 1
 description: |-
   This model is an optimized version of SmolLM3-3B to enable local inference on GPUs. This model uses GPTQ quantization.

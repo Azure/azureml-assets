@@ -41,7 +41,6 @@ variantInfo:
     executionProvider: CUDAExecutionProvider
     fileSizeBytes: 764952910
     vRamFootprintBytes: 764952910
-type: custom_model
 version: 1
 description: |
   This model is a fine-tuned and optimized derivative of nemotron-speech-streaming-en-0.6b, adapted for Spanish speech recognition. The model is optimized for local inference on GPUs.
