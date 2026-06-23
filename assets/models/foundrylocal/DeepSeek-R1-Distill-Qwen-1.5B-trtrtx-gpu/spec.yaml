@@ -38,5 +38,4 @@ variantInfo:
     executionProvider: NvTensorRTRTXExecutionProvider
     fileSizeBytes: 1535450808
     vRamFootprintBytes: 1535670046
-type: custom_model
 version: 2

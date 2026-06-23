@@ -45,5 +45,4 @@ variantInfo:
     executionProvider: WebGPUExecutionProvider
     fileSizeBytes: 5918277423
     vRamFootprintBytes: 5918277423
-type: custom_model
 version: 1
