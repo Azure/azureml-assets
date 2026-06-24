@@ -56,9 +56,11 @@ RUN conda run -n base python -m pip install --no-cache-dir 'aiohttp>=3.14.0' \
 #    installed as transitive dep at 2.12.1 in both Python envs.
 #  - py-rattler>=0.24.0 (GHSA-q53q-5r4j-5729): pinned transitive dep brought in by
 #    base image in the Python 3.13 conda env.
+#  - cryptography>=48.0.1 (GHSA-537c-gmf6-5ccf): pinned transitive dep brought in by
+#    base image in the Python 3.13 conda env.
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
         'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'pip>=26.1' \
-        'PyJWT>=2.13.0' 'py-rattler>=0.24.0' \
+        'PyJWT>=2.13.0' 'py-rattler>=0.24.0' 'cryptography>=48.0.1' \
  && pip install --no-cache-dir --upgrade 'pip>=26.1' 'PyJWT>=2.13.0' \
  && rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0.1-*.json \
           /opt/conda/conda-meta/pip-26.0.1-*.json
