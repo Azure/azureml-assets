@@ -311,3 +311,102 @@ class TestGetAgentResponseFormatting:
         ]
         out = _get_agent_response(msgs, include_tool_messages=False)
         assert all("[TOOL_RESULT]" not in line for line in out)
+
+
+class TestRealWorldSharePointTrace:
+    """End-to-end smoke test using a payload shaped like a real
+    Foundry playground OTel trace.
+
+    Mirrors the ``gen_ai.input.messages`` shape produced by a Foundry
+    agent invoking SharePoint grounding: an assistant tool_call with a
+    ``query`` argument followed by a tool message whose payload is the
+    documents envelope ``{"documents": [{id, content, filepath, title,
+    url, knowledgeSourceIndex}, ...]}``.
+
+    Tool Output Utilization specifically asks the judge "did the agent
+    use the tool output?", so the rendered TOOL_RESULT must preserve
+    the document content verbatim (no Python repr mangling) for the
+    judge to make that call.
+    """
+
+    _SHAREPOINT_PAYLOAD = {
+        "documents": [
+            {
+                "id": "0",
+                "content": "Onboarding doc: see the setup guide for first-time access.",
+                "filepath": "https://contoso.sharepoint.com/sites/it/SitePages/Onboarding.aspx",
+                "title": "IT Onboarding Guide",
+                "url": "https://contoso.sharepoint.com/sites/it/SitePages/Onboarding.aspx",
+                "knowledgeSourceIndex": 0,
+            }
+        ]
+    }
+
+    def _build_messages(self, tool_result_value):
+        """Construct messages mirroring the production trace shape."""
+        return [
+            {
+                "role": "user",
+                "content": [{"type": "text", "text": "how do I get started?"}],
+            },
+            {
+                "role": "assistant",
+                "content": [
+                    {
+                        "type": "tool_call",
+                        "tool_call_id": "call_sp_1",
+                        "name": "sharepoint_grounding",
+                        "arguments": {"query": "onboarding"},
+                    }
+                ],
+            },
+            {
+                "role": "tool",
+                "tool_call_id": "call_sp_1",
+                "content": [
+                    {
+                        "type": "tool_result",
+                        "tool_result": tool_result_value,
+                    }
+                ],
+            },
+            {
+                "role": "assistant",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "To get started, follow the IT Onboarding Guide.",
+                    }
+                ],
+            },
+        ]
+
+    def test_sharepoint_dict_payload_round_trips_as_json(self):
+        """Most common shape: ACA parses the response into a dict
+        before the evaluator sees it. The helper must JSON-encode it."""
+        msgs = self._build_messages(self._SHAREPOINT_PAYLOAD)
+        out = _get_agent_response(msgs, include_tool_messages=True)
+
+        result_lines = [line for line in out if line.startswith("[TOOL_RESULT] ")]
+        assert len(result_lines) == 1
+        body = result_lines[0][len("[TOOL_RESULT] ") :]
+
+        parsed = json.loads(body)
+        assert parsed == self._SHAREPOINT_PAYLOAD
+        # JSON output never emits Python's single-quoted strings.
+        assert "'" not in body
+        # Distinctive structural content must survive intact for the judge.
+        assert "knowledgeSourceIndex" in body
+        assert "IT Onboarding Guide" in body
+
+    def test_sharepoint_json_string_payload_passes_through(self):
+        """Alternate shape: raw JSON-encoded string from the upstream.
+        The helper's str pass-through must leave it verbatim."""
+        raw_json = json.dumps(self._SHAREPOINT_PAYLOAD)
+        msgs = self._build_messages(raw_json)
+        out = _get_agent_response(msgs, include_tool_messages=True)
+
+        result_lines = [line for line in out if line.startswith("[TOOL_RESULT] ")]
+        body = result_lines[0][len("[TOOL_RESULT] ") :]
+        assert body == raw_json
+        assert json.loads(body) == self._SHAREPOINT_PAYLOAD
