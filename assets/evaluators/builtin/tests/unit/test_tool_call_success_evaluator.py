@@ -253,7 +253,7 @@ class TestGetToolCallsResultsFormatting:
         assert out[0] == '[TOOL_CALL] sharepoint_grounding(input="Q4")'
         # The result line must be valid JSON, not a Python repr.
         assert out[1].startswith("[TOOL_RESULT] ")
-        rendered_json = out[1][len("[TOOL_RESULT] ") :]
+        rendered_json = out[1][len("[TOOL_RESULT] "):]
         assert json.loads(rendered_json) == sharepoint_payload
         # And specifically: no single quotes (which Python repr would emit).
         assert "'" not in rendered_json
@@ -289,7 +289,7 @@ class TestGetToolCallsResultsFormatting:
             },
         ]
         out = _get_tool_calls_results(msgs)
-        rendered_json = out[1][len("[TOOL_RESULT] ") :]
+        rendered_json = out[1][len("[TOOL_RESULT] "):]
         assert json.loads(rendered_json) == aas_payload
 
     def test_none_result_renders_empty(self):
@@ -390,7 +390,7 @@ class TestRealWorldSharePointTrace:
 
         rendered = out[1]
         assert rendered.startswith("[TOOL_RESULT] ")
-        body = rendered[len("[TOOL_RESULT] ") :]
+        body = rendered[len("[TOOL_RESULT] "):]
 
         # The rendered payload must be valid JSON and round-trip cleanly,
         # which is the whole point of switching off ``f"{result}"``.
@@ -412,7 +412,7 @@ class TestRealWorldSharePointTrace:
         msgs = self._build_messages(raw_json)
         out = _get_tool_calls_results(msgs)
 
-        body = out[1][len("[TOOL_RESULT] ") :]
+        body = out[1][len("[TOOL_RESULT] "):]
         # String inputs pass through unchanged — no extra quoting.
         assert body == raw_json
         # And it's still valid JSON the judge can parse.

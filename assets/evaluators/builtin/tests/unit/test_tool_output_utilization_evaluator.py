@@ -235,7 +235,7 @@ class TestGetAgentResponseFormatting:
         # Find the tool_result line
         result_lines = [line for line in out if line.startswith("[TOOL_RESULT] ")]
         assert len(result_lines) == 1
-        rendered_json = result_lines[0][len("[TOOL_RESULT] ") :]
+        rendered_json = result_lines[0][len("[TOOL_RESULT] "):]
         assert json.loads(rendered_json) == sharepoint_payload
         # Python repr would emit single quotes — JSON must not.
         assert "'" not in rendered_json
@@ -267,7 +267,7 @@ class TestGetAgentResponseFormatting:
         ]
         out = _get_agent_response(msgs, include_tool_messages=True)
         result_lines = [line for line in out if line.startswith("[TOOL_RESULT] ")]
-        assert json.loads(result_lines[0][len("[TOOL_RESULT] ") :]) == aas_payload
+        assert json.loads(result_lines[0][len("[TOOL_RESULT] "):]) == aas_payload
 
     def test_none_result_renders_empty(self):
         msgs = [
@@ -389,7 +389,7 @@ class TestRealWorldSharePointTrace:
 
         result_lines = [line for line in out if line.startswith("[TOOL_RESULT] ")]
         assert len(result_lines) == 1
-        body = result_lines[0][len("[TOOL_RESULT] ") :]
+        body = result_lines[0][len("[TOOL_RESULT] "):]
 
         parsed = json.loads(body)
         assert parsed == self._SHAREPOINT_PAYLOAD
@@ -407,6 +407,6 @@ class TestRealWorldSharePointTrace:
         out = _get_agent_response(msgs, include_tool_messages=True)
 
         result_lines = [line for line in out if line.startswith("[TOOL_RESULT] ")]
-        body = result_lines[0][len("[TOOL_RESULT] ") :]
+        body = result_lines[0][len("[TOOL_RESULT] "):]
         assert body == raw_json
         assert json.loads(body) == self._SHAREPOINT_PAYLOAD
