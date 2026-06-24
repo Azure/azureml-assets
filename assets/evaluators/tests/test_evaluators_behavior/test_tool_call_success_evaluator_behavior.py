@@ -115,7 +115,7 @@ class TestToolCallSuccessEvaluatorBehavior(
         )
 
     def test_sharepoint_grounding(self):
-        """SharePoint grounding tool with sharepoint_grounding type - now supported in Phase 2."""
+        """Test SharePoint grounding tool with sharepoint_grounding type - now supported in Phase 2."""
         self._run_tool_type_test(
             test_label="SharePoint Grounding",
             evaluation_inputs={
