@@ -24,13 +24,15 @@ RUN pip install transformers==5.5.4
 # pyOpenSSL:       GHSA-vp96-hxj8-p424, GHSA-5pwr-322w-8jr4; azureml-core 1.61.0.post3 pins
 #                  pyopenssl<26.0.0 and no newer azureml-core release exists (verified 2026-05-19),
 #                  so explicit override is the only remediation.
+# cryptography:    pinned transitive/base image package in ptca env; fixes GHSA-537c-gmf6-5ccf.
 # urllib3:         GHSA-mf9v-mfxr-j63j, GHSA-qccp-gfcp-xxvc; fix in 2.7.0. urllib3 is brought
 #                  in transitively by requests/botocore/azureml-core/kubernetes/etc., all of
 #                  which only constrain urllib3<3 (loose). No parent package pins urllib3>=2.7,
 #                  so direct override is the only remediation (verified PyPI 2026-05-19).
 RUN pip install --upgrade 'protobuf>=6.33.5,<7' 'xgrammar>=0.1.32' \
     'nltk>=3.9.4' 'pyasn1>=0.6.3' 'python-multipart>=0.0.22' 'ray>=2.55.0' \
-    'mlflow>=3.8.1,<4.0.0' 'vllm>=0.20.1' 'pyOpenSSL>=26.0.0' 'urllib3>=2.7.0'
+    'mlflow>=3.8.1,<4.0.0' 'vllm>=0.20.1' 'pyOpenSSL>=26.0.0' 'cryptography>=48.0.1' \
+    'urllib3>=2.7.0'
 # aiohttp: GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8 (fix in >=3.14.0)
 # starlette: GHSA-86qp-5c8j-p5mr (fix in >=1.0.1)
 # idna: GHSA-65pc-fj4g-8rjx (fix in >=3.15)
@@ -51,11 +53,12 @@ RUN rm -rf ~/.cache/pip
 # urllib3 in base conda env: see urllib3 note above; same direct-override rationale.
 # pip: see note above - bootstrap tool, must be upgraded directly in base env too
 # py-rattler: pinned transitive dep from base image conda tooling; fixes GHSA-q53q-5r4j-5729
+# cryptography: pinned transitive/base image package in base env; fixes GHSA-537c-gmf6-5ccf.
 # Also clean stale conda-meta/pip-*.json (see ptca env note above for scanner detail).
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'pip>=26.1.1' 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' \
         'aiohttp>=3.14.0' 'click>=8.3.3' 'idna>=3.15' \
-        'PyJWT>=2.13.0' 'py-rattler>=0.24.0' && \
-    rm -f /opt/conda/conda-meta/pip-26.0*.json
+        'PyJWT>=2.13.0' 'py-rattler>=0.24.0' 'cryptography>=48.0.1' && \
+        rm -f /opt/conda/conda-meta/pip-26.0*.json
 # pyarrow: GHSA-rgxp-2hwp-jwgg (fix in >=23.0.1); ptca env ships 20.0.0 via vllm transitive dep.
 # PyJWT: GHSA-jq35-7prp-9v3f, GHSA-993g-76c3-p5m4 (fix in >=2.13.0); base env ships 2.12.1.
 RUN pip install --no-cache-dir --upgrade 'pyarrow>=23.0.1'

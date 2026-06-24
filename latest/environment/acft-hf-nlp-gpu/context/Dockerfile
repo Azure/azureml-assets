@@ -2,6 +2,8 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly
 
 USER root
 
+ENV PIP_PROGRESS_BAR=off
+
 RUN apt-get update && apt-get -y upgrade && \
     apt-get install -y --only-upgrade \
       dotnet-hostfxr-8.0 \
@@ -54,7 +56,8 @@ RUN pip install --upgrade --no-cache-dir pyasn1==0.6.3 'python-multipart>=0.0.26
 # PyJWT: base env ships 2.12.1 which has GHSA-jq35-7prp-9v3f and GHSA-993g-76c3-p5m4 (fixed in 2.13.0);
 #        no parent in base pins PyJWT to a safe floor, so explicit override is required.
 # py-rattler: pinned transitive/base image package from the base conda env; fixes GHSA-q53q-5r4j-5729.
-RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.0' 'PyJWT>=2.13.0' 'py-rattler>=0.24.0'
+# cryptography: pinned transitive/base image package from the base conda env; fixes GHSA-537c-gmf6-5ccf.
+RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.0' 'PyJWT>=2.13.0' 'py-rattler>=0.24.0' 'cryptography>=48.0.1'
 
 # pip is the package manager in both base and ptca conda envs. defaults has no pip>=26.1.1 package,
 # while a normal conda-forge solve pulls unrelated conda updates and py-rattler. Install only the
@@ -62,9 +65,9 @@ RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'python-dot
 RUN conda install -n base -c conda-forge --no-deps -y 'pip>=26.1.1' && \
     conda install -n ptca -c conda-forge --no-deps -y 'pip>=26.1.1'
 
-# aiohttp in ptca env (Python 3.10): requirements.txt sets >=3.14.0 for main installs, but
-# the ptca env may still have 3.13.5 from the base image; force upgrade here explicitly.
-RUN conda run -n ptca python -m pip install --upgrade --no-cache-dir 'aiohttp>=3.14.0'
+# aiohttp and cryptography in ptca env (Python 3.10) are present in the base image; force upgrades here explicitly.
+# cryptography is pinned as a transitive/base image package to fix GHSA-537c-gmf6-5ccf.
+RUN conda run -n ptca python -m pip install --upgrade --no-cache-dir 'aiohttp>=3.14.0' 'cryptography>=48.0.1'
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip

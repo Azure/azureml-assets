@@ -73,10 +73,12 @@ RUN /opt/conda/bin/pip uninstall -y py-rattler conda-rattler-solver && \
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' && \
     conda run -n ptca python -m pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0'
 
-# Upgrade pyarrow in ptca env to patched version (GHSA-rgxp-2hwp-jwgg)
-RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade 'pyarrow>=23.0.1'
+# pyarrow: pinned transitive dep in ptca; brought in by AzureML dependencies, fixes GHSA-rgxp-2hwp-jwgg.
+# cryptography: pinned transitive dep of ACPT base image; brought in by base image, fixes GHSA-537c-gmf6-5ccf.
+RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade 'pyarrow>=23.0.1' 'cryptography==48.0.1'
 
-# Upgrade PyJWT in base env to patched version (GHSA-jq35-7prp-9v3f, GHSA-993g-76c3-p5m4)
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.13.0'
+# PyJWT: pinned transitive dep in base; brought in by base image, fixes GHSA-jq35-7prp-9v3f and GHSA-993g-76c3-p5m4.
+# cryptography: pinned transitive dep of ACPT base image; brought in by base image, fixes GHSA-537c-gmf6-5ccf.
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.13.0' 'cryptography==48.0.1'
 
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/

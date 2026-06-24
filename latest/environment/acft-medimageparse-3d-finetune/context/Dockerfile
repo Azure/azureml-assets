@@ -1,17 +1,6 @@
-# MIP-3D finetune image based on a maintained AzureML base image instead of ACPT.
-#
-# Base: mcr.microsoft.com/azureml/openmpi5.0-cuda12.6-ubuntu24.04
-#   - Same family olympus uses
-#   - On a real OS-patch cadence (vs ACPT biweekly tags shipping unpatched USNs)
-#
-# Pattern follows the existing azureml-assets openmpi-base curated envs (e.g.
-# training/general/environments/sklearn-1.5, training/automl/.../forecasting-gpu):
-#   FROM openmpi-base
-#   conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10
-#   conda run -p ... pip install <deps>
-#
+# MIP-3D finetune image based on a maintained AzureML base image.
 # AML training infra reads $AZUREML_CONDA_ENVIRONMENT_PATH at startup, so this
-# env-path layout is effectively required for curated envs.
+# env-path layout is required for curated envs.
 
 FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.6-ubuntu24.04:20260621.v1
 
@@ -21,6 +10,7 @@ ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/acft-medimageparse-3d-finetune
 ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
 ENV CONDA_DEFAULT_ENV=$AZUREML_CONDA_ENVIRONMENT_PATH
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
+ENV PIP_PROGRESS_BAR=off
 # mpi needs to locate libpython from the conda env
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
 
@@ -46,9 +36,11 @@ RUN apt-get update && \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Upgrade idna in the base miniconda Python to fix GHSA-65pc-fj4g-8rjx (idna < 3.15).
-# The base image ships idna 3.13 in /opt/miniconda; pip install --upgrade pins the fix.
-RUN /opt/miniconda/bin/pip install --no-cache-dir "idna>=3.15"
+# idna and cryptography are brought in by the base Miniconda Python; fixes
+# GHSA-65pc-fj4g-8rjx and GHSA-537c-gmf6-5ccf.
+RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade \
+        "idna>=3.15" \
+        "cryptography==48.0.1"
 
 # Step 1: minimal conda env with python 3.10 (matches azureml-acft-image-components compat).
 # Keep this step pure conda-channel — the SAT solver OOMs on ACR Standard build
@@ -68,3 +60,8 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
 WORKDIR /workspace
 COPY requirements.txt .
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir -r requirements.txt
+
+# cryptography is pinned as a transitive dep of azureml-mlflow/AzureML SDK;
+# azureml-mlflow metadata caps it below the patched release, fixes GHSA-537c-gmf6-5ccf.
+RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --no-deps --upgrade \
+        "cryptography==48.0.1"
