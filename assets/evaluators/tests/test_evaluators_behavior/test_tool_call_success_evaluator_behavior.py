@@ -60,21 +60,85 @@ class TestToolCallSuccessEvaluatorBehavior(
         "tool_calls": data.MCP_TCS_EXPECTED_FLOW_TOOL_CALLS,
         "tool_definitions": data.MCP_TCS_EXPECTED_FLOW_TOOL_DEFINITIONS,
     }
+
+    # Phase 2: azure_ai_search, sharepoint_grounding, and azure_fabric are now
+    # accepted by the TCS validator. The base class branches to NOT_APPLICABLE for
+    # these tests whenever check_for_unsupported_tools is True, so we override the
+    # three tests below to assert PASS instead.
+    test_azure_ai_search_expected_flow_inputs = {
+        "response": data.AZURE_AI_SEARCH_TCS_EXPECTED_FLOW_RESPONSE,
+        "tool_calls": data.AZURE_AI_SEARCH_TCS_EXPECTED_FLOW_TOOL_CALLS,
+        "tool_definitions": data.AZURE_AI_SEARCH_TCS_EXPECTED_FLOW_TOOL_DEFINITIONS,
+    }
+
+    test_sharepoint_grounding_expected_flow_inputs = {
+        "response": data.SHAREPOINT_TCS_EXPECTED_FLOW_RESPONSE,
+        "tool_calls": data.SHAREPOINT_TCS_EXPECTED_FLOW_TOOL_CALLS,
+        "tool_definitions": data.SHAREPOINT_TCS_EXPECTED_FLOW_TOOL_DEFINITIONS,
+    }
+
+    test_fabric_data_agent_expected_flow_inputs = {
+        "response": data.FABRIC_TCS_EXPECTED_FLOW_RESPONSE,
+        "tool_calls": data.FABRIC_TCS_EXPECTED_FLOW_TOOL_CALLS,
+        "tool_definitions": data.FABRIC_TCS_EXPECTED_FLOW_TOOL_DEFINITIONS,
+    }
     # endregion
 
     evaluator_type = ToolCallSuccessEvaluator
 
-    # Phase 1 ships only the prompty-level [STATUS] pass-through (asset version 8). The validator
-    # still rejects restricted built-in tool conversations because Tool Call Success grades the
-    # tool result payload, which the converter does not yet emit for restricted tools. The
-    # validator flip is deferred to Phase 2, which will add a synthesized tool_result body for
-    # the non-Bing restricted tools (azure_ai_search, azure_fabric, sharepoint_grounding).
+    # Phase 1 shipped only the prompty-level [STATUS] pass-through (asset version 8).
+    # Phase 2 (this PR) flips the validator for the non-Bing restricted tools
+    # (azure_ai_search, azure_fabric, sharepoint_grounding) so those three are now
+    # accepted; bing_grounding and bing_custom_search remain rejected by the converter.
     check_for_unsupported_tools = True
 
     # Test Configs
     requires_query = False
 
     MINIMAL_RESPONSE = BaseToolsEvaluatorBehaviorTest.tool_results_without_arguments
+
+    # --- Phase 2 overrides: these three tools used to be unsupported but TCS now
+    # accepts them, so we override the base-class tests (which still branch to
+    # NOT_APPLICABLE when check_for_unsupported_tools is True) to assert PASS.
+
+    def test_azure_ai_search(self):
+        """Azure AI Search tool with azure_ai_search type - now supported in Phase 2."""
+        self._run_tool_type_test(
+            test_label="Azure AI Search",
+            evaluation_inputs={
+                "query": data.AZURE_AI_SEARCH_QUERY,
+                "response": data.AZURE_AI_SEARCH_RESPONSE,
+                "tool_definitions": data.AZURE_AI_SEARCH_TOOL_DEFINITIONS,
+            },
+            assert_type=self.AssertType.PASS,
+            expected_flow_inputs=self.test_azure_ai_search_expected_flow_inputs,
+        )
+
+    def test_sharepoint_grounding(self):
+        """SharePoint grounding tool with sharepoint_grounding type - now supported in Phase 2."""
+        self._run_tool_type_test(
+            test_label="SharePoint Grounding",
+            evaluation_inputs={
+                "query": data.SHAREPOINT_QUERY,
+                "response": data.SHAREPOINT_RESPONSE,
+                "tool_definitions": data.SHAREPOINT_TOOL_DEFINITIONS,
+            },
+            assert_type=self.AssertType.PASS,
+            expected_flow_inputs=self.test_sharepoint_grounding_expected_flow_inputs,
+        )
+
+    def test_fabric_data_agent(self):
+        """Fabric data agent tool with azure_fabric type - now supported in Phase 2."""
+        self._run_tool_type_test(
+            test_label="Fabric Data Agent",
+            evaluation_inputs={
+                "query": data.FABRIC_QUERY,
+                "response": data.FABRIC_RESPONSE,
+                "tool_definitions": data.FABRIC_TOOL_DEFINITIONS,
+            },
+            assert_type=self.AssertType.PASS,
+            expected_flow_inputs=self.test_fabric_data_agent_expected_flow_inputs,
+        )
 
 
 # region Python-side short-circuit unit tests
@@ -393,11 +457,12 @@ class TestGetToolCallsResultsNoStatusForward:
             _tool_result("c3", {"user_id": "u42"}, status="completed"),
         ]
         lines = _get_tool_calls_results(msgs)
+        # Dict tool_result is rendered as JSON by _stringify_tool_result.
         assert lines == [
             '[TOOL_CALL] fetch_weather(city="Seattle")',
             "[TOOL_RESULT] Sunny, 72F.",
             '[TOOL_CALL] send_email(to="x@example.com")',
             "[TOOL_RESULT] ok",
             '[TOOL_CALL] lookup_user(id="u42")',
-            "[TOOL_RESULT] {'user_id': 'u42'}",
+            '[TOOL_RESULT] {"user_id": "u42"}',
         ]

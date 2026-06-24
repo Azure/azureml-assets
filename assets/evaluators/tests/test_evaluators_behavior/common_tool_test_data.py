@@ -1950,9 +1950,11 @@ MCP_EXPECTED_FLOW_TOOL_CALLS = [
 # =============================================================================
 
 # --- Function Tool (local_calls) - ToolCallSuccess ---
+# _stringify_tool_result renders dict tool_result payloads as JSON (double-quoted)
+# rather than Python repr, so the LLM judge sees a parseable [TOOL_RESULT] block.
 LOCAL_CALLS_TCS_EXPECTED_FLOW_TOOL_CALLS = (
     '[TOOL_CALL] get_horoscope(sign="Aquarius")\n'
-    "[TOOL_RESULT] {'horoscope': 'Aquarius: Next Tuesday you will befriend a baby otter.'}"
+    '[TOOL_RESULT] {"horoscope": "Aquarius: Next Tuesday you will befriend a baby otter."}'
 )
 
 LOCAL_CALLS_TCS_EXPECTED_FLOW_TOOL_DEFINITIONS = (
@@ -1960,15 +1962,17 @@ LOCAL_CALLS_TCS_EXPECTED_FLOW_TOOL_DEFINITIONS = (
 )
 
 # --- File Search - ToolCallSuccess ---
+# The tool_call args are still rendered via Python repr (preserves the list literal
+# with mixed quotes), only the tool_result payload is JSON-serialized.
 FILE_SEARCH_TCS_EXPECTED_FLOW_TOOL_CALLS = (
     "[TOOL_CALL] file_search_call(queries=['good restaurant recommendation', "
     "'best restaurant', 'top rated restaurant', 'recommended restaurants', "
     '"what\'s a good restaurant"])\n'
-    "[TOOL_RESULT] [{'attributes': {}, 'file_id': 'assistant-StE61XCSBRyLv11Ytyckea', "
-    "'filename': 'french_cafe_menu.md', 'score': 0.0333, 'text': '# Le Jardin de Paris', "
-    "'vector_store_id': ''}, {'attributes': {}, 'file_id': 'assistant-Xpu5yP1AQZiB86Hz5iG4uv', "
-    "'filename': 'italian_diner_menu.md', 'score': 0.0328, "
-    "'text': '# Trattoria Bella Notte', 'vector_store_id': ''}]"
+    '[TOOL_RESULT] [{"attributes": {}, "file_id": "assistant-StE61XCSBRyLv11Ytyckea", '
+    '"filename": "french_cafe_menu.md", "score": 0.0333, "text": "# Le Jardin de Paris", '
+    '"vector_store_id": ""}, {"attributes": {}, "file_id": "assistant-Xpu5yP1AQZiB86Hz5iG4uv", '
+    '"filename": "italian_diner_menu.md", "score": 0.0328, '
+    '"text": "# Trattoria Bella Notte", "vector_store_id": ""}]'
 )
 
 FILE_SEARCH_TCS_EXPECTED_FLOW_TOOL_DEFINITIONS = (
@@ -1996,17 +2000,17 @@ IMAGE_GEN_TCS_EXPECTED_FLOW_TOOL_DEFINITIONS = (
 # --- Memory Search - ToolCallSuccess ---
 MEMORY_SEARCH_TCS_EXPECTED_FLOW_TOOL_CALLS = (
     "[TOOL_CALL] memory_search()\n"
-    "[TOOL_RESULT] [{'content': 'User prefers dark roast coffee.', "
-    "'kind': 'user_profile', 'memory_id': '3a353f9202ca41bf95a4a9ef21d90d41', "
-    "'scope': 'user_123', 'updated_at': 1771323829}, "
-    "{'content': 'User prefers dark roast coffee.', "
-    "'kind': 'user_profile', 'memory_id': '3a353f9202ca41bf95a4a9ef21d90d41', "
-    "'scope': 'user_123', 'updated_at': 1771323829}, "
-    "{'content': 'The user stated a preference for dark roast coffee. "
+    '[TOOL_RESULT] [{"content": "User prefers dark roast coffee.", '
+    '"kind": "user_profile", "memory_id": "3a353f9202ca41bf95a4a9ef21d90d41", '
+    '"scope": "user_123", "updated_at": 1771323829}, '
+    '{"content": "User prefers dark roast coffee.", '
+    '"kind": "user_profile", "memory_id": "3a353f9202ca41bf95a4a9ef21d90d41", '
+    '"scope": "user_123", "updated_at": 1771323829}, '
+    '{"content": "The user stated a preference for dark roast coffee. '
     "Dark roast coffee is characterized by a bold flavor, rich aroma, "
-    "and lower acidity compared to lighter roasts.', "
-    "'kind': 'chat_summary', 'memory_id': '9117c9f9d7424f0290c523d1cd3de45a', "
-    "'scope': 'user_123', 'updated_at': 1771323829}]"
+    'and lower acidity compared to lighter roasts.", '
+    '"kind": "chat_summary", "memory_id": "9117c9f9d7424f0290c523d1cd3de45a", '
+    '"scope": "user_123", "updated_at": 1771323829}]'
 )
 
 MEMORY_SEARCH_TCS_EXPECTED_FLOW_TOOL_DEFINITIONS = (
@@ -2087,6 +2091,55 @@ MEMORY_SEARCH_TCS_EXPECTED_FLOW_RESPONSE = MEMORY_SEARCH_RESPONSE
 # For KB_MCP and MCP: _preprocess_messages drops the first 2 MCP approval messages.
 KB_MCP_TCS_EXPECTED_FLOW_RESPONSE = KB_MCP_RESPONSE[2:]
 MCP_TCS_EXPECTED_FLOW_RESPONSE = MCP_RESPONSE[2:]
+# The 3 restricted built-in tools newly enabled in Phase 2 -- their raw responses
+# contain no function_call/openapi_call/MCP-approval blocks, so _preprocess_messages
+# is a no-op and the preprocessed response equals the raw response.
+AZURE_AI_SEARCH_TCS_EXPECTED_FLOW_RESPONSE = AZURE_AI_SEARCH_RESPONSE
+SHAREPOINT_TCS_EXPECTED_FLOW_RESPONSE = SHAREPOINT_RESPONSE
+FABRIC_TCS_EXPECTED_FLOW_RESPONSE = FABRIC_RESPONSE
+
+# --- Azure AI Search - ToolCallSuccess ---
+# This fixture has no tool_result block; only the [TOOL_CALL] line is rendered.
+AZURE_AI_SEARCH_TCS_EXPECTED_FLOW_TOOL_CALLS = (
+    '[TOOL_CALL] azure_ai_search(query="top hotels")'
+)
+
+AZURE_AI_SEARCH_TCS_EXPECTED_FLOW_TOOL_DEFINITIONS = (
+    "TOOL_DEFINITIONS:\n- azure_ai_search:  (inputs: no parameters)"
+)
+
+# --- SharePoint Grounding - ToolCallSuccess ---
+SHAREPOINT_TCS_EXPECTED_FLOW_TOOL_CALLS = (
+    '[TOOL_CALL] sharepoint_grounding(query="income details")\n'
+    '[TOOL_RESULT] {"documents": []}'
+)
+
+SHAREPOINT_TCS_EXPECTED_FLOW_TOOL_DEFINITIONS = (
+    "TOOL_DEFINITIONS:\n- sharepoint_grounding:  (inputs: no parameters)"
+)
+
+# --- Fabric Data Agent - ToolCallSuccess ---
+FABRIC_TCS_EXPECTED_FLOW_TOOL_CALLS = (
+    '[TOOL_CALL] azure_fabric(query="average income for the user")\n'
+    '[TOOL_RESULT] {"documents": [{"id": "416ae013-64ed-4356-b633-ce9e306a74ca", '
+    '"content": "The user\'s average income is 7,071.43.\\n", '
+    '"filepath": "fabric://response", '
+    '"title": "Fabric Response for: average income for the user", '
+    '"url": "https://msit.fabric.microsoft.com/groups/944d4cb8-9517-4219-991c-da6c31f3c4e7'
+    '/aiskills/830e03d6-4afd-484b-8328-ee9d85510307/stage/published/threads/'
+    'thread_8gXP6muTIDVIltjLPYkYGpcy/runs/run_fabg2zOsCZiNOi15DRtcaIgwrijm/question/'
+    'msg_Fh2TVkvUgI0wwMvz9T3OzQl6/source/foundry", '
+    '"metadata": "{\\"source\\":\\"azure_fabric\\",\\"query\\":\\"average income for the user\\",'
+    '\\"data_agent_url\\":\\"https://msit.fabric.microsoft.com/groups/944d4cb8-9517-4219-991c-da6c31f3c4e7'
+    '/aiskills/830e03d6-4afd-484b-8328-ee9d85510307/stage/published/threads/'
+    'thread_8gXP6muTIDVIltjLPYkYGpcy/runs/run_fabg2zOsCZiNOi15DRtcaIgwrijm/question/'
+    'msg_Fh2TVkvUgI0wwMvz9T3OzQl6/source/foundry\\"}", '
+    '"score": 1, "knowledgeSourceIndex": 0}]}'
+)
+
+FABRIC_TCS_EXPECTED_FLOW_TOOL_DEFINITIONS = (
+    "TOOL_DEFINITIONS:\n- azure_fabric:  (inputs: no parameters)"
+)
 
 # Normalized OPENAPI_RESPONSE: openapi_call -> tool_call, openapi_call_output -> tool_result
 OPENAPI_NORMALIZED_RESPONSE = [
@@ -2453,6 +2506,102 @@ MCP_EXPECTED_FLOW_RESPONSE = (
                              '[TOOL_CALL] microsoft_docs_search(query="how Azure Functions work")\n[TOOL_RESULT] '
                              'Retrieved documentation about Azure Functions.\nAzure Functions is a serverless compute '
                              'service.'
+)
+
+
+# ----- TOU-specific expected flow response -----
+# TOU defines its own _get_agent_response that calls _stringify_tool_result on the
+# tool_result payload. Dict/list payloads are JSON-encoded (double quotes) instead of
+# Python-repr (single quotes). TA/TC continue to use the SDK's _get_agent_response which
+# still emits Python-repr, so the LOCAL_CALLS_EXPECTED_FLOW_RESPONSE constants above are
+# left unchanged for them and the TOU-flavored constants below are introduced for TOU.
+LOCAL_CALLS_TOU_EXPECTED_FLOW_RESPONSE = (
+    '[TOOL_CALL] get_horoscope(sign="Aquarius")\n'
+    '[TOOL_RESULT] {"horoscope": "Aquarius: Next Tuesday you will befriend a baby otter."}\n'
+    "Your horoscope for Aquarius is: Next Tuesday you will befriend a baby otter."
+)
+
+FILE_SEARCH_TOU_EXPECTED_FLOW_RESPONSE = (
+    '[TOOL_CALL] file_search_call(queries="[\'good restaurant recommendation\', '
+    "'best restaurant', 'top rated restaurant', 'recommended restaurants', "
+    '"what\'s a good restaurant"]")\n'
+    '[TOOL_RESULT] [{"attributes": {}, "file_id": "assistant-StE61XCSBRyLv11Ytyckea", '
+    '"filename": "french_cafe_menu.md", "score": 0.0333, "text": "# Le Jardin de Paris", '
+    '"vector_store_id": ""}, {"attributes": {}, "file_id": "assistant-Xpu5yP1AQZiB86Hz5iG4uv", '
+    '"filename": "italian_diner_menu.md", "score": 0.0328, '
+    '"text": "# Trattoria Bella Notte", "vector_store_id": ""}]\n'
+    "If you're looking for a good restaurant, here are two tasty options based on the menus provided:"
+    "\n\n1. **Le Jardin de Paris** (French Caf\u00e9)\n2. **Trattoria Bella Notte** (Italian Diner)"
+    "\n\nBoth are excellent choices\u2014pick based on whether you\u2019re in the mood for "
+    "French or Italian!"
+)
+
+MEMORY_SEARCH_TOU_EXPECTED_FLOW_RESPONSE = (
+    "[TOOL_CALL] memory_search()\n"
+    '[TOOL_RESULT] [{"content": "User prefers dark roast coffee.", '
+    '"kind": "user_profile", "memory_id": "3a353f9202ca41bf95a4a9ef21d90d41", '
+    '"scope": "user_123", "updated_at": 1771323829}, '
+    '{"content": "User prefers dark roast coffee.", '
+    '"kind": "user_profile", "memory_id": "3a353f9202ca41bf95a4a9ef21d90d41", '
+    '"scope": "user_123", "updated_at": 1771323829}, '
+    '{"content": "The user stated a preference for dark roast coffee. '
+    "Dark roast coffee is characterized by a bold flavor, rich aroma, "
+    'and lower acidity compared to lighter roasts.", '
+    '"kind": "chat_summary", "memory_id": "9117c9f9d7424f0290c523d1cd3de45a", '
+    '"scope": "user_123", "updated_at": 1771323829}]\n'
+    "Sure! I'll order your usual\u2014one dark roast coffee. "
+    "Would you like any specific size or extras (milk, sugar, etc.) with that?"
+)
+
+# Restricted built-in tools newly enabled in Phase 2 (azure_ai_search, sharepoint,
+# fabric). The azure_ai_search fixture has no tool_result block; only the [TOOL_CALL]
+# line and the assistant text are rendered.
+AZURE_AI_SEARCH_TOU_EXPECTED_FLOW_RESPONSE = (
+    '[TOOL_CALL] azure_ai_search(query="top hotels")\n'
+    "Here are some of the top hotels identified using the Azure AI Search tool:\n\n"
+    "1. **Double Sanctuary Resort**  \n   - 5-star luxury hotel with the largest rooms in "
+    "the city, ranked #1 by Traveler magazine. Offers free WiFi, flexible check-in/out, "
+    "fitness center, and in-room espresso.\n\n"
+    "2. **Gastronomic Landscape Hotel**\n   - Renowned for culinary excellence, led by "
+    "acclaimed chef William Dough who oversees all dining services.\n\n"
+    "3. **Economy Universe Motel**\n   - Local, family-run hotel in bustling downtown "
+    "Redmond. Pet-friendly and close to parks, highways, and major cities. A good budget "
+    "option.\n\n"
+    "4. **Countryside Hotel**\n   - Offers up to 50% savings compared to traditional "
+    "hotels. Features free WiFi, downtown proximity, a full kitchen, washer/dryer, and a "
+    "bowling alley\u2014great for extended stays.\n\n"
+    "5. **Bellevue Suites**\n   - Centrally located in downtown Bellevue, this hotel "
+    "offers apartment-style suites and a free shuttle to the airport. Steps from the "
+    "Light Rail for easy city access.\n\n"
+    "Let me know if you want more details or hotels focused on a specific location or "
+    "style!\u30106:0\u2020source\u3011\u30106:1\u2020source\u3011\u30106:2\u2020source"
+    "\u3011\u30106:3\u2020source\u3011\u30106:4\u2020source\u3011"
+)
+
+SHAREPOINT_TOU_EXPECTED_FLOW_RESPONSE = (
+    '[TOOL_CALL] sharepoint_grounding(query="income details")\n'
+    '[TOOL_RESULT] {"documents": []}\n'
+    'I searched using the term "income details" but couldn\'t find any relevant '
+    "information in your SharePoint data."
+)
+
+FABRIC_TOU_EXPECTED_FLOW_RESPONSE = (
+    '[TOOL_CALL] azure_fabric(query="average income for the user")\n'
+    '[TOOL_RESULT] {"documents": [{"id": "416ae013-64ed-4356-b633-ce9e306a74ca", '
+    '"content": "The user\'s average income is 7,071.43.\\n", '
+    '"filepath": "fabric://response", '
+    '"title": "Fabric Response for: average income for the user", '
+    '"url": "https://msit.fabric.microsoft.com/groups/944d4cb8-9517-4219-991c-da6c31f3c4e7'
+    '/aiskills/830e03d6-4afd-484b-8328-ee9d85510307/stage/published/threads/'
+    'thread_8gXP6muTIDVIltjLPYkYGpcy/runs/run_fabg2zOsCZiNOi15DRtcaIgwrijm/question/'
+    'msg_Fh2TVkvUgI0wwMvz9T3OzQl6/source/foundry", '
+    '"metadata": "{\\"source\\":\\"azure_fabric\\",\\"query\\":\\"average income for the user\\",'
+    '\\"data_agent_url\\":\\"https://msit.fabric.microsoft.com/groups/944d4cb8-9517-4219-991c-da6c31f3c4e7'
+    '/aiskills/830e03d6-4afd-484b-8328-ee9d85510307/stage/published/threads/'
+    'thread_8gXP6muTIDVIltjLPYkYGpcy/runs/run_fabg2zOsCZiNOi15DRtcaIgwrijm/question/'
+    'msg_Fh2TVkvUgI0wwMvz9T3OzQl6/source/foundry\\"}", '
+    '"score": 1, "knowledgeSourceIndex": 0}]}\n'
+    "Your average income is 7,071.43\u30104:0\u2020source\u3011."
 )
 
 
