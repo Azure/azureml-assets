@@ -748,3 +748,195 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Param Type - float vs str")
         self.assert_pass(result_data)
+
+    # ==================== SDK INPUT-NAME ALIAS TESTS ====================
+
+    def test_sdk_aliases_equivalent_to_canonical_names(self):
+        """SDK names (response/ground_truth) produce identical results to actions/expected_actions."""
+        canonical = self._run_evaluation(
+            actions=self.VALID_ACTIONS,
+            expected_actions=self.VALID_EXPECTED_ACTIONS,
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        sdk = self._run_evaluation(
+            response=self.VALID_ACTIONS,
+            ground_truth=self.VALID_EXPECTED_ACTIONS,
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        canonical_data = self._extract_and_print_result(canonical, "Alias - Canonical Names")
+        sdk_data = self._extract_and_print_result(sdk, "Alias - SDK Names")
+        self.assert_pass(canonical_data)
+        self.assert_pass(sdk_data)
+        assert sdk_data["score"] == canonical_data["score"]
+        assert sdk_data["properties"] == canonical_data["properties"]
+
+    def test_response_alias_only(self):
+        """'response' alias maps to 'actions' when actions is absent."""
+        results = self._run_evaluation(
+            response=self.VALID_ACTIONS,
+            expected_actions=self.VALID_EXPECTED_ACTIONS,
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Alias - response only")
+        self.assert_pass(result_data)
+
+    def test_ground_truth_alias_only(self):
+        """'ground_truth' alias maps to 'expected_actions' when expected_actions is absent."""
+        results = self._run_evaluation(
+            actions=self.VALID_ACTIONS,
+            ground_truth=self.VALID_EXPECTED_ACTIONS,
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Alias - ground_truth only")
+        self.assert_pass(result_data)
+
+    def test_canonical_names_take_precedence_over_aliases(self):
+        """When both canonical and alias keys are present, the canonical key wins."""
+        results = self._run_evaluation(
+            actions=self.VALID_ACTIONS,
+            expected_actions=self.VALID_EXPECTED_ACTIONS,
+            response=self.STRING_ACTIONS,  # invalid value; ignored because 'actions' present
+            ground_truth=["ignored"],  # ignored because 'expected_actions' present
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Alias - Canonical Precedence")
+        self.assert_pass(result_data)
+
+    # ==================== ACTIONS STRUCTURE VALIDATION TESTS ====================
+
+    def test_action_item_not_dict(self):
+        """An action item that is not a dict raises invalid value error."""
+        results = self._run_evaluation(
+            actions=[123],
+            expected_actions=self.VALID_EXPECTED_ACTIONS,
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Action Item Not Dict")
+        self.assert_error(result_data, ErrorCategory.INVALID_VALUE.name)
+
+    def test_action_missing_role(self):
+        """An action missing the 'role' field raises missing field error."""
+        results = self._run_evaluation(
+            actions=[{"content": [{"type": "tool_call", "name": "x", "tool_call_id": "c1", "arguments": {}}]}],
+            expected_actions=self.VALID_EXPECTED_ACTIONS,
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Action Missing Role")
+        self.assert_error(result_data, ErrorCategory.MISSING_FIELD.name)
+
+    def test_action_role_not_string(self):
+        """An action whose 'role' is not a string raises invalid value error."""
+        results = self._run_evaluation(
+            actions=[{"role": 123, "content": []}],
+            expected_actions=self.VALID_EXPECTED_ACTIONS,
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Action Role Not String")
+        self.assert_error(result_data, ErrorCategory.INVALID_VALUE.name)
+
+    def test_assistant_action_missing_content(self):
+        """An assistant action missing the 'content' field raises missing field error."""
+        results = self._run_evaluation(
+            actions=[{"role": "assistant"}],
+            expected_actions=self.VALID_EXPECTED_ACTIONS,
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Assistant Action Missing Content")
+        self.assert_error(result_data, ErrorCategory.MISSING_FIELD.name)
+
+    def test_assistant_content_item_not_dict(self):
+        """An assistant content item that is not a dict raises invalid value error."""
+        results = self._run_evaluation(
+            actions=[{"role": "assistant", "content": [123]}],
+            expected_actions=self.VALID_EXPECTED_ACTIONS,
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Assistant Content Item Not Dict")
+        self.assert_error(result_data, ErrorCategory.INVALID_VALUE.name)
+
+    def test_tool_call_content_missing_name(self):
+        """A tool_call content item missing the 'name' field raises missing field error."""
+        results = self._run_evaluation(
+            actions=[
+                {
+                    "role": "assistant",
+                    "content": [{"type": "tool_call", "tool_call_id": "c1", "arguments": {}}],
+                }
+            ],
+            expected_actions=self.VALID_EXPECTED_ACTIONS,
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Tool Call Missing Name")
+        self.assert_error(result_data, ErrorCategory.MISSING_FIELD.name)
+
+    # ==================== EXPECTED_ACTIONS STRUCTURE VALIDATION TESTS ====================
+
+    def test_expected_actions_tuple_wrong_length(self):
+        """An expected_actions tuple without exactly 2 elements raises invalid value error."""
+        results = self._run_evaluation(
+            actions=self.VALID_ACTIONS,
+            expected_actions=(["a"], {"a": {}}, "extra"),
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Expected Actions Tuple Wrong Length")
+        self.assert_error(result_data, ErrorCategory.INVALID_VALUE.name)
+
+    def test_expected_actions_tuple_first_not_list(self):
+        """An expected_actions tuple whose first element is not a list raises invalid value error."""
+        results = self._run_evaluation(
+            actions=self.VALID_ACTIONS,
+            expected_actions=("not_a_list", {}),
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Expected Actions Tuple First Not List")
+        self.assert_error(result_data, ErrorCategory.INVALID_VALUE.name)
+
+    def test_expected_actions_tuple_empty_tool_names(self):
+        """An expected_actions tuple with an empty tool-names list raises invalid value error."""
+        results = self._run_evaluation(
+            actions=self.VALID_ACTIONS,
+            expected_actions=([], {}),
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Expected Actions Tuple Empty Tool Names")
+        self.assert_error(result_data, ErrorCategory.INVALID_VALUE.name)
+
+    def test_expected_actions_tuple_tool_name_not_string(self):
+        """An expected_actions tuple with a non-string tool name raises invalid value error."""
+        results = self._run_evaluation(
+            actions=self.VALID_ACTIONS,
+            expected_actions=([123], {}),
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Expected Actions Tuple Tool Name Not String")
+        self.assert_error(result_data, ErrorCategory.INVALID_VALUE.name)
+
+    def test_expected_actions_tuple_second_not_dict(self):
+        """An expected_actions tuple whose second element is not a dict raises invalid value error."""
+        results = self._run_evaluation(
+            actions=self.VALID_ACTIONS,
+            expected_actions=(["a"], "not_a_dict"),
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Expected Actions Tuple Second Not Dict")
+        self.assert_error(result_data, ErrorCategory.INVALID_VALUE.name)
+
+    def test_expected_actions_tuple_param_value_not_dict(self):
+        """An expected_actions tuple whose parameter value is not a dict raises invalid value error."""
+        results = self._run_evaluation(
+            actions=self.VALID_ACTIONS,
+            expected_actions=(["a"], {"a": "not_a_dict"}),
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Expected Actions Tuple Param Value Not Dict")
+        self.assert_error(result_data, ErrorCategory.INVALID_VALUE.name)
+
+    def test_expected_actions_list_non_string_element(self):
+        """An expected_actions list with a non-string element raises invalid value error."""
+        results = self._run_evaluation(
+            actions=self.VALID_ACTIONS,
+            expected_actions=["valid_tool", 123],
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Expected Actions List Non-String Element")
+        self.assert_error(result_data, ErrorCategory.INVALID_VALUE.name)
