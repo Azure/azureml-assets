@@ -51,6 +51,8 @@ RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.5
 #   override is required.
 # pyarrow 17.0.0 -> >=23.0.1 (GHSA-rgxp-2hwp-jwgg / CVE-2026-25087): pinned
 #   transitive dep of azureml-automl-dnn-nlp via AzureML dataset/runtime packages.
+# cryptography 46.0.7 -> >=48.0.1 (GHSA-537c-gmf6-5ccf): pinned transitive dep
+#   brought in by the ACPT base image ptca conda environment.
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
     'pip>=26.1.1' \
     'setuptools>=82.0.1' \
@@ -58,7 +60,8 @@ RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
     'bokeh>=3.8.2' \
     'distributed>=2026.1.0' \
     'aiohttp>=3.14.0' \
-    'pyarrow>=23.0.1' && \
+    'pyarrow>=23.0.1' \
+    'cryptography>=48.0.1' && \
     rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0.1-*.json
 
 # Vulnerability patches for conda base env (python 3.13 at /opt/conda)
@@ -87,6 +90,8 @@ RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
 #   transitive dep brought in by the ACPT base image conda environment.
 # py-rattler 0.23.1 -> >=0.24.0 (GHSA-q53q-5r4j-5729): pinned transitive dep
 #   brought in by the ACPT base image conda tooling.
+# cryptography 46.0.7 -> >=48.0.1 (GHSA-537c-gmf6-5ccf): pinned transitive dep
+#   brought in by the ACPT base image conda environment.
 # Stale conda pkgs-cache entries for click, idna, pip, and python-dotenv are removed
 #   so scanners do not re-flag the old versions from the package cache directories.
 RUN /opt/conda/bin/pip install --no-cache-dir --upgrade \
@@ -98,7 +103,8 @@ RUN /opt/conda/bin/pip install --no-cache-dir --upgrade \
     'python-dotenv>=1.2.2' \
     'aiohttp>=3.14.0' \
     'PyJWT>=2.13.0' \
-    'py-rattler>=0.24.0' && \
+    'py-rattler>=0.24.0' \
+    'cryptography>=48.0.1' && \
     rm -rf /opt/conda/pkgs/click-8.2.1-* \
            /opt/conda/pkgs/idna-3.11-* \
            /opt/conda/pkgs/pip-26.0.1-* \

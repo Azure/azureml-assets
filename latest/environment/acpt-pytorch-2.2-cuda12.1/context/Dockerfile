@@ -3,6 +3,7 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly
 # Base conda env (Python 3.13) security floors.
 # PyJWT>=2.13.0: pinned transitive dep brought in by the base image; fixes GHSA-jq35-7prp-9v3f and GHSA-993g-76c3-p5m4.
 # py-rattler>=0.24.0: pinned transitive dep of base conda tooling; brought in by base image, fixes GHSA-q53q-5r4j-5729.
+# cryptography>=48.0.1: pinned transitive dep brought in by the base image; fixes GHSA-537c-gmf6-5ccf.
 RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' && \
     conda install -n base -c conda-forge -y 'pip>=26.1' 'conda=26.3.2' && \
     conda run -n base python -m pip install --upgrade --no-cache-dir \
@@ -12,10 +13,12 @@ RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' && \
         'click>=8.3.3' \
         'aiohttp>=3.14.0' \
         'PyJWT>=2.13.0' \
-        'py-rattler>=0.24.0' && \
+        'py-rattler>=0.24.0' \
+        'cryptography>=48.0.1' && \
     conda run -n ptca python -m pip install --upgrade --no-cache-dir \
         'urllib3>=2.7.0' \
-        'idna>=3.15' && \
+        'idna>=3.15' \
+        'cryptography>=48.0.1' && \
     conda clean -a -y && \
     rm -rf /opt/conda/pkgs
 

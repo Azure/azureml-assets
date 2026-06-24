@@ -60,16 +60,19 @@ RUN conda create -q -p $AZUREML_CONDA_ENVIRONMENT_PATH \
 #   fixing GHSA-65pc-fj4g-8rjx.
 # - py-rattler>=0.24.0 is pinned as a transitive dep brought in by the base image,
 #   fixing GHSA-q53q-5r4j-5729.
+# - cryptography>=48.0.1 is pinned as a transitive dep brought in by the base image
+#   and its ptca conda env, fixing GHSA-537c-gmf6-5ccf.
 RUN set -eux; \
     base_prefix_found=0; \
-    for base_python in /opt/conda/bin/python /opt/miniconda/bin/python; do \
+    for base_python in /opt/conda/bin/python /opt/miniconda/bin/python /opt/conda/envs/ptca/bin/python; do \
         if [ -x "$base_python" ]; then \
             base_prefix_found=1; \
             "$base_python" -m pip install --no-cache-dir --upgrade \
                 'pip>=26.1' \
                 'PyJWT>=2.13.0' \
                 'idna>=3.15' \
-                'py-rattler>=0.24.0'; \
+                'py-rattler>=0.24.0' \
+                'cryptography>=48.0.1'; \
         fi; \
     done; \
     test "$base_prefix_found" = "1"; \
@@ -86,7 +89,6 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
 
 # Install pip dependencies
 RUN pip install \
-                # begin pypi dependencies
                 azureml-core==1.61.0.post4 \
                 azureml-mlflow==1.62.0.post3 \
                 azureml-pipeline-core==1.62.0 \
@@ -100,7 +102,6 @@ RUN pip install \
                 azureml-train-automl==1.62.0 \
                 azureml-dataset-runtime==1.62.0 \
                 azureml-defaults==1.62.0 \
-                # TODO: replace the hard coded above by a referenceto azureml-train-automl[tabular]
                 'mlflow-skinny==2.16.0' \
                 'xgboost==1.5.2' \
                 'cmdstanpy==1.0.4' \
@@ -108,7 +109,6 @@ RUN pip install \
                 'inference-schema' \
                 'mltable>=1.0.0' \
                 'pillow==12.2.0'
-                # end pypi dependencies
 
 # Install pip ad-hoc dependencies for security updates
 # distributed>=2026.1.0 (CVE-2026-23528): XSS leading to RCE via Dask dashboard
@@ -132,6 +132,9 @@ RUN pip install \
 #   in Apache Arrow C++. Parent packages still resolve pyarrow 17.0.0 in this
 #   image through AzureML AutoML runtime dependencies, so override directly until
 #   upstream pins move to a patched version.
+# cryptography>=48.0.1 (GHSA-537c-gmf6-5ccf): pinned transitive dep of
+#   azureml-core/azureml-automl packages; fixes vulnerable cryptography 46.0.7
+#   resolved in the AzureML AutoML environment.
 # onnx: azureml-automl-runtime pins onnx<=1.17.0; override needed for
 #   GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6,
 #   GHSA-538c-55jv-c5g9, GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m
@@ -139,6 +142,7 @@ RUN pip install \
 RUN pip install --no-cache-dir --upgrade \
     'distributed>=2026.1.0' \
     'bokeh>=3.8.2' \
+    'cryptography>=48.0.1' \
     'onnx>=1.21.0' \
     'pillow>=12.2.0' \
     'python-dotenv>=1.2.2' \
