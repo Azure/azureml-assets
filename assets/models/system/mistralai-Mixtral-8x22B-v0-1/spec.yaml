@@ -35,4 +35,4 @@ system_metadata:
   - vllm
   platformCapabilities:
     enableBatch: false
-version: 6
+version: 7
