@@ -46,5 +46,4 @@ variantInfo:
     executionProvider: CPUExecutionProvider
     fileSizeBytes: 4919876920
     vRamFootprintBytes: 4919876920
-type: custom_model
 version: 1
