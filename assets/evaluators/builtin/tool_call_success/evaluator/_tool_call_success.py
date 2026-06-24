@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import json
 import os
 import logging
 from typing import Dict, Union, List, Optional
@@ -64,16 +65,22 @@ class ConversationValidator(ValidatorInterface):
     check_for_unsupported_tools: bool = False
     error_target: ErrorTarget
 
+    # NOTE: Restricted tools previously listed here ("azure_ai_search",
+    # "azure_fabric", "sharepoint_grounding") have been removed so that
+    # Azure AI Search, Microsoft Fabric, and SharePoint grounding tool
+    # calls are accepted by this evaluator. Their tool_result payloads are
+    # structured documents the LLM judge can reason over directly. Keep
+    # Bing variants, web_search, browser_automation, code_interpreter_call,
+    # computer_call, and openapi_call rejected because their payloads are
+    # either redacted by the runtime (Bing) or not meaningful for this
+    # rubric.
     UNSUPPORTED_TOOLS: List[str] = [
-        "azure_ai_search",
         "bing_custom_search",
         "bing_grounding",
         "browser_automation",
         "code_interpreter_call",
         "computer_call",
-        "azure_fabric",
         "openapi_call",
-        "sharepoint_grounding",
         "web_search",
     ]
 
@@ -1243,6 +1250,36 @@ def _collect_failed_tool_calls(messages):
     return ordered
 
 
+def _stringify_tool_result(result):
+    """Render a tool_result value as a string the LLM judge can read.
+
+    Tool outputs arrive in mixed shapes depending on the producer:
+    - Function / MCP tools usually emit a plain ``str``.
+    - Built-in grounding tools (``azure_ai_search``, ``azure_fabric``,
+      ``sharepoint_grounding``) emit a list/dict (documents, snippets,
+      titles, URLs). Falling back to ``f"{result}"`` here produced a
+      Python ``repr`` with single quotes and trailing commas that the
+      LLM had to reverse-engineer, which is the root cause of the
+      "validator didn't parse SharePoint output" problem these
+      evaluators surfaced.
+
+    Strategy: pass strings through unchanged (zero behavior change for
+    function/MCP tools), serialize anything else as JSON with
+    ``default=str`` so non-JSON-native values (dates, enums, etc.) do
+    not raise. ``None`` is rendered as the empty string so the LLM
+    sees an empty ``[TOOL_RESULT]`` block instead of the literal text
+    ``None``.
+    """
+    if result is None:
+        return ""
+    if isinstance(result, str):
+        return result
+    try:
+        return json.dumps(result, default=str, ensure_ascii=False)
+    except (TypeError, ValueError):
+        return str(result)
+
+
 def _get_tool_calls_results(agent_response_msgs):
     """Extract formatted agent tool calls and results from response.
 
@@ -1263,7 +1300,7 @@ def _get_tool_calls_results(agent_response_msgs):
             for content in msg.get("content", []):
                 if content.get("type") == "tool_result":
                     result = content.get("tool_result")
-                    tool_results[msg["tool_call_id"]] = f"[TOOL_RESULT] {result}"
+                    tool_results[msg["tool_call_id"]] = f"[TOOL_RESULT] {_stringify_tool_result(result)}"
 
     # Second pass: parse assistant messages and tool calls
     for msg in agent_response_msgs:
