@@ -39,5 +39,4 @@ variantInfo:
     executionProvider: QNNExecutionProvider
     fileSizeBytes: 1632077086
     vRamFootprintBytes: 1632077086
-type: custom_model
 version: 2

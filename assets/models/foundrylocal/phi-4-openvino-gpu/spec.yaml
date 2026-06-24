@@ -38,5 +38,4 @@ variantInfo:
     executionProvider: OpenVINOExecutionProvider
     fileSizeBytes: 9486152522
     vRamFootprintBytes: 9486152522
-type: custom_model
 version: 2
