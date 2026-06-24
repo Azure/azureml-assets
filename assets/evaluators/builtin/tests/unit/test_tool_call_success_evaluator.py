@@ -313,3 +313,107 @@ class TestGetToolCallsResultsFormatting:
         ]
         out = _get_tool_calls_results(msgs)
         assert out[1] == "[TOOL_RESULT] "
+
+
+class TestRealWorldSharePointTrace:
+    """End-to-end smoke test using a payload shaped like a real
+    Foundry playground OTel trace.
+
+    Mirrors the ``gen_ai.input.messages`` shape produced by a Foundry
+    agent invoking SharePoint grounding: an assistant tool_call with a
+    ``query`` argument followed by a tool message whose payload is the
+    documents envelope ``{"documents": [{id, content, filepath, title,
+    url, knowledgeSourceIndex}, ...]}``.
+
+    The point is to catch regressions where realistic content (markdown,
+    HTML escapes, unicode, embedded JSON, long strings) would be
+    mangled by ``f"{result}"`` rendering. With the new helper the result
+    must round-trip as valid JSON and the original document content must
+    be reachable in the rendered string.
+    """
+
+    # Realistic SharePoint document payload shaped like a production
+    # Foundry trace's ``tool_call_response.response`` field. Kept short
+    # and topic-neutral; only the envelope shape matters.
+    _SHAREPOINT_PAYLOAD = {
+        "documents": [
+            {
+                "id": "0",
+                "content": "Onboarding doc: see the setup guide for first-time access.",
+                "filepath": "https://contoso.sharepoint.com/sites/it/SitePages/Onboarding.aspx",
+                "title": "IT Onboarding Guide",
+                "url": "https://contoso.sharepoint.com/sites/it/SitePages/Onboarding.aspx",
+                "knowledgeSourceIndex": 0,
+            }
+        ]
+    }
+
+    def _build_messages(self, tool_result_value):
+        """Construct messages mirroring the production trace shape."""
+        return [
+            {
+                "role": "user",
+                "content": [{"type": "text", "text": "how do I get started?"}],
+            },
+            {
+                "role": "assistant",
+                "content": [
+                    {
+                        "type": "tool_call",
+                        "tool_call_id": "call_sp_1",
+                        "name": "sharepoint_grounding",
+                        "arguments": {"query": "onboarding"},
+                    }
+                ],
+            },
+            {
+                "role": "tool",
+                "tool_call_id": "call_sp_1",
+                "content": [
+                    {
+                        "type": "tool_result",
+                        "tool_result": tool_result_value,
+                    }
+                ],
+            },
+        ]
+
+    def test_sharepoint_dict_payload_round_trips_as_json(self):
+        """Most common shape: ACA parses the response into a dict
+        before the evaluator sees it. The helper must JSON-encode it."""
+        msgs = self._build_messages(self._SHAREPOINT_PAYLOAD)
+        out = _get_tool_calls_results(msgs)
+
+        # One [TOOL_CALL] + one [TOOL_RESULT] line.
+        assert len(out) == 2
+        assert out[0] == '[TOOL_CALL] sharepoint_grounding(query="onboarding")'
+
+        rendered = out[1]
+        assert rendered.startswith("[TOOL_RESULT] ")
+        body = rendered[len("[TOOL_RESULT] ") :]
+
+        # The rendered payload must be valid JSON and round-trip cleanly,
+        # which is the whole point of switching off ``f"{result}"``.
+        parsed = json.loads(body)
+        assert parsed == self._SHAREPOINT_PAYLOAD
+
+        # JSON output never emits Python's single-quoted strings.
+        assert "'" not in body
+        # Distinctive structural fields must survive so the judge can
+        # ground on the documents envelope.
+        assert "knowledgeSourceIndex" in body
+        assert "IT Onboarding Guide" in body
+
+    def test_sharepoint_json_string_payload_passes_through(self):
+        """Alternate shape: some upstreams hand the evaluator the raw
+        JSON-encoded string. The helper's str pass-through must leave it
+        verbatim (no double-encoding), and json.loads must still work."""
+        raw_json = json.dumps(self._SHAREPOINT_PAYLOAD)
+        msgs = self._build_messages(raw_json)
+        out = _get_tool_calls_results(msgs)
+
+        body = out[1][len("[TOOL_RESULT] ") :]
+        # String inputs pass through unchanged — no extra quoting.
+        assert body == raw_json
+        # And it's still valid JSON the judge can parse.
+        assert json.loads(body) == self._SHAREPOINT_PAYLOAD
