@@ -81,14 +81,17 @@ class TestUnsupportedToolsList:
     """The hard-coded UNSUPPORTED_TOOLS list controls service-side gating."""
 
     def test_newly_enabled_tools_are_not_in_unsupported_list(self):
+        """Newly enabled tools must be absent from the unsupported list."""
         for tool_name in NEWLY_ENABLED_TOOLS:
             assert tool_name not in ConversationValidator.UNSUPPORTED_TOOLS
 
     def test_still_unsupported_tools_remain_in_list(self):
+        """Still-unsupported tools must remain in the unsupported list."""
         for tool_name in STILL_UNSUPPORTED_TOOLS:
             assert tool_name in ConversationValidator.UNSUPPORTED_TOOLS
 
     def test_unsupported_list_contains_no_unexpected_tools(self):
+        """Unsupported list must match the expected set exactly."""
         # Defensive: keep the list explicit so future additions are
         # reviewed against this test.
         assert set(ConversationValidator.UNSUPPORTED_TOOLS) == set(STILL_UNSUPPORTED_TOOLS)
@@ -99,6 +102,7 @@ class TestValidatorAcceptsNewlyEnabledTools:
 
     @pytest.mark.parametrize("tool_name", NEWLY_ENABLED_TOOLS)
     def test_assistant_message_accepts_tool(self, tool_name):
+        """Assistant-message validation accepts each newly enabled tool."""
         validator = ToolDefinitionsValidator(
             error_target=ExtendedErrorTarget.TOOL_CALL_SUCCESS_EVALUATOR,
             requires_query=False,
@@ -111,6 +115,7 @@ class TestValidatorAcceptsNewlyEnabledTools:
 
     @pytest.mark.parametrize("tool_name", NEWLY_ENABLED_TOOLS)
     def test_validate_eval_input_accepts_tool(self, tool_name):
+        """Full eval-input validation accepts each newly enabled tool."""
         validator = ToolDefinitionsValidator(
             error_target=ExtendedErrorTarget.TOOL_CALL_SUCCESS_EVALUATOR,
             requires_query=False,
@@ -125,6 +130,7 @@ class TestValidatorRejectsStillUnsupportedTools:
 
     @pytest.mark.parametrize("tool_name", STILL_UNSUPPORTED_TOOLS)
     def test_validate_eval_input_rejects_tool(self, tool_name):
+        """Eval-input validation still rejects each still-unsupported tool."""
         validator = ToolDefinitionsValidator(
             error_target=ExtendedErrorTarget.TOOL_CALL_SUCCESS_EVALUATOR,
             requires_query=False,
@@ -140,17 +146,21 @@ class TestStringifyToolResult:
     """The new helper makes structured tool outputs LLM-readable."""
 
     def test_string_passes_through_unchanged(self):
+        """String results pass through the helper unchanged."""
         assert _stringify_tool_result("hello") == "hello"
 
     def test_none_renders_as_empty_string(self):
+        """None results render as the empty string (not 'None')."""
         # Avoid leaking the literal text "None" into the prompt.
         assert _stringify_tool_result(None) == ""
 
     def test_dict_is_json_encoded(self):
+        """Dict results are JSON-encoded."""
         result = _stringify_tool_result({"answer": 42, "ok": True})
         assert json.loads(result) == {"answer": 42, "ok": True}
 
     def test_list_of_dicts_is_json_encoded(self):
+        """List-of-dicts results are JSON-encoded."""
         sharepoint_payload = [
             {
                 "documents": [
@@ -167,11 +177,13 @@ class TestStringifyToolResult:
         assert parsed == sharepoint_payload
 
     def test_unicode_is_preserved_not_escaped(self):
+        """Unicode characters are preserved (ensure_ascii=False)."""
         # ``ensure_ascii=False`` keeps non-ASCII readable for the judge.
         rendered = _stringify_tool_result({"title": "测试"})
         assert "测试" in rendered
 
     def test_non_json_value_falls_back_to_str(self):
+        """Non-JSON-serializable values fall back to str()."""
         class _Custom:
             def __str__(self):
                 return "<custom>"
@@ -215,6 +227,7 @@ class TestGetToolCallsResultsFormatting:
         ]
 
     def test_sharepoint_structured_result_is_json(self):
+        """Structured SharePoint payloads render as valid JSON."""
         sharepoint_payload = [
             {
                 "documents": [
@@ -259,6 +272,7 @@ class TestGetToolCallsResultsFormatting:
         assert "'" not in rendered_json
 
     def test_azure_ai_search_dict_result_is_json(self):
+        """Azure AI Search dict payloads render as valid JSON."""
         aas_payload = {
             "results": [
                 {"title": "Doc A", "score": 0.91},
@@ -293,6 +307,7 @@ class TestGetToolCallsResultsFormatting:
         assert json.loads(rendered_json) == aas_payload
 
     def test_none_result_renders_empty(self):
+        """None tool_result renders as an empty [TOOL_RESULT] body."""
         msgs = [
             {
                 "role": "assistant",
@@ -316,8 +331,7 @@ class TestGetToolCallsResultsFormatting:
 
 
 class TestRealWorldSharePointTrace:
-    """End-to-end smoke test using a payload shaped like a real
-    Foundry playground OTel trace.
+    """End-to-end smoke test using a payload shaped like a real Foundry playground OTel trace.
 
     Mirrors the ``gen_ai.input.messages`` shape produced by a Foundry
     agent invoking SharePoint grounding: an assistant tool_call with a
@@ -379,8 +393,12 @@ class TestRealWorldSharePointTrace:
         ]
 
     def test_sharepoint_dict_payload_round_trips_as_json(self):
-        """Most common shape: ACA parses the response into a dict
-        before the evaluator sees it. The helper must JSON-encode it."""
+        """Verify a dict payload (the common ACA-parsed shape) round-trips as JSON.
+
+        ACA usually parses the upstream response into a dict before the
+        evaluator sees it. The helper must JSON-encode it so the judge
+        can read it directly.
+        """
         msgs = self._build_messages(self._SHAREPOINT_PAYLOAD)
         out = _get_tool_calls_results(msgs)
 
@@ -405,9 +423,12 @@ class TestRealWorldSharePointTrace:
         assert "IT Onboarding Guide" in body
 
     def test_sharepoint_json_string_payload_passes_through(self):
-        """Alternate shape: some upstreams hand the evaluator the raw
-        JSON-encoded string. The helper's str pass-through must leave it
-        verbatim (no double-encoding), and json.loads must still work."""
+        """Verify a raw JSON-string payload passes through unchanged.
+
+        Some upstreams hand the evaluator the raw JSON-encoded string.
+        The helper's str pass-through must leave it verbatim (no
+        double-encoding), and json.loads must still work.
+        """
         raw_json = json.dumps(self._SHAREPOINT_PAYLOAD)
         msgs = self._build_messages(raw_json)
         out = _get_tool_calls_results(msgs)
