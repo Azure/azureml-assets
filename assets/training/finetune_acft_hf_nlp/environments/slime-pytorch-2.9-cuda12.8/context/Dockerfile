@@ -9,7 +9,8 @@ WORKDIR /opt
 
 ARG SLIME_COMMIT=9b50665190d70cefcc9cc42e5994ad4de5f0cd88
 ARG PATCH_VERSION=latest
-ARG SGLANG_VERSION=0.5.10.post1
+ARG SGLANG_DEPENDENCY_VERSION=0.5.10.post1
+ARG SGLANG_VERSION=0.5.11
 ARG MEGATRON_COMMIT=1dcf0dafa884ad52ffb243625717a3471643e087
 ARG MBRIDGE_COMMIT=89eb10887887bc74853f89a4de258c0702932a1c
 ARG LOG4J_VERSION=2.25.4
@@ -105,10 +106,17 @@ COPY requirements.txt /tmp/slime-requirements.txt
 RUN python -m pip install --no-cache-dir -r /tmp/slime-requirements.txt && \
     rm /tmp/slime-requirements.txt
 
-RUN python -m pip install --no-cache-dir "sglang==${SGLANG_VERSION}"
+# Bootstrap the validated dependency set, then upgrade only SGLang so its newer
+# wheel does not replace this image's torch/CUDA stack.
+RUN python -m pip install --no-cache-dir "sglang==${SGLANG_DEPENDENCY_VERSION}" && \
+    python -m pip install --no-cache-dir --no-deps --upgrade "sglang==${SGLANG_VERSION}"
 RUN python -m pip install --no-cache-dir \
         https://github.com/zhuzilin/sgl-router/releases/download/v0.3.2-5f8d397/sglang_router-0.3.2-cp38-abi3-manylinux_2_28_x86_64.whl \
         --force-reinstall
+
+COPY patch_sglang_cve_2026_5760.py /tmp/patch_sglang_cve_2026_5760.py
+RUN python /tmp/patch_sglang_cve_2026_5760.py && \
+    rm /tmp/patch_sglang_cve_2026_5760.py
 
 COPY patch_ray_log4j.py /tmp/patch_ray_log4j.py
 # Ray vendors Log4j inside ray_dist.jar as expanded fat-jar contents plus
@@ -166,6 +174,9 @@ RUN python -m pip install --no-cache-dir \
         "starlette>=1.0.1" \
         "idna>=3.15" \
         "pyarrow>=23.0.1"
+
+# pinned transitive dep of base image; fixes GHSA-537c-gmf6-5ccf
+RUN python -m pip install --no-cache-dir "cryptography==48.0.1"
 
 COPY patch_ray_thirdparty.py /tmp/patch_ray_thirdparty.py
 # Upgrade vulnerable packages inside ray's vendored thirdparty_files directory and
