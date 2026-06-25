@@ -18,12 +18,9 @@ RUN rm -rf /opt/nvidia/nsight-compute || true
 # loader risk if LD_LIBRARY_PATH is unset at runtime.
 ENV LD_LIBRARY_PATH=/usr/local/cuda/compat:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64
 
-# Install git and upgrade nginx to patched version (CVE-2026-49975 / USN-8398-3).
+# git is needed by some pip editable installs / VCS deps.
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends git \
-        nginx=1.24.0-2ubuntu7.12 \
-        nginx-common=1.24.0-2ubuntu7.12 \
-        nginx-light=1.24.0-2ubuntu7.12 && \
+    apt-get install -y --no-install-recommends git && \
     rm -rf /var/lib/apt/lists/*
 
 # Create the AzureML-conventional conda environment so app deps stay isolated from the
