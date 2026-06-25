@@ -55,9 +55,10 @@ RUN pip install --upgrade --no-cache-dir pyasn1==0.6.3 'python-multipart>=0.0.26
 # does not force patched child versions, and conda updates would introduce py-rattler, so use pip in base.
 # PyJWT: base env ships 2.12.1 which has GHSA-jq35-7prp-9v3f and GHSA-993g-76c3-p5m4 (fixed in 2.13.0);
 #        no parent in base pins PyJWT to a safe floor, so explicit override is required.
+# pydantic-settings: pinned transitive/base image package from the base conda env; fixes GHSA-4xgf-cpjx-pc3j.
 # py-rattler: pinned transitive/base image package from the base conda env; fixes GHSA-q53q-5r4j-5729.
 # cryptography: pinned transitive/base image package from the base conda env; fixes GHSA-537c-gmf6-5ccf.
-RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.0' 'PyJWT>=2.13.0' 'py-rattler>=0.24.0' 'cryptography>=48.0.1'
+RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.0' 'PyJWT>=2.13.0' 'pydantic-settings>=2.14.2' 'py-rattler>=0.24.0' 'cryptography>=48.0.1'
 
 # pip is the package manager in both base and ptca conda envs. defaults has no pip>=26.1.1 package,
 # while a normal conda-forge solve pulls unrelated conda updates and py-rattler. Install only the
