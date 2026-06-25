@@ -1294,6 +1294,36 @@ def _get_tool_calls_results(agent_response_msgs):
     return agent_response_text
 
 
+def _log_safe_summary(obj):
+    """Return a non-sensitive structural summary of a payload for safe logging.
+
+    The raw payload may contain customer-controlled data (tool arguments,
+    tool results, assistant text, database rows, file content, etc.) which
+    can include credentials or PII. Logging the payload itself risks leaking
+    that data into telemetry sinks at any log level. This helper returns
+    shape-only metadata - type, length, top-level keys/roles - which is
+    sufficient to diagnose schema drift without exposing values.
+    """
+    try:
+        type_name = type(obj).__name__
+        if isinstance(obj, list):
+            roles = []
+            for item in obj[:10]:
+                if isinstance(item, dict):
+                    role = item.get("role")
+                    if isinstance(role, str):
+                        roles.append(role)
+            roles_summary = roles if roles else "n/a"
+            return f"type={type_name} len={len(obj)} roles={roles_summary}"
+        if isinstance(obj, dict):
+            keys = sorted(k for k in obj.keys() if isinstance(k, str))[:10]
+            return f"type={type_name} top_keys={keys}"
+        length = len(obj) if hasattr(obj, "__len__") else "n/a"
+        return f"type={type_name} len={length}"
+    except Exception:
+        return f"type={type(obj).__name__} (summary unavailable)"
+
+
 def _reformat_tool_calls_results(response, logger=None):
     try:
         if response is None or response == []:
@@ -1304,8 +1334,9 @@ def _reformat_tool_calls_results(response, logger=None):
             # fallback to the original response in that case
             if logger:
                 logger.warning(
-                    f"Empty agent response extracted, likely due to input schema change. "
-                    f"Falling back to using the original response: {response}"
+                    "Empty agent response extracted, likely due to input schema change. "
+                    "Falling back to using the original response. %s",
+                    _log_safe_summary(response),
                 )
             return response
         return "\n".join(agent_response)
@@ -1316,9 +1347,10 @@ def _reformat_tool_calls_results(response, logger=None):
         # See comments on reformat_conversation_history for more details.
         if logger:
             logger.warning(
-                f"Agent response could not be parsed, falling back to original response. Error: {e}"
+                "Agent response could not be parsed, falling back to original response. Error: %s. %s",
+                e,
+                _log_safe_summary(response),
             )
-            logger.debug(f"Original response: {response}")
         return response
 
 
@@ -1338,7 +1370,9 @@ def _reformat_tool_definitions(tool_definitions, logger=None):
         # See comments on reformat_conversation_history for more details.
         if logger:
             logger.warning(
-                f"Tool definitions could not be parsed, falling back to original definitions. Error: {e}"
+                "Tool definitions could not be parsed; falling back to raw definitions. "
+                "Input shape: %s. Error: %s",
+                _log_safe_summary(tool_definitions),
+                e,
             )
-            logger.debug(f"Original tool definitions: {tool_definitions}")
         return tool_definitions
