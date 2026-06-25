@@ -7,8 +7,8 @@ properties:
   finetuning-tasks: text-to-image
   finetune-min-sku-spec: 6|1|112|736
   finetune-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
-  inference-min-sku-spec: 6|1|112|736
-  inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
+  inference-min-sku-spec: 96|8|880|2900
+  inference-recommended-sku: Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
 tags:
   training_dataset: LAION-2B (en)
 system_metadata:
@@ -20,10 +20,6 @@ system_metadata:
     - text-to-image
   SKU:
     inferenceRecommendedSkus:
-    - Standard_NC6s_v3
-    - Standard_NC12s_v3
-    - Standard_NC24s_v3
-    - Standard_ND40rs_v2
     - Standard_ND96amsr_A100_v4
     - Standard_ND96asr_v4
     finetuneRecommendedSkus:
@@ -33,7 +29,7 @@ system_metadata:
     - Standard_ND40rs_v2
     - Standard_ND96amsr_A100_v4
     - Standard_ND96asr_v4
-    inferenceMinSkuSpec: 6|1|112|736
+    inferenceMinSkuSpec: 96|8|880|2900
     finetuneMinSkuSpec: 6|1|112|736
   publisher: Runway
   hiddenLayerScanned: true
@@ -41,10 +37,6 @@ system_metadata:
   license: creativeml-openrail-m
   supportedComputes:
     inferenceComputes:
-    - Standard_NC6s_v3
-    - Standard_NC12s_v3
-    - Standard_NC24s_v3
-    - Standard_ND40rs_v2
     - Standard_ND96amsr_A100_v4
     - Standard_ND96asr_v4
     finetuneComputes:
@@ -56,4 +48,4 @@ system_metadata:
     - Standard_ND96asr_v4
   inferenceSupportedEnvs:
   - ds_mii
-version: 12
+version: 13
