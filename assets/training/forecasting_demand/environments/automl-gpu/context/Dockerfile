@@ -36,9 +36,6 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
     conda clean -a -y
 
-# CVE-2026-41727: override cryptography to >=46.0.5,<47.0.0 (conda resolves older 44.x by default)
-RUN pip install 'cryptography>=46.0.5,<47.0.0'
-
 # CVE-2026-6357: upgrade pip in base miniconda (/opt/miniconda ships 26.0.1)
 RUN /opt/miniconda/bin/python -m pip install --upgrade --no-cache-dir 'pip>=26.1.1' && \
     rm -rf /opt/miniconda/lib/python3.10/site-packages/pip-26.0.*.dist-info
@@ -46,8 +43,9 @@ RUN /opt/miniconda/bin/python -m pip install --upgrade --no-cache-dir 'pip>=26.1
 # distributed/bokeh/onnx: parent packages cap these below patched versions.
 # GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6,
 # GHSA-538c-55jv-c5g9, GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m (onnx)
+# cryptography is a pinned transitive dep of azureml-core; fixes GHSA-537c-gmf6-5ccf.
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --upgrade --no-cache-dir \
-    'cryptography>=46.0.5,<47.0.0' 'setuptools>=79.0.0' 'distributed>=2026.1.0' \
+    'cryptography>=48.0.1' 'setuptools>=79.0.0' 'distributed>=2026.1.0' \
     'bokeh>=3.8.2' \
     'onnx>=1.21.0' \
     'pyarrow==23.0.1'  # pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg.
