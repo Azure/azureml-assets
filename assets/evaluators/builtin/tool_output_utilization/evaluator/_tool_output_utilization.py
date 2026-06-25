@@ -69,16 +69,6 @@ class ConversationValidator(ValidatorInterface):
     check_for_unsupported_tools: bool = False
     error_target: ErrorTarget
 
-    # NOTE: Restricted tools previously listed here ("azure_ai_search",
-    # "azure_fabric", "sharepoint_grounding") have been removed so that
-    # Azure AI Search, Microsoft Fabric, and SharePoint grounding tool
-    # calls are accepted by this evaluator. Their tool_result payloads are
-    # structured documents the LLM judge can reason over directly when
-    # deciding whether the agent's final response utilized them. Keep
-    # Bing variants, web_search, browser_automation, code_interpreter_call,
-    # computer_call, and openapi_call rejected because their payloads are
-    # either redacted by the runtime (Bing) or not meaningful for this
-    # rubric.
     UNSUPPORTED_TOOLS: List[str] = [
         "bing_custom_search",
         "bing_grounding",
