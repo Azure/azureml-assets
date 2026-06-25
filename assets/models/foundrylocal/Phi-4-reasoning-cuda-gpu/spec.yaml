@@ -37,5 +37,4 @@ variantInfo:
     executionProvider: CUDAExecutionProvider
     fileSizeBytes: 8997956485
     vRamFootprintBytes: 8998222295
-type: custom_model
 version: 1

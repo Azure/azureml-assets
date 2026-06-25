@@ -45,6 +45,12 @@ RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade \
 #   by the base image, fixes GHSA-q53q-5r4j-5729.
 #   aiohttp: no parent currently pins >=3.14.0 (GHSA-jg22-mg44-37j8 / GHSA-hg6j-4rv6-33pg).
 #   PyJWT: no parent currently pins >=2.13.0 (GHSA-jq35-7prp-9v3f / GHSA-993g-76c3-p5m4).
+#   cryptography: pinned transitive dep of the base Python stack; brought in by
+#   the base image, fixes GHSA-537c-gmf6-5ccf.
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade --no-binary=cffi \
+        'cryptography==48.0.1' && \
+    rm -rf /opt/conda/lib/python3.13/site-packages/cryptography-46*.dist-info
+
 RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade \
         'pip==26.1.1' \
         'py-rattler>=0.24.0' \

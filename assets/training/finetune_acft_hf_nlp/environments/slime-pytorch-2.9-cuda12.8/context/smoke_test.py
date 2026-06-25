@@ -6,6 +6,7 @@
 import importlib.util
 import pathlib
 import zipfile
+import cryptography
 from packaging.version import Version
 import PIL
 import ray
@@ -68,6 +69,8 @@ def assert_world_accessible(path: pathlib.Path) -> None:
 assert torch.cuda.is_available() or torch.version.cuda
 assert torch.__version__.startswith("2.9.1")
 assert Version(PIL.__version__) >= Version("12.2.0")
+assert Version(cryptography.__version__) >= Version("48.0.1")
+assert Version(sglang.__version__) >= Version("0.5.11")
 assert sglang
 assert slime
 assert te

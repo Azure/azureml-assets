@@ -23,6 +23,6 @@ tags:
   Foundry: ""
   Python: "3.10"
   slime: "THUDM"
-  SGLang: "0.5.10.post1"
+  SGLang: "0.5.11"
   FlashAttention: "4"
   Megatron: "dev"
