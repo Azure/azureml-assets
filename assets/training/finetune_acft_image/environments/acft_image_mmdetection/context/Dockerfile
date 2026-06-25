@@ -23,8 +23,6 @@ RUN pip install -r requirements.txt --no-cache-dir
 # Keep a temporary compatibility pin for mim installation, then restore setuptools.
 RUN pip install --no-cache-dir 'setuptools<82'
 
-# # # Install mmdet
-# # Note that MMDet installs pycocotools
 # Note: mmdet should be installed via mim to access the model zoo config folder.
 RUN mim install mmdet==3.3.0
 # Temporary workaround for https://github.com/open-mmlab/mmdetection/issues/11668 (when mmdet updated, remove lines below)
@@ -46,19 +44,23 @@ RUN conda install -n ptca -y -c conda-forge --freeze-installed 'pip=26.1.1' \
 # parents allow patched versions but do not require them, so keep direct floors.
 # urllib3 is pulled by conda/requests-style tooling and must be >=2.7.0 for
 # GHSA-qccp-gfcp-xxvc and GHSA-mf9v-mfxr-j63j.
+# cryptography is brought in by the base image; fixes GHSA-537c-gmf6-5ccf.
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
     'urllib3>=2.7.0,<3' \
     'idna>=3.15' \
     'click>=8.3.3' \
     'python-dotenv>=1.2.2' \
     'aiohttp>=3.14.0' \
-    'PyJWT>=2.13.0'
+    'PyJWT>=2.13.0' \
+    'cryptography>=48.0.1'
 
 # aiohttp is also present in the ptca env (GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8).
 # pyarrow <23.0.1 is vulnerable (GHSA-rgxp-2hwp-jwgg).
+# cryptography is brought in by the base image; fixes GHSA-537c-gmf6-5ccf.
 RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade \
     'aiohttp>=3.14.0' \
-    'pyarrow>=23.0.1'
+    'pyarrow>=23.0.1' \
+    'cryptography>=48.0.1'
 
 # The conda pip upgrade can reinstall the rattler solver. The base image does
 # not need it for runtime, and its compiled extension currently carries Rust CVEs.

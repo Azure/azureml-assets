@@ -80,21 +80,18 @@ RUN pip install --no-cache-dir --upgrade 'pip>=26.1'
 
 RUN pip install -r requirements.txt --no-cache-dir
 
-# setuptools==82.0.1, wheel==0.46.3, cryptography==46.0.5, urllib3==2.6.3, h2==4.3.0
-# are already at fixed versions in the openmpi base image (20260315.v1).
-# The override below only targets packages NOT fixed in base or pulled in vulnerable by requirements.txt.
+# setuptools==82.0.1, wheel==0.46.3, urllib3==2.6.3, h2==4.3.0 are already
+# at fixed versions in the openmpi base image. The override below only targets
+# packages NOT fixed in base or pulled in vulnerable by requirements.txt.
 # aiohttp (GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8): transitive dep of azure-core/datasets; bumped floor
 #   to >=3.14.0 to resolve USN-reported CVEs (previous floor >=3.13.4 was insufficient).
-# cryptography (GHSA-m959-cc7f-wv43, GHSA-p423-j2cm-9vmq): base image has 46.0.5; floor at 46.0.7+.
 # requests (GHSA-gc5v-m9x4-r6x2): transitive dep of many packages; parents use loose floors.
 # scikit-learn: explicit pin removed — azureml-acft-contrib-hf-nlp 0.0.89 already
 #   pins `scikit-learn<1.6.0,>=1.5.1`, so the parent enforces the secure floor (>=1.5.1
 #   ships the CVE-2024-5206 fix the historical pin protected against). Pip resolves to 1.5.2.
 # pyarrow (GHSA-rgxp-2hwp-jwgg): transitive dep; bump to >=23.0.1 to fix the CVE.
-RUN pip install --no-cache-dir 'aiohttp>=3.14.0' 'requests>=2.33.0' 'cryptography>=46.0.7' 'pyarrow>=23.0.1' && rm -rf /root/.cache/pip
+# cryptography: pinned transitive dep pulled by azureml-acft-contrib-hf-nlp/base image; fixes GHSA-537c-gmf6-5ccf.
+RUN pip install --no-cache-dir 'aiohttp>=3.14.0' 'requests>=2.33.0' 'cryptography>=48.0.1' 'pyarrow>=23.0.1' && rm -rf /root/.cache/pip
 
-# The below file is required for baking the code into the environment 
+# The below file is required for baking the code into the environment
 COPY data_import_run.py /azureml/data_import/run.py
-
-# dummy number to change when needing to force rebuild without changing the definition: 4
-
