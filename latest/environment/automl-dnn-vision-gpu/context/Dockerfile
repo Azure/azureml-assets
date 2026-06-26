@@ -52,9 +52,10 @@ RUN pip install --no-cache-dir --upgrade 'urllib3>=2.7.0'
 RUN pip install --no-cache-dir --upgrade 'onnx>=1.21.0'
 
 # Security: fix base conda env (python 3.13).
-# python-dotenv>=1.2.2: CVE-2026-28684 (GHSA-mf9w-mj56-hr94); transitive chain in inference layer:
-#   azureml-defaults -> azureml-inference-server-http -> pydantic-settings -> python-dotenv>=0.21.0;
-#   pydantic-settings (<=2.14.0) only requires >=0.21.0, no parent upgrade resolves this.
+# pydantic-settings>=2.14.2: pinned transitive dep of azureml-inference-server-http
+# brought in by the inference layer; fixes GHSA-4xgf-cpjx-pc3j.
+# python-dotenv>=1.2.2: CVE-2026-28684 (GHSA-mf9w-mj56-hr94); pydantic-settings
+# only requires python-dotenv>=0.21.0, so no parent upgrade resolves this.
 # idna>=3.15 (GHSA-65pc-fj4g-8rjx): base has idna 3.11 from requests 2.32.4 (idna<4,>=2.5)
 # and yarl 1.22.0 (idna>=2.0). As of 2026-05-25, latest requests/yarl keep the same loose
 # idna ranges, so parent upgrades cannot force the fixed idna version.
@@ -64,7 +65,7 @@ RUN pip install --no-cache-dir --upgrade 'onnx>=1.21.0'
 RUN /opt/conda/bin/conda install -n base -c conda-forge 'pip>=26.1' -y && \
     /opt/conda/bin/pip install --no-cache-dir --upgrade 'requests>=2.33.0' 'urllib3>=2.7.0' 'aiohttp>=3.14.0' 'wheel>=0.46.2' \
     'setuptools>=82.0.1' 'cryptography>=46.0.7' 'PyJWT>=2.12.0' \
-    'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3'
+    'pydantic-settings>=2.14.2' 'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3'
 # Security: fix ptca conda env (python 3.10).
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade torch==2.8.0 torchvision==0.23.0
 # idna>=3.15 (GHSA-65pc-fj4g-8rjx): ptca has idna 3.11 from requests 2.32.5 (idna<4,>=2.5)
@@ -82,13 +83,14 @@ RUN /opt/conda/bin/conda install -n ptca -c conda-forge 'pip>=26.1' -y && \
 # versions (cannot upgrade parent during template rendering).
 # cryptography>=46.0.7: azure-identity (via azureml-dataprep) only requires cryptography>=2.5.
 # pyarrow>=23.0.1: pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg / CVE-2026-25087.
-# python-dotenv>=1.2.2: CVE-2026-28684; pydantic-settings (<=2.14.0) requires >=0.21.0 only.
+# pydantic-settings>=2.14.2: pinned transitive dep of azureml-defaults -> azureml-inference-server-http; fixes GHSA-4xgf-cpjx-pc3j.
+# python-dotenv>=1.2.2: CVE-2026-28684; pydantic-settings requires >=0.21.0 only.
 # idna>=3.15 and click>=8.3.3 are direct overrides because requests/yarl/dask parents keep
 # loose dependency ranges that allow vulnerable versions.
 RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' 'distributed>=2026.1.0' 'protobuf>=6.33.5' 'cryptography>=46.0.7' \
     'filelock>=3.20.3' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'urllib3>=2.7.0' 'pillow>=12.2.0' \
     'onnx>=1.21.0' 'requests>=2.33.0' 'python-dotenv>=1.2.2' \
-    'bokeh>=3.8.2' 'idna>=3.15' 'click>=8.3.3' 'pyarrow>=23.0.1'
+    'bokeh>=3.8.2' 'idna>=3.15' 'click>=8.3.3' 'pyarrow>=23.0.1' 'pydantic-settings>=2.14.2'
 # Remove stale vendored metadata that scanners pick up
 RUN rm -rf /opt/conda/lib/python3.13/site-packages/setuptools/__vendor/jaraco.context-5.3.0.dist-info \
     /opt/conda/lib/python3.13/site-packages/setuptools/__vendor/wheel-0.45.1.dist-info \
