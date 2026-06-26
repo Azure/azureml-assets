@@ -62,6 +62,8 @@ RUN conda create -q -p $AZUREML_CONDA_ENVIRONMENT_PATH \
 #   fixing GHSA-q53q-5r4j-5729.
 # - cryptography>=48.0.1 is pinned as a transitive dep brought in by the base image
 #   and its ptca conda env, fixing GHSA-537c-gmf6-5ccf.
+# - pydantic-settings>=2.14.2 is pinned as a transitive dep brought in by the
+#   base image, fixing GHSA-4xgf-cpjx-pc3j.
 RUN set -eux; \
     base_prefix_found=0; \
     for base_python in /opt/conda/bin/python /opt/miniconda/bin/python /opt/conda/envs/ptca/bin/python; do \
@@ -72,7 +74,8 @@ RUN set -eux; \
                 'PyJWT>=2.13.0' \
                 'idna>=3.15' \
                 'py-rattler>=0.24.0' \
-                'cryptography>=48.0.1'; \
+                'cryptography>=48.0.1' \
+                'pydantic-settings>=2.14.2'; \
         fi; \
     done; \
     test "$base_prefix_found" = "1"; \
