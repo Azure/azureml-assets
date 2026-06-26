@@ -35,21 +35,25 @@ RUN apt-get update && \
 # unattended jump to a future major release that could break the rest of the
 # image. opt/miniconda's pip is already 26.1.1 in the latest parent base image,
 # so no secondary upgrade for that prefix is required here.
-RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 pip=26.0 -y && \
-    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH python -m pip install --no-cache-dir --upgrade 'pip>=26.1,<27' && \
-    conda clean -a -y
+RUN conda create -q -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 pip=26.0 -y && \
+    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH python -m pip install --no-cache-dir --progress-bar off --upgrade 'pip>=26.1,<27' && \
+    conda clean -q -a -y
 
-RUN pip install --upgrade lightgbm==4.6.0
+RUN test -x /opt/miniconda/bin/python && \
+    /opt/miniconda/bin/python -m pip install --no-cache-dir --progress-bar off --upgrade \
+        'pydantic-settings>=2.14.2'  # pinned transitive dep brought in by base image; fixes GHSA-4xgf-cpjx-pc3j
 
-RUN pip install --upgrade --force-reinstall xgboost==1.5.2 pandas==1.5.3
+RUN pip install --no-cache-dir --progress-bar off --upgrade lightgbm==4.6.0
+
+RUN pip install --no-cache-dir --progress-bar off --upgrade --force-reinstall xgboost==1.5.2 pandas==1.5.3
 
 # Install ncurses via conda (C library, not available on pip; single-package solve is trivial)
-RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
+RUN conda install -q -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     ncurses=6.5 \
     -c conda-forge -y
 
 # Install packages via pip (avoids conda solver OOM)
-RUN pip install --no-cache-dir \
+RUN pip install --no-cache-dir --progress-bar off \
     'numpy>=1.23.5,<1.24' \
     'scikit-learn==1.5.1' \
     'holidays==0.29' \
@@ -63,7 +67,7 @@ RUN pip install --no-cache-dir \
 SHELL ["conda", "run", "-p", "$AZUREML_CONDA_ENVIRONMENT_PATH", "/bin/bash", "-c"]
 
 # Install pip dependencies
-RUN pip install \
+RUN pip install --no-cache-dir --progress-bar off \
                 azureml-core=={{latest-pypi-version}} \
                 azureml-pipeline-core=={{latest-pypi-version}} \
                 azureml-telemetry=={{latest-pypi-version}} \
@@ -78,22 +82,23 @@ RUN pip install \
                 azureml-mlflow=={{latest-pypi-version}} \
                 'azureml-model-management-sdk==1.0.1b6.post1' \
                 'mlflow-skinny==2.15.1' \
-                'azure-identity>=1.25.1' --no-cache-dir
+                'azure-identity>=1.25.1'
 
-RUN pip install \
+RUN pip install --no-cache-dir --progress-bar off \
                 'inference-schema' \
                 'cmdstanpy==1.0.4' \
                 'prophet==1.1.4' \
-                'pytorch-transformers==1.0.0' --no-cache-dir
+                'pytorch-transformers==1.0.0'
 
-RUN pip install \
+RUN pip install --no-cache-dir --progress-bar off \
                 'spacy==3.7.4' \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz' \
                 'py-cpuinfo==5.0.0' \
-                'jinja2>=3.1.6' --no-cache-dir
+                'jinja2>=3.1.6'
 
 # Fix vulnerabilities - overrides needed because parent packages cap vulnerable versions
-# torchvision==0.23.0, torch==2.8.0: CVE-2025-32434 RCE via torch.load (via pytorch-transformers -> torch, horovod)
+# torchvision==0.25.0, torch==2.10.0: CVE-2025-32434 RCE via torch.load and
+#   CVE-2025-2999/CVE-2025-3001 memory corruption fixes (via pytorch-transformers -> torch, horovod)
 # distributed>=2026.1.0: CVE-2026-23528 (via azureml-train-automl-runtime -> dask[complete] -> distributed)
 # mlflow-skinny>=2.16.0: security fixes (via azureml-mlflow -> mlflow-skinny, also installed directly)
 # protobuf>=5.29.6: CVE-2026-0994 DoS recursion (via mlflow-skinny -> protobuf, azureml-automl-runtime -> onnx/onnxruntime)
@@ -103,12 +108,14 @@ RUN pip install \
 #   GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m (overrides azureml-automl-runtime's onnx<=1.17.0 cap)
 # starlette>=1.0.1: GHSA-86qp-5c8j-p5mr (transitive via fastapi; drop when parent bumps)
 # pyarrow>=23.0.1: GHSA-rgxp-2hwp-jwgg / CVE-2026-25087 use-after-free (via azureml-dataset-runtime)
-RUN pip install --upgrade torchvision==0.23.0 torch==2.8.0 --no-cache-dir
-RUN pip install --upgrade 'distributed>=2026.1.0' 'mlflow-skinny>=2.16.0' \
+# cryptography>=48.0.1: pinned transitive dep of azureml-core/azureml-automl packages; fixes GHSA-537c-gmf6-5ccf
+RUN pip install --no-cache-dir --progress-bar off --upgrade torchvision==0.25.0 torch==2.10.0
+RUN pip install --no-cache-dir --progress-bar off --upgrade 'distributed>=2026.1.0' 'mlflow-skinny>=2.16.0' \
                           'protobuf>=5.29.6' 'pillow>=12.1.1' \
                           'bokeh>=3.8.2' \
                           'onnx>=1.21.0' \
                           'starlette>=1.0.1' \
+                          'cryptography>=48.0.1' \
                           'pyarrow>=23.0.1'  # pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg / CVE-2026-25087
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
@@ -117,7 +124,7 @@ RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  HOROVOD_WITH_PYTORCH=1 \
  HOROVOD_CUDA_HOME=/usr/local/cuda \
  CMAKE_LIBRARY_PATH=/usr/local/cuda/targets/x86_64-linux/lib:/usr/local/cuda-12.6/targets/x86_64-linux/lib \
- pip install --no-cache-dir --no-build-isolation \
+ pip install --no-cache-dir --progress-bar off --no-build-isolation \
  git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d"
 
 RUN rm -rf /opt/miniconda/pkgs/
