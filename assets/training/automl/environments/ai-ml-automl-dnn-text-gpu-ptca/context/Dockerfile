@@ -92,10 +92,8 @@ RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
 #   brought in by the ACPT base image conda tooling.
 # cryptography 46.0.7 -> >=48.0.1 (GHSA-537c-gmf6-5ccf): pinned transitive dep
 #   brought in by the ACPT base image conda environment.
-# pydantic-settings 2.12.0 -> >=2.14.2 (GHSA-4xgf-cpjx-pc3j): pinned transitive
-#   dep of anaconda-auth/anaconda-cli-base brought in by the ACPT base image conda tooling.
-# Stale conda pkgs-cache entries are removed so scanners do not re-flag old versions
-#   from the package cache directories.
+# Stale conda pkgs-cache entries for click, idna, pip, and python-dotenv are removed
+#   so scanners do not re-flag the old versions from the package cache directories.
 RUN /opt/conda/bin/pip install --no-cache-dir --upgrade \
     'pip>=26.1.1' \
     'urllib3>=2.7.0' \
@@ -106,10 +104,8 @@ RUN /opt/conda/bin/pip install --no-cache-dir --upgrade \
     'aiohttp>=3.14.0' \
     'PyJWT>=2.13.0' \
     'py-rattler>=0.24.0' \
-    'cryptography>=48.0.1' \
-    'pydantic-settings>=2.14.2' && \
+    'cryptography>=48.0.1' && \
     rm -rf /opt/conda/pkgs/click-8.2.1-* \
            /opt/conda/pkgs/idna-3.11-* \
            /opt/conda/pkgs/pip-26.0.1-* \
-           /opt/conda/pkgs/python-dotenv-1.2.1-* \
-           /opt/conda/pkgs/pydantic-settings-2.12.0-*
+           /opt/conda/pkgs/python-dotenv-1.2.1-*

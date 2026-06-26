@@ -4,10 +4,9 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 # PyJWT>=2.13.0: pinned transitive dep brought in by the base image; fixes GHSA-jq35-7prp-9v3f and GHSA-993g-76c3-p5m4.
 # py-rattler>=0.24.0: pinned transitive dep of base conda tooling; brought in by base image, fixes GHSA-q53q-5r4j-5729.
 # cryptography>=48.0.1: pinned transitive dep brought in by the base image; fixes GHSA-537c-gmf6-5ccf.
-# pydantic-settings>=2.14.2: pinned transitive dep of anaconda-auth brought in by the base image; fixes GHSA-4xgf-cpjx-pc3j.
-RUN conda install -n ptca -c conda-forge -q -y 'pip>=26.1' && \
-    conda install -n base -c conda-forge -q -y 'pip>=26.1' 'conda=26.3.2' 'pydantic-settings>=2.14.2' && \
-    conda run -n base python -m pip install --upgrade --no-cache-dir --root-user-action=ignore \
+RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' && \
+    conda install -n base -c conda-forge -y 'pip>=26.1' 'conda=26.3.2' && \
+    conda run -n base python -m pip install --upgrade --no-cache-dir \
         'python-dotenv>=1.2.2' \
         'urllib3>=2.7.0' \
         'idna>=3.15' \
@@ -16,7 +15,7 @@ RUN conda install -n ptca -c conda-forge -q -y 'pip>=26.1' && \
         'PyJWT>=2.13.0' \
         'py-rattler>=0.24.0' \
         'cryptography>=48.0.1' && \
-    conda run -n ptca python -m pip install --upgrade --no-cache-dir --root-user-action=ignore \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir \
         'urllib3>=2.7.0' \
         'idna>=3.15' \
         'cryptography>=48.0.1' && \
@@ -26,8 +25,8 @@ RUN conda install -n ptca -c conda-forge -q -y 'pip>=26.1' && \
 # Install pip dependencies (runs in default PTCA conda env)
 COPY requirements.txt .
 # pyarrow>=23.0.1: pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg.
-RUN pip install -r requirements.txt --no-cache-dir --root-user-action=ignore && \
-    pip install --upgrade --no-cache-dir --root-user-action=ignore --no-deps 'pyarrow>=23.0.1'
+RUN pip install -r requirements.txt --no-cache-dir && \
+    pip install --upgrade --no-cache-dir --no-deps 'pyarrow>=23.0.1'
 
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
