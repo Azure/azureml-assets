@@ -45,6 +45,7 @@ RUN conda install -n ptca -y -c conda-forge --freeze-installed 'pip=26.1.1' \
 # urllib3 is pulled by conda/requests-style tooling and must be >=2.7.0 for
 # GHSA-qccp-gfcp-xxvc and GHSA-mf9v-mfxr-j63j.
 # cryptography is brought in by the base image; fixes GHSA-537c-gmf6-5ccf.
+# pydantic-settings: pinned transitive dep of ACPT base image; brought in by base image, fixes GHSA-4xgf-cpjx-pc3j.
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
     'urllib3>=2.7.0,<3' \
     'idna>=3.15' \
@@ -52,7 +53,8 @@ RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
     'python-dotenv>=1.2.2' \
     'aiohttp>=3.14.0' \
     'PyJWT>=2.13.0' \
-    'cryptography>=48.0.1'
+    'cryptography>=48.0.1' \
+    'pydantic-settings>=2.14.2'
 
 # aiohttp is also present in the ptca env (GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8).
 # pyarrow <23.0.1 is vulnerable (GHSA-rgxp-2hwp-jwgg).

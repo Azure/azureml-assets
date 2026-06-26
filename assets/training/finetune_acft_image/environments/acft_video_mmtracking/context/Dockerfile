@@ -72,3 +72,6 @@ RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' 'click>=8.3.3' 'idna>
 # Both are transitive deps with no parent pinning a safe floor.
 RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir 'PyJWT>=2.13.0' \
  && pip install --no-cache-dir 'pyarrow>=23.0.1'
+
+# pydantic-settings: pinned transitive dep in base ACPT image; fixes GHSA-4xgf-cpjx-pc3j.
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'pydantic-settings==2.14.2'
