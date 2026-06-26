@@ -13,7 +13,6 @@ dependencies:
   - azure-storage-blob==12.14.1
   - Pillow
   - pycairo==1.20.1
-  - pyarrow==23.0.1
   - pydicom
   - python-rle==0.0.3
   # Pinning setuptools to avoid import issue with azureml-core as temp workaround. This can be removed once azureml-core is updated to remove the dependency on pkg_resources.
