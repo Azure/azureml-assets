@@ -54,8 +54,6 @@ RUN conda install -n ptca -c conda-forge -y 'pip>=26.1.1' 'setuptools>=82.0.1' &
 # loose floors as of 2026-05-25, so these direct floors are required:
 # setuptools>=82.0.1: conda 26.3.2 requires setuptools>=60.0.0 only.
 # python-dotenv>=1.2.2: pydantic-settings 2.14.1 requires >=0.21.0.
-# pydantic-settings>=2.14.2: pinned transitive dep of anaconda-auth; brought
-#   in by the base image, fixes GHSA-4xgf-cpjx-pc3j.
 # urllib3>=2.7.0: requests 2.34.2 requires <3,>=1.26.
 # idna>=3.15: requests 2.34.2 requires <4,>=2.5.
 # click>=8.3.3: typer 0.25.1 requires >=8.2.1; mlflow-skinny 3.12.0 requires
@@ -66,7 +64,7 @@ RUN conda install -n ptca -c conda-forge -y 'pip>=26.1.1' 'setuptools>=82.0.1' &
 # PyJWT>=2.13.0: transitive dep from the base image; fixes GHSA-jq35-7prp-9v3f
 #   and GHSA-993g-76c3-p5m4.
 RUN conda run -n base python -m pip install --upgrade \
-    'setuptools>=82.0.1' 'python-dotenv>=1.2.2' 'pydantic-settings>=2.14.2' \
+    'setuptools>=82.0.1' 'python-dotenv>=1.2.2' \
     'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.0' \
     'cryptography>=48.0.1' 'PyJWT>=2.13.0'
 

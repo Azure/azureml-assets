@@ -22,7 +22,6 @@ dependencies:
   - azureml-automl-core==1.62.0.post3
   - azureml-automl-runtime==1.62.0.post1
   - azureml-defaults==1.62.0
-  - pydantic-settings>=2.14.2  # pinned transitive dep of azureml-defaults/azureml-inference-server-http; fixes GHSA-4xgf-cpjx-pc3j
   - azureml-interpret==1.62.0
   - azureml-dataprep>=2.24.4
   - azure-identity>=1.16.1

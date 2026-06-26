@@ -166,9 +166,6 @@ RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-d
 # cryptography>=48.0.1 (GHSA-537c-gmf6-5ccf): cryptography 46.0.7 is shipped in
 #   the base conda env (py3.13) of the ACPT base image; explicit override required
 #   until the base image is rebuilt with a patched floor.
-# pydantic-settings>=2.14.2 (GHSA-4xgf-cpjx-pc3j): pydantic-settings 2.12.0
-#   is shipped in the base conda env (py3.13) of the ACPT base image; explicit
-#   override required until the base image is rebuilt with a patched floor.
 RUN conda run -n base pip install --no-cache-dir --upgrade \
                 'python-dotenv>=1.2.2' \
                 'pip>=26.1' \
@@ -178,8 +175,7 @@ RUN conda run -n base pip install --no-cache-dir --upgrade \
                 'aiohttp>=3.14.0' \
                 'PyJWT>=2.13.0' \
                 'py-rattler>=0.24.0' \
-                'cryptography>=48.0.1' \
-                'pydantic-settings>=2.14.2'
+                'cryptography>=48.0.1'
 # Fix vendored jaraco.context (GHSA-58pv-8j8x-9vj2) and wheel (GHSA-8rrh-rw8j-w5fx) in base setuptools
 # setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced
 RUN /opt/conda/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
