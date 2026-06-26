@@ -71,8 +71,8 @@ FROM oras-${ORAS_MODE} AS oras-final
 #   in-toto-golang         >= v0.11.0   -> GHSA-pmwq-pjrm-6p5r
 #   go-git/v5              >= v5.19.0   -> GHSA-389r-gv7p-r3rp (CVE-2026-45022)
 #   go-billy/v5            >= v5.9.0    -> GHSA-m3xc-h892-ggx6 / GHSA-qw64-3x98-g7q2
-#   containerd             >= v1.7.32   -> GHSA-fqw6-gf59-qr4w (CVE-2026-46680)
-#   containerd/v2          >= v2.2.4    -> GHSA-fqw6-gf59-qr4w (CVE-2026-46680)
+#   containerd             >= v1.7.33   -> CVE-2026-47262 (QID 5014189) / CVE-2026-53488 (QID 5014196)
+#   containerd/v2          >= v2.2.5    -> CVE-2026-47262 / 50195 / 53488 / 53489 / 53492 (QID 5014189/94/96/79/92)
 FROM ubuntu:24.04 AS trivy-build
 ARG GO_VERSION
 ARG TRIVY_VERSION
@@ -92,8 +92,8 @@ RUN git clone --depth 1 --branch v${TRIVY_VERSION} https://github.com/aquasecuri
  && go get github.com/in-toto/in-toto-golang@v0.11.0 \
  && go get github.com/go-git/go-git/v5@v5.19.0 \
  && go get github.com/go-git/go-billy/v5@v5.9.0 \
- && go get github.com/containerd/containerd@v1.7.32 \
- && go get github.com/containerd/containerd/v2@v2.2.4 \
+ && go get github.com/containerd/containerd@v1.7.33 \
+ && go get github.com/containerd/containerd/v2@v2.2.5 \
  && go mod tidy \
  && CGO_ENABLED=0 GOEXPERIMENT=jsonv2 go build \
       -ldflags="-s -w -X=github.com/aquasecurity/trivy/pkg/version/app.ver=${TRIVY_VERSION}" \
