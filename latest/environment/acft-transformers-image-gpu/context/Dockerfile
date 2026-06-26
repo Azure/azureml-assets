@@ -1,4 +1,3 @@
-# PTCA image
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202606.2.v1
 
 USER root
@@ -17,7 +16,6 @@ RUN apt-get -y update && apt-get -y upgrade \
  || true \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install required packages from pypi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
@@ -70,7 +68,9 @@ RUN conda install -n ptca -y -c conda-forge --freeze-installed 'pip=26.1.1' \
 #   no parent package to upgrade — explicit override required (>=2.13.0).
 # cryptography in base conda env: pinned transitive/base-image dep brought in by the base ACPT image;
 #   base ships 46.0.7 which has GHSA-537c-gmf6-5ccf; override to 48.0.1.
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'aiohttp>=3.14.0' 'click>=8.3.3' 'idna>=3.15' 'PyJWT>=2.13.0' 'cryptography==48.0.1'
+# pydantic-settings in base conda env: pinned transitive/base-image dep brought in by the base ACPT image;
+#   base ships 2.12.0 which has GHSA-4xgf-cpjx-pc3j; override to >=2.14.2.
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'aiohttp>=3.14.0' 'click>=8.3.3' 'idna>=3.15' 'PyJWT>=2.13.0' 'cryptography==48.0.1' 'pydantic-settings>=2.14.2'
 # aiohttp in ptca env: same CVEs as base env — GHSA-jg22-mg44-37j8 and GHSA-hg6j-4rv6-33pg.
 # pyarrow in ptca env: ships 20.0.0 which has GHSA-rgxp-2hwp-jwgg; override to >=23.0.1.
 # cryptography in ptca env: pinned transitive/base-image dep brought in by the base ACPT image;
