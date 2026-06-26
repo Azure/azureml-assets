@@ -63,7 +63,7 @@ RUN conda create -q -p $AZUREML_CONDA_ENVIRONMENT_PATH \
 # - cryptography>=48.0.1 is pinned as a transitive dep brought in by the base image
 #   and its ptca conda env, fixing GHSA-537c-gmf6-5ccf.
 # - pydantic-settings>=2.14.2 is pinned as a transitive dep brought in by the
-#   base image, fixing GHSA-4xgf-cpjx-pc3j.
+#   mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04 base image, fixing GHSA-4xgf-cpjx-pc3j.
 RUN set -eux; \
     base_prefix_found=0; \
     for base_python in /opt/conda/bin/python /opt/miniconda/bin/python /opt/conda/envs/ptca/bin/python; do \
