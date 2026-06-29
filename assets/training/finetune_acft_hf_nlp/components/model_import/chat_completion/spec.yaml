@@ -8,7 +8,7 @@ is_deterministic: true
 display_name: Chat Completion Model Import
 description: Component to import PyTorch / MLFlow model. See [docs](https://aka.ms/azureml/components/chat_completion_model_import) to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/105
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/112
 
 code: ../../../src/model_selector
 
@@ -44,6 +44,13 @@ inputs:
     description: Validation status.
     mode: rw_mount
 
+  # User-provided finetune config (e.g. chat_special_tokens for ChatCompletion)
+  finetune_config_path:
+    type: uri_file
+    optional: true
+    description: Path to a JSON finetune config used to supply settings such as chat_special_tokens for ChatCompletion when finetuning a raw Hugging Face model that does not bundle a finetune config. Takes precedence over any config packaged with the model.
+    mode: ro_mount
+
 outputs:
   output_dir:
     type: uri_folder
@@ -51,5 +58,5 @@ outputs:
     mode: rw_mount
 
 command: >-
-  python model_selector.py --task_name ChatCompletion $[[--huggingface_id '${{inputs.huggingface_id}}']] $[[--pytorch_model_path '${{inputs.pytorch_model_path}}']] $[[--mlflow_model_path '${{inputs.mlflow_model_path}}']] --output_dir '${{outputs.output_dir}}'
+  python model_selector.py --task_name ChatCompletion $[[--huggingface_id '${{inputs.huggingface_id}}']] $[[--pytorch_model_path '${{inputs.pytorch_model_path}}']] $[[--mlflow_model_path '${{inputs.mlflow_model_path}}']] $[[--finetune_config_path '${{inputs.finetune_config_path}}']] --output_dir '${{outputs.output_dir}}'
 

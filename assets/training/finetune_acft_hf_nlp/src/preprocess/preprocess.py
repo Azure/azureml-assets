@@ -302,6 +302,28 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
     hf_task_runner = get_task_runner(task_name=parsed_args.task_name)()
     hf_task_runner.run_preprocess_for_finetune(parsed_args, unparsed_args)  # type: ignore
 
+    # ChatCompletion finetune loads its tokenizer from the preprocess output and calls
+    # AzuremlAutoConfig.get_model_type, which needs a model `config.json` (with `model_type`)
+    # in that folder. Saving the tokenizer does not emit the model config.json, so copy it
+    # from the model_selector output. A plain file copy avoids executing any model code.
+    model_selector_output = getattr(parsed_args, "model_selector_output", None)
+    output_config_path = Path(parsed_args.output_dir, "config.json")
+    if (
+        parsed_args.task_name == "ChatCompletion"
+        and model_selector_output
+        and not output_config_path.is_file()
+    ):
+        for candidate_config in sorted(Path(model_selector_output).rglob("config.json")):
+            try:
+                if "model_type" in json.loads(candidate_config.read_text(encoding="utf-8")):
+                    output_config_path.write_text(
+                        candidate_config.read_text(encoding="utf-8"), encoding="utf-8"
+                    )
+                    logger.info(f"Copied base model config.json to preprocess output: {candidate_config}")
+                    break
+            except Exception as config_copy_exc:
+                logger.warning(f"Could not copy config.json from {candidate_config}: {config_copy_exc}")
+
 
 @swallow_all_exceptions(time_delay=60)
 def main():
