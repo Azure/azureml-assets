@@ -1,0 +1,6 @@
+type: evaluator
+spec: spec.yaml
+test:
+  pytest:
+    enabled: true
+    conda_environment: tests/conda.yaml

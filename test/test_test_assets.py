@@ -20,10 +20,12 @@ TEST_REQUIREMENTS_FILE = SCRIPTS_DIR / "requirements.txt"
         ("good-assets-with-conda-environment", True),
         ("good-assets-with-requirements", True),
         ("bad-assets", False),
-        ("mixed-assets", False)
+        ("mixed-assets", False),
+        ("good-evaluator-with-coverage", True),
+        ("bad-evaluator-with-coverage", False)
     ]
 )
-def test_test_assets(test_subdir: str, expected: bool):
+def test_test_assets(test_subdir: str, expected: bool, tmp_path: Path):
     """Test azureml.assets.test_assets() function."""
     this_dir = Path(__file__).parent
 
@@ -40,5 +42,6 @@ def test_test_assets(test_subdir: str, expected: bool):
         this_dir / TEST_ASSETS_SCRIPT,
         "-i", this_dir / RESOURCES_DIR / test_subdir,
         "-p", this_dir / TEST_REQUIREMENTS_FILE,
+        "-r", tmp_path,
     ])
     assert (completed_process.returncode == 0) == expected

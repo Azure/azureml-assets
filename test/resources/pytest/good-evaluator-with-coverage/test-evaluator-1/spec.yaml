@@ -1,0 +1,7 @@
+type: "evaluator"
+name: "test-evaluator-1"
+version: 1
+displayName: "Test Evaluator 1"
+description: "Evaluator resource asset whose tests fully exercise its source (>=85% coverage)."
+evaluatorType: "builtin"
+evaluatorSubType: "code"
