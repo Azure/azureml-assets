@@ -84,7 +84,7 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
 # parent packages still allow the older versions, so this direct floor is needed.
 RUN pip install \
                 azureml-core==1.61.0.post4 \
-                azureml-mlflow==1.62.0.post3 \
+                azureml-mlflow==1.62.0.post4 \
                 azureml-pipeline-core==1.62.0 \
                 azureml-telemetry==1.62.0 \
                 azureml-interpret==1.62.0 \
