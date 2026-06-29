@@ -4,7 +4,7 @@ description: Environment used by HuggingFace Transformers Image Finetune
   components
 
 name: "acft-transformers-image-gpu"
-version: "85"
+version: "86"
 
 build:
   path: "context"

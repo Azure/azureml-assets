@@ -1,5 +1,5 @@
 # PTCA image
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202606.2.v1
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202606.3
 
 # Pull latest Ubuntu 22.04 security patches on each rebuild.
 # Explicit package list ensures USN-8298-1 (.NET), USN-8319-1 (libgcrypt20),
