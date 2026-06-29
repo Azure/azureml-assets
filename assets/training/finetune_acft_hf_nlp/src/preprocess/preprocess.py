@@ -168,7 +168,7 @@ def get_parser():
         "--trust_remote_code",
         type=str2bool,
         default=False,
-        help="If true, allow executing model repo code when loading the base model config to persist it. Default false.",
+        help="If true, run model repo code when loading the base model config to persist it. Default false.",
     )
 
     return parser
@@ -311,15 +311,10 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
 
     # ChatCompletion finetune loads its tokenizer from the preprocess output and calls
     # AzuremlAutoConfig.get_model_type, which needs a model `config.json` (with `model_type`)
-    # in that folder. Saving the tokenizer does not emit it, so persist the base model config
-    # to the preprocess output. trust_remote_code is False so no model repo code is executed.
+    # there. Re-save the base model config (native, trust_remote_code default false) so any
+    # auto_map to remote code is dropped and finetune resolves the type without extra files.
     model_selector_output = getattr(parsed_args, "model_selector_output", None)
-    output_config_path = Path(parsed_args.output_dir, "config.json")
-    if (
-        parsed_args.task_name == "ChatCompletion"
-        and model_selector_output
-        and not output_config_path.is_file()
-    ):
+    if parsed_args.task_name == "ChatCompletion" and model_selector_output:
         base_model_dir = next(
             (
                 cfg.parent
@@ -329,8 +324,16 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
             None,
         )
         if base_model_dir is not None:
-            AzuremlAutoConfig.from_pretrained(str(base_model_dir), trust_remote_code=getattr(parsed_args, "trust_remote_code", False)).save_pretrained(parsed_args.output_dir)
-            logger.info(f"Saved base model config.json to preprocess output: {base_model_dir}")
+            base_cfg = AzuremlAutoConfig.from_pretrained(
+                str(base_model_dir),
+                trust_remote_code=getattr(parsed_args, "trust_remote_code", False),
+            )
+            # Drop auto_map so the finetune tokenizer resolves the built-in model_type and
+            # does not need the remote configuration/modeling .py files in this folder.
+            if getattr(base_cfg, "auto_map", None):
+                base_cfg.auto_map = {}
+            base_cfg.save_pretrained(parsed_args.output_dir)
+            logger.info(f"Saved base model config.json (auto_map cleared) to preprocess output: {base_model_dir}")
 
 
 @swallow_all_exceptions(time_delay=60)
