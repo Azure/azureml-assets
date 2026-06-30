@@ -172,41 +172,49 @@ class FeaturizationPhase:
 
 def _patch_holidays(site_packages: Path) -> None:
     path = site_packages / "azureml/training/tabular/featurization/timeseries/_holidays.py"
+    old = "        mappings_cr = mappings_cr.append(mappings_cc)\n"
+    new = "        mappings_cr = pd.concat([mappings_cr, mappings_cc])\n"
     _replace_once(
         path,
-        "        mappings_cr = mappings_cr.append(mappings_cc)\n",
-        "        mappings_cr = pd.concat([mappings_cr, mappings_cc])\n",
+        old,
+        new,
         fixed_markers=("pd.concat([mappings_cr, mappings_cc])",),
     )
-    _replace_once(
-        path,
-        """                data = data.append(
+
+    old = """                data = data.append(
                     {"Name": name, "Date": newDate, "CountryOrRegion": _country, "CountryCode": _countryCode},
                     ignore_index=True,
                 )
-""",
-        """                row = pd.DataFrame(
+"""
+    new = """                row = pd.DataFrame(
                     [{"Name": name, "Date": newDate, "CountryOrRegion": _country, "CountryCode": _countryCode}]
                 )
                 data = pd.concat([data, row], ignore_index=True)
-""",
+"""
+    _replace_once(
+        path,
+        old,
+        new,
         fixed_markers=(
             "data = pd.concat([data, row], ignore_index=True)",
             "{\"Name\": name, \"Date\": newDate, \"CountryOrRegion\": _country, \"CountryCode\": _countryCode}",
         ),
     )
-    _replace_once(
-        path,
-        """                current_df = current_df.append(
+
+    old = """                current_df = current_df.append(
                     {"Date": temp_dts[i], "CountryOrRegion": item, "gapFormer": gapF, "gapNext": gapN},
                     ignore_index=True,
                 )
-""",
-        """                row = pd.DataFrame(
+"""
+    new = """                row = pd.DataFrame(
                     [{"Date": temp_dts[i], "CountryOrRegion": item, "gapFormer": gapF, "gapNext": gapN}]
                 )
                 current_df = pd.concat([current_df, row], ignore_index=True)
-""",
+"""
+    _replace_once(
+        path,
+        old,
+        new,
         fixed_markers=(
             "current_df = pd.concat([current_df, row], ignore_index=True)",
             "{\"Date\": temp_dts[i], \"CountryOrRegion\": item, \"gapFormer\": gapF, \"gapNext\": gapN}",
@@ -220,10 +228,12 @@ def _patch_public_holidays_offline(site_packages: Path) -> None:
         print(f"{path}: not installed, skipping optional Open Datasets holiday patch")
         return
 
+    old = "        mappings_cr = mappings_cr.append(mappings_cc)\n"
+    new = "        mappings_cr = pd.concat([mappings_cr, mappings_cc])\n"
     _replace_once(
         path,
-        "        mappings_cr = mappings_cr.append(mappings_cc)\n",
-        "        mappings_cr = pd.concat([mappings_cr, mappings_cc])\n",
+        old,
+        new,
         fixed_markers=("pd.concat([mappings_cr, mappings_cc])",),
     )
 
@@ -234,30 +244,35 @@ def _patch_public_holidays_utils(site_packages: Path) -> None:
         print(f"{path}: not installed, skipping optional Open Datasets utility patch")
         return
 
-    _replace_once(
-        path,
-        """            data = data.append({'Name': name, 'Date': newDate, 'CountryOrRegion': _countryOrRegion,
+    old = """            data = data.append({'Name': name, 'Date': newDate, 'CountryOrRegion': _countryOrRegion,
                                 'CountryCode': _countryOrRegionCode}, ignore_index=True)
-""",
-        """            row = pd.DataFrame([{'Name': name, 'Date': newDate, 'CountryOrRegion': _countryOrRegion,
+"""
+    new = """            row = pd.DataFrame([{'Name': name, 'Date': newDate, 'CountryOrRegion': _countryOrRegion,
                                  'CountryCode': _countryOrRegionCode}])
             data = pd.concat([data, row], ignore_index=True)
-""",
+"""
+    _replace_once(
+        path,
+        old,
+        new,
         fixed_markers=(
             "data = pd.concat([data, row], ignore_index=True)",
             "'CountryOrRegion': _countryOrRegion",
             "'CountryCode': _countryOrRegionCode",
         ),
     )
-    _replace_once(
-        path,
-        """            current_df = current_df.append({'Date': temp_dts[i], 'CountryOrRegion': item,
+
+    old = """            current_df = current_df.append({'Date': temp_dts[i], 'CountryOrRegion': item,
                                             'gapFormer': gapF, 'gapNext': gapN}, ignore_index=True)
-""",
-        """            row = pd.DataFrame([{'Date': temp_dts[i], 'CountryOrRegion': item,
+"""
+    new = """            row = pd.DataFrame([{'Date': temp_dts[i], 'CountryOrRegion': item,
                                  'gapFormer': gapF, 'gapNext': gapN}])
             current_df = pd.concat([current_df, row], ignore_index=True)
-""",
+"""
+    _replace_once(
+        path,
+        old,
+        new,
         fixed_markers=(
             "current_df = pd.concat([current_df, row], ignore_index=True)",
             "'Date': temp_dts[i]",
@@ -269,16 +284,21 @@ def _patch_public_holidays_utils(site_packages: Path) -> None:
 
 def _patch_freq_aggregator(site_packages: Path) -> None:
     path = site_packages / "azureml/training/tabular/timeseries/_freq_aggregator.py"
+    old = "                    X_one = pd.DataFrame([pad], columns=X_one.columns).append(X_one)\n"
+    new = "                    X_one = pd.concat([pd.DataFrame([pad], columns=X_one.columns), X_one])\n"
     _replace_once(
         path,
-        "                    X_one = pd.DataFrame([pad], columns=X_one.columns).append(X_one)\n",
-        "                    X_one = pd.concat([pd.DataFrame([pad], columns=X_one.columns), X_one])\n",
+        old,
+        new,
         fixed_markers=("pd.concat([pd.DataFrame([pad], columns=X_one.columns), X_one])",),
     )
+
+    old = "    return cast(int, (date_grid[-1] - date_grid[0]).delta)\n"
+    new = "    return cast(int, (date_grid[-1] - date_grid[0]).value)\n"
     _replace_once(
         path,
-        "    return cast(int, (date_grid[-1] - date_grid[0]).delta)\n",
-        "    return cast(int, (date_grid[-1] - date_grid[0]).value)\n",
+        old,
+        new,
         fixed_markers=("return cast(int, (date_grid[-1] - date_grid[0]).value)",),
     )
 
