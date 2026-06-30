@@ -1,13 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Patch AutoML runtime sparse-data helpers for pandas 2 compatibility.
+"""Patch AutoML runtime helpers for pandas 2 compatibility.
 
 The AutoML 1.62.0 runtime still references the pandas 1.x
 ``pd.SparseDataFrame`` and ``pd.SparseSeries`` attributes. The ai-ml-automl
 image intentionally force-installs pandas 2.0.0 for security reasons, where
-those attributes no longer exist. Patch only the affected runtime files in
-place until the runtime wheels contain the fix.
+those attributes no longer exist. The forecasting runtime also uses removed
+``append`` APIs and ``Timedelta.delta``. Patch only the affected runtime files
+in place until the runtime wheels contain the fix.
 """
 
 import py_compile
@@ -169,14 +170,151 @@ class FeaturizationPhase:
     )
 
 
+def _patch_holidays(site_packages: Path) -> None:
+    path = site_packages / "azureml/training/tabular/featurization/timeseries/_holidays.py"
+    old = "        mappings_cr = mappings_cr.append(mappings_cc)\n"
+    new = "        mappings_cr = pd.concat([mappings_cr, mappings_cc])\n"
+    _replace_once(
+        path,
+        old,
+        new,
+        fixed_markers=("pd.concat([mappings_cr, mappings_cc])",),
+    )
+
+    old = """                data = data.append(
+                    {"Name": name, "Date": newDate, "CountryOrRegion": _country, "CountryCode": _countryCode},
+                    ignore_index=True,
+                )
+"""
+    new = """                row = pd.DataFrame(
+                    [{"Name": name, "Date": newDate, "CountryOrRegion": _country, "CountryCode": _countryCode}]
+                )
+                data = pd.concat([data, row], ignore_index=True)
+"""
+    _replace_once(
+        path,
+        old,
+        new,
+        fixed_markers=(
+            "data = pd.concat([data, row], ignore_index=True)",
+            "{\"Name\": name, \"Date\": newDate, \"CountryOrRegion\": _country, \"CountryCode\": _countryCode}",
+        ),
+    )
+
+    old = """                current_df = current_df.append(
+                    {"Date": temp_dts[i], "CountryOrRegion": item, "gapFormer": gapF, "gapNext": gapN},
+                    ignore_index=True,
+                )
+"""
+    new = """                row = pd.DataFrame(
+                    [{"Date": temp_dts[i], "CountryOrRegion": item, "gapFormer": gapF, "gapNext": gapN}]
+                )
+                current_df = pd.concat([current_df, row], ignore_index=True)
+"""
+    _replace_once(
+        path,
+        old,
+        new,
+        fixed_markers=(
+            "current_df = pd.concat([current_df, row], ignore_index=True)",
+            "{\"Date\": temp_dts[i], \"CountryOrRegion\": item, \"gapFormer\": gapF, \"gapNext\": gapN}",
+        ),
+    )
+
+
+def _patch_public_holidays_offline(site_packages: Path) -> None:
+    path = site_packages / "azureml/opendatasets/_public_holidays_offline.py"
+    if not path.exists():
+        print(f"{path}: not installed, skipping optional Open Datasets holiday patch")
+        return
+
+    old = "        mappings_cr = mappings_cr.append(mappings_cc)\n"
+    new = "        mappings_cr = pd.concat([mappings_cr, mappings_cc])\n"
+    _replace_once(
+        path,
+        old,
+        new,
+        fixed_markers=("pd.concat([mappings_cr, mappings_cc])",),
+    )
+
+
+def _patch_public_holidays_utils(site_packages: Path) -> None:
+    path = site_packages / "azureml/opendatasets/_utils/public_holidays_utils.py"
+    if not path.exists():
+        print(f"{path}: not installed, skipping optional Open Datasets utility patch")
+        return
+
+    old = """            data = data.append({'Name': name, 'Date': newDate, 'CountryOrRegion': _countryOrRegion,
+                                'CountryCode': _countryOrRegionCode}, ignore_index=True)
+"""
+    new = """            row = pd.DataFrame([{'Name': name, 'Date': newDate, 'CountryOrRegion': _countryOrRegion,
+                                 'CountryCode': _countryOrRegionCode}])
+            data = pd.concat([data, row], ignore_index=True)
+"""
+    _replace_once(
+        path,
+        old,
+        new,
+        fixed_markers=(
+            "data = pd.concat([data, row], ignore_index=True)",
+            "'CountryOrRegion': _countryOrRegion",
+            "'CountryCode': _countryOrRegionCode",
+        ),
+    )
+
+    old = """            current_df = current_df.append({'Date': temp_dts[i], 'CountryOrRegion': item,
+                                            'gapFormer': gapF, 'gapNext': gapN}, ignore_index=True)
+"""
+    new = """            row = pd.DataFrame([{'Date': temp_dts[i], 'CountryOrRegion': item,
+                                 'gapFormer': gapF, 'gapNext': gapN}])
+            current_df = pd.concat([current_df, row], ignore_index=True)
+"""
+    _replace_once(
+        path,
+        old,
+        new,
+        fixed_markers=(
+            "current_df = pd.concat([current_df, row], ignore_index=True)",
+            "'Date': temp_dts[i]",
+            "'gapFormer': gapF",
+            "'gapNext': gapN",
+        ),
+    )
+
+
+def _patch_freq_aggregator(site_packages: Path) -> None:
+    path = site_packages / "azureml/training/tabular/timeseries/_freq_aggregator.py"
+    old = "                    X_one = pd.DataFrame([pad], columns=X_one.columns).append(X_one)\n"
+    new = "                    X_one = pd.concat([pd.DataFrame([pad], columns=X_one.columns), X_one])\n"
+    _replace_once(
+        path,
+        old,
+        new,
+        fixed_markers=("pd.concat([pd.DataFrame([pad], columns=X_one.columns), X_one])",),
+    )
+
+    old = "    return cast(int, (date_grid[-1] - date_grid[0]).delta)\n"
+    new = "    return cast(int, (date_grid[-1] - date_grid[0]).value)\n"
+    _replace_once(
+        path,
+        old,
+        new,
+        fixed_markers=("return cast(int, (date_grid[-1] - date_grid[0]).value)",),
+    )
+
+
 def main() -> None:
-    """Apply the AutoML pandas 2 sparse compatibility patch."""
+    """Apply the AutoML pandas 2 compatibility patch."""
     site_packages = _site_packages()
     print(f"Patching AutoML runtime under {site_packages}")
     _patch_runtime_utilities(site_packages)
     _patch_lagging_transformer(site_packages)
     _patch_featurization_phase(site_packages)
-    print("AutoML pandas 2 sparse compatibility patch complete.")
+    _patch_holidays(site_packages)
+    _patch_public_holidays_offline(site_packages)
+    _patch_public_holidays_utils(site_packages)
+    _patch_freq_aggregator(site_packages)
+    print("AutoML pandas 2 compatibility patch complete.")
 
 
 if __name__ == "__main__":
