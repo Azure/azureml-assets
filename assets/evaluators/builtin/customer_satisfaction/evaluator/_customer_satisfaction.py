@@ -148,15 +148,12 @@ class ConversationValidator(ValidatorInterface):
     error_target: ErrorTarget
 
     UNSUPPORTED_TOOLS: List[str] = [
-        "azure_ai_search",
         "bing_custom_search",
         "bing_grounding",
         "browser_automation",
         "code_interpreter_call",
         "computer_call",
-        "azure_fabric",
         "openapi_call",
-        "sharepoint_grounding",
         "web_search"
     ]
 
