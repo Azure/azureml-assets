@@ -815,7 +815,7 @@ class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         model_id = stage1_output.get("model_id", "") if stage1_output else ""
 
         # If stage 1 was skipped (conversationIncomplete = true), return not applicable
-        if str(stage1_parsed.get("status", "")).strip().lower() == "skipped":
+        if str(stage1_parsed.get("status", "completed")).strip().lower() == "skipped":
             return self._return_not_applicable_result(
                 "Conversation is incomplete or consists only of greetings/closings with no task to evaluate.",
             )
