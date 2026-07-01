@@ -10,8 +10,10 @@ import pytest
 from azure.ai.evaluation._exceptions import EvaluationException
 
 from .base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
+from .base_evaluator_behavior_test import _TurnLevelUtilE2ETests
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
+from .base_validator_unit_test import BaseValidatorUnitTest
 from ...builtin.tool_call_success.evaluator._tool_call_success import (
     ConversationValidator,
     ExtendedErrorTarget,
@@ -25,7 +27,7 @@ from ...builtin.tool_call_success.evaluator._tool_call_success import (
 
 @pytest.mark.unittest
 class TestToolCallSuccessEvaluatorBehavior(
-    BaseToolsEvaluatorBehaviorTest, BaseToolEvaluationTest
+    BaseToolsEvaluatorBehaviorTest, BaseToolEvaluationTest, _TurnLevelUtilE2ETests
 ):
     """
     Behavioral tests for Tool Call Success Evaluator.
@@ -105,6 +107,14 @@ class TestToolCallSuccessEvaluatorBehavior(
     requires_query = False
 
     MINIMAL_RESPONSE = BaseToolsEvaluatorBehaviorTest.tool_results_without_arguments
+
+    def test_skipped_llm_status_returns_not_applicable(self):
+        """Flow output with status='skipped' yields a not-applicable result, not a crash."""
+        self.run_skipped_llm_status_not_applicable_test()
+
+    def test_intermediate_response_returns_not_applicable(self):
+        """A response ending in an unresolved function_call is treated as not-applicable."""
+        self.run_intermediate_response_not_applicable_test()
 
     # --- Phase 2 overrides: these three tools used to be unsupported but TCS now
     # accepts them, so we override the base-class tests (which still branch to
@@ -888,3 +898,10 @@ class TestRealWorldSharePointTrace:
         assert body == raw_json
         # And it's still valid JSON the judge can parse.
         assert json.loads(body) == self._SHAREPOINT_PAYLOAD
+
+
+@pytest.mark.unittest
+class TestToolCallSuccessValidatorUnit(BaseValidatorUnitTest):
+    """Low-level unit tests for tool_call_success's repeated validators, utils and methods."""
+
+    evaluator_class = ToolCallSuccessEvaluator

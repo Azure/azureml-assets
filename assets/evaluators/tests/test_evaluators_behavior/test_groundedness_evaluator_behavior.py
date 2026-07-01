@@ -11,9 +11,14 @@ from unittest.mock import MagicMock
 from azure.ai.evaluation import AzureOpenAIModelConfiguration
 from azure.ai.evaluation._exceptions import EvaluationException
 
-from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
+from .base_evaluator_behavior_test import (
+    BaseEvaluatorBehaviorTest,
+    _TurnLevelUtilE2ETests,
+    _MessagesUtilE2ETests,
+)
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
+from .base_validator_unit_test import BaseValidatorUnitTest
 from ...builtin.groundedness.evaluator._groundedness import (
     GroundednessEvaluator,
     EvaluationLevel,
@@ -21,13 +26,14 @@ from ...builtin.groundedness.evaluator._groundedness import (
 )
 from ..common.evaluator_mock_config import (
     get_flow_side_effect_for_evaluator,
-    create_none_score_flow_side_effect,
-    assert_none_score_result,
+    run_none_score_not_applicable,
 )
 
 
 @pytest.mark.unittest
-class TestGroundednessEvaluatorBehavior(BaseEvaluatorBehaviorTest, BaseToolEvaluationTest):
+class TestGroundednessEvaluatorBehavior(
+    BaseEvaluatorBehaviorTest, BaseToolEvaluationTest, _TurnLevelUtilE2ETests, _MessagesUtilE2ETests
+):
     """
     Behavioral tests for Groundedness Evaluator.
 
@@ -652,25 +658,26 @@ class TestGroundednessNoneScoreHandling:
 
     def test_turn_level_none_score_does_not_crash(self):
         """Turn-level eval with score=None from _flow should not raise TypeError."""
-        evaluator = _create_mocked_groundedness_evaluator()
-        evaluator._flow = MagicMock(side_effect=create_none_score_flow_side_effect())
         # Turn-level path: response + context, no query
-        result = evaluator(
+        run_none_score_not_applicable(
+            GroundednessEvaluator,
+            "groundedness",
             response="The sky is blue.",
             context="The sky appears blue due to Rayleigh scattering.",
         )
-        assert_none_score_result(result, "groundedness")
 
     def test_conversation_level_none_score_does_not_crash(self):
         """Conversation-level eval with score=None should not crash."""
-        evaluator = _create_mocked_groundedness_evaluator()
-        evaluator._multi_turn_flow = MagicMock(
-            side_effect=create_none_score_flow_side_effect(
-                reason="No agent responses to evaluate."
-            )
+        run_none_score_not_applicable(
+            GroundednessEvaluator, "groundedness", messages=VALID_GROUNDEDNESS_MESSAGES
         )
-        result = evaluator(messages=VALID_GROUNDEDNESS_MESSAGES)
-        assert_none_score_result(result, "groundedness")
 
 
 # endregion
+
+
+@pytest.mark.unittest
+class TestGroundednessValidatorUnit(BaseValidatorUnitTest):
+    """Low-level unit tests for groundedness's repeated validators, utils and methods."""
+
+    evaluator_class = GroundednessEvaluator

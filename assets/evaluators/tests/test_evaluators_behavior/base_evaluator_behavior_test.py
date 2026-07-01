@@ -266,6 +266,13 @@ class BaseEvaluatorBehaviorTest(BasePromptyEvaluatorRunner):
     INVALID_QUERY_AS_STRING: str = json.dumps(INVALID_QUERY)
 
     INVALID_RESPONSE_AS_STRING: str = json.dumps(INVALID_RESPONSE)
+
+    # Generic multi-turn conversation for conversation-level (messages) end-to-end tests.
+    # Evaluators that do not support a messages input skip the corresponding test.
+    VALID_MESSAGES: List[Dict[str, Any]] = [
+        {"role": "user", "content": [{"type": "text", "text": "What is the capital of France?"}]},
+        {"role": "assistant", "content": [{"type": "text", "text": "The capital of France is Paris."}]},
+    ]
     # endregion
 
     # region Intermediate/preprocessing test data
@@ -901,3 +908,70 @@ class BaseEvaluatorBehaviorTest(BasePromptyEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "MCP Approval Full - Preprocessed")
         self.assert_pass(result_data)
+
+
+# ==================== END-TO-END UTIL TEST MIXINS (mocked flow) ====================
+# These mixins call the evaluator end-to-end with every flow mocked, then inspect what
+# the flow actually received, verifying that the shared util methods run correctly
+# through the public call path. Each mixin is wired ONLY into the evaluator test classes
+# whose evaluator supports that input shape, so the tests run exactly where they apply
+# (no capability flags and no runtime skips). Combine a mixin with BaseEvaluatorBehaviorTest,
+# which supplies the shared test data and the _run_and_capture_flow_input helper.
+
+
+class _TurnLevelUtilE2ETests:
+    """Mixin: end-to-end util tests for a turn-level (query/response) flow call.
+
+    Covers ``reformat_agent_response`` / ``reformat_conversation_history``,
+    ``_preprocess_messages`` / ``_drop_mcp_approval_messages`` /
+    ``_normalize_function_call_types``, and the ``_is_intermediate_response``
+    short-circuit. Wire into evaluators that reach the LLM flow from a bare
+    query/response call; do NOT wire into evaluators that require extra inputs (e.g.
+    ``tool_definitions``) and short-circuit before any flow call.
+    """
+
+    def _turn_level_call_kwargs(self, response):
+        """Build turn-level call kwargs for ``response``, adding query only when required."""
+        call_kwargs = {"response": response}
+        if self.requires_query:
+            call_kwargs["query"] = self.VALID_QUERY
+        return call_kwargs
+
+    def test_util_query_response_reach_flow_e2e(self):
+        """End-to-end: query/response content is reformatted/preprocessed and reaches the flow."""
+        _, captured = self._run_and_capture_flow_input(**self._turn_level_call_kwargs(self.VALID_RESPONSE))
+        blob = json.dumps(captured, default=str)
+        assert "Seattle" in blob, "response content did not reach the flow"
+        if self.requires_query:
+            assert "your_email@example.com" in blob, "query content did not reach the flow"
+
+    def test_util_preprocess_drops_mcp_from_flow_e2e(self):
+        """End-to-end: MCP approval messages are dropped before the response reaches the flow."""
+        _, captured = self._run_and_capture_flow_input(
+            **self._turn_level_call_kwargs(self.MCP_APPROVAL_FULL_RESPONSE)
+        )
+        blob = json.dumps(captured, default=str)
+        assert "mcp_approval" not in blob, "MCP approval messages were not dropped before the flow"
+        assert "Azure Functions" in blob, "post-approval content did not reach the flow"
+
+    def test_util_intermediate_response_skips_flow_e2e(self):
+        """End-to-end: an intermediate (function_call-only) response short-circuits before any flow call."""
+        results, captured = self._run_and_capture_flow_input(
+            **self._turn_level_call_kwargs(self.FUNCTION_CALL_ONLY_RESPONSE)
+        )
+        assert not captured, "flow should not be called for an intermediate (function_call-only) response"
+        assert isinstance(results, dict)
+
+
+class _MessagesUtilE2ETests:
+    """Mixin: end-to-end conversation-level (messages) util test.
+
+    Covers ``serialize_messages`` / ``simplify_messages``. Wire into evaluators that
+    accept a conversation-level ``messages`` input.
+    """
+
+    def test_util_messages_serialized_reach_flow_e2e(self):
+        """End-to-end: a messages conversation is serialized and reaches the multi-turn flow."""
+        _, captured = self._run_and_capture_flow_input(messages=self.VALID_MESSAGES)
+        blob = json.dumps(captured, default=str)
+        assert "Paris" in blob, "serialized conversation content did not reach the flow"

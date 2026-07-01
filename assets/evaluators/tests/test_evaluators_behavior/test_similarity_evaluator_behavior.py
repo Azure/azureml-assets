@@ -4,14 +4,10 @@
 """Behavioral tests for Similarity Evaluator."""
 
 import pytest
-from unittest.mock import MagicMock
+from .base_validator_unit_test import BaseValidatorUnitTest
 from ...builtin.similarity.evaluator._similarity import SimilarityEvaluator
 from ..common import BasePromptyEvaluatorRunner
-from ..common.evaluator_mock_config import (
-    create_none_score_flow_side_effect,
-    create_mocked_evaluator,
-    assert_none_score_result,
-)
+from ..common.evaluator_mock_config import run_none_score_not_applicable
 
 
 @pytest.mark.unittest
@@ -562,14 +558,20 @@ class TestSimilarityNoneScoreHandling:
 
     def test_turn_level_none_score_does_not_crash(self):
         """Turn-level eval with score=None from _flow should not raise TypeError."""
-        evaluator = create_mocked_evaluator(SimilarityEvaluator, "similarity")
-        evaluator._flow = MagicMock(side_effect=create_none_score_flow_side_effect())
-        result = evaluator(
+        run_none_score_not_applicable(
+            SimilarityEvaluator,
+            "similarity",
             query="What is the role of ribosomes?",
             response="Ribosomes are responsible for protein synthesis.",
             ground_truth="Ribosomes are cellular structures responsible for protein synthesis.",
         )
-        assert_none_score_result(result, "similarity")
 
 
 # endregion
+
+
+@pytest.mark.unittest
+class TestSimilarityValidatorUnit(BaseValidatorUnitTest):
+    """Low-level unit tests for similarity's repeated validators, utils and methods."""
+
+    evaluator_class = SimilarityEvaluator

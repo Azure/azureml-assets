@@ -6,7 +6,28 @@
 import pytest
 import math
 from ..common.base_prompty_evaluator_runner import BasePromptyEvaluatorRunner
+from ..common.evaluator_mock_config import (
+    run_none_score_not_applicable,
+    run_intermediate_response_not_applicable,
+)
+from .base_validator_unit_test import BaseValidatorUnitTest
 from ...builtin.response_completeness.evaluator._response_completeness import ResponseCompletenessEvaluator
+
+# Intermediate response whose last content item is a function_call (agent has not yet produced a final answer).
+INTERMEDIATE_RESPONSE = [
+    {
+        "run_id": "",
+        "role": "assistant",
+        "content": [
+            {
+                "type": "function_call",
+                "tool_call_id": "call_test",
+                "name": "get_weather",
+                "arguments": {"city": "Seattle"},
+            }
+        ],
+    }
+]
 
 
 @pytest.mark.unittest
@@ -533,3 +554,43 @@ class TestResponseCompletenessEvaluatorBehavior(BasePromptyEvaluatorRunner):
 
         result_data = self._extract_and_print_result(results, "ground-truth-as-list")
         self.assert_pass_or_fail(result_data)
+
+
+# region Not-applicable handling tests (util-fix regression)
+
+@pytest.mark.unittest
+class TestResponseCompletenessNotApplicableHandling:
+    """Regression tests for the not-applicable paths added to ``_do_eval``.
+
+    Covers the ``_return_not_applicable_result`` / ``math.isnan`` fix (LLM
+    ``status='skipped'`` with ``score=None``) and the ``_is_intermediate_response``
+    rejection, neither of which is exercised by the main valid-input tests.
+    """
+
+    def test_skipped_status_returns_not_applicable(self):
+        """LLM status='skipped' (score=None) yields not_applicable instead of crashing on math.isnan(None)."""
+        run_none_score_not_applicable(
+            ResponseCompletenessEvaluator,
+            "response_completeness",
+            response="Python is a programming language created by Guido van Rossum.",
+            ground_truth="Python is a programming language created by Guido van Rossum.",
+        )
+
+    def test_intermediate_response_returns_not_applicable(self):
+        """An intermediate response (trailing function_call) is skipped as not_applicable before the LLM call."""
+        run_intermediate_response_not_applicable(
+            ResponseCompletenessEvaluator,
+            "response_completeness",
+            response=INTERMEDIATE_RESPONSE,
+            ground_truth="The weather in Seattle is rainy.",
+        )
+
+
+# endregion
+
+
+@pytest.mark.unittest
+class TestResponseCompletenessValidatorUnit(BaseValidatorUnitTest):
+    """Low-level unit tests for response_completeness's repeated validators, utils and methods."""
+
+    evaluator_class = ResponseCompletenessEvaluator

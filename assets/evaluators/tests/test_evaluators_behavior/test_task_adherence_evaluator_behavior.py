@@ -12,18 +12,25 @@ from azure.ai.evaluation import AzureOpenAIModelConfiguration
 from azure.ai.evaluation._exceptions import EvaluationException
 
 from .base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
+from .base_evaluator_behavior_test import _TurnLevelUtilE2ETests, _MessagesUtilE2ETests
 from .base_tool_evaluation_test import BaseToolEvaluationTest
+from .base_validator_unit_test import BaseValidatorUnitTest
 from . import common_tool_test_data as data
 from ...builtin.task_adherence.evaluator._task_adherence import (
     TaskAdherenceEvaluator,
     EvaluationLevel,
     serialize_messages,
 )
-from ..common.evaluator_mock_config import get_flow_side_effect_for_evaluator
+from ..common.evaluator_mock_config import (
+    get_flow_side_effect_for_evaluator,
+    run_none_score_not_applicable,
+)
 
 
 @pytest.mark.unittest
-class TestTaskAdherenceEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, BaseToolEvaluationTest):
+class TestTaskAdherenceEvaluatorBehavior(
+    BaseToolsEvaluatorBehaviorTest, BaseToolEvaluationTest, _TurnLevelUtilE2ETests, _MessagesUtilE2ETests
+):
     """
     Behavioral tests for Task Adherence Evaluator.
 
@@ -572,3 +579,38 @@ class TestTaskAdherenceSerializeMessages:
 
 
 # endregion
+
+
+# region None score handling tests
+
+
+@pytest.mark.unittest
+class TestTaskAdherenceNoneScoreHandling:
+    """Regression tests for None-score handling in _do_eval (math.isnan(None) fix).
+
+    When the flow returns a skipped/None score, _do_eval must return the standardized
+    not-applicable result instead of crashing on math.isnan(None).
+    """
+
+    def test_turn_level_none_score_does_not_crash(self):
+        """Turn-level eval with score=None from _flow returns not-applicable."""
+        run_none_score_not_applicable(
+            TaskAdherenceEvaluator,
+            "task_adherence",
+            query="Plan a trip to Paris.",
+            response="Here is your itinerary.",
+        )
+
+    def test_conversation_level_none_score_does_not_crash(self):
+        """Conversation-level eval with score=None from _multi_turn_flow returns not-applicable."""
+        run_none_score_not_applicable(TaskAdherenceEvaluator, "task_adherence", messages=VALID_MESSAGES)
+
+
+# endregion
+
+
+@pytest.mark.unittest
+class TestTaskAdherenceValidatorUnit(BaseValidatorUnitTest):
+    """Low-level unit tests for task_adherence's repeated validators, utils and methods."""
+
+    evaluator_class = TaskAdherenceEvaluator

@@ -9,6 +9,10 @@ Tests various input scenarios: query, response, and tool_definitions.
 
 import json
 from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
+from ..common.evaluator_mock_config import (
+    create_none_score_flow_side_effect,
+    assert_none_score_result,
+)
 
 
 class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
@@ -81,6 +85,48 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
 
     INVALID_TOOL_DEFINITIONS_AS_STRING: str = json.dumps(INVALID_TOOL_DEFINITIONS)
     # endregion
+
+    def run_skipped_llm_status_not_applicable_test(self):
+        """Run a skipped-status flow output and assert a not-applicable result.
+
+        Regression: when the LLM flow returns ``status='skipped'`` (score=None), the
+        evaluator must return a standardized not-applicable result without crashing.
+        """
+        self._run_none_score_not_applicable_test(self.VALID_RESPONSE)
+
+    def run_intermediate_response_not_applicable_test(self):
+        """Run an intermediate (function_call) response and assert a not-applicable result.
+
+        Regression: a response whose final assistant turn is an unresolved function_call
+        must be treated as not-applicable rather than evaluated.
+        """
+        self._run_none_score_not_applicable_test(self.FUNCTION_CALL_ONLY_RESPONSE)
+
+    def _run_none_score_not_applicable_test(self, response):
+        """Mock the flow to a None/skipped score, run with ``response``, assert not-applicable.
+
+        Shared by the skipped-status and intermediate-response regressions, which differ
+        only in the ``response`` payload passed to the evaluator.
+        """
+        result = self._run_evaluation_with_flow_side_effect(
+            create_none_score_flow_side_effect(),
+            query=self.VALID_QUERY,
+            response=response,
+            tool_calls=self.VALID_TOOL_CALLS,
+            tool_definitions=self.VALID_TOOL_DEFINITIONS,
+        )
+        assert_none_score_result(result, self.result_key)
+
+    def test_util_tool_definitions_reach_flow_e2e(self):
+        """End-to-end: needed tool definitions are extracted (built-in + provided) and reach the flow."""
+        _, captured = self._run_and_capture_flow_input(
+            query=self.VALID_QUERY,
+            response=self.VALID_RESPONSE,
+            tool_calls=self.VALID_TOOL_CALLS,
+            tool_definitions=self.VALID_TOOL_DEFINITIONS,
+        )
+        blob = json.dumps(captured, default=str)
+        assert "fetch_weather" in blob or "send_email" in blob, "tool definitions did not reach the flow"
 
     # ==================== TOOL DEFINITIONS TESTS ====================
 

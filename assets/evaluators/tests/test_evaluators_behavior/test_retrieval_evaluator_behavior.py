@@ -4,14 +4,10 @@
 """Behavioral tests for Retrieval Evaluator — None score handling."""
 
 import pytest
-from unittest.mock import MagicMock
 
+from .base_validator_unit_test import BaseValidatorUnitTest
 from ...builtin.retrieval.evaluator._retrieval import RetrievalEvaluator
-from ..common.evaluator_mock_config import (
-    create_none_score_flow_side_effect,
-    create_mocked_evaluator,
-    assert_none_score_result,
-)
+from ..common.evaluator_mock_config import run_none_score_not_applicable
 
 
 # region None score handling tests
@@ -26,13 +22,19 @@ class TestRetrievalNoneScoreHandling:
 
     def test_turn_level_none_score_does_not_crash(self):
         """Turn-level eval with score=None from _flow should not raise TypeError."""
-        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
-        evaluator._flow = MagicMock(side_effect=create_none_score_flow_side_effect())
-        result = evaluator(
+        run_none_score_not_applicable(
+            RetrievalEvaluator,
+            "retrieval",
             query="What are the office hours?",
             context="The office is open Monday through Friday from 9 AM to 5 PM.",
         )
-        assert_none_score_result(result, "retrieval")
 
 
 # endregion
+
+
+@pytest.mark.unittest
+class TestRetrievalValidatorUnit(BaseValidatorUnitTest):
+    """Low-level unit tests for retrieval's repeated validators, utils and methods."""
+
+    evaluator_class = RetrievalEvaluator

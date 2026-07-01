@@ -6,14 +6,16 @@
 from typing import Any, Dict
 
 import pytest
-from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
+from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest, _TurnLevelUtilE2ETests
+from ..common.evaluator_mock_config import create_mocked_evaluator, build_none_score_evaluator
+from .base_validator_unit_test import BaseValidatorUnitTest
 from ...builtin.deflection_rate.evaluator._deflection_rate import (
     DeflectionRateEvaluator,
 )
 
 
 @pytest.mark.unittest
-class TestDeflectionRateEvaluatorBehavior(BaseEvaluatorBehaviorTest):
+class TestDeflectionRateEvaluatorBehavior(BaseEvaluatorBehaviorTest, _TurnLevelUtilE2ETests):
     """
     Behavioral tests for Deflection Rate Evaluator.
 
@@ -93,3 +95,46 @@ class TestDeflectionRateEvaluatorBehavior(BaseEvaluatorBehaviorTest):
             f"Score should be numeric but got type {type(score)}"
         assert score >= threshold, \
             f"Score {score} should be >= threshold {threshold}"
+
+
+# region Not-applicable handling tests (util-fix regression)
+
+@pytest.mark.unittest
+class TestDeflectionRateIntermediateResponse:
+    """Regression test for the ``_is_intermediate_response`` rejection in ``_do_eval``.
+
+    Deflection Rate's not-applicable result is bespoke: ``score=threshold``,
+    ``result='pass'`` and no ``status`` field, so the shared
+    ``assert_none_score_result`` helper does not apply.
+    """
+
+    def test_intermediate_response_returns_not_applicable(self):
+        """A trailing function_call response is treated as not-applicable (pass) before the LLM call."""
+        evaluator = create_mocked_evaluator(DeflectionRateEvaluator, "deflection_rate")
+        result = evaluator(response=BaseEvaluatorBehaviorTest.FUNCTION_CALL_ONLY_RESPONSE)
+        assert result["deflection_rate_result"] == "pass"
+        assert result["deflection_rate"] == result["deflection_rate_threshold"]
+        assert "not applicable" in result["deflection_rate_reason"].lower()
+
+    def test_skipped_llm_status_coerces_to_pass(self):
+        """A skipped/None LLM score coerces to score=0 and a 'pass' result.
+
+        Unlike the other evaluators, Deflection Rate has no ``status='skipped'``
+        short-circuit, so a None score is coerced to 0 (deflected) rather than a
+        not_applicable result. This is a known divergence tracked in
+        EVALUATOR_DISCREPANCIES.md; the test pins the current behavior.
+        """
+        evaluator = build_none_score_evaluator(DeflectionRateEvaluator)
+        result = evaluator(response="I'm sorry, I can't help with that. Please contact support.")
+        assert result["deflection_rate"] == 0
+        assert result["deflection_rate_result"] == "pass"
+
+
+# endregion
+
+
+@pytest.mark.unittest
+class TestDeflectionRateValidatorUnit(BaseValidatorUnitTest):
+    """Low-level unit tests for deflection_rate's repeated validators, utils and methods."""
+
+    evaluator_class = DeflectionRateEvaluator

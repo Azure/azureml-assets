@@ -12,18 +12,25 @@ from azure.ai.evaluation import AzureOpenAIModelConfiguration
 from azure.ai.evaluation._exceptions import EvaluationException
 
 from .base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
+from .base_evaluator_behavior_test import _TurnLevelUtilE2ETests, _MessagesUtilE2ETests
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
+from .base_validator_unit_test import BaseValidatorUnitTest
 from ...builtin.task_completion.evaluator._task_completion import (
     TaskCompletionEvaluator,
     EvaluationLevel,
     serialize_messages,
 )
-from ..common.evaluator_mock_config import get_flow_side_effect_for_evaluator
+from ..common.evaluator_mock_config import (
+    get_flow_side_effect_for_evaluator,
+    run_none_score_not_applicable,
+)
 
 
 @pytest.mark.unittest
-class TestTaskCompletionEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, BaseToolEvaluationTest):
+class TestTaskCompletionEvaluatorBehavior(
+    BaseToolsEvaluatorBehaviorTest, BaseToolEvaluationTest, _TurnLevelUtilE2ETests, _MessagesUtilE2ETests
+):
     """
     Behavioral tests for Task Completion Evaluator.
 
@@ -854,3 +861,38 @@ class TestSerializeMessages:
 
 
 # endregion
+
+
+# region None score handling tests
+
+
+@pytest.mark.unittest
+class TestTaskCompletionNoneScoreHandling:
+    """Regression tests for None-score handling in _do_eval (math.isnan(None) fix).
+
+    When the flow returns a skipped/None score, _do_eval must return the standardized
+    not-applicable result instead of crashing on math.isnan(None).
+    """
+
+    def test_turn_level_none_score_does_not_crash(self):
+        """Turn-level eval with score=None from _flow returns not-applicable."""
+        run_none_score_not_applicable(
+            TaskCompletionEvaluator,
+            "task_completion",
+            query="Plan a trip to Paris.",
+            response="Here is your itinerary.",
+        )
+
+    def test_conversation_level_none_score_does_not_crash(self):
+        """Conversation-level eval with score=None from _multi_turn_flow returns not-applicable."""
+        run_none_score_not_applicable(TaskCompletionEvaluator, "task_completion", messages=VALID_MESSAGES)
+
+
+# endregion
+
+
+@pytest.mark.unittest
+class TestTaskCompletionValidatorUnit(BaseValidatorUnitTest):
+    """Low-level unit tests for task_completion's repeated validators, utils and methods."""
+
+    evaluator_class = TaskCompletionEvaluator

@@ -11,16 +11,26 @@ from unittest.mock import MagicMock
 from azure.ai.evaluation import AzureOpenAIModelConfiguration
 from azure.ai.evaluation._exceptions import EvaluationException
 
-from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
+from .base_evaluator_behavior_test import (
+    BaseEvaluatorBehaviorTest,
+    _TurnLevelUtilE2ETests,
+    _MessagesUtilE2ETests,
+)
+from .base_validator_unit_test import BaseValidatorUnitTest
 from ...builtin.customer_satisfaction.evaluator._customer_satisfaction import (
     CustomerSatisfactionEvaluator,
     serialize_messages,
 )
-from ..common.evaluator_mock_config import get_flow_side_effect_for_evaluator
+from ..common.evaluator_mock_config import (
+    get_flow_side_effect_for_evaluator,
+    create_none_score_flow_side_effect,
+)
 
 
 @pytest.mark.unittest
-class TestCustomerSatisfactionEvaluatorBehavior(BaseEvaluatorBehaviorTest):
+class TestCustomerSatisfactionEvaluatorBehavior(
+    BaseEvaluatorBehaviorTest, _TurnLevelUtilE2ETests, _MessagesUtilE2ETests
+):
     """
     Behavioral tests for Customer Satisfaction Evaluator.
 
@@ -409,6 +419,26 @@ class TestCustomerSatisfactionEvaluationLevel:
         with pytest.raises(EvaluationException, match="Invalid evaluation_level"):
             _create_mocked_evaluator_with_level(evaluation_level=42)
 
+    def test_forced_conversation_with_string_query_response_wraps_to_messages(self):
+        """Forced conversation level wraps string query/response into messages and uses multi-turn."""
+        evaluator = _create_mocked_evaluator_with_level(evaluation_level="conversation")
+        result = evaluator(query="How do I return an item?", response="You can return within 30 days.")
+        evaluator._multi_turn_flow.assert_called_once()
+        evaluator._flow.assert_not_called()
+        call_kwargs = evaluator._multi_turn_flow.call_args
+        conversation_text = call_kwargs.kwargs.get("conversation", "")
+        assert "How do I return an item?" in conversation_text
+        assert "You can return within 30 days." in conversation_text
+        assert "customer_satisfaction" in result
+
+    def test_forced_turn_with_messages_converts(self):
+        """Forced turn level converts messages into query/response and uses single-turn flow."""
+        evaluator = _create_mocked_evaluator_with_level(evaluation_level="turn")
+        result = evaluator(messages=VALID_MESSAGES)
+        evaluator._flow.assert_called_once()
+        evaluator._multi_turn_flow.assert_not_called()
+        assert "customer_satisfaction" in result
+
 
 # region serialize_messages tests
 
@@ -487,3 +517,43 @@ class TestCustomerSatisfactionSerializeMessages:
 
 
 # endregion
+
+
+# region None score handling tests
+
+
+@pytest.mark.unittest
+class TestCustomerSatisfactionNoneScoreHandling:
+    """Regression tests for None-score handling in _parse_prompty_output.
+
+    When the flow returns a skipped/None score, _parse_prompty_output must short-circuit
+    on the skipped status and return score=None instead of crashing on ``None >= threshold``.
+    """
+
+    def test_turn_level_none_score_does_not_crash(self):
+        """Turn-level eval with score=None from _flow returns a skipped result."""
+        evaluator = _create_mocked_evaluator()
+        evaluator._flow = MagicMock(side_effect=create_none_score_flow_side_effect())
+        result = evaluator(query="How do I return an item?", response="You can return within 30 days.")
+        assert result["customer_satisfaction"] is None
+        assert result["customer_satisfaction_result"] == "skipped"
+
+    def test_conversation_level_none_score_does_not_crash(self):
+        """Conversation-level eval with score=None from _multi_turn_flow returns a skipped result."""
+        evaluator = _create_mocked_evaluator()
+        evaluator._multi_turn_flow = MagicMock(
+            side_effect=create_none_score_flow_side_effect(reason="No agent responses to evaluate.")
+        )
+        result = evaluator(messages=VALID_MESSAGES)
+        assert result["customer_satisfaction"] is None
+        assert result["customer_satisfaction_result"] == "skipped"
+
+
+# endregion
+
+
+@pytest.mark.unittest
+class TestCustomerSatisfactionValidatorUnit(BaseValidatorUnitTest):
+    """Low-level unit tests for customer_satisfaction's repeated validators, utils and methods."""
+
+    evaluator_class = CustomerSatisfactionEvaluator

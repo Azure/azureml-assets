@@ -11,6 +11,7 @@ import pytest
 from .base_tool_calls_evaluator_behavior_test import BaseToolCallEvaluatorBehaviorTest
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
+from .base_validator_unit_test import BaseValidatorUnitTest
 from ...builtin.tool_call_accuracy.evaluator._tool_call_accuracy import (
     ToolCallAccuracyEvaluator,
 )
@@ -73,3 +74,18 @@ class TestToolCallAccuracyEvaluatorBehavior(BaseToolCallEvaluatorBehaviorTest, B
     is_tool_definition_required = True
 
     MINIMAL_RESPONSE = BaseToolCallEvaluatorBehaviorTest.email_tool_call_and_assistant_response
+
+    def test_skipped_llm_status_returns_not_applicable(self):
+        """Flow output with status='skipped' yields a not-applicable result, not a crash."""
+        self.run_skipped_llm_status_not_applicable_test()
+
+    def test_intermediate_response_returns_not_applicable(self):
+        """A response ending in an unresolved function_call is treated as not-applicable."""
+        self.run_intermediate_response_not_applicable_test()
+
+
+@pytest.mark.unittest
+class TestToolCallAccuracyValidatorUnit(BaseValidatorUnitTest):
+    """Low-level unit tests for tool_call_accuracy's repeated validators, utils and methods."""
+
+    evaluator_class = ToolCallAccuracyEvaluator

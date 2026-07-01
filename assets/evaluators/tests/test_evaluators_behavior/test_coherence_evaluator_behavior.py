@@ -11,8 +11,13 @@ from unittest.mock import MagicMock
 from azure.ai.evaluation import AzureOpenAIModelConfiguration
 from azure.ai.evaluation._exceptions import EvaluationException
 
-from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
+from .base_evaluator_behavior_test import (
+    BaseEvaluatorBehaviorTest,
+    _TurnLevelUtilE2ETests,
+    _MessagesUtilE2ETests,
+)
 from .base_tool_evaluation_test import BaseToolEvaluationTest
+from .base_validator_unit_test import BaseValidatorUnitTest
 from . import common_tool_test_data as data
 from ...builtin.coherence.evaluator._coherence import (
     CoherenceEvaluator,
@@ -21,13 +26,14 @@ from ...builtin.coherence.evaluator._coherence import (
 )
 from ..common.evaluator_mock_config import (
     get_flow_side_effect_for_evaluator,
-    create_none_score_flow_side_effect,
-    assert_none_score_result,
+    run_none_score_not_applicable,
 )
 
 
 @pytest.mark.unittest
-class TestCoherenceEvaluatorBehavior(BaseEvaluatorBehaviorTest, BaseToolEvaluationTest):
+class TestCoherenceEvaluatorBehavior(
+    BaseEvaluatorBehaviorTest, BaseToolEvaluationTest, _TurnLevelUtilE2ETests, _MessagesUtilE2ETests
+):
     """
     Behavioral tests for Coherence Evaluator.
 
@@ -112,6 +118,13 @@ class TestCoherenceEvaluatorBehavior(BaseEvaluatorBehaviorTest, BaseToolEvaluati
     # endregion
 
     evaluator_type = CoherenceEvaluator
+
+
+@pytest.mark.unittest
+class TestCoherenceValidatorUnit(BaseValidatorUnitTest):
+    """Low-level unit tests for coherence's repeated validators, utils and methods."""
+
+    evaluator_class = CoherenceEvaluator
 
 
 def _create_multi_turn_mock_side_effect(
@@ -424,24 +437,16 @@ class TestCoherenceNoneScoreHandling:
 
     def test_turn_level_none_score_does_not_crash(self):
         """Turn-level eval with score=None from _flow should not raise TypeError."""
-        evaluator = _create_mocked_coherence_evaluator()
-        evaluator._flow = MagicMock(side_effect=create_none_score_flow_side_effect())
-        result = evaluator(
+        run_none_score_not_applicable(
+            CoherenceEvaluator,
+            "coherence",
             query="What is the weather?",
             response="It is sunny today.",
         )
-        assert_none_score_result(result, "coherence")
 
     def test_conversation_level_none_score_does_not_crash(self):
         """Conversation-level eval with score=None should not crash."""
-        evaluator = _create_mocked_coherence_evaluator()
-        evaluator._multi_turn_flow = MagicMock(
-            side_effect=create_none_score_flow_side_effect(
-                reason="No agent responses to evaluate."
-            )
-        )
-        result = evaluator(messages=VALID_MESSAGES)
-        assert_none_score_result(result, "coherence")
+        run_none_score_not_applicable(CoherenceEvaluator, "coherence", messages=VALID_MESSAGES)
 
 
 # endregion

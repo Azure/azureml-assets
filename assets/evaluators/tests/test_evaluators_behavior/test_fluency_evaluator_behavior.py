@@ -4,20 +4,16 @@
 """Behavioral tests for Fluency Evaluator."""
 
 import pytest
-from unittest.mock import MagicMock
-from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
+from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest, _TurnLevelUtilE2ETests
+from .base_validator_unit_test import BaseValidatorUnitTest
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
 from ...builtin.fluency.evaluator._fluency import FluencyEvaluator
-from ..common.evaluator_mock_config import (
-    create_none_score_flow_side_effect,
-    create_mocked_evaluator,
-    assert_none_score_result,
-)
+from ..common.evaluator_mock_config import run_none_score_not_applicable
 
 
 @pytest.mark.unittest
-class TestFluencyEvaluatorBehavior(BaseEvaluatorBehaviorTest, BaseToolEvaluationTest):
+class TestFluencyEvaluatorBehavior(BaseEvaluatorBehaviorTest, BaseToolEvaluationTest, _TurnLevelUtilE2ETests):
     """
     Behavioral tests for Fluency Evaluator.
 
@@ -106,10 +102,14 @@ class TestFluencyNoneScoreHandling:
 
     def test_turn_level_none_score_does_not_crash(self):
         """Turn-level eval with score=None from _flow should not raise TypeError."""
-        evaluator = create_mocked_evaluator(FluencyEvaluator, "fluency")
-        evaluator._flow = MagicMock(side_effect=create_none_score_flow_side_effect())
-        result = evaluator(response="It is sunny today.")
-        assert_none_score_result(result, "fluency")
+        run_none_score_not_applicable(FluencyEvaluator, "fluency", response="It is sunny today.")
 
 
 # endregion
+
+
+@pytest.mark.unittest
+class TestFluencyValidatorUnit(BaseValidatorUnitTest):
+    """Low-level unit tests for fluency's repeated validators, utils and methods."""
+
+    evaluator_class = FluencyEvaluator
