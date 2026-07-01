@@ -1,11 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Aurora
 path: ./
-properties:
-  languages: EN
-  inference-min-sku-spec: 24|1|220|64
-  inference-recommended-sku: Standard_NC24ads_A100_v4
-  SharedComputeCapacityEnabled: 'True'
 system_metadata:
   domain:
   - Geospatial & Earth Science
