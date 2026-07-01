@@ -1,0 +1,8 @@
+path:
+  container_name: rai-eval-flows
+  container_path: models/evaluators/GroundednessProEvaluator/v2/GroundednessProEvaluator
+  storage_name: amlraipfmodels
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model
