@@ -374,6 +374,11 @@ class RetrievalEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             eval_input["query"] = _preprocess_messages(eval_input["query"])
 
         result = await self._the_super_do_eval(eval_input)
+        # Honor explicit skip status before any numeric validation. This is structurally safer
+        # than relying solely on the None-guard below: if the base helper already produced a
+        # not-applicable record, propagate it as-is and never run math.isnan on its None score.
+        if result.get(f"{self._result_key}_status") == "skipped":
+            return result
         # Check if base returned nan (invalid output case); None means not-applicable/skipped
         _score = result.get(self._result_key, 0)
         if _score is not None and math.isnan(_score):
@@ -385,6 +390,29 @@ class RetrievalEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             )
         return result
 
+    def _validate_required_inputs(self, **kwargs) -> None:
+        """Pre-validate inputs to raise a clean USER_ERROR for missing/empty fields.
+
+        When ``conversation`` is provided the multi-turn path handles validation internally,
+        so this check only applies to the single-turn ``query``/``context`` path. Raising here
+        (before the LLM is ever invoked) turns silent ``not_applicable`` rows into proactive
+        user-error signals and avoids burning model calls on inputs that cannot be evaluated.
+        """
+        if kwargs.get("conversation"):
+            return
+        query = kwargs.get("query")
+        context = kwargs.get("context")
+        if (not query) or (not context):
+            raise EvaluationException(
+                message=(
+                    f"{type(self).__name__}: Either 'conversation' or both 'query' and 'context' "
+                    "must be provided as non-empty inputs."
+                ),
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.MISSING_FIELD,
+                target=ErrorTarget.RETRIEVAL_EVALUATOR,
+            )
+
     @override
     async def _real_call(self, **kwargs):
         """Perform the asynchronous call where real end-to-end evaluation logic runs.
@@ -394,6 +422,9 @@ class RetrievalEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: The evaluation result.
         :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
         """
+        # Pre-validate before invoking the LLM so missing/empty inputs surface a clean
+        # USER_ERROR instead of either crashing later or being silently demoted to a skipped row.
+        self._validate_required_inputs(**kwargs)
         # Convert inputs into list of evaluable inputs.
         try:
             eval_input_list = self._convert_kwargs_to_eval_input(**kwargs)
