@@ -11,7 +11,7 @@ properties:
   finetune-min-sku-spec: 40|8|672|2900
   finetune-recommended-sku: Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   finetuning-tasks: text-classification
-  inference-min-sku-spec: 96|8|880|2900
+  inference-min-sku-spec: 96|8|900|2900
   inference-recommended-sku: Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
 tags:
   model_specific_defaults:
@@ -46,7 +46,7 @@ system_metadata:
     - Standard_ND96asr_v4
     - Standard_ND96amsr_A100_v4
     evaluationMinSkuSpec: 24|4|448|2900
-    inferenceMinSkuSpec: 96|8|880|2900
+    inferenceMinSkuSpec: 96|8|900|2900
     finetuneMinSkuSpec: 40|8|672|2900
   publisher: tiiuae
   hiddenLayerScanned: true
