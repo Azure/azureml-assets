@@ -10,5 +10,5 @@ dependencies:
   - cryptography>=46.0.7
   - azure-ml-component=={{latest-pypi-version}}
   - azureml-defaults=={{latest-pypi-version}}
-  - pyarrow>=14.0.1
+  - pyarrow>=23.0.1
   - Jinja2>=3.1.6
