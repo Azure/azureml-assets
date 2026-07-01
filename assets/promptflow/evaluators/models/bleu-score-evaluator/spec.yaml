@@ -1,9 +1,0 @@
-$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: Bleu-Score-Evaluator
-path: ./
-properties:
-  is-promptflow: true
-  is-evaluator: true
-  show-artifact: true
-  _default-display-file: ./BleuScoreEvaluator/_bleu.py
-version: 4
