@@ -1,9 +1,0 @@
-azure-storage-blob
-azure-identity
-markdown
-bs4
-numpy<2
-azureml-core
-promptflow[azure]
-azure-ai-ml
-azure-cli-core
