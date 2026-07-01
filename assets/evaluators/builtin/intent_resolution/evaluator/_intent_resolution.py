@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import json
 import os
 import math
 import logging
@@ -973,11 +974,16 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
+        if isinstance(llm_output, str):
+            try:
+                llm_output = json.loads(llm_output)
+            except (json.JSONDecodeError, TypeError):
+                pass
         score = math.nan
         if isinstance(llm_output, dict):
             # Handle skipped status from LLM
             llm_status = llm_output.get("status", "completed")
-            if llm_status == "skipped":
+            if str(llm_status).strip().lower() == "skipped":
                 reason = llm_output.get("reason", "")
                 return self._return_not_applicable_result(reason, self._threshold)
 
@@ -996,7 +1002,7 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                     blame=ErrorBlame.SYSTEM_ERROR,
                 )
             reason = llm_output.get("reason", "")
-            score = float(score)
+            score = float(score) if score is not None else math.nan
             score_result = "pass" if score >= self._threshold else "fail"
             llm_properties = llm_output.get("properties", {}) or {}
             token_metadata = self._get_token_metadata(prompty_output_dict)

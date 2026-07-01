@@ -1340,7 +1340,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                     parsed_output = None
             if parsed_output and isinstance(parsed_output, dict):
                 llm_status = parsed_output.get("status", "completed")
-                if llm_status == "skipped":
+                if str(llm_status).strip().lower() == "skipped":
                     skip_reason = parsed_output.get("reason", "")
                     return self._return_not_applicable_result(skip_reason, self._threshold)
                 score = parsed_output.get("score", math.nan)

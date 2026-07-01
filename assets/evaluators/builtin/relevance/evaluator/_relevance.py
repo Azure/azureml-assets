@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import json
 import logging
 import math
 import os
@@ -863,16 +864,22 @@ class RelevanceEvaluator(PromptyEvaluatorBase):
             eval_input["response"] = reformat_agent_response(eval_input["response"], logger)
         result = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         llm_output = result.get("llm_output", result)
+        if isinstance(llm_output, str):
+            try:
+                llm_output = json.loads(llm_output)
+            except (json.JSONDecodeError, TypeError):
+                pass
         score = math.nan
 
         if isinstance(llm_output, dict):
             # Handle skipped status from LLM
             llm_status = llm_output.get("status", "completed")
-            if llm_status == "skipped":
+            if str(llm_status).strip().lower() == "skipped":
                 reason = llm_output.get("reason", "")
                 return self._return_not_applicable_result(reason, self._threshold)
 
-            score = float(llm_output.get("score", math.nan))
+            score = llm_output.get("score", math.nan)
+            score = float(score) if score is not None else math.nan
             reason = llm_output.get("reason", "")
             llm_properties = llm_output.get("properties", {}) or {}
             score_result = self._get_binary_result(score)

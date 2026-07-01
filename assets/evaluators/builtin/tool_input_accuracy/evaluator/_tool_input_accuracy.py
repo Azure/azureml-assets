@@ -1,5 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
+import json
+import math
 import os
 import logging
 from typing import Dict, List, Union, TypeVar, cast
@@ -1202,11 +1204,16 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         # Call the LLM to evaluate
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
+        if isinstance(llm_output, str):
+            try:
+                llm_output = json.loads(llm_output)
+            except (json.JSONDecodeError, TypeError):
+                pass
 
         if isinstance(llm_output, dict):
             # Handle skipped status from LLM
             llm_status = llm_output.get("status", "completed")
-            if llm_status == "skipped":
+            if str(llm_status).strip().lower() == "skipped":
                 reason = llm_output.get("reason", "")
                 return self._return_not_applicable_result(reason, self._threshold)
 
@@ -1227,7 +1234,7 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
             # Format the output
             reason = llm_output.get("reason", "")
-            score = float(score)
+            score = float(score) if score is not None else math.nan
             score_result = "pass" if score == 1 else "fail"
             token_metadata = self._get_token_metadata(prompty_output_dict)
             llm_properties.update(token_metadata)

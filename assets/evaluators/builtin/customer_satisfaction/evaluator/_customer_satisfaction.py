@@ -1,5 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
+import json
+import math
 import os
 import logging
 from typing import Dict, Union, List, Optional, Tuple
@@ -1295,6 +1297,11 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :rtype: Dict
         """
         llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
+        if isinstance(llm_output, str):
+            try:
+                llm_output = json.loads(llm_output)
+            except (json.JSONDecodeError, TypeError):
+                pass
 
         if not isinstance(llm_output, dict):
             score = None
@@ -1307,11 +1314,12 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             reason = llm_output.get("reason", "")
             properties = llm_output.get("properties") or {}
 
-            if status == "skipped":
+            if str(status).strip().lower() == "skipped":
                 score = None
                 result = "skipped"
             else:
                 score = llm_output.get("score", self._threshold)
+                score = float(score) if score is not None else math.nan
                 result = "pass" if score >= self._threshold else "fail"
 
         return self._build_result(

@@ -1,5 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
+import json
+import math
 import os
 import logging
 from enum import Enum
@@ -1458,6 +1460,11 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         :rtype: Dict
         """
         llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
+        if isinstance(llm_output, str):
+            try:
+                llm_output = json.loads(llm_output)
+            except (json.JSONDecodeError, TypeError):
+                pass
 
         if not isinstance(llm_output, dict):
             raise EvaluationException(
@@ -1469,11 +1476,12 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
 
         # Handle skipped status from LLM
         llm_status = llm_output.get("status", "completed")
-        if llm_status == "skipped":
+        if str(llm_status).strip().lower() == "skipped":
             reason = llm_output.get("reason", "")
             return self._return_not_applicable_result(reason, self._threshold)
 
-        score = float(llm_output.get("score", 0))
+        score = llm_output.get("score", 0)
+        score = float(score) if score is not None else math.nan
         success_result = "pass" if score >= 1.0 else "fail"
         reason = llm_output.get("reason", "")
         llm_properties = llm_output.get("properties", {}) or {}
