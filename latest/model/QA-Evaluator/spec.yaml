@@ -1,0 +1,17 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: QA-Evaluator
+path: ./
+properties:
+  is-promptflow: true
+  is-evaluator: true
+tags:
+  Preview: ""
+version: 2
+description: |-
+  | 	| |
+  | -- | -- |
+  | Score range |	Float [0-1] for F1 score evaluator: the higher, the more similar is the response with ground truth. Integer [1-5] for AI-assisted quality evaluators for question-and-answering (QA) scenarios: where 1 is bad and 5 is good |
+  | What is this metric? | Measures comprehensively the groundedness, coherence, and fluency of a response in QA scenarios, as well as the textual similarity between the response and its ground truth. |
+  | How does it work? | The QA evaluator leverages prompt-based AI-assisted evaluators using a language model as a judge on the response to a user query, including `GroundednessEvaluator` (needs input `context`), `RelevanceEvaluator`, `CoherenceEvaluator`, `FluencyEvaluator`, and `SimilarityEvaluator` (needs input `ground_truth`). It also includes a Natural Language Process (NLP) metric `F1ScoreEvaluator` using F1 score on shared tokens between the response and its ground truth. See the [definitions and scoring rubrics](https://learn.microsoft.com/azure/ai-studio/concepts/evaluation-metrics-built-in?tabs=warning#generation-quality-metrics) for these AI-assisted evaluators and F1 score evaluator. |
+  | When to use it? |	Use it when assessing the readability and user-friendliness of your model's generated responses in real-world applications. |
+  | What does it need as input? |	Query, Response, Context, Ground Truth |
