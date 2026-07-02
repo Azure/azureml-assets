@@ -1,6 +1,6 @@
 openai==1.28.0
 pandas==2.2.0
-azureml-mlflow==1.62.0.post4
+azureml-mlflow==1.62.0.post5
 azure-mgmt-cognitiveservices==13.5.0
 azure-identity>=1.16.1
 jsonlines==4.0.0
