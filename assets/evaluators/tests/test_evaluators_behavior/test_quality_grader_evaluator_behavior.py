@@ -4,6 +4,9 @@
 """Behavioral tests for Quality Grader Evaluator."""
 
 import pytest
+from unittest.mock import MagicMock
+
+from azure.ai.evaluation import AzureOpenAIModelConfiguration
 from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest, _TurnLevelUtilE2ETests
 from ..common.evaluator_mock_config import (
     run_none_score_not_applicable,
@@ -15,6 +18,32 @@ from ...builtin.quality_grader.evaluator._quality_grader import (
     _coerce_bool,
     _coerce_number,
 )
+
+
+def _build_quality_grader_with_flows(stage1_output, stage2_output=None):
+    """Build a QualityGraderEvaluator with its two prompty flows mocked.
+
+    :param stage1_output: The dict returned by the stage-1 (response quality) flow.
+    :param stage2_output: The dict returned by the stage-2 (groundedness) flow.
+    :return: The evaluator with ``_flow`` and ``_groundedness_flow`` mocked.
+    """
+    model_config = AzureOpenAIModelConfiguration(
+        azure_endpoint="https://Sanitized.api.cognitive.microsoft.com",
+        azure_deployment="aoai-deployment",
+    )
+    evaluator = QualityGraderEvaluator(model_config=model_config)
+
+    async def _stage1_flow(timeout=None, **kwargs):
+        return stage1_output
+
+    async def _stage2_flow(timeout=None, **kwargs):
+        return stage2_output
+
+    evaluator._flow = MagicMock(side_effect=_stage1_flow)
+    evaluator._groundedness_flow = MagicMock(side_effect=_stage2_flow)
+    if hasattr(evaluator, "_ensure_query_prompty_loaded"):
+        evaluator._ensure_query_prompty_loaded = MagicMock()
+    return evaluator
 
 
 @pytest.mark.unittest
@@ -92,6 +121,84 @@ class TestQualityGraderNotApplicableHandling:
 
 
 # endregion
+
+
+@pytest.mark.unittest
+class TestQualityGraderTwoStagePipeline:
+    """Regression tests for the two-stage grading pipeline in ``_do_eval`` and ``_build_result``.
+
+    Drives the stage-1 threshold failures, the stage-2 groundedness checks
+    (numeric, null, and pass paths), and the JSON output parsing branches.
+    """
+
+    STAGE1_PASS = {
+        "properties": {"abstention": False, "relevance": 5, "answerCompleteness": 5},
+        "status": "completed",
+        "reasoning": "The response is relevant and complete.",
+        "score": 1,
+    }
+
+    def test_stage1_threshold_failure_returns_fail_result(self):
+        """Stage-1 abstention/low relevance/low completeness produce a failing result."""
+        evaluator = _build_quality_grader_with_flows(
+            {
+                "properties": {"abstention": True, "relevance": 1, "answerCompleteness": 1},
+                "status": "completed",
+                "reasoning": "",
+            }
+        )
+        result = evaluator(query="What is the capital of France?", response="I cannot help.")
+        assert isinstance(result, dict)
+        assert result["quality_grader"] == 0.0
+        assert evaluator._groundedness_flow.call_count == 0
+
+    def test_stage2_numeric_failure_returns_fail_result(self):
+        """Stage-2 numeric groundedness/context-coverage below threshold fail the result."""
+        evaluator = _build_quality_grader_with_flows(
+            self.STAGE1_PASS,
+            {
+                "properties": {"groundedness": 1, "contextCoverage": 1},
+                "status": "completed",
+                "reasoning": "Not grounded.",
+            },
+        )
+        result = evaluator(query="Q", response="R", context="Some retrieved context.")
+        assert result["quality_grader"] == 0.0
+        assert evaluator._groundedness_flow.call_count == 1
+
+    def test_stage2_null_values_return_fail_result(self):
+        """Stage-2 null groundedness/context-coverage exercise the None fallback branches."""
+        evaluator = _build_quality_grader_with_flows(
+            self.STAGE1_PASS,
+            {
+                "properties": {"groundedness": None, "contextCoverage": None},
+                "status": "completed",
+                "reasoning": "",
+            },
+        )
+        result = evaluator(query="Q", response="R", context="Some retrieved context.")
+        assert result["quality_grader"] == 0.0
+
+    def test_stage2_pass_returns_pass_result(self):
+        """A passing stage-1 and stage-2 produce a passing result with stage-2 properties."""
+        evaluator = _build_quality_grader_with_flows(
+            self.STAGE1_PASS,
+            {
+                "properties": {"groundedness": 5, "contextCoverage": 5, "documentUtility": 5},
+                "status": "completed",
+                "reasoning": "Fully grounded.",
+            },
+        )
+        result = evaluator(query="Q", response="R", context="Some retrieved context.")
+        assert result["quality_grader"] == 1.0
+
+    def test_parse_prompty_json_output_branches(self):
+        """Parse JSON output across empty, dict, and malformed-string branches."""
+        parse = QualityGraderEvaluator._parse_prompty_json_output
+        assert parse(None) == {}
+        assert parse({"llm_output": ""}) == {}
+        assert parse({"llm_output": {"score": 1}}) == {"score": 1}
+        assert parse({"llm_output": "not-json"}) == {}
 
 
 @pytest.mark.unittest

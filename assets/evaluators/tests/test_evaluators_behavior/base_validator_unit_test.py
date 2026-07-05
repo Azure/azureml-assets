@@ -24,7 +24,9 @@ same mixin works for every prompty-based evaluator.
 """
 
 import asyncio
+import inspect
 import json
+import logging
 import os
 import sys
 from typing import Any
@@ -311,18 +313,28 @@ class BaseValidatorUnitTest:
         return asyncio.run(coro)
 
     def _super_impl(self, ev, name):
-        """Return the evaluator's inlined ``_the_super_<name>`` or the bound ``super()._<name>``.
+        """Resolve the evaluator's copy of the base ``_<name>`` implementation.
 
-        Evaluators that inline a copy of the base implementation expose it as
-        ``_the_super_<name>`` and delegate to it from their overridden ``_<name>``.
-        Evaluators that call straight through to the SDK base do not define the
-        copy, so fall back to the bound ``super()._<name>`` method (resolved from
-        the evaluator's parent class) instead of skipping, so the base behaviour
-        is still exercised.
+        ``_the_super_<name>`` and the SDK's ``super()._<name>`` are the same code,
+        so prefer the inlined ``_the_super_<name>`` copy the evaluator delegates
+        to when present. Some evaluators instead inline that same base copy
+        directly as their own ``_<name>`` override - a byte copy the SDK entry
+        point bypasses, so it is otherwise never exercised; detect it by its
+        ``per_turn_results`` aggregation body and drive it directly. Otherwise
+        fall back to the bound ``super()._<name>`` method (resolved from the
+        evaluator's parent class) so the base behaviour is still exercised.
         """
         inlined = getattr(ev, f"_the_super_{name}", None)
         if inlined is not None:
             return inlined
+        own = type(ev).__dict__.get(f"_{name}")
+        if own is not None:
+            try:
+                is_super_copy = "per_turn_results" in inspect.getsource(own)
+            except (OSError, TypeError):
+                is_super_copy = False
+            if is_super_copy:
+                return getattr(ev, f"_{name}")
         return getattr(super(type(ev), ev), f"_{name}", None)
 
     def _actual_capabilities(self, ev):
@@ -1115,5 +1127,251 @@ class BaseValidatorUnitTest:
         assert "query" in captured
         assert "response" in captured
         assert "messages" not in captured
+
+    # endregion
+
+    # region Tool-evaluator shared code (_extract_needed_tool_definitions)
+
+    def _extract_tool_defs_callable(self):
+        """Return an ``extract(tool_calls, tool_definitions)`` for the asset, or None.
+
+        Matches only evaluators that inline their own copy of the util: the
+        module-level 3-arg function (tool_input_accuracy, tool_selection) or the
+        class-level override (tool_call_accuracy's 2-arg method). The inherited
+        3-arg base method is deliberately ignored - it lives in the SDK (not the
+        asset source) and its per-asset coverage impact is nil. The explicit
+        ``error_target`` is supplied only when the callable's signature needs it.
+        """
+        fn = getattr(self._module(), "_extract_needed_tool_definitions", None)
+        if fn is None:
+            ev = self._make_evaluator()
+            if type(ev).__dict__.get("_extract_needed_tool_definitions") is None:
+                return None
+            fn = ev._extract_needed_tool_definitions
+        positional = [
+            p
+            for p in inspect.signature(fn).parameters.values()
+            if p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD)
+        ]
+        if len(positional) >= 3:
+            target = self._target()
+            return lambda calls, defs: fn(calls, defs, target)
+        return lambda calls, defs: fn(calls, defs)
+
+    def test_extract_needed_tool_definitions_happy_path(self):
+        """Return the matching definition for a well-formed converter tool call."""
+        extract = self._extract_tool_defs_callable()
+        if extract is None:
+            pytest.skip("no _extract_needed_tool_definitions")
+        needed = extract(
+            [{"type": "tool_call", "name": "fetch_weather", "arguments": {}}],
+            [{"name": "fetch_weather", "parameters": {}}],
+        )
+        assert any(t.get("name") == "fetch_weather" for t in needed)
+
+    def test_extract_needed_tool_definitions_missing_definition_raises(self):
+        """Raise when a converter tool call has no matching definition."""
+        extract = self._extract_tool_defs_callable()
+        if extract is None:
+            pytest.skip("no _extract_needed_tool_definitions")
+        with pytest.raises(EvaluationException):
+            extract([{"type": "tool_call", "name": "unknown_tool", "arguments": {}}], [])
+
+    def test_extract_needed_tool_definitions_missing_name_raises(self):
+        """Raise when a converter tool call is missing its name."""
+        extract = self._extract_tool_defs_callable()
+        if extract is None:
+            pytest.skip("no _extract_needed_tool_definitions")
+        with pytest.raises(EvaluationException):
+            extract([{"type": "tool_call"}], [])
+
+    def test_extract_needed_tool_definitions_unsupported_format_raises(self):
+        """Raise for non-converter tool-call formats."""
+        extract = self._extract_tool_defs_callable()
+        if extract is None:
+            pytest.skip("no _extract_needed_tool_definitions")
+        with pytest.raises(EvaluationException):
+            extract([{"type": "function", "name": "x"}], [])
+
+    def test_extract_needed_tool_definitions_non_dict_raises(self):
+        """Raise when a tool call is not a dictionary."""
+        extract = self._extract_tool_defs_callable()
+        if extract is None:
+            pytest.skip("no _extract_needed_tool_definitions")
+        with pytest.raises(EvaluationException):
+            extract(["not-a-dict"], [])
+
+    # endregion
+
+    # region Tool-evaluator response reformatting (shared module utils)
+
+    def _tool_reformat_module(self):
+        """Return the module if it inlines ``reformat_agent_response``, else skip.
+
+        Only the tool evaluators inline both ``_get_agent_response`` and the
+        public ``reformat_agent_response`` copy; other evaluators expose neither
+        (or only the private helper), so gate on both.
+        """
+        module = self._module()
+        if getattr(module, "_get_agent_response", None) is None:
+            pytest.skip("no inlined tool-family reformat helpers")
+        if getattr(module, "reformat_agent_response", None) is None:
+            pytest.skip("no inlined reformat_agent_response")
+        return module
+
+    def test_reformat_agent_response_with_tool_messages(self):
+        """Format agent text, flat/nested tool calls, and tool results into a string."""
+        module = self._tool_reformat_module()
+        reformat = module.reformat_agent_response
+        msgs = [
+            {
+                "role": "assistant",
+                "content": [
+                    {"type": "text", "text": "Let me check."},
+                    {
+                        "type": "tool_call",
+                        "tool_call_id": "c1",
+                        "name": "fetch_weather",
+                        "arguments": {"city": "Seattle", "units": None, "days": 3},
+                    },
+                    {
+                        "type": "tool_call",
+                        "tool_call": {"id": "c2", "function": {"name": "send_email", "arguments": {"to": "a@b.com"}}},
+                    },
+                ],
+            },
+            {"role": "tool", "tool_call_id": "c1", "content": [{"type": "tool_result", "tool_result": "sunny"}]},
+            {"role": "tool", "tool_call_id": "c2", "content": [{"type": "tool_result", "tool_result": "sent"}]},
+        ]
+        out = reformat(msgs, include_tool_messages=True)
+        assert "TOOL_CALL" in out and "fetch_weather" in out and "send_email" in out
+        assert "TOOL_RESULT" in out
+
+    def test_reformat_agent_response_empty_and_fallback(self):
+        """Return empty string for None/[] and fall back to raw input when unparseable."""
+        module = self._tool_reformat_module()
+        reformat = module.reformat_agent_response
+        assert reformat(None) == ""
+        assert reformat([]) == ""
+        weird = [{"role": "user", "content": [{"type": "text", "text": "hi"}]}]
+        assert reformat(weird) == weird
+
+    def test_reformat_conversation_history_with_tool_calls(self):
+        """Format a multi-turn conversation with system, tool calls, and results."""
+        module = self._module()
+        reformat = getattr(module, "reformat_conversation_history", None)
+        if getattr(module, "_get_conversation_history", None) is None or reformat is None:
+            pytest.skip("no inlined conversation-history helpers")
+        if "include_tool_calls" not in inspect.signature(reformat).parameters:
+            pytest.skip("reformat_conversation_history variant without include_tool_calls")
+        query = [
+            {"role": "system", "content": "You are helpful."},
+            {"role": "user", "content": [{"type": "text", "text": "Weather?"}]},
+            {
+                "role": "assistant",
+                "content": [
+                    {"type": "text", "text": "Checking."},
+                    {
+                        "type": "tool_call",
+                        "tool_call_id": "c1",
+                        "name": "fetch_weather",
+                        "arguments": {"city": "Seattle", "units": None},
+                    },
+                    {
+                        "type": "tool_call",
+                        "tool_call": {"id": "c2", "function": {"name": "send_email", "arguments": {"to": "a@b.com"}}},
+                    },
+                ],
+            },
+            {"role": "tool", "tool_call_id": "c1", "content": [{"type": "tool_result", "tool_result": "sunny"}]},
+            {"role": "tool", "tool_call_id": "c2", "content": [{"type": "tool_result", "tool_result": "sent"}]},
+            {"role": "user", "content": [{"type": "text", "text": "Thanks"}]},
+        ]
+        out = reformat(query, include_system_messages=True, include_tool_calls=True)
+        assert "SYSTEM_PROMPT" in out
+        assert "User turn 1" in out and "Agent turn 1" in out
+        assert "fetch_weather" in out and "send_email" in out
+
+    def test_reformat_conversation_history_malformed_fallback(self):
+        """Fall back to the raw input (and log a safe summary) when malformed."""
+        module = self._module()
+        reformat = getattr(module, "reformat_conversation_history", None)
+        if getattr(module, "_get_conversation_history", None) is None or reformat is None:
+            pytest.skip("no inlined conversation-history helpers")
+        if "include_tool_calls" not in inspect.signature(reformat).parameters:
+            pytest.skip("reformat_conversation_history variant without include_tool_calls")
+        query = [{"role": "assistant", "content": [{"type": "text", "text": "hi"}]}]
+        out = reformat(query, logger=logging.getLogger("tool_reformat_test"))
+        assert out == query
+
+    def test_log_safe_summary_variants(self):
+        """Summarize list, dict, and scalar payloads without leaking values."""
+        module = self._module()
+        fn = getattr(module, "_log_safe_summary", None)
+        if fn is None:
+            pytest.skip("no _log_safe_summary")
+        assert "type=list" in fn([{"role": "user"}, "x"])
+        assert "type=dict" in fn({"b": 1, "a": 2})
+        assert "type=int" in fn(5)
+
+    # endregion
+
+    # region ToolDefinitionsValidator branches
+
+    def _tool_definitions_validator_cls(self):
+        """Return the asset's ``ToolDefinitionsValidator`` class, or skip."""
+        cls = getattr(self._module(), "ToolDefinitionsValidator", None)
+        if cls is None:
+            pytest.skip("no ToolDefinitionsValidator")
+        return cls
+
+    def test_validate_tool_definitions_error_branches(self):
+        """Exercise the list/type/optional/openapi tool-definitions validation branches."""
+        cls = self._tool_definitions_validator_cls()
+        target = self._target()
+        validator = cls(error_target=target)
+        assert validator._validate_tool_definitions(None) is None
+        assert validator._validate_tool_definitions("free-form-string") is None
+        assert validator._validate_tool_definitions([{"name": "f", "parameters": {}}]) is None
+        assert isinstance(validator._validate_tool_definitions(123), EvaluationException)
+        assert isinstance(validator._validate_tool_definitions([123]), EvaluationException)
+        openapi = [{"type": "openapi", "functions": [{"name": "f", "parameters": {}}]}]
+        assert validator._validate_tool_definitions(openapi) is None
+        required = cls(error_target=target, optional_tool_definitions=False)
+        assert isinstance(required._validate_tool_definitions(None), EvaluationException)
+
+    def test_validate_tool_definition_field_branches(self):
+        """Exercise the single tool-definition field validation branches."""
+        cls = self._tool_definitions_validator_cls()
+        validator = cls(error_target=self._target())
+        assert validator._validate_tool_definition({"name": "f", "parameters": {}}) is None
+        assert isinstance(validator._validate_tool_definition("not-a-dict"), EvaluationException)
+        assert isinstance(validator._validate_tool_definition({"parameters": {}}), EvaluationException)
+        assert isinstance(validator._validate_tool_definition({"name": "f"}), EvaluationException)
+
+    # endregion
+
+    # region simplify_messages (groundedness)
+
+    def test_simplify_messages_variants(self):
+        """Simplify messages across passthrough, drop-system, and error-fallback branches."""
+        fn = getattr(self._module(), "simplify_messages", None)
+        if fn is None:
+            pytest.skip("no simplify_messages")
+        assert fn("already a string") == "already a string"
+        assert fn(123) == 123
+        messages = [
+            {"role": "system", "content": [{"type": "text", "text": "sys"}]},
+            {"role": "user", "content": [{"type": "text", "text": "hi"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "hello"}]},
+            {"role": "tool", "content": [{"type": "tool_result", "tool_result": "r"}]},
+            "not-a-dict-msg",
+        ]
+        out = fn(messages)
+        assert "system" not in [m.get("role") for m in out if isinstance(m, dict)]
+        out_drop = fn(messages, drop_tool_calls=True)
+        assert all(not (isinstance(m, dict) and m.get("role") == "tool") for m in out_drop)
+        bad = [{"role": "user", "content": 123}]
+        assert fn(bad, logger=logging.getLogger("simplify_test")) == bad
 
     # endregion
