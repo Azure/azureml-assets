@@ -10,7 +10,11 @@ from ..common.evaluator_mock_config import (
     run_none_score_not_applicable,
     run_intermediate_response_not_applicable,
 )
-from .base_validator_unit_test import BaseValidatorUnitTest
+from .base_validator_unit_test import (
+    CorePromptyValidatorUnitTests,
+    MessagePreprocessUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+)
 from ...builtin.response_completeness.evaluator._response_completeness import ResponseCompletenessEvaluator
 
 # Intermediate response whose last content item is a function_call (agent has not yet produced a final answer).
@@ -590,7 +594,11 @@ class TestResponseCompletenessNotApplicableHandling:
 
 
 @pytest.mark.unittest
-class TestResponseCompletenessValidatorUnit(BaseValidatorUnitTest):
+class TestResponseCompletenessValidatorUnit(
+    CorePromptyValidatorUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    MessagePreprocessUnitTests,
+):
     """Low-level unit tests for response_completeness's repeated validators, utils and methods."""
 
     evaluator_class = ResponseCompletenessEvaluator

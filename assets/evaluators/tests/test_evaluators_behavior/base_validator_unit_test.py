@@ -1,26 +1,40 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Reusable low-level unit tests for repeated evaluator validator/util code.
+"""Composable low-level unit tests for the repeated evaluator validator/util code.
 
 The repeated building blocks (``ConversationValidator``,
 ``MessagesOrQueryResponseInputValidator``, ``serialize_messages``,
 ``_preprocess_messages`` ...) are byte-for-byte copies in every evaluator's
-``_<name>.py`` source. To avoid duplicating their tests in every evaluator test
-file, the corner-case tests live here in a single mixin and are auto-detected
-from the evaluator module under test.
+``_<name>.py`` source. Their corner-case tests live here once, split into
+capability-scoped mixins so each evaluator's behavior file composes exactly the
+mixins matching the surface it exposes - no test is skipped for a capability the
+evaluator does not have::
 
-A derived evaluator test class only needs to declare the evaluator under test;
-``validator_module`` and ``error_target`` are derived from it (the evaluator
-class is defined in the same ``_<name>.py`` module as the repeated code)::
-
-    class TestCoherenceValidatorUnit(BaseValidatorUnitTest):
+    class TestCoherenceValidatorUnit(
+        CorePromptyValidatorUnitTests,
+        SuperDoEvalNotApplicableUnitTests,
+        MessagePreprocessUnitTests,
+        ConversationValidatorUnitTests,
+        ConversationValidatorToolCheckUnitTests,
+        ConversationSerializationUnitTests,
+        MessagesOrQueryResponseUnitTests,
+    ):
         evaluator_class = CoherenceEvaluator
 
-Both derived values can still be set explicitly to override the derivation.
-Capabilities that a given evaluator does not have (e.g. ``serialize_messages``
-or ``MessagesOrQueryResponseInputValidator``) are skipped automatically, so the
-same mixin works for every prompty-based evaluator.
+Every mixin derives from :class:`_ValidatorUnitTestSupport`, which holds the
+shared configuration (``evaluator_class`` and the derived ``validator_module`` /
+``error_target``), the capability manifest, the per-evaluator divergence maps and
+all the construction/resolution helpers. Utilities are resolved by *name* on the
+evaluator's module (see ``_module_fn``) and base methods fall back to
+``super()._<name>`` (see ``_super_impl``), so the tests keep working whether a
+util is inlined in the source or imported from the ``azure-ai-evaluation`` SDK.
+
+``CorePromptyValidatorUnitTests`` carries ``test_capability_manifest``, which
+pins the exact capability surface of each evaluator (``_CAPABILITY_BASELINE``)
+and fails loudly on drift: a removed capability is a likely regression, an added
+one means the source is converging and both the baseline and the mixins composed
+by that evaluator's behavior file must be updated deliberately.
 """
 
 import asyncio
@@ -40,16 +54,17 @@ from azure.ai.evaluation._exceptions import EvaluationException, ErrorCategory
 from ..common.evaluator_mock_config import OutputType, create_flow_side_effect
 
 
-class BaseValidatorUnitTest:
-    """Mixin exercising every repeated util/validator/method with all corner cases.
+class _ValidatorUnitTestSupport:
+    """Shared configuration, capability manifest, divergence maps and helpers.
 
-    Derived classes only need to set ``evaluator_class``; ``validator_module`` and
-    ``error_target`` are derived from it but may be set explicitly to override.
-    The mixin name does not start with ``Test`` so pytest will not collect it
-    directly.
+    Every ``*UnitTests`` mixin inherits from this base so that, however a
+    behavior file composes them, the construction/resolution helpers and the
+    per-evaluator data are always available. The base class name is
+    underscore-prefixed and no mixin name starts with ``Test``, so pytest never
+    collects them directly - only the composed ``Test<Name>ValidatorUnit``
+    subclasses run.
     """
 
-    # Subclasses set evaluator_class; the other two are derived from it unless set.
     validator_module: Any = None
     evaluator_class: Any = None
     error_target: Any = None
@@ -249,8 +264,6 @@ class BaseValidatorUnitTest:
         ),
     }
 
-    # region helpers
-
     def _module(self):
         """Return the evaluator's source module (explicit or derived from the class)."""
         if self.validator_module is not None:
@@ -351,9 +364,56 @@ class BaseValidatorUnitTest:
         caps |= {m for m in self._METHOD_CAPABILITIES if hasattr(ev, m)}
         return caps
 
-    # endregion
+    def _extract_tool_defs_callable(self):
+        """Return an ``extract(tool_calls, tool_definitions)`` for the asset, or None.
 
-    # region Capability manifest (skip-hiding guard)
+        Matches only evaluators that inline their own copy of the util: the
+        module-level 3-arg function (tool_input_accuracy, tool_selection) or the
+        class-level override (tool_call_accuracy's 2-arg method). The inherited
+        3-arg base method is deliberately ignored - it lives in the SDK (not the
+        asset source) and its per-asset coverage impact is nil. The explicit
+        ``error_target`` is supplied only when the callable's signature needs it.
+        """
+        fn = getattr(self._module(), "_extract_needed_tool_definitions", None)
+        if fn is None:
+            ev = self._make_evaluator()
+            if type(ev).__dict__.get("_extract_needed_tool_definitions") is None:
+                return None
+            fn = ev._extract_needed_tool_definitions
+        positional = [
+            p
+            for p in inspect.signature(fn).parameters.values()
+            if p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD)
+        ]
+        if len(positional) >= 3:
+            target = self._target()
+            return lambda calls, defs: fn(calls, defs, target)
+        return lambda calls, defs: fn(calls, defs)
+
+    def _tool_reformat_module(self):
+        """Return the module if it inlines ``reformat_agent_response``, else skip.
+
+        Only the tool evaluators inline both ``_get_agent_response`` and the
+        public ``reformat_agent_response`` copy; other evaluators expose neither
+        (or only the private helper), so gate on both.
+        """
+        module = self._module()
+        if getattr(module, "_get_agent_response", None) is None:
+            pytest.skip("no inlined tool-family reformat helpers")
+        if getattr(module, "reformat_agent_response", None) is None:
+            pytest.skip("no inlined reformat_agent_response")
+        return module
+
+    def _tool_definitions_validator_cls(self):
+        """Return the asset's ``ToolDefinitionsValidator`` class, or skip."""
+        cls = getattr(self._module(), "ToolDefinitionsValidator", None)
+        if cls is None:
+            pytest.skip("no ToolDefinitionsValidator")
+        return cls
+
+
+class CorePromptyValidatorUnitTests(_ValidatorUnitTestSupport):
+    """Capability manifest plus the base token/not-applicable/do_eval/real_call tests every prompty evaluator shares."""
 
     def test_capability_manifest(self):
         """Fail (not skip) when an evaluator gains or loses a probed capability.
@@ -379,389 +439,6 @@ class BaseValidatorUnitTest:
             f"  removed (possible regression now hidden as skips): {missing}\n"
             f"  added (source converging; update the baseline): {extra}"
         )
-
-    # endregion
-
-    # region ConversationValidator field helpers
-
-    def test_validate_field_exists(self):
-        """Cover required-field presence checks."""
-        v = self._validator()
-        assert v._validate_field_exists({"a": 1}, "a", "ctx") is None
-        self._assert_exc(v._validate_field_exists({}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
-
-    def test_validate_string_field(self):
-        """Cover string field type/presence checks."""
-        v = self._validator()
-        assert v._validate_string_field({"a": "x"}, "a", "ctx") is None
-        self._assert_exc(v._validate_string_field({}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
-        self._assert_exc(v._validate_string_field({"a": 1}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
-
-    def test_validate_list_field(self):
-        """Cover list field type/presence checks."""
-        v = self._validator()
-        assert v._validate_list_field({"a": []}, "a", "ctx") is None
-        self._assert_exc(v._validate_list_field({}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
-        self._assert_exc(v._validate_list_field({"a": 1}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
-
-    def test_validate_dict_field(self):
-        """Cover dict field type/presence checks."""
-        v = self._validator()
-        assert v._validate_dict_field({"a": {}}, "a", "ctx") is None
-        self._assert_exc(v._validate_dict_field({}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
-        self._assert_exc(v._validate_dict_field({"a": 1}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
-
-    # endregion
-
-    # region ConversationValidator content-item helpers
-
-    def test_validate_text_content_item(self):
-        """Cover text content-item validation."""
-        v = self._validator()
-        assert v._validate_text_content_item({"text": "hi"}, "user") is None
-        self._assert_exc(v._validate_text_content_item({}, "user"))
-        self._assert_exc(v._validate_text_content_item({"text": 1}, "user"))
-
-    def test_validate_tool_call_content_item(self):
-        """Cover tool_call content-item validation paths."""
-        v = self._validator()
-        # Missing / invalid type.
-        self._assert_exc(v._validate_tool_call_content_item({}))
-        self._assert_exc(v._validate_tool_call_content_item({"type": "text"}))
-        # mcp_approval_request short-circuits to valid.
-        assert v._validate_tool_call_content_item({"type": "mcp_approval_request"}) is None
-        # Fully valid tool_call.
-        valid = {"type": "tool_call", "name": "f", "arguments": {}, "tool_call_id": "c1"}
-        assert v._validate_tool_call_content_item(valid) is None
-        # Missing name / non-dict arguments / missing tool_call_id.
-        self._assert_exc(v._validate_tool_call_content_item({"type": "tool_call", "arguments": {}, "tool_call_id": "c1"}))
-        self._assert_exc(
-            v._validate_tool_call_content_item(
-                {"type": "tool_call", "name": "f", "arguments": 1, "tool_call_id": "c1"}
-            )
-        )
-        self._assert_exc(v._validate_tool_call_content_item({"type": "tool_call", "name": "f", "arguments": {}}))
-
-    def test_validate_user_or_system_message(self):
-        """Cover user/system message content validation."""
-        v = self._validator()
-        assert v._validate_user_or_system_message({"content": "hi"}, "user") is None
-        assert v._validate_user_or_system_message({"content": [{"type": "text", "text": "hi"}]}, "user") is None
-        assert v._validate_user_or_system_message({"content": [{"type": "input_text", "text": "hi"}]}, "user") is None
-        self._assert_exc(v._validate_user_or_system_message({"content": [{"type": "tool_call", "text": "x"}]}, "user"))
-        self._assert_exc(v._validate_user_or_system_message({"content": [{"type": "text", "text": 1}]}, "user"))
-
-    def test_validate_assistant_message(self):
-        """Cover assistant message content validation."""
-        v = self._validator()
-        assert v._validate_assistant_message({"content": "hi"}) is None
-        assert v._validate_assistant_message({"content": [{"type": "output_text", "text": "ok"}]}) is None
-        assert v._validate_assistant_message(
-            {"content": [{"type": "tool_call", "name": "f", "arguments": {}, "tool_call_id": "c1"}]}
-        ) is None
-        self._assert_exc(v._validate_assistant_message({"content": [{"type": "input_text", "text": "x"}]}))
-
-    def test_validate_assistant_message_unsupported_tools(self):
-        """Cover the unsupported-tool rejection path."""
-        v = self._validator(check_for_unsupported_tools=True)
-        bad = {"type": "tool_call", "name": "bing_grounding", "arguments": {}, "tool_call_id": "c1"}
-        self._assert_exc(v._validate_assistant_message({"content": [bad]}), ErrorCategory.NOT_APPLICABLE)
-        openapi = {"type": "openapi_call", "name": "x", "arguments": {}, "tool_call_id": "c2"}
-        self._assert_exc(v._validate_assistant_message({"content": [openapi]}), ErrorCategory.NOT_APPLICABLE)
-
-    def test_validate_tool_message(self):
-        """Cover tool message validation paths."""
-        v = self._validator()
-        self._assert_exc(v._validate_tool_message({"content": "x", "tool_call_id": "c1"}))
-        self._assert_exc(v._validate_tool_message({"content": [{"type": "tool_result", "tool_result": {}}]}))
-        self._assert_exc(v._validate_tool_message({"tool_call_id": "c1", "content": [{"type": "text"}]}))
-        self._assert_exc(v._validate_tool_message({"tool_call_id": "c1", "content": [{"type": "tool_result"}]}))
-        valid = {"tool_call_id": "c1", "content": [{"type": "tool_result", "tool_result": {"a": 1}}]}
-        assert v._validate_tool_message(valid) is None
-
-    # endregion
-
-    # region ConversationValidator message / input list helpers
-
-    def test_validate_message_dict(self):
-        """Cover message-dict validation across roles."""
-        v = self._validator()
-        self._assert_exc(v._validate_message_dict({"content": "x"}))
-        self._assert_exc(v._validate_message_dict({"role": "user"}))
-        self._assert_exc(v._validate_message_dict({"role": "user", "content": 1}))
-        self._assert_exc(v._validate_message_dict({"role": "user", "content": ""}))
-        self._assert_exc(v._validate_message_dict({"role": "user", "content": [{"text": "x"}]}))
-        assert v._validate_message_dict({"role": "user", "content": "hi"}) is None
-        assert v._validate_message_dict({"role": "assistant", "content": [{"type": "text", "text": "ok"}]}) is None
-        assert v._validate_message_dict(
-            {"role": "tool", "tool_call_id": "c1", "content": [{"type": "tool_result", "tool_result": {}}]}
-        ) is None
-
-    def test_validate_input_messages_list(self):
-        """Cover input-messages-list validation paths."""
-        v = self._validator()
-        self._assert_exc(v._validate_input_messages_list(None, "Query"), ErrorCategory.MISSING_FIELD)
-        self._assert_exc(v._validate_input_messages_list("", "Query"), ErrorCategory.MISSING_FIELD)
-        assert v._validate_input_messages_list("hi", "Query") is None
-        self._assert_exc(v._validate_input_messages_list(1, "Query"), ErrorCategory.INVALID_VALUE)
-        self._assert_exc(v._validate_input_messages_list([], "Query"), ErrorCategory.MISSING_FIELD)
-        self._assert_exc(v._validate_input_messages_list([1], "Query"), ErrorCategory.INVALID_VALUE)
-        self._assert_exc(v._validate_input_messages_list([{"role": "user"}], "Query"))
-        assert v._validate_input_messages_list([{"role": "user", "content": "hi"}], "Query") is None
-
-    def test_validate_conversation(self):
-        """Cover conversation-dict validation paths."""
-        v = self._validator()
-        self._assert_exc(v._validate_conversation([]), ErrorCategory.INVALID_VALUE)
-        self._assert_exc(v._validate_conversation({}))
-        assert v._validate_conversation({"messages": [{"role": "user", "content": "hi"}]}) is None
-
-    def test_validate_query_and_response(self):
-        """Cover query/response validation, required and optional."""
-        v = self._validator(requires_query=True)
-        self._assert_exc(v._validate_query(None))
-        assert v._validate_query([{"role": "user", "content": "hi"}]) is None
-        v2 = self._validator(requires_query=False)
-        assert v2._validate_query(None) is None
-        self._assert_exc(v._validate_response(None))
-        assert v._validate_response([{"role": "assistant", "content": "ok"}]) is None
-
-    def test_validate_eval_input_conversation_path(self):
-        """Cover validate_eval_input via the conversation branch."""
-        v = self._validator()
-        assert v.validate_eval_input(
-            {"conversation": {"messages": [{"role": "user", "content": "hi"}]}}
-        ) is True
-        with pytest.raises(EvaluationException):
-            v.validate_eval_input({"conversation": {"messages": [1]}})
-
-    def test_validate_eval_input_query_response_path(self):
-        """Cover validate_eval_input via the query/response branch."""
-        v = self._validator()
-        assert v.validate_eval_input(
-            {
-                "query": [{"role": "user", "content": "hi"}],
-                "response": [{"role": "assistant", "content": "ok"}],
-            }
-        ) is True
-        with pytest.raises(EvaluationException):
-            v.validate_eval_input({"query": None, "response": [{"role": "assistant", "content": "ok"}]})
-        with pytest.raises(EvaluationException):
-            v.validate_eval_input({"query": [{"role": "user", "content": "hi"}], "response": None})
-
-    # endregion
-
-    # region MessagesOrQueryResponseInputValidator
-
-    def test_mqr_messages_not_list(self):
-        """Reject a non-list ``messages`` input."""
-        v = self._messages_or_query_response_validator()
-        with pytest.raises(EvaluationException):
-            v.validate_eval_input({"messages": "x"})
-
-    def test_mqr_messages_empty(self):
-        """Reject an empty ``messages`` list."""
-        v = self._messages_or_query_response_validator()
-        with pytest.raises(EvaluationException):
-            v.validate_eval_input({"messages": []})
-
-    def test_mqr_message_not_dict(self):
-        """Reject a non-dict message item."""
-        v = self._messages_or_query_response_validator()
-        with pytest.raises(EvaluationException):
-            v.validate_eval_input({"messages": [1]})
-
-    def test_mqr_message_missing_role(self):
-        """Reject a message item missing the role."""
-        v = self._messages_or_query_response_validator()
-        with pytest.raises(EvaluationException):
-            v.validate_eval_input({"messages": [{"content": "x"}]})
-
-    def test_mqr_invalid_role(self):
-        """Reject an unknown message role."""
-        v = self._messages_or_query_response_validator()
-        with pytest.raises(EvaluationException):
-            v.validate_eval_input({"messages": [{"role": "bogus", "content": "x"}]})
-
-    def test_mqr_missing_user(self):
-        """Reject input that has no user message."""
-        v = self._messages_or_query_response_validator()
-        with pytest.raises(EvaluationException):
-            v.validate_eval_input({"messages": [{"role": "assistant", "content": "x"}]})
-
-    def test_mqr_missing_assistant(self):
-        """Reject input that has no assistant message."""
-        v = self._messages_or_query_response_validator()
-        with pytest.raises(EvaluationException):
-            v.validate_eval_input({"messages": [{"role": "user", "content": "x"}]})
-
-    def test_mqr_last_message_no_text(self):
-        """Reject input whose last message has no text content."""
-        v = self._messages_or_query_response_validator()
-        msgs = [
-            {"role": "user", "content": [{"type": "text", "text": "hi"}]},
-            {
-                "role": "assistant",
-                "content": [{"type": "tool_call", "name": "f", "arguments": {}, "tool_call_id": "c1"}],
-            },
-        ]
-        with pytest.raises(EvaluationException):
-            v.validate_eval_input({"messages": msgs})
-
-    def test_mqr_valid_messages(self):
-        """Accept a well-formed messages list."""
-        v = self._messages_or_query_response_validator()
-        msgs = [
-            {"role": "user", "content": [{"type": "text", "text": "hi"}]},
-            {"role": "assistant", "content": [{"type": "text", "text": "hello"}]},
-        ]
-        assert v.validate_eval_input({"messages": msgs}) is True
-
-    def test_mqr_delegates_to_super_without_messages(self):
-        """Delegate to the base validator when no messages key is present."""
-        v = self._messages_or_query_response_validator()
-        assert v.validate_eval_input(
-            {
-                "query": [{"role": "user", "content": "hi"}],
-                "response": [{"role": "assistant", "content": "ok"}],
-            }
-        ) is True
-
-    # endregion
-
-    # region Module-level utils
-
-    def test_merge_query_response_messages(self):
-        """Cover merging of query and response message lists."""
-        fn = self._module_fn("_merge_query_response_messages")
-        assert fn([{"a": 1}], [{"b": 2}]) == [{"a": 1}, {"b": 2}]
-
-    def test_split_messages_at_latest_user(self):
-        """Cover splitting messages at the latest user turn."""
-        fn = self._module_fn("_split_messages_at_latest_user")
-        msgs = [
-            {"role": "user", "content": "q1"},
-            {"role": "assistant", "content": "a1"},
-            {"role": "user", "content": "q2"},
-            {"role": "assistant", "content": "a2"},
-        ]
-        query, response = fn(msgs)
-        assert query == msgs[:3]
-        assert response == msgs[3:]
-
-    def test_wrap_string_messages(self):
-        """Cover wrapping plain strings into message dicts."""
-        fn = self._module_fn("_wrap_string_messages")
-        query, response = fn("hello", "world")
-        assert query == [{"role": "user", "content": [{"type": "text", "text": "hello"}]}]
-        assert response == [{"role": "assistant", "content": [{"type": "text", "text": "world"}]}]
-
-    def test_resolve_evaluation_level(self):
-        """Cover evaluation-level resolution and invalid inputs."""
-        fn = self._module_fn("_resolve_evaluation_level")
-        target = self._target()
-        level_enum = getattr(self._module(), "EvaluationLevel")
-        assert fn(None, target) is None
-        assert fn("", target) is None
-        assert fn(level_enum.TURN, target) == level_enum.TURN
-        assert fn("turn", target) == level_enum.TURN
-        assert fn("conversation", target) == level_enum.CONVERSATION
-        with pytest.raises(EvaluationException):
-            fn("bogus", target)
-        with pytest.raises(EvaluationException):
-            fn(123, target)
-
-    def test_is_intermediate_response(self):
-        """Cover intermediate-response detection."""
-        fn = self._module_fn("_is_intermediate_response")
-        assert fn([{"role": "assistant", "content": [{"type": "function_call", "name": "f"}]}]) is True
-        assert fn([{"role": "assistant", "content": [{"type": "mcp_approval_request"}]}]) is True
-        assert fn([{"role": "assistant", "content": [{"type": "output_text", "text": "done"}]}]) is False
-        assert fn("x") is False
-        assert fn([]) is False
-
-    def test_drop_mcp_approval_messages(self):
-        """Cover removal of MCP approval request/response messages."""
-        fn = self._module_fn("_drop_mcp_approval_messages")
-        msgs = [
-            {"role": "assistant", "content": [{"type": "mcp_approval_request"}]},
-            {"role": "tool", "content": [{"type": "mcp_approval_response"}]},
-            {"role": "assistant", "content": [{"type": "text", "text": "ok"}]},
-        ]
-        assert fn(msgs) == [{"role": "assistant", "content": [{"type": "text", "text": "ok"}]}]
-        assert fn("x") == "x"
-
-    def test_normalize_function_call_types(self):
-        """Cover normalization of function/openapi call types and non-dict items."""
-        fn = self._module_fn("_normalize_function_call_types")
-        msgs = [
-            {"role": "assistant", "content": [{"type": "function_call", "name": "f"}, "non-dict-item"]},
-            {"role": "tool", "content": [{"type": "function_call_output", "function_call_output": {"x": 1}}]},
-            {"role": "assistant", "content": [{"type": "openapi_call", "name": "g"}]},
-            {"role": "tool", "content": [{"type": "openapi_call_output", "openapi_call_output": {"y": 2}}]},
-        ]
-        out = fn(msgs)
-        assert out[0]["content"][0]["type"] == "tool_call"
-        assert out[1]["content"][0]["type"] == "tool_result"
-        assert out[1]["content"][0]["tool_result"] == {"x": 1}
-        assert out[2]["content"][0]["type"] == "tool_call"
-        assert out[3]["content"][0]["type"] == "tool_result"
-        assert out[3]["content"][0]["tool_result"] == {"y": 2}
-        assert fn("x") == "x"
-
-    def test_preprocess_messages(self):
-        """Cover the combined preprocessing pipeline."""
-        fn = self._module_fn("_preprocess_messages")
-        msgs = [
-            {"role": "assistant", "content": [{"type": "mcp_approval_request"}]},
-            {"role": "assistant", "content": [{"type": "function_call", "name": "f"}]},
-        ]
-        assert fn(msgs) == [{"role": "assistant", "content": [{"type": "tool_call", "name": "f"}]}]
-
-    def test_serialize_messages(self):
-        """Cover serialization of a mixed-role conversation."""
-        fn = self._module_fn("serialize_messages")
-        assert fn([]) == ""
-        msgs = [
-            "not a dict",
-            {"foo": "bar"},
-            {"role": "system", "content": "Be helpful."},
-            {"role": "user", "content": [{"type": "text", "text": "Hi"}]},
-            {"role": "assistant", "content": "Hello there"},
-            {"role": "user", "content": "Another question"},
-            {"role": "assistant", "content": [{"type": "text", "text": "Final answer"}]},
-        ]
-        out = fn(msgs)
-        assert isinstance(out, str)
-        assert "Final answer" in out
-
-    def test_serialize_messages_system_list_content(self):
-        """Cover serialization when the system message uses list content."""
-        fn = self._module_fn("serialize_messages")
-        msgs = [
-            {"role": "system", "content": [{"type": "text", "text": "System prompt"}]},
-            {"role": "user", "content": [{"type": "text", "text": "Question"}]},
-            {"role": "assistant", "content": [{"type": "text", "text": "Answer"}]},
-        ]
-        out = fn(msgs)
-        assert isinstance(out, str)
-        assert "Answer" in out
-
-    def test_serialize_messages_trailing_user(self):
-        """Cover the trailing-user-query flush branch of serialization."""
-        fn = self._module_fn("serialize_messages")
-        msgs = [
-            {"role": "user", "content": [{"type": "text", "text": "First question"}]},
-            {"role": "assistant", "content": [{"type": "text", "text": "First answer"}]},
-            {"role": "user", "content": [{"type": "text", "text": "Trailing question"}]},
-        ]
-        out = fn(msgs)
-        assert isinstance(out, str)
-        assert "Trailing question" in out
-
-    # endregion
-
-    # region Evaluator instance methods (sync)
 
     def test_get_token_metadata(self):
         """Cover token-metadata extraction with and without counts."""
@@ -793,89 +470,41 @@ class BaseValidatorUnitTest:
         assert res[f"{rk}_status"] == "skipped"
         assert "because reasons" in res[f"{rk}_reason"]
 
-    def test_should_use_conversation_level(self):
-        """Cover the conversation-vs-turn level decision logic."""
+    def test_is_intermediate_response(self):
+        """Cover intermediate-response detection."""
+        fn = self._module_fn("_is_intermediate_response")
+        assert fn([{"role": "assistant", "content": [{"type": "function_call", "name": "f"}]}]) is True
+        assert fn([{"role": "assistant", "content": [{"type": "mcp_approval_request"}]}]) is True
+        assert fn([{"role": "assistant", "content": [{"type": "output_text", "text": "done"}]}]) is False
+        assert fn("x") is False
+        assert fn([]) is False
+
+    def test_do_eval_nan_output_raises(self):
+        """A turn-level score that evaluates to NaN must not crash with TypeError."""
         ev = self._make_evaluator()
-        if not hasattr(ev, "_should_use_conversation_level"):
-            pytest.skip("no _should_use_conversation_level")
+        if not hasattr(ev, "_do_eval"):
+            pytest.skip("no _do_eval")
+        rk = ev._result_key
         level_enum = getattr(self._module(), "EvaluationLevel", None)
-        if level_enum is None:
-            pytest.skip("no EvaluationLevel")
-        ev._evaluation_level = level_enum.CONVERSATION
-        assert ev._should_use_conversation_level({}) is True
-        ev._evaluation_level = level_enum.TURN
-        assert ev._should_use_conversation_level({"messages": [1]}) is False
-        ev._evaluation_level = None
-        assert ev._should_use_conversation_level({"messages": [1]}) is True
-        assert ev._should_use_conversation_level({}) is False
+        if level_enum is not None:
+            ev._evaluation_level = level_enum.TURN
 
-    def test_build_result(self):
-        """Cover the result-dict builder for populated and empty scores."""
-        ev = self._make_evaluator()
-        if not hasattr(ev, "_build_result"):
-            pytest.skip("no _build_result")
-        rk = ev._result_key
-        # quality_grader has a bespoke keyword-only _build_result signature
-        # (passed/failure_reasons/stage1_parsed/...); see EVALUATOR_DISCREPANCIES.md.
-        if rk == "quality_grader":
-            pytest.skip("quality_grader uses a bespoke _build_result signature")
-        # task_adherence is the only builder that omits the `status` kwarg.
-        has_status = rk != "task_adherence"
-        kwargs = dict(
-            score=4, result="pass", reason="good", properties={"a": 1}, prompty_output_dict={"input_token_count": 2}
-        )
-        if has_status:
-            kwargs["status"] = "completed"
-        res = ev._build_result(**kwargs)
-        assert res[rk] == 4
-        assert res[f"{rk}_result"] == "pass"
-        if has_status:
-            assert res[f"{rk}_status"] == "completed"
-        assert res[f"{rk}_properties"]["a"] == 1
-        assert res[f"{rk}_prompt_tokens"] == 2
-        empty = dict(score=None, result="error", reason="bad", properties={}, prompty_output_dict={})
-        if has_status:
-            empty["status"] = "error"
-        res2 = ev._build_result(**empty)
-        assert res2[rk] is None
+        async def flow(timeout=None, **kwargs):
+            return {"llm_output": {"status": "completed", "reason": "no score field"}}
 
-    def test_parse_prompty_output(self):
-        """Cover parsing of completed, skipped and malformed prompty outputs."""
-        ev = self._make_evaluator()
-        if not hasattr(ev, "_parse_prompty_output"):
-            pytest.skip("no _parse_prompty_output")
-        rk = ev._result_key
-        res = ev._parse_prompty_output(
-            {"llm_output": {"status": "completed", "score": 4, "reason": "r", "properties": {}}}
-        )
-        assert res[f"{rk}_result"] in ("pass", "fail")
-        assert isinstance(res[rk], (int, float)) and not isinstance(res[rk], bool)
-        # A skipped prompty status normally maps to "not_applicable"; see
-        # EVALUATOR_DISCREPANCIES.md for the evaluators that diverge.
-        res2 = ev._parse_prompty_output({"llm_output": {"status": "skipped", "reason": "skip"}})
-        assert res2[f"{rk}_result"] == self._PARSE_SKIPPED_RESULT.get(rk, "not_applicable")
-        # Malformed llm_outputs are handled deterministically but inconsistently
-        # per evaluator (recorded in _PARSE_MALFORMED_EXPECTATIONS); the invariant
-        # is no unhandled TypeError from math.isnan.
-        expectations = self._PARSE_MALFORMED_EXPECTATIONS.get(rk)
-        if expectations is None:
-            pytest.skip(f"no recorded _parse_prompty_output expectations for {rk}")
-        malformed = (
-            {"llm_output": {"status": "completed", "reason": "r"}},
-            {"llm_output": {"status": "completed", "score": "abc"}},
-            {"llm_output": "not a dict"},
-        )
-        for inp, expected in zip(malformed, expectations):
-            if isinstance(expected, type) and issubclass(expected, BaseException):
-                with pytest.raises(expected):
-                    ev._parse_prompty_output(inp)
-            else:
-                out = ev._parse_prompty_output(inp)
-                assert out[f"{rk}_status"] == expected
-
-    # endregion
-
-    # region Evaluator instance methods (async)
+        ev._flow = MagicMock(side_effect=flow)
+        # The invariant: a missing score is handled deterministically (never an
+        # unhandled TypeError from math.isnan(None)). The exact handling diverges
+        # by evaluator and is tracked in EVALUATOR_DISCREPANCIES.md.
+        if rk in self._DO_EVAL_MISSING_SCORE_KEYERROR:
+            with pytest.raises(KeyError):
+                self._run_async(ev._do_eval({"query": "q", "response": "r"}))
+        elif rk in self._DO_EVAL_MISSING_SCORE_RETURNS_DICT:
+            res = self._run_async(ev._do_eval({"query": "q", "response": "r"}))
+            assert isinstance(res, dict)
+        else:
+            with pytest.raises(EvaluationException):
+                self._run_async(ev._do_eval({"query": "q", "response": "r"}))
 
     def test_the_super_do_eval_missing_inputs_raises(self):
         """Raise when required inputs are missing."""
@@ -885,19 +514,6 @@ class BaseValidatorUnitTest:
             pytest.skip("no _do_eval on super")
         with pytest.raises(EvaluationException):
             self._run_async(do_eval({}))
-
-    def test_the_super_do_eval_intermediate_response(self):
-        """Return not-applicable for an intermediate (tool-call) response."""
-        ev = self._make_evaluator()
-        do_eval = self._super_impl(ev, "do_eval")
-        if do_eval is None:
-            pytest.skip("no _do_eval on super")
-        if ev._result_key in self._SUPER_DO_EVAL_NOT_APPLICABLE_UNSUPPORTED:
-            pytest.skip("_return_not_applicable_result signature is incompatible with the base _do_eval")
-        rk = ev._result_key
-        intermediate = [{"role": "assistant", "content": [{"type": "function_call", "name": "f"}]}]
-        res = self._run_async(do_eval({"query": "q", "response": intermediate}))
-        assert res[f"{rk}_result"] == "not_applicable"
 
     def test_the_super_do_eval_dict_output(self):
         """Parse a dict llm_output from the prompty flow."""
@@ -909,23 +525,6 @@ class BaseValidatorUnitTest:
         ev._flow = MagicMock(side_effect=create_flow_side_effect(4, OutputType.DICT))
         res = self._run_async(do_eval({"query": "q", "response": "r"}))
         assert res[f"{rk}_score"] == 4
-
-    def test_the_super_do_eval_skipped_output(self):
-        """Map a skipped llm_output to a not-applicable result."""
-        ev = self._make_evaluator()
-        do_eval = self._super_impl(ev, "do_eval")
-        if do_eval is None:
-            pytest.skip("no _do_eval on super")
-        if ev._result_key in self._SUPER_DO_EVAL_NOT_APPLICABLE_UNSUPPORTED:
-            pytest.skip("_return_not_applicable_result signature is incompatible with the base _do_eval")
-        rk = ev._result_key
-
-        async def flow(timeout=None, **kwargs):
-            return {"llm_output": {"status": "skipped", "reason": "nope"}}
-
-        ev._flow = MagicMock(side_effect=flow)
-        res = self._run_async(do_eval({"query": "q", "response": "r"}))
-        assert res[f"{rk}_result"] == "not_applicable"
 
     def test_the_super_do_eval_json_string_output(self):
         """Parse a JSON-string llm_output from the prompty flow."""
@@ -987,33 +586,6 @@ class BaseValidatorUnitTest:
         ev._flow = MagicMock(side_effect=flow)
         with pytest.raises(EvaluationException):
             self._run_async(do_eval({"query": "q", "response": "r"}))
-
-    def test_do_eval_nan_output_raises(self):
-        """A turn-level score that evaluates to NaN must not crash with TypeError."""
-        ev = self._make_evaluator()
-        if not hasattr(ev, "_do_eval"):
-            pytest.skip("no _do_eval")
-        rk = ev._result_key
-        level_enum = getattr(self._module(), "EvaluationLevel", None)
-        if level_enum is not None:
-            ev._evaluation_level = level_enum.TURN
-
-        async def flow(timeout=None, **kwargs):
-            return {"llm_output": {"status": "completed", "reason": "no score field"}}
-
-        ev._flow = MagicMock(side_effect=flow)
-        # The invariant: a missing score is handled deterministically (never an
-        # unhandled TypeError from math.isnan(None)). The exact handling diverges
-        # by evaluator and is tracked in EVALUATOR_DISCREPANCIES.md.
-        if rk in self._DO_EVAL_MISSING_SCORE_KEYERROR:
-            with pytest.raises(KeyError):
-                self._run_async(ev._do_eval({"query": "q", "response": "r"}))
-        elif rk in self._DO_EVAL_MISSING_SCORE_RETURNS_DICT:
-            res = self._run_async(ev._do_eval({"query": "q", "response": "r"}))
-            assert isinstance(res, dict)
-        else:
-            with pytest.raises(EvaluationException):
-                self._run_async(ev._do_eval({"query": "q", "response": "r"}))
 
     def test_the_super_real_call_convert_raises(self):
         """Propagate exceptions raised while converting kwargs to eval input."""
@@ -1110,6 +682,440 @@ class BaseValidatorUnitTest:
         ev._do_eval = fake_do_eval
         assert self._run_async(real_call(query="q", response="r")) == {}
 
+
+class SuperDoEvalNotApplicableUnitTests(_ValidatorUnitTestSupport):
+    """Base ``_do_eval`` not-applicable paths, for evaluators whose ``_return_not_applicable_result`` matches the base signature."""
+
+    def test_the_super_do_eval_intermediate_response(self):
+        """Return not-applicable for an intermediate (tool-call) response."""
+        ev = self._make_evaluator()
+        do_eval = self._super_impl(ev, "do_eval")
+        if do_eval is None:
+            pytest.skip("no _do_eval on super")
+        if ev._result_key in self._SUPER_DO_EVAL_NOT_APPLICABLE_UNSUPPORTED:
+            pytest.skip("_return_not_applicable_result signature is incompatible with the base _do_eval")
+        rk = ev._result_key
+        intermediate = [{"role": "assistant", "content": [{"type": "function_call", "name": "f"}]}]
+        res = self._run_async(do_eval({"query": "q", "response": intermediate}))
+        assert res[f"{rk}_result"] == "not_applicable"
+
+    def test_the_super_do_eval_skipped_output(self):
+        """Map a skipped llm_output to a not-applicable result."""
+        ev = self._make_evaluator()
+        do_eval = self._super_impl(ev, "do_eval")
+        if do_eval is None:
+            pytest.skip("no _do_eval on super")
+        if ev._result_key in self._SUPER_DO_EVAL_NOT_APPLICABLE_UNSUPPORTED:
+            pytest.skip("_return_not_applicable_result signature is incompatible with the base _do_eval")
+        rk = ev._result_key
+
+        async def flow(timeout=None, **kwargs):
+            return {"llm_output": {"status": "skipped", "reason": "nope"}}
+
+        ev._flow = MagicMock(side_effect=flow)
+        res = self._run_async(do_eval({"query": "q", "response": "r"}))
+        assert res[f"{rk}_result"] == "not_applicable"
+
+
+class MessagePreprocessUnitTests(_ValidatorUnitTestSupport):
+    """Tests for the message-preprocessing utils (drop-mcp, normalize, preprocess)."""
+
+    def test_drop_mcp_approval_messages(self):
+        """Cover removal of MCP approval request/response messages."""
+        fn = self._module_fn("_drop_mcp_approval_messages")
+        msgs = [
+            {"role": "assistant", "content": [{"type": "mcp_approval_request"}]},
+            {"role": "tool", "content": [{"type": "mcp_approval_response"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "ok"}]},
+        ]
+        assert fn(msgs) == [{"role": "assistant", "content": [{"type": "text", "text": "ok"}]}]
+        assert fn("x") == "x"
+
+    def test_normalize_function_call_types(self):
+        """Cover normalization of function/openapi call types and non-dict items."""
+        fn = self._module_fn("_normalize_function_call_types")
+        msgs = [
+            {"role": "assistant", "content": [{"type": "function_call", "name": "f"}, "non-dict-item"]},
+            {"role": "tool", "content": [{"type": "function_call_output", "function_call_output": {"x": 1}}]},
+            {"role": "assistant", "content": [{"type": "openapi_call", "name": "g"}]},
+            {"role": "tool", "content": [{"type": "openapi_call_output", "openapi_call_output": {"y": 2}}]},
+        ]
+        out = fn(msgs)
+        assert out[0]["content"][0]["type"] == "tool_call"
+        assert out[1]["content"][0]["type"] == "tool_result"
+        assert out[1]["content"][0]["tool_result"] == {"x": 1}
+        assert out[2]["content"][0]["type"] == "tool_call"
+        assert out[3]["content"][0]["type"] == "tool_result"
+        assert out[3]["content"][0]["tool_result"] == {"y": 2}
+        assert fn("x") == "x"
+
+    def test_preprocess_messages(self):
+        """Cover the combined preprocessing pipeline."""
+        fn = self._module_fn("_preprocess_messages")
+        msgs = [
+            {"role": "assistant", "content": [{"type": "mcp_approval_request"}]},
+            {"role": "assistant", "content": [{"type": "function_call", "name": "f"}]},
+        ]
+        assert fn(msgs) == [{"role": "assistant", "content": [{"type": "tool_call", "name": "f"}]}]
+
+
+class ConversationValidatorUnitTests(_ValidatorUnitTestSupport):
+    """Corner-case tests for the ``ConversationValidator`` field/content/message/input helpers."""
+
+    def test_validate_field_exists(self):
+        """Cover required-field presence checks."""
+        v = self._validator()
+        assert v._validate_field_exists({"a": 1}, "a", "ctx") is None
+        self._assert_exc(v._validate_field_exists({}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
+
+    def test_validate_string_field(self):
+        """Cover string field type/presence checks."""
+        v = self._validator()
+        assert v._validate_string_field({"a": "x"}, "a", "ctx") is None
+        self._assert_exc(v._validate_string_field({}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
+        self._assert_exc(v._validate_string_field({"a": 1}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
+
+    def test_validate_list_field(self):
+        """Cover list field type/presence checks."""
+        v = self._validator()
+        assert v._validate_list_field({"a": []}, "a", "ctx") is None
+        self._assert_exc(v._validate_list_field({}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
+        self._assert_exc(v._validate_list_field({"a": 1}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
+
+    def test_validate_dict_field(self):
+        """Cover dict field type/presence checks."""
+        v = self._validator()
+        assert v._validate_dict_field({"a": {}}, "a", "ctx") is None
+        self._assert_exc(v._validate_dict_field({}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
+        self._assert_exc(v._validate_dict_field({"a": 1}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
+
+    def test_validate_text_content_item(self):
+        """Cover text content-item validation."""
+        v = self._validator()
+        assert v._validate_text_content_item({"text": "hi"}, "user") is None
+        self._assert_exc(v._validate_text_content_item({}, "user"))
+        self._assert_exc(v._validate_text_content_item({"text": 1}, "user"))
+
+    def test_validate_tool_call_content_item(self):
+        """Cover tool_call content-item validation paths."""
+        v = self._validator()
+        # Missing / invalid type.
+        self._assert_exc(v._validate_tool_call_content_item({}))
+        self._assert_exc(v._validate_tool_call_content_item({"type": "text"}))
+        # mcp_approval_request short-circuits to valid.
+        assert v._validate_tool_call_content_item({"type": "mcp_approval_request"}) is None
+        # Fully valid tool_call.
+        valid = {"type": "tool_call", "name": "f", "arguments": {}, "tool_call_id": "c1"}
+        assert v._validate_tool_call_content_item(valid) is None
+        # Missing name / non-dict arguments / missing tool_call_id.
+        self._assert_exc(v._validate_tool_call_content_item({"type": "tool_call", "arguments": {}, "tool_call_id": "c1"}))
+        self._assert_exc(
+            v._validate_tool_call_content_item(
+                {"type": "tool_call", "name": "f", "arguments": 1, "tool_call_id": "c1"}
+            )
+        )
+        self._assert_exc(v._validate_tool_call_content_item({"type": "tool_call", "name": "f", "arguments": {}}))
+
+    def test_validate_user_or_system_message(self):
+        """Cover user/system message content validation."""
+        v = self._validator()
+        assert v._validate_user_or_system_message({"content": "hi"}, "user") is None
+        assert v._validate_user_or_system_message({"content": [{"type": "text", "text": "hi"}]}, "user") is None
+        assert v._validate_user_or_system_message({"content": [{"type": "input_text", "text": "hi"}]}, "user") is None
+        self._assert_exc(v._validate_user_or_system_message({"content": [{"type": "tool_call", "text": "x"}]}, "user"))
+        self._assert_exc(v._validate_user_or_system_message({"content": [{"type": "text", "text": 1}]}, "user"))
+
+    def test_validate_assistant_message(self):
+        """Cover assistant message content validation."""
+        v = self._validator()
+        assert v._validate_assistant_message({"content": "hi"}) is None
+        assert v._validate_assistant_message({"content": [{"type": "output_text", "text": "ok"}]}) is None
+        assert v._validate_assistant_message(
+            {"content": [{"type": "tool_call", "name": "f", "arguments": {}, "tool_call_id": "c1"}]}
+        ) is None
+        self._assert_exc(v._validate_assistant_message({"content": [{"type": "input_text", "text": "x"}]}))
+
+    def test_validate_tool_message(self):
+        """Cover tool message validation paths."""
+        v = self._validator()
+        self._assert_exc(v._validate_tool_message({"content": "x", "tool_call_id": "c1"}))
+        self._assert_exc(v._validate_tool_message({"content": [{"type": "tool_result", "tool_result": {}}]}))
+        self._assert_exc(v._validate_tool_message({"tool_call_id": "c1", "content": [{"type": "text"}]}))
+        self._assert_exc(v._validate_tool_message({"tool_call_id": "c1", "content": [{"type": "tool_result"}]}))
+        valid = {"tool_call_id": "c1", "content": [{"type": "tool_result", "tool_result": {"a": 1}}]}
+        assert v._validate_tool_message(valid) is None
+
+    def test_validate_message_dict(self):
+        """Cover message-dict validation across roles."""
+        v = self._validator()
+        self._assert_exc(v._validate_message_dict({"content": "x"}))
+        self._assert_exc(v._validate_message_dict({"role": "user"}))
+        self._assert_exc(v._validate_message_dict({"role": "user", "content": 1}))
+        self._assert_exc(v._validate_message_dict({"role": "user", "content": ""}))
+        self._assert_exc(v._validate_message_dict({"role": "user", "content": [{"text": "x"}]}))
+        assert v._validate_message_dict({"role": "user", "content": "hi"}) is None
+        assert v._validate_message_dict({"role": "assistant", "content": [{"type": "text", "text": "ok"}]}) is None
+        assert v._validate_message_dict(
+            {"role": "tool", "tool_call_id": "c1", "content": [{"type": "tool_result", "tool_result": {}}]}
+        ) is None
+
+    def test_validate_input_messages_list(self):
+        """Cover input-messages-list validation paths."""
+        v = self._validator()
+        self._assert_exc(v._validate_input_messages_list(None, "Query"), ErrorCategory.MISSING_FIELD)
+        self._assert_exc(v._validate_input_messages_list("", "Query"), ErrorCategory.MISSING_FIELD)
+        assert v._validate_input_messages_list("hi", "Query") is None
+        self._assert_exc(v._validate_input_messages_list(1, "Query"), ErrorCategory.INVALID_VALUE)
+        self._assert_exc(v._validate_input_messages_list([], "Query"), ErrorCategory.MISSING_FIELD)
+        self._assert_exc(v._validate_input_messages_list([1], "Query"), ErrorCategory.INVALID_VALUE)
+        self._assert_exc(v._validate_input_messages_list([{"role": "user"}], "Query"))
+        assert v._validate_input_messages_list([{"role": "user", "content": "hi"}], "Query") is None
+
+    def test_validate_conversation(self):
+        """Cover conversation-dict validation paths."""
+        v = self._validator()
+        self._assert_exc(v._validate_conversation([]), ErrorCategory.INVALID_VALUE)
+        self._assert_exc(v._validate_conversation({}))
+        assert v._validate_conversation({"messages": [{"role": "user", "content": "hi"}]}) is None
+
+    def test_validate_query_and_response(self):
+        """Cover query/response validation, required and optional."""
+        v = self._validator(requires_query=True)
+        self._assert_exc(v._validate_query(None))
+        assert v._validate_query([{"role": "user", "content": "hi"}]) is None
+        v2 = self._validator(requires_query=False)
+        assert v2._validate_query(None) is None
+        self._assert_exc(v._validate_response(None))
+        assert v._validate_response([{"role": "assistant", "content": "ok"}]) is None
+
+    def test_validate_eval_input_conversation_path(self):
+        """Cover validate_eval_input via the conversation branch."""
+        v = self._validator()
+        assert v.validate_eval_input(
+            {"conversation": {"messages": [{"role": "user", "content": "hi"}]}}
+        ) is True
+        with pytest.raises(EvaluationException):
+            v.validate_eval_input({"conversation": {"messages": [1]}})
+
+    def test_validate_eval_input_query_response_path(self):
+        """Cover validate_eval_input via the query/response branch."""
+        v = self._validator()
+        assert v.validate_eval_input(
+            {
+                "query": [{"role": "user", "content": "hi"}],
+                "response": [{"role": "assistant", "content": "ok"}],
+            }
+        ) is True
+        with pytest.raises(EvaluationException):
+            v.validate_eval_input({"query": None, "response": [{"role": "assistant", "content": "ok"}]})
+        with pytest.raises(EvaluationException):
+            v.validate_eval_input({"query": [{"role": "user", "content": "hi"}], "response": None})
+
+
+class ConversationValidatorToolCheckUnitTests(_ValidatorUnitTestSupport):
+    """Test the ``ConversationValidator`` unsupported-tool rejection path (needs ``check_for_unsupported_tools``)."""
+
+    def test_validate_assistant_message_unsupported_tools(self):
+        """Cover the unsupported-tool rejection path."""
+        v = self._validator(check_for_unsupported_tools=True)
+        bad = {"type": "tool_call", "name": "bing_grounding", "arguments": {}, "tool_call_id": "c1"}
+        self._assert_exc(v._validate_assistant_message({"content": [bad]}), ErrorCategory.NOT_APPLICABLE)
+        openapi = {"type": "openapi_call", "name": "x", "arguments": {}, "tool_call_id": "c2"}
+        self._assert_exc(v._validate_assistant_message({"content": [openapi]}), ErrorCategory.NOT_APPLICABLE)
+
+
+class ToolDefinitionsValidatorUnitTests(_ValidatorUnitTestSupport):
+    """Branch tests for the tool-family ``ToolDefinitionsValidator``."""
+
+    def test_validate_tool_definitions_error_branches(self):
+        """Exercise the list/type/optional/openapi tool-definitions validation branches."""
+        cls = self._tool_definitions_validator_cls()
+        target = self._target()
+        validator = cls(error_target=target)
+        assert validator._validate_tool_definitions(None) is None
+        assert validator._validate_tool_definitions("free-form-string") is None
+        assert validator._validate_tool_definitions([{"name": "f", "parameters": {}}]) is None
+        assert isinstance(validator._validate_tool_definitions(123), EvaluationException)
+        assert isinstance(validator._validate_tool_definitions([123]), EvaluationException)
+        openapi = [{"type": "openapi", "functions": [{"name": "f", "parameters": {}}]}]
+        assert validator._validate_tool_definitions(openapi) is None
+        required = cls(error_target=target, optional_tool_definitions=False)
+        assert isinstance(required._validate_tool_definitions(None), EvaluationException)
+
+    def test_validate_tool_definition_field_branches(self):
+        """Exercise the single tool-definition field validation branches."""
+        cls = self._tool_definitions_validator_cls()
+        validator = cls(error_target=self._target())
+        assert validator._validate_tool_definition({"name": "f", "parameters": {}}) is None
+        assert isinstance(validator._validate_tool_definition("not-a-dict"), EvaluationException)
+        assert isinstance(validator._validate_tool_definition({"parameters": {}}), EvaluationException)
+        assert isinstance(validator._validate_tool_definition({"name": "f"}), EvaluationException)
+
+
+class ConversationSerializationUnitTests(_ValidatorUnitTestSupport):
+    """Tests for the conversation serialization, evaluation-level and result-building utils."""
+
+    def test_merge_query_response_messages(self):
+        """Cover merging of query and response message lists."""
+        fn = self._module_fn("_merge_query_response_messages")
+        assert fn([{"a": 1}], [{"b": 2}]) == [{"a": 1}, {"b": 2}]
+
+    def test_split_messages_at_latest_user(self):
+        """Cover splitting messages at the latest user turn."""
+        fn = self._module_fn("_split_messages_at_latest_user")
+        msgs = [
+            {"role": "user", "content": "q1"},
+            {"role": "assistant", "content": "a1"},
+            {"role": "user", "content": "q2"},
+            {"role": "assistant", "content": "a2"},
+        ]
+        query, response = fn(msgs)
+        assert query == msgs[:3]
+        assert response == msgs[3:]
+
+    def test_wrap_string_messages(self):
+        """Cover wrapping plain strings into message dicts."""
+        fn = self._module_fn("_wrap_string_messages")
+        query, response = fn("hello", "world")
+        assert query == [{"role": "user", "content": [{"type": "text", "text": "hello"}]}]
+        assert response == [{"role": "assistant", "content": [{"type": "text", "text": "world"}]}]
+
+    def test_resolve_evaluation_level(self):
+        """Cover evaluation-level resolution and invalid inputs."""
+        fn = self._module_fn("_resolve_evaluation_level")
+        target = self._target()
+        level_enum = getattr(self._module(), "EvaluationLevel")
+        assert fn(None, target) is None
+        assert fn("", target) is None
+        assert fn(level_enum.TURN, target) == level_enum.TURN
+        assert fn("turn", target) == level_enum.TURN
+        assert fn("conversation", target) == level_enum.CONVERSATION
+        with pytest.raises(EvaluationException):
+            fn("bogus", target)
+        with pytest.raises(EvaluationException):
+            fn(123, target)
+
+    def test_serialize_messages(self):
+        """Cover serialization of a mixed-role conversation."""
+        fn = self._module_fn("serialize_messages")
+        assert fn([]) == ""
+        msgs = [
+            "not a dict",
+            {"foo": "bar"},
+            {"role": "system", "content": "Be helpful."},
+            {"role": "user", "content": [{"type": "text", "text": "Hi"}]},
+            {"role": "assistant", "content": "Hello there"},
+            {"role": "user", "content": "Another question"},
+            {"role": "assistant", "content": [{"type": "text", "text": "Final answer"}]},
+        ]
+        out = fn(msgs)
+        assert isinstance(out, str)
+        assert "Final answer" in out
+
+    def test_serialize_messages_system_list_content(self):
+        """Cover serialization when the system message uses list content."""
+        fn = self._module_fn("serialize_messages")
+        msgs = [
+            {"role": "system", "content": [{"type": "text", "text": "System prompt"}]},
+            {"role": "user", "content": [{"type": "text", "text": "Question"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "Answer"}]},
+        ]
+        out = fn(msgs)
+        assert isinstance(out, str)
+        assert "Answer" in out
+
+    def test_serialize_messages_trailing_user(self):
+        """Cover the trailing-user-query flush branch of serialization."""
+        fn = self._module_fn("serialize_messages")
+        msgs = [
+            {"role": "user", "content": [{"type": "text", "text": "First question"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "First answer"}]},
+            {"role": "user", "content": [{"type": "text", "text": "Trailing question"}]},
+        ]
+        out = fn(msgs)
+        assert isinstance(out, str)
+        assert "Trailing question" in out
+
+    def test_should_use_conversation_level(self):
+        """Cover the conversation-vs-turn level decision logic."""
+        ev = self._make_evaluator()
+        if not hasattr(ev, "_should_use_conversation_level"):
+            pytest.skip("no _should_use_conversation_level")
+        level_enum = getattr(self._module(), "EvaluationLevel", None)
+        if level_enum is None:
+            pytest.skip("no EvaluationLevel")
+        ev._evaluation_level = level_enum.CONVERSATION
+        assert ev._should_use_conversation_level({}) is True
+        ev._evaluation_level = level_enum.TURN
+        assert ev._should_use_conversation_level({"messages": [1]}) is False
+        ev._evaluation_level = None
+        assert ev._should_use_conversation_level({"messages": [1]}) is True
+        assert ev._should_use_conversation_level({}) is False
+
+    def test_build_result(self):
+        """Cover the result-dict builder for populated and empty scores."""
+        ev = self._make_evaluator()
+        if not hasattr(ev, "_build_result"):
+            pytest.skip("no _build_result")
+        rk = ev._result_key
+        # quality_grader has a bespoke keyword-only _build_result signature
+        # (passed/failure_reasons/stage1_parsed/...); see EVALUATOR_DISCREPANCIES.md.
+        if rk == "quality_grader":
+            pytest.skip("quality_grader uses a bespoke _build_result signature")
+        # task_adherence is the only builder that omits the `status` kwarg.
+        has_status = rk != "task_adherence"
+        kwargs = dict(
+            score=4, result="pass", reason="good", properties={"a": 1}, prompty_output_dict={"input_token_count": 2}
+        )
+        if has_status:
+            kwargs["status"] = "completed"
+        res = ev._build_result(**kwargs)
+        assert res[rk] == 4
+        assert res[f"{rk}_result"] == "pass"
+        if has_status:
+            assert res[f"{rk}_status"] == "completed"
+        assert res[f"{rk}_properties"]["a"] == 1
+        assert res[f"{rk}_prompt_tokens"] == 2
+        empty = dict(score=None, result="error", reason="bad", properties={}, prompty_output_dict={})
+        if has_status:
+            empty["status"] = "error"
+        res2 = ev._build_result(**empty)
+        assert res2[rk] is None
+
+    def test_parse_prompty_output(self):
+        """Cover parsing of completed, skipped and malformed prompty outputs."""
+        ev = self._make_evaluator()
+        if not hasattr(ev, "_parse_prompty_output"):
+            pytest.skip("no _parse_prompty_output")
+        rk = ev._result_key
+        res = ev._parse_prompty_output(
+            {"llm_output": {"status": "completed", "score": 4, "reason": "r", "properties": {}}}
+        )
+        assert res[f"{rk}_result"] in ("pass", "fail")
+        assert isinstance(res[rk], (int, float)) and not isinstance(res[rk], bool)
+        # A skipped prompty status normally maps to "not_applicable"; see
+        # EVALUATOR_DISCREPANCIES.md for the evaluators that diverge.
+        res2 = ev._parse_prompty_output({"llm_output": {"status": "skipped", "reason": "skip"}})
+        assert res2[f"{rk}_result"] == self._PARSE_SKIPPED_RESULT.get(rk, "not_applicable")
+        # Malformed llm_outputs are handled deterministically but inconsistently
+        # per evaluator (recorded in _PARSE_MALFORMED_EXPECTATIONS); the invariant
+        # is no unhandled TypeError from math.isnan.
+        expectations = self._PARSE_MALFORMED_EXPECTATIONS.get(rk)
+        if expectations is None:
+            pytest.skip(f"no recorded _parse_prompty_output expectations for {rk}")
+        malformed = (
+            {"llm_output": {"status": "completed", "reason": "r"}},
+            {"llm_output": {"status": "completed", "score": "abc"}},
+            {"llm_output": "not a dict"},
+        )
+        for inp, expected in zip(malformed, expectations):
+            if isinstance(expected, type) and issubclass(expected, BaseException):
+                with pytest.raises(expected):
+                    ev._parse_prompty_output(inp)
+            else:
+                out = ev._parse_prompty_output(inp)
+                assert out[f"{rk}_status"] == expected
+
     def test_real_call_turn_level_splits_messages(self):
         """Split conversation messages into query/response at turn level."""
         ev = self._make_evaluator()
@@ -1135,35 +1141,142 @@ class BaseValidatorUnitTest:
         assert "response" in captured
         assert "messages" not in captured
 
-    # endregion
 
-    # region Tool-evaluator shared code (_extract_needed_tool_definitions)
+class AgentResponseReformatUnitTests(_ValidatorUnitTestSupport):
+    """Tests for the tool-family ``reformat_agent_response`` helper."""
 
-    def _extract_tool_defs_callable(self):
-        """Return an ``extract(tool_calls, tool_definitions)`` for the asset, or None.
-
-        Matches only evaluators that inline their own copy of the util: the
-        module-level 3-arg function (tool_input_accuracy, tool_selection) or the
-        class-level override (tool_call_accuracy's 2-arg method). The inherited
-        3-arg base method is deliberately ignored - it lives in the SDK (not the
-        asset source) and its per-asset coverage impact is nil. The explicit
-        ``error_target`` is supplied only when the callable's signature needs it.
-        """
-        fn = getattr(self._module(), "_extract_needed_tool_definitions", None)
-        if fn is None:
-            ev = self._make_evaluator()
-            if type(ev).__dict__.get("_extract_needed_tool_definitions") is None:
-                return None
-            fn = ev._extract_needed_tool_definitions
-        positional = [
-            p
-            for p in inspect.signature(fn).parameters.values()
-            if p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD)
+    def test_reformat_agent_response_with_tool_messages(self):
+        """Format agent text, flat/nested tool calls, and tool results into a string."""
+        module = self._tool_reformat_module()
+        reformat = module.reformat_agent_response
+        msgs = [
+            {
+                "role": "assistant",
+                "content": [
+                    {"type": "text", "text": "Let me check."},
+                    {
+                        "type": "tool_call",
+                        "tool_call_id": "c1",
+                        "name": "fetch_weather",
+                        "arguments": {"city": "Seattle", "units": None, "days": 3},
+                    },
+                    {
+                        "type": "tool_call",
+                        "tool_call": {"id": "c2", "function": {"name": "send_email", "arguments": {"to": "a@b.com"}}},
+                    },
+                ],
+            },
+            {"role": "tool", "tool_call_id": "c1", "content": [{"type": "tool_result", "tool_result": "sunny"}]},
+            {"role": "tool", "tool_call_id": "c2", "content": [{"type": "tool_result", "tool_result": "sent"}]},
         ]
-        if len(positional) >= 3:
-            target = self._target()
-            return lambda calls, defs: fn(calls, defs, target)
-        return lambda calls, defs: fn(calls, defs)
+        out = reformat(msgs, include_tool_messages=True)
+        assert "TOOL_CALL" in out and "fetch_weather" in out and "send_email" in out
+        assert "TOOL_RESULT" in out
+
+    def test_reformat_agent_response_empty_and_fallback(self):
+        """Return empty string for None/[] and fall back to raw input when unparseable."""
+        module = self._tool_reformat_module()
+        reformat = module.reformat_agent_response
+        assert reformat(None) == ""
+        assert reformat([]) == ""
+        weird = [{"role": "user", "content": [{"type": "text", "text": "hi"}]}]
+        assert reformat(weird) == weird
+
+
+class LogSafeSummaryUnitTests(_ValidatorUnitTestSupport):
+    """Test the tool-family ``_log_safe_summary`` helper."""
+
+    def test_log_safe_summary_variants(self):
+        """Summarize list, dict, and scalar payloads without leaking values."""
+        module = self._module()
+        fn = getattr(module, "_log_safe_summary", None)
+        if fn is None:
+            pytest.skip("no _log_safe_summary")
+        assert "type=list" in fn([{"role": "user"}, "x"])
+        assert "type=dict" in fn({"b": 1, "a": 2})
+        assert "type=int" in fn(5)
+
+
+class MessagesOrQueryResponseUnitTests(_ValidatorUnitTestSupport):
+    """Corner-case tests for ``MessagesOrQueryResponseInputValidator``."""
+
+    def test_mqr_messages_not_list(self):
+        """Reject a non-list ``messages`` input."""
+        v = self._messages_or_query_response_validator()
+        with pytest.raises(EvaluationException):
+            v.validate_eval_input({"messages": "x"})
+
+    def test_mqr_messages_empty(self):
+        """Reject an empty ``messages`` list."""
+        v = self._messages_or_query_response_validator()
+        with pytest.raises(EvaluationException):
+            v.validate_eval_input({"messages": []})
+
+    def test_mqr_message_not_dict(self):
+        """Reject a non-dict message item."""
+        v = self._messages_or_query_response_validator()
+        with pytest.raises(EvaluationException):
+            v.validate_eval_input({"messages": [1]})
+
+    def test_mqr_message_missing_role(self):
+        """Reject a message item missing the role."""
+        v = self._messages_or_query_response_validator()
+        with pytest.raises(EvaluationException):
+            v.validate_eval_input({"messages": [{"content": "x"}]})
+
+    def test_mqr_invalid_role(self):
+        """Reject an unknown message role."""
+        v = self._messages_or_query_response_validator()
+        with pytest.raises(EvaluationException):
+            v.validate_eval_input({"messages": [{"role": "bogus", "content": "x"}]})
+
+    def test_mqr_missing_user(self):
+        """Reject input that has no user message."""
+        v = self._messages_or_query_response_validator()
+        with pytest.raises(EvaluationException):
+            v.validate_eval_input({"messages": [{"role": "assistant", "content": "x"}]})
+
+    def test_mqr_missing_assistant(self):
+        """Reject input that has no assistant message."""
+        v = self._messages_or_query_response_validator()
+        with pytest.raises(EvaluationException):
+            v.validate_eval_input({"messages": [{"role": "user", "content": "x"}]})
+
+    def test_mqr_last_message_no_text(self):
+        """Reject input whose last message has no text content."""
+        v = self._messages_or_query_response_validator()
+        msgs = [
+            {"role": "user", "content": [{"type": "text", "text": "hi"}]},
+            {
+                "role": "assistant",
+                "content": [{"type": "tool_call", "name": "f", "arguments": {}, "tool_call_id": "c1"}],
+            },
+        ]
+        with pytest.raises(EvaluationException):
+            v.validate_eval_input({"messages": msgs})
+
+    def test_mqr_valid_messages(self):
+        """Accept a well-formed messages list."""
+        v = self._messages_or_query_response_validator()
+        msgs = [
+            {"role": "user", "content": [{"type": "text", "text": "hi"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "hello"}]},
+        ]
+        assert v.validate_eval_input({"messages": msgs}) is True
+
+    def test_mqr_delegates_to_super_without_messages(self):
+        """Delegate to the base validator when no messages key is present."""
+        v = self._messages_or_query_response_validator()
+        assert v.validate_eval_input(
+            {
+                "query": [{"role": "user", "content": "hi"}],
+                "response": [{"role": "assistant", "content": "ok"}],
+            }
+        ) is True
+
+
+class ToolDefinitionExtractionUnitTests(_ValidatorUnitTestSupport):
+    """Tests for the inlined ``_extract_needed_tool_definitions`` util."""
 
     def test_extract_needed_tool_definitions_happy_path(self):
         """Return the matching definition for a well-formed converter tool call."""
@@ -1208,60 +1321,9 @@ class BaseValidatorUnitTest:
         with pytest.raises(EvaluationException):
             extract(["not-a-dict"], [])
 
-    # endregion
 
-    # region Tool-evaluator response reformatting (shared module utils)
-
-    def _tool_reformat_module(self):
-        """Return the module if it inlines ``reformat_agent_response``, else skip.
-
-        Only the tool evaluators inline both ``_get_agent_response`` and the
-        public ``reformat_agent_response`` copy; other evaluators expose neither
-        (or only the private helper), so gate on both.
-        """
-        module = self._module()
-        if getattr(module, "_get_agent_response", None) is None:
-            pytest.skip("no inlined tool-family reformat helpers")
-        if getattr(module, "reformat_agent_response", None) is None:
-            pytest.skip("no inlined reformat_agent_response")
-        return module
-
-    def test_reformat_agent_response_with_tool_messages(self):
-        """Format agent text, flat/nested tool calls, and tool results into a string."""
-        module = self._tool_reformat_module()
-        reformat = module.reformat_agent_response
-        msgs = [
-            {
-                "role": "assistant",
-                "content": [
-                    {"type": "text", "text": "Let me check."},
-                    {
-                        "type": "tool_call",
-                        "tool_call_id": "c1",
-                        "name": "fetch_weather",
-                        "arguments": {"city": "Seattle", "units": None, "days": 3},
-                    },
-                    {
-                        "type": "tool_call",
-                        "tool_call": {"id": "c2", "function": {"name": "send_email", "arguments": {"to": "a@b.com"}}},
-                    },
-                ],
-            },
-            {"role": "tool", "tool_call_id": "c1", "content": [{"type": "tool_result", "tool_result": "sunny"}]},
-            {"role": "tool", "tool_call_id": "c2", "content": [{"type": "tool_result", "tool_result": "sent"}]},
-        ]
-        out = reformat(msgs, include_tool_messages=True)
-        assert "TOOL_CALL" in out and "fetch_weather" in out and "send_email" in out
-        assert "TOOL_RESULT" in out
-
-    def test_reformat_agent_response_empty_and_fallback(self):
-        """Return empty string for None/[] and fall back to raw input when unparseable."""
-        module = self._tool_reformat_module()
-        reformat = module.reformat_agent_response
-        assert reformat(None) == ""
-        assert reformat([]) == ""
-        weird = [{"role": "user", "content": [{"type": "text", "text": "hi"}]}]
-        assert reformat(weird) == weird
+class ConversationHistoryReformatUnitTests(_ValidatorUnitTestSupport):
+    """Tests for the tool-family ``reformat_conversation_history`` (``include_tool_calls`` variant)."""
 
     def test_reformat_conversation_history_with_tool_calls(self):
         """Format a multi-turn conversation with system, tool calls, and results."""
@@ -1311,54 +1373,9 @@ class BaseValidatorUnitTest:
         out = reformat(query, logger=logging.getLogger("tool_reformat_test"))
         assert out == query
 
-    def test_log_safe_summary_variants(self):
-        """Summarize list, dict, and scalar payloads without leaking values."""
-        module = self._module()
-        fn = getattr(module, "_log_safe_summary", None)
-        if fn is None:
-            pytest.skip("no _log_safe_summary")
-        assert "type=list" in fn([{"role": "user"}, "x"])
-        assert "type=dict" in fn({"b": 1, "a": 2})
-        assert "type=int" in fn(5)
 
-    # endregion
-
-    # region ToolDefinitionsValidator branches
-
-    def _tool_definitions_validator_cls(self):
-        """Return the asset's ``ToolDefinitionsValidator`` class, or skip."""
-        cls = getattr(self._module(), "ToolDefinitionsValidator", None)
-        if cls is None:
-            pytest.skip("no ToolDefinitionsValidator")
-        return cls
-
-    def test_validate_tool_definitions_error_branches(self):
-        """Exercise the list/type/optional/openapi tool-definitions validation branches."""
-        cls = self._tool_definitions_validator_cls()
-        target = self._target()
-        validator = cls(error_target=target)
-        assert validator._validate_tool_definitions(None) is None
-        assert validator._validate_tool_definitions("free-form-string") is None
-        assert validator._validate_tool_definitions([{"name": "f", "parameters": {}}]) is None
-        assert isinstance(validator._validate_tool_definitions(123), EvaluationException)
-        assert isinstance(validator._validate_tool_definitions([123]), EvaluationException)
-        openapi = [{"type": "openapi", "functions": [{"name": "f", "parameters": {}}]}]
-        assert validator._validate_tool_definitions(openapi) is None
-        required = cls(error_target=target, optional_tool_definitions=False)
-        assert isinstance(required._validate_tool_definitions(None), EvaluationException)
-
-    def test_validate_tool_definition_field_branches(self):
-        """Exercise the single tool-definition field validation branches."""
-        cls = self._tool_definitions_validator_cls()
-        validator = cls(error_target=self._target())
-        assert validator._validate_tool_definition({"name": "f", "parameters": {}}) is None
-        assert isinstance(validator._validate_tool_definition("not-a-dict"), EvaluationException)
-        assert isinstance(validator._validate_tool_definition({"parameters": {}}), EvaluationException)
-        assert isinstance(validator._validate_tool_definition({"name": "f"}), EvaluationException)
-
-    # endregion
-
-    # region simplify_messages (groundedness)
+class SimplifyMessagesUnitTests(_ValidatorUnitTestSupport):
+    """Test the groundedness ``simplify_messages`` util."""
 
     def test_simplify_messages_variants(self):
         """Simplify messages across passthrough, drop-system, and error-fallback branches."""
@@ -1380,5 +1397,3 @@ class BaseValidatorUnitTest:
         assert all(not (isinstance(m, dict) and m.get("role") == "tool") for m in out_drop)
         bad = [{"role": "user", "content": 123}]
         assert fn(bad, logger=logging.getLogger("simplify_test")) == bad
-
-    # endregion

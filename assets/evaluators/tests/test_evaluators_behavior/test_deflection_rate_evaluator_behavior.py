@@ -8,7 +8,11 @@ from typing import Any, Dict
 import pytest
 from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest, _TurnLevelUtilE2ETests
 from ..common.evaluator_mock_config import create_mocked_evaluator, build_none_score_evaluator
-from .base_validator_unit_test import BaseValidatorUnitTest
+from .base_validator_unit_test import (
+    ConversationValidatorUnitTests,
+    CorePromptyValidatorUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+)
 from ...builtin.deflection_rate.evaluator._deflection_rate import (
     DeflectionRateEvaluator,
 )
@@ -134,7 +138,11 @@ class TestDeflectionRateIntermediateResponse:
 
 
 @pytest.mark.unittest
-class TestDeflectionRateValidatorUnit(BaseValidatorUnitTest):
+class TestDeflectionRateValidatorUnit(
+    CorePromptyValidatorUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    ConversationValidatorUnitTests,
+):
     """Low-level unit tests for deflection_rate's repeated validators, utils and methods."""
 
     evaluator_class = DeflectionRateEvaluator

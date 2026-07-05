@@ -18,7 +18,16 @@ from .base_evaluator_behavior_test import (
 )
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
-from .base_validator_unit_test import BaseValidatorUnitTest
+from .base_validator_unit_test import (
+    ConversationSerializationUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ConversationValidatorUnitTests,
+    CorePromptyValidatorUnitTests,
+    MessagePreprocessUnitTests,
+    MessagesOrQueryResponseUnitTests,
+    SimplifyMessagesUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+)
 from ...builtin.groundedness.evaluator._groundedness import (
     GroundednessEvaluator,
     EvaluationLevel,
@@ -677,7 +686,16 @@ class TestGroundednessNoneScoreHandling:
 
 
 @pytest.mark.unittest
-class TestGroundednessValidatorUnit(BaseValidatorUnitTest):
+class TestGroundednessValidatorUnit(
+    CorePromptyValidatorUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    MessagePreprocessUnitTests,
+    ConversationValidatorUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ConversationSerializationUnitTests,
+    MessagesOrQueryResponseUnitTests,
+    SimplifyMessagesUnitTests,
+):
     """Low-level unit tests for groundedness's repeated validators, utils and methods."""
 
     evaluator_class = GroundednessEvaluator

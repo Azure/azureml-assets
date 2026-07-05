@@ -17,7 +17,15 @@ from .base_evaluator_behavior_test import (
     _MessagesUtilE2ETests,
 )
 from .base_tool_evaluation_test import BaseToolEvaluationTest
-from .base_validator_unit_test import BaseValidatorUnitTest
+from .base_validator_unit_test import (
+    ConversationSerializationUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ConversationValidatorUnitTests,
+    CorePromptyValidatorUnitTests,
+    MessagePreprocessUnitTests,
+    MessagesOrQueryResponseUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+)
 from . import common_tool_test_data as data
 from ...builtin.coherence.evaluator._coherence import (
     CoherenceEvaluator,
@@ -121,7 +129,15 @@ class TestCoherenceEvaluatorBehavior(
 
 
 @pytest.mark.unittest
-class TestCoherenceValidatorUnit(BaseValidatorUnitTest):
+class TestCoherenceValidatorUnit(
+    CorePromptyValidatorUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    MessagePreprocessUnitTests,
+    ConversationValidatorUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ConversationSerializationUnitTests,
+    MessagesOrQueryResponseUnitTests,
+):
     """Low-level unit tests for coherence's repeated validators, utils and methods."""
 
     evaluator_class = CoherenceEvaluator

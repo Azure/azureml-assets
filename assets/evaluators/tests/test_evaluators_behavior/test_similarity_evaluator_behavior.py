@@ -4,7 +4,11 @@
 """Behavioral tests for Similarity Evaluator."""
 
 import pytest
-from .base_validator_unit_test import BaseValidatorUnitTest
+from .base_validator_unit_test import (
+    CorePromptyValidatorUnitTests,
+    MessagePreprocessUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+)
 from ...builtin.similarity.evaluator._similarity import SimilarityEvaluator
 from ..common import BasePromptyEvaluatorRunner
 from ..common.evaluator_mock_config import run_none_score_not_applicable
@@ -571,7 +575,11 @@ class TestSimilarityNoneScoreHandling:
 
 
 @pytest.mark.unittest
-class TestSimilarityValidatorUnit(BaseValidatorUnitTest):
+class TestSimilarityValidatorUnit(
+    CorePromptyValidatorUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    MessagePreprocessUnitTests,
+):
     """Low-level unit tests for similarity's repeated validators, utils and methods."""
 
     evaluator_class = SimilarityEvaluator

@@ -16,7 +16,15 @@ from .base_evaluator_behavior_test import (
     _TurnLevelUtilE2ETests,
     _MessagesUtilE2ETests,
 )
-from .base_validator_unit_test import BaseValidatorUnitTest
+from .base_validator_unit_test import (
+    AgentResponseReformatUnitTests,
+    ConversationSerializationUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ConversationValidatorUnitTests,
+    CorePromptyValidatorUnitTests,
+    MessagePreprocessUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+)
 from ...builtin.customer_satisfaction.evaluator._customer_satisfaction import (
     CustomerSatisfactionEvaluator,
     serialize_messages,
@@ -553,7 +561,15 @@ class TestCustomerSatisfactionNoneScoreHandling:
 
 
 @pytest.mark.unittest
-class TestCustomerSatisfactionValidatorUnit(BaseValidatorUnitTest):
+class TestCustomerSatisfactionValidatorUnit(
+    CorePromptyValidatorUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    MessagePreprocessUnitTests,
+    ConversationValidatorUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ConversationSerializationUnitTests,
+    AgentResponseReformatUnitTests,
+):
     """Low-level unit tests for customer_satisfaction's repeated validators, utils and methods."""
 
     evaluator_class = CustomerSatisfactionEvaluator

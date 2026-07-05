@@ -12,7 +12,12 @@ from ..common.evaluator_mock_config import (
     run_none_score_not_applicable,
     run_intermediate_response_not_applicable,
 )
-from .base_validator_unit_test import BaseValidatorUnitTest
+from .base_validator_unit_test import (
+    ConversationValidatorUnitTests,
+    CorePromptyValidatorUnitTests,
+    LogSafeSummaryUnitTests,
+    MessagePreprocessUnitTests,
+)
 from ...builtin.quality_grader.evaluator._quality_grader import (
     QualityGraderEvaluator,
     _coerce_bool,
@@ -202,7 +207,12 @@ class TestQualityGraderTwoStagePipeline:
 
 
 @pytest.mark.unittest
-class TestQualityGraderValidatorUnit(BaseValidatorUnitTest):
+class TestQualityGraderValidatorUnit(
+    CorePromptyValidatorUnitTests,
+    MessagePreprocessUnitTests,
+    ConversationValidatorUnitTests,
+    LogSafeSummaryUnitTests,
+):
     """Low-level unit tests for quality_grader's repeated validators, utils and methods."""
 
     evaluator_class = QualityGraderEvaluator

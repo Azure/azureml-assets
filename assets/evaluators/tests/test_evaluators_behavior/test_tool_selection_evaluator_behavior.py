@@ -11,7 +11,17 @@ import pytest
 from .base_tool_calls_evaluator_behavior_test import BaseToolCallEvaluatorBehaviorTest
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
-from .base_validator_unit_test import BaseValidatorUnitTest
+from .base_validator_unit_test import (
+    ConversationHistoryReformatUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ConversationValidatorUnitTests,
+    CorePromptyValidatorUnitTests,
+    LogSafeSummaryUnitTests,
+    MessagePreprocessUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    ToolDefinitionExtractionUnitTests,
+    ToolDefinitionsValidatorUnitTests,
+)
 from ...builtin.tool_selection.evaluator._tool_selection import (
     ToolSelectionEvaluator,
 )
@@ -131,7 +141,17 @@ class TestToolSelectionEvaluatorBehavior(BaseToolCallEvaluatorBehaviorTest, Base
 
 
 @pytest.mark.unittest
-class TestToolSelectionValidatorUnit(BaseValidatorUnitTest):
+class TestToolSelectionValidatorUnit(
+    CorePromptyValidatorUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    MessagePreprocessUnitTests,
+    ConversationValidatorUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ToolDefinitionsValidatorUnitTests,
+    ToolDefinitionExtractionUnitTests,
+    LogSafeSummaryUnitTests,
+    ConversationHistoryReformatUnitTests,
+):
     """Low-level unit tests for tool_selection's repeated validators, utils and methods."""
 
     evaluator_class = ToolSelectionEvaluator

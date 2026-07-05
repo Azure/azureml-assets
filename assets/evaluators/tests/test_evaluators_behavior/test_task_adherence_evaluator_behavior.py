@@ -14,7 +14,17 @@ from azure.ai.evaluation._exceptions import EvaluationException
 from .base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
 from .base_evaluator_behavior_test import _TurnLevelUtilE2ETests, _MessagesUtilE2ETests
 from .base_tool_evaluation_test import BaseToolEvaluationTest
-from .base_validator_unit_test import BaseValidatorUnitTest
+from .base_validator_unit_test import (
+    AgentResponseReformatUnitTests,
+    ConversationSerializationUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ConversationValidatorUnitTests,
+    CorePromptyValidatorUnitTests,
+    MessagePreprocessUnitTests,
+    MessagesOrQueryResponseUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    ToolDefinitionsValidatorUnitTests,
+)
 from . import common_tool_test_data as data
 from ...builtin.task_adherence.evaluator._task_adherence import (
     TaskAdherenceEvaluator,
@@ -610,7 +620,17 @@ class TestTaskAdherenceNoneScoreHandling:
 
 
 @pytest.mark.unittest
-class TestTaskAdherenceValidatorUnit(BaseValidatorUnitTest):
+class TestTaskAdherenceValidatorUnit(
+    CorePromptyValidatorUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    MessagePreprocessUnitTests,
+    ConversationValidatorUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ToolDefinitionsValidatorUnitTests,
+    ConversationSerializationUnitTests,
+    MessagesOrQueryResponseUnitTests,
+    AgentResponseReformatUnitTests,
+):
     """Low-level unit tests for task_adherence's repeated validators, utils and methods."""
 
     evaluator_class = TaskAdherenceEvaluator

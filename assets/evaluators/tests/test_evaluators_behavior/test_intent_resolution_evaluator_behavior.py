@@ -8,7 +8,14 @@ from .base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
 from .base_evaluator_behavior_test import _TurnLevelUtilE2ETests
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
-from .base_validator_unit_test import BaseValidatorUnitTest
+from .base_validator_unit_test import (
+    ConversationValidatorToolCheckUnitTests,
+    ConversationValidatorUnitTests,
+    CorePromptyValidatorUnitTests,
+    MessagePreprocessUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    ToolDefinitionsValidatorUnitTests,
+)
 from ..common.evaluator_mock_config import (
     run_none_score_not_applicable,
     run_intermediate_response_not_applicable,
@@ -151,7 +158,14 @@ class TestIntentResolutionNotApplicableHandling:
 
 
 @pytest.mark.unittest
-class TestIntentResolutionValidatorUnit(BaseValidatorUnitTest):
+class TestIntentResolutionValidatorUnit(
+    CorePromptyValidatorUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    MessagePreprocessUnitTests,
+    ConversationValidatorUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ToolDefinitionsValidatorUnitTests,
+):
     """Low-level unit tests for intent_resolution's repeated validators, utils and methods."""
 
     evaluator_class = IntentResolutionEvaluator

@@ -7,7 +7,18 @@ import pytest
 from .base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
-from .base_validator_unit_test import BaseValidatorUnitTest
+from .base_validator_unit_test import (
+    AgentResponseReformatUnitTests,
+    ConversationHistoryReformatUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ConversationValidatorUnitTests,
+    CorePromptyValidatorUnitTests,
+    LogSafeSummaryUnitTests,
+    MessagePreprocessUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    ToolDefinitionExtractionUnitTests,
+    ToolDefinitionsValidatorUnitTests,
+)
 from ...builtin.tool_input_accuracy.evaluator._tool_input_accuracy import (
     ToolInputAccuracyEvaluator,
 )
@@ -98,7 +109,18 @@ class TestToolInputAccuracyEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, Bas
 
 
 @pytest.mark.unittest
-class TestToolInputAccuracyValidatorUnit(BaseValidatorUnitTest):
+class TestToolInputAccuracyValidatorUnit(
+    CorePromptyValidatorUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    MessagePreprocessUnitTests,
+    ConversationValidatorUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ToolDefinitionsValidatorUnitTests,
+    ToolDefinitionExtractionUnitTests,
+    AgentResponseReformatUnitTests,
+    LogSafeSummaryUnitTests,
+    ConversationHistoryReformatUnitTests,
+):
     """Low-level unit tests for tool_input_accuracy's repeated validators, utils and methods."""
 
     evaluator_class = ToolInputAccuracyEvaluator

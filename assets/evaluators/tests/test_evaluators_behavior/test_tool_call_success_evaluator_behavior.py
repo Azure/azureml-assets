@@ -13,7 +13,15 @@ from .base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
 from .base_evaluator_behavior_test import _TurnLevelUtilE2ETests
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
-from .base_validator_unit_test import BaseValidatorUnitTest
+from .base_validator_unit_test import (
+    ConversationValidatorToolCheckUnitTests,
+    ConversationValidatorUnitTests,
+    CorePromptyValidatorUnitTests,
+    LogSafeSummaryUnitTests,
+    MessagePreprocessUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    ToolDefinitionsValidatorUnitTests,
+)
 from ...builtin.tool_call_success.evaluator._tool_call_success import (
     ConversationValidator,
     ExtendedErrorTarget,
@@ -901,7 +909,15 @@ class TestRealWorldSharePointTrace:
 
 
 @pytest.mark.unittest
-class TestToolCallSuccessValidatorUnit(BaseValidatorUnitTest):
+class TestToolCallSuccessValidatorUnit(
+    CorePromptyValidatorUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    MessagePreprocessUnitTests,
+    ConversationValidatorUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ToolDefinitionsValidatorUnitTests,
+    LogSafeSummaryUnitTests,
+):
     """Low-level unit tests for tool_call_success's repeated validators, utils and methods."""
 
     evaluator_class = ToolCallSuccessEvaluator

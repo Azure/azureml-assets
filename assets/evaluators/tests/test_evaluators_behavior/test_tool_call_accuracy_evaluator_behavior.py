@@ -11,7 +11,15 @@ import pytest
 from .base_tool_calls_evaluator_behavior_test import BaseToolCallEvaluatorBehaviorTest
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
-from .base_validator_unit_test import BaseValidatorUnitTest
+from .base_validator_unit_test import (
+    ConversationValidatorToolCheckUnitTests,
+    ConversationValidatorUnitTests,
+    CorePromptyValidatorUnitTests,
+    MessagePreprocessUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    ToolDefinitionExtractionUnitTests,
+    ToolDefinitionsValidatorUnitTests,
+)
 from ...builtin.tool_call_accuracy.evaluator._tool_call_accuracy import (
     ToolCallAccuracyEvaluator,
 )
@@ -85,7 +93,15 @@ class TestToolCallAccuracyEvaluatorBehavior(BaseToolCallEvaluatorBehaviorTest, B
 
 
 @pytest.mark.unittest
-class TestToolCallAccuracyValidatorUnit(BaseValidatorUnitTest):
+class TestToolCallAccuracyValidatorUnit(
+    CorePromptyValidatorUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    MessagePreprocessUnitTests,
+    ConversationValidatorUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ToolDefinitionsValidatorUnitTests,
+    ToolDefinitionExtractionUnitTests,
+):
     """Low-level unit tests for tool_call_accuracy's repeated validators, utils and methods."""
 
     evaluator_class = ToolCallAccuracyEvaluator

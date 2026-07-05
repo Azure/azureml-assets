@@ -5,7 +5,13 @@
 
 import pytest
 from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest, _TurnLevelUtilE2ETests
-from .base_validator_unit_test import BaseValidatorUnitTest
+from .base_validator_unit_test import (
+    ConversationValidatorToolCheckUnitTests,
+    ConversationValidatorUnitTests,
+    CorePromptyValidatorUnitTests,
+    MessagePreprocessUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+)
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
 from ...builtin.fluency.evaluator._fluency import FluencyEvaluator
@@ -109,7 +115,13 @@ class TestFluencyNoneScoreHandling:
 
 
 @pytest.mark.unittest
-class TestFluencyValidatorUnit(BaseValidatorUnitTest):
+class TestFluencyValidatorUnit(
+    CorePromptyValidatorUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    MessagePreprocessUnitTests,
+    ConversationValidatorUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+):
     """Low-level unit tests for fluency's repeated validators, utils and methods."""
 
     evaluator_class = FluencyEvaluator

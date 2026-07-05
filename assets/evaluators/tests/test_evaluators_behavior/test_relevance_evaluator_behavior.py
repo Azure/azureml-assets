@@ -7,7 +7,13 @@ import pytest
 from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest, _TurnLevelUtilE2ETests
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
-from .base_validator_unit_test import BaseValidatorUnitTest
+from .base_validator_unit_test import (
+    ConversationValidatorToolCheckUnitTests,
+    ConversationValidatorUnitTests,
+    CorePromptyValidatorUnitTests,
+    MessagePreprocessUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+)
 from ..common.evaluator_mock_config import (
     run_none_score_not_applicable,
     run_intermediate_response_not_applicable,
@@ -131,7 +137,13 @@ class TestRelevanceNotApplicableHandling:
 
 
 @pytest.mark.unittest
-class TestRelevanceValidatorUnit(BaseValidatorUnitTest):
+class TestRelevanceValidatorUnit(
+    CorePromptyValidatorUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    MessagePreprocessUnitTests,
+    ConversationValidatorUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+):
     """Low-level unit tests for relevance's repeated validators, utils and methods."""
 
     evaluator_class = RelevanceEvaluator

@@ -15,7 +15,17 @@ from .base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
 from .base_evaluator_behavior_test import _TurnLevelUtilE2ETests, _MessagesUtilE2ETests
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
-from .base_validator_unit_test import BaseValidatorUnitTest
+from .base_validator_unit_test import (
+    AgentResponseReformatUnitTests,
+    ConversationSerializationUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ConversationValidatorUnitTests,
+    CorePromptyValidatorUnitTests,
+    MessagePreprocessUnitTests,
+    MessagesOrQueryResponseUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    ToolDefinitionsValidatorUnitTests,
+)
 from ...builtin.task_completion.evaluator._task_completion import (
     TaskCompletionEvaluator,
     EvaluationLevel,
@@ -892,7 +902,17 @@ class TestTaskCompletionNoneScoreHandling:
 
 
 @pytest.mark.unittest
-class TestTaskCompletionValidatorUnit(BaseValidatorUnitTest):
+class TestTaskCompletionValidatorUnit(
+    CorePromptyValidatorUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    MessagePreprocessUnitTests,
+    ConversationValidatorUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ToolDefinitionsValidatorUnitTests,
+    ConversationSerializationUnitTests,
+    MessagesOrQueryResponseUnitTests,
+    AgentResponseReformatUnitTests,
+):
     """Low-level unit tests for task_completion's repeated validators, utils and methods."""
 
     evaluator_class = TaskCompletionEvaluator
