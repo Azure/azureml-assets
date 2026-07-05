@@ -203,19 +203,52 @@ def create_none_score_flow_side_effect(
     return flow_side_effect
 
 
-def create_mocked_evaluator(evaluator_cls, evaluator_name: str):
-    """Create an evaluator instance with _flow mocked using standard side effect.
+def create_multi_turn_mock_side_effect(score=5, status="completed", reason="Conversation evaluated.", properties=None):
+    """Create an async multi-turn flow side effect returning dict ``llm_output``.
 
-    Reusable factory for evaluators that only need model_config and a mocked _flow.
-    For evaluators with extra init params (evaluation_level, multi_turn, etc.),
-    use a custom helper instead.
+    A non-``completed`` status gates both the score and the properties to ``None``
+    (the skipped / not-applicable shape). Callers pass their evaluator-specific
+    ``reason`` and ``properties`` so this single builder replaces the per-file copies.
+
+    Args:
+        score: Score returned when ``status`` is ``"completed"``.
+        status: Output status; anything other than ``"completed"`` yields a None score.
+        reason: Human-readable reason string carried through unchanged.
+        properties: Evaluator-specific properties dict (dropped when not completed).
+
+    Returns:
+        An async callable suitable for use as a ``_multi_turn_flow`` side effect.
+    """
+    async def flow_side_effect(timeout, **kwargs):
+        return {
+            "llm_output": {
+                "score": score if status == "completed" else None,
+                "status": status,
+                "reason": reason,
+                "properties": properties if status == "completed" else None,
+            }
+        }
+
+    return flow_side_effect
+
+
+def create_mocked_evaluator(evaluator_cls, evaluator_name: str, **init_kwargs):
+    """Create an evaluator instance with its prompty flows mocked using the standard side effect.
+
+    ``_flow`` is always mocked; ``_multi_turn_flow`` is mocked with the same side
+    effect when present, so conversation-capable evaluators that share a single side
+    effect for both paths (e.g. customer_satisfaction, task_adherence, task_completion)
+    can use this directly. Extra constructor arguments (e.g. ``evaluation_level``) are
+    forwarded via ``init_kwargs``. For evaluators needing a distinct multi-turn payload,
+    build the evaluator locally and use ``create_multi_turn_mock_side_effect``.
 
     Args:
         evaluator_cls: The evaluator class to instantiate (e.g., FluencyEvaluator).
         evaluator_name: Name used to look up the mock config (e.g., "fluency").
+        **init_kwargs: Extra keyword arguments forwarded to the evaluator constructor.
 
     Returns:
-        An evaluator instance with _flow replaced by a MagicMock.
+        An evaluator instance with its flows replaced by MagicMocks.
     """
     import os
     from unittest.mock import MagicMock
@@ -225,8 +258,11 @@ def create_mocked_evaluator(evaluator_cls, evaluator_name: str):
         azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
         azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
     )
-    evaluator = evaluator_cls(model_config=model_config)
-    evaluator._flow = MagicMock(side_effect=get_flow_side_effect_for_evaluator(evaluator_name))
+    evaluator = evaluator_cls(model_config=model_config, **init_kwargs)
+    side_effect = get_flow_side_effect_for_evaluator(evaluator_name)
+    evaluator._flow = MagicMock(side_effect=side_effect)
+    if hasattr(evaluator, "_multi_turn_flow"):
+        evaluator._multi_turn_flow = MagicMock(side_effect=side_effect)
     return evaluator
 
 

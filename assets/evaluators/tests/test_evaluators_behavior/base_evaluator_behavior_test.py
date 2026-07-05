@@ -940,19 +940,19 @@ class _TurnLevelUtilE2ETests:
     def test_util_query_response_reach_flow_e2e(self):
         """End-to-end: query/response content is reformatted/preprocessed and reaches the flow."""
         _, captured = self._run_and_capture_flow_input(**self._turn_level_call_kwargs(self.VALID_RESPONSE))
-        blob = json.dumps(captured, default=str)
-        assert "Seattle" in blob, "response content did not reach the flow"
+        flow_input_json = json.dumps(captured, default=str)
+        assert "Seattle" in flow_input_json, "response content did not reach the flow"
         if self.requires_query:
-            assert "your_email@example.com" in blob, "query content did not reach the flow"
+            assert "your_email@example.com" in flow_input_json, "query content did not reach the flow"
 
     def test_util_preprocess_drops_mcp_from_flow_e2e(self):
         """End-to-end: MCP approval messages are dropped before the response reaches the flow."""
         _, captured = self._run_and_capture_flow_input(
             **self._turn_level_call_kwargs(self.MCP_APPROVAL_FULL_RESPONSE)
         )
-        blob = json.dumps(captured, default=str)
-        assert "mcp_approval" not in blob, "MCP approval messages were not dropped before the flow"
-        assert "Azure Functions" in blob, "post-approval content did not reach the flow"
+        flow_input_json = json.dumps(captured, default=str)
+        assert "mcp_approval" not in flow_input_json, "MCP approval messages were not dropped before the flow"
+        assert "Azure Functions" in flow_input_json, "post-approval content did not reach the flow"
 
     def test_util_intermediate_response_skips_flow_e2e(self):
         """End-to-end: an intermediate (function_call-only) response short-circuits before any flow call."""
@@ -973,5 +973,5 @@ class _MessagesUtilE2ETests:
     def test_util_messages_serialized_reach_flow_e2e(self):
         """End-to-end: a messages conversation is serialized and reaches the multi-turn flow."""
         _, captured = self._run_and_capture_flow_input(messages=self.VALID_MESSAGES)
-        blob = json.dumps(captured, default=str)
-        assert "Paris" in blob, "serialized conversation content did not reach the flow"
+        flow_input_json = json.dumps(captured, default=str)
+        assert "Paris" in flow_input_json, "serialized conversation content did not reach the flow"

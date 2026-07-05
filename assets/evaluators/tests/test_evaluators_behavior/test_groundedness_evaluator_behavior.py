@@ -34,6 +34,7 @@ from ...builtin.groundedness.evaluator._groundedness import (
     serialize_messages,
 )
 from ..common.evaluator_mock_config import (
+    create_multi_turn_mock_side_effect,
     get_flow_side_effect_for_evaluator,
     run_none_score_not_applicable,
 )
@@ -97,24 +98,13 @@ class TestGroundednessEvaluatorBehavior(
 # region Conversation-level (messages) behavioral tests
 
 
-def _create_multi_turn_mock_side_effect():
-    """Create a mock side effect that returns dict output for multi-turn groundedness."""
-
-    async def flow_side_effect(timeout, **kwargs):
-        return {
-            "llm_output": {
-                "score": 5,
-                "reason": "All responses are grounded in the provided conversation evidence.",
-                "status": "completed",
-                "properties": {
-                    "grounding_sources": ["Tool result"],
-                    "grounded_claims": "All claims supported.",
-                    "ungrounded_claims": "None",
-                },
-            }
-        }
-
-    return flow_side_effect
+# Default multi-turn flow payload for groundedness (completed conversation output).
+_MULTI_TURN_REASON = "All responses are grounded in the provided conversation evidence."
+_MULTI_TURN_PROPERTIES = {
+    "grounding_sources": ["Tool result"],
+    "grounded_claims": "All claims supported.",
+    "ungrounded_claims": "None",
+}
 
 
 def _create_mocked_groundedness_evaluator():
@@ -126,7 +116,9 @@ def _create_mocked_groundedness_evaluator():
     evaluator = GroundednessEvaluator(model_config=model_config)
     mock_side_effect = get_flow_side_effect_for_evaluator("groundedness")
     evaluator._flow = MagicMock(side_effect=mock_side_effect)
-    evaluator._multi_turn_flow = MagicMock(side_effect=_create_multi_turn_mock_side_effect())
+    evaluator._multi_turn_flow = MagicMock(
+        side_effect=create_multi_turn_mock_side_effect(reason=_MULTI_TURN_REASON, properties=_MULTI_TURN_PROPERTIES)
+    )
     return evaluator
 
 
@@ -423,7 +415,9 @@ def _create_mocked_groundedness_evaluator_with_level(evaluation_level=None):
     )
     mock_side_effect = get_flow_side_effect_for_evaluator("groundedness")
     evaluator._flow = MagicMock(side_effect=mock_side_effect)
-    evaluator._multi_turn_flow = MagicMock(side_effect=_create_multi_turn_mock_side_effect())
+    evaluator._multi_turn_flow = MagicMock(
+        side_effect=create_multi_turn_mock_side_effect(reason=_MULTI_TURN_REASON, properties=_MULTI_TURN_PROPERTIES)
+    )
     return evaluator
 
 

@@ -3,12 +3,9 @@
 
 """Behavioral tests for Task Adherence Evaluator."""
 
-import os
 from typing import Any, Dict, List
-from unittest.mock import MagicMock
 
 import pytest
-from azure.ai.evaluation import AzureOpenAIModelConfiguration
 from azure.ai.evaluation._exceptions import EvaluationException
 
 from .base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
@@ -32,7 +29,7 @@ from ...builtin.task_adherence.evaluator._task_adherence import (
     serialize_messages,
 )
 from ..common.evaluator_mock_config import (
-    get_flow_side_effect_for_evaluator,
+    create_mocked_evaluator,
     run_none_score_not_applicable,
 )
 
@@ -161,15 +158,7 @@ class TestTaskAdherenceEvaluatorBehavior(
 
 def _create_mocked_evaluator():
     """Create a TaskAdherenceEvaluator with both _flow and _multi_turn_flow mocked."""
-    model_config = AzureOpenAIModelConfiguration(
-        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
-        azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
-    )
-    evaluator = TaskAdherenceEvaluator(model_config=model_config)
-    mock_side_effect = get_flow_side_effect_for_evaluator("task_adherence")
-    evaluator._flow = MagicMock(side_effect=mock_side_effect)
-    evaluator._multi_turn_flow = MagicMock(side_effect=mock_side_effect)
-    return evaluator
+    return create_mocked_evaluator(TaskAdherenceEvaluator, "task_adherence")
 
 
 # region Conversation-level (messages) behavioral tests
@@ -337,18 +326,9 @@ class TestTaskAdherenceMultiturnBehavior:
 
 def _create_mocked_evaluator_with_level(evaluation_level=None):
     """Create a TaskAdherenceEvaluator with evaluation_level and mocked flows."""
-    model_config = AzureOpenAIModelConfiguration(
-        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
-        azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
+    return create_mocked_evaluator(
+        TaskAdherenceEvaluator, "task_adherence", evaluation_level=evaluation_level
     )
-    evaluator = TaskAdherenceEvaluator(
-        model_config=model_config,
-        evaluation_level=evaluation_level,
-    )
-    mock_side_effect = get_flow_side_effect_for_evaluator("task_adherence")
-    evaluator._flow = MagicMock(side_effect=mock_side_effect)
-    evaluator._multi_turn_flow = MagicMock(side_effect=mock_side_effect)
-    return evaluator
 
 
 @pytest.mark.unittest

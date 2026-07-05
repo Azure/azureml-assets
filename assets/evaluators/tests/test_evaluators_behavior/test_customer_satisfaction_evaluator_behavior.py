@@ -3,12 +3,10 @@
 
 """Behavioral tests for Customer Satisfaction Evaluator."""
 
-import os
 import pytest
 from typing import Any, Dict, List
 from unittest.mock import MagicMock
 
-from azure.ai.evaluation import AzureOpenAIModelConfiguration
 from azure.ai.evaluation._exceptions import EvaluationException
 
 from .base_evaluator_behavior_test import (
@@ -30,7 +28,7 @@ from ...builtin.customer_satisfaction.evaluator._customer_satisfaction import (
     serialize_messages,
 )
 from ..common.evaluator_mock_config import (
-    get_flow_side_effect_for_evaluator,
+    create_mocked_evaluator,
     create_none_score_flow_side_effect,
 )
 
@@ -52,15 +50,7 @@ class TestCustomerSatisfactionEvaluatorBehavior(
 
 def _create_mocked_evaluator():
     """Create a CustomerSatisfactionEvaluator with both _flow and _multi_turn_flow mocked."""
-    model_config = AzureOpenAIModelConfiguration(
-        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
-        azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
-    )
-    evaluator = CustomerSatisfactionEvaluator(model_config=model_config)
-    mock_side_effect = get_flow_side_effect_for_evaluator("customer_satisfaction")
-    evaluator._flow = MagicMock(side_effect=mock_side_effect)
-    evaluator._multi_turn_flow = MagicMock(side_effect=mock_side_effect)
-    return evaluator
+    return create_mocked_evaluator(CustomerSatisfactionEvaluator, "customer_satisfaction")
 
 
 # region Session-level (messages) behavioral tests
@@ -384,18 +374,9 @@ class TestCustomerSatisfactionSessionBehavior:
 
 def _create_mocked_evaluator_with_level(evaluation_level=None):
     """Create a CustomerSatisfactionEvaluator with evaluation_level and mocked flows."""
-    model_config = AzureOpenAIModelConfiguration(
-        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
-        azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
+    return create_mocked_evaluator(
+        CustomerSatisfactionEvaluator, "customer_satisfaction", evaluation_level=evaluation_level
     )
-    evaluator = CustomerSatisfactionEvaluator(
-        model_config=model_config,
-        evaluation_level=evaluation_level,
-    )
-    mock_side_effect = get_flow_side_effect_for_evaluator("customer_satisfaction")
-    evaluator._flow = MagicMock(side_effect=mock_side_effect)
-    evaluator._multi_turn_flow = MagicMock(side_effect=mock_side_effect)
-    return evaluator
 
 
 @pytest.mark.unittest
