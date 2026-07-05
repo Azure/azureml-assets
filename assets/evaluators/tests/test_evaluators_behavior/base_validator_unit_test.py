@@ -332,7 +332,7 @@ class _ValidatorUnitTestSupport:
         """Run a coroutine to completion for async method tests."""
         return asyncio.run(coro)
 
-    def _super_impl(self, ev, name):
+    def _super_impl(self, evaluator, name):
         """Resolve the evaluator's copy of the base ``_<name>`` implementation.
 
         ``_the_super_<name>`` and the SDK's ``super()._<name>`` are the same code,
@@ -344,24 +344,24 @@ class _ValidatorUnitTestSupport:
         fall back to the bound ``super()._<name>`` method (resolved from the
         evaluator's parent class) so the base behaviour is still exercised.
         """
-        inlined = getattr(ev, f"_the_super_{name}", None)
+        inlined = getattr(evaluator, f"_the_super_{name}", None)
         if inlined is not None:
             return inlined
-        own = type(ev).__dict__.get(f"_{name}")
+        own = type(evaluator).__dict__.get(f"_{name}")
         if own is not None:
             try:
                 is_super_copy = "per_turn_results" in inspect.getsource(own)
             except (OSError, TypeError):
                 is_super_copy = False
             if is_super_copy:
-                return getattr(ev, f"_{name}")
-        return getattr(super(type(ev), ev), f"_{name}", None)
+                return getattr(evaluator, f"_{name}")
+        return getattr(super(type(evaluator), evaluator), f"_{name}", None)
 
-    def _actual_capabilities(self, ev):
+    def _actual_capabilities(self, evaluator):
         """Return the set of probed capabilities the evaluator currently exposes."""
         module = self._module()
         caps = {c for c in self._MODULE_CAPABILITIES if getattr(module, c, None) is not None}
-        caps |= {m for m in self._METHOD_CAPABILITIES if hasattr(ev, m)}
+        caps |= {m for m in self._METHOD_CAPABILITIES if hasattr(evaluator, m)}
         return caps
 
     def _extract_tool_defs_callable(self):
@@ -376,10 +376,10 @@ class _ValidatorUnitTestSupport:
         """
         fn = getattr(self._module(), "_extract_needed_tool_definitions", None)
         if fn is None:
-            ev = self._make_evaluator()
-            if type(ev).__dict__.get("_extract_needed_tool_definitions") is None:
+            evaluator = self._make_evaluator()
+            if type(evaluator).__dict__.get("_extract_needed_tool_definitions") is None:
                 return None
-            fn = ev._extract_needed_tool_definitions
+            fn = evaluator._extract_needed_tool_definitions
         positional = [
             p
             for p in inspect.signature(fn).parameters.values()
@@ -424,51 +424,51 @@ class CorePromptyValidatorUnitTests(_ValidatorUnitTestSupport):
         loud: a removed capability is a likely regression; an added one means the
         source is converging and the baseline must be updated deliberately.
         """
-        ev = self._make_evaluator()
-        rk = ev._result_key
-        actual = self._actual_capabilities(ev)
-        assert rk in self._CAPABILITY_BASELINE, (
-            f"No capability baseline for '{rk}'. A newly wired evaluator must be registered in "
+        evaluator = self._make_evaluator()
+        result_key = evaluator._result_key
+        actual = self._actual_capabilities(evaluator)
+        assert result_key in self._CAPABILITY_BASELINE, (
+            f"No capability baseline for '{result_key}'. A newly wired evaluator must be registered in "
             f"_CAPABILITY_BASELINE. Current capabilities: {sorted(actual)}"
         )
-        expected = set(self._CAPABILITY_BASELINE[rk].split())
+        expected = set(self._CAPABILITY_BASELINE[result_key].split())
         missing = sorted(expected - actual)
         extra = sorted(actual - expected)
         assert not missing and not extra, (
-            f"Capability drift for '{rk}' (see EVALUATOR_DISCREPANCIES.md):\n"
+            f"Capability drift for '{result_key}' (see EVALUATOR_DISCREPANCIES.md):\n"
             f"  removed (possible regression now hidden as skips): {missing}\n"
             f"  added (source converging; update the baseline): {extra}"
         )
 
     def test_get_token_metadata(self):
         """Cover token-metadata extraction with and without counts."""
-        ev = self._make_evaluator()
-        if not hasattr(ev, "_get_token_metadata"):
+        evaluator = self._make_evaluator()
+        if not hasattr(evaluator, "_get_token_metadata"):
             pytest.skip("no _get_token_metadata")
-        md = ev._get_token_metadata(
+        md = evaluator._get_token_metadata(
             {"input_token_count": 3, "output_token_count": 5, "total_token_count": 8, "model_id": "m"}
         )
         assert md["prompt_tokens"] == 3
         assert md["completion_tokens"] == 5
         assert md["total_tokens"] == 8
         assert md["model"] == "m"
-        assert ev._get_token_metadata({})["prompt_tokens"] == 0
+        assert evaluator._get_token_metadata({})["prompt_tokens"] == 0
 
     def test_return_not_applicable_result(self):
         """Cover the not-applicable result builder."""
-        ev = self._make_evaluator()
-        if not hasattr(ev, "_return_not_applicable_result"):
+        evaluator = self._make_evaluator()
+        if not hasattr(evaluator, "_return_not_applicable_result"):
             pytest.skip("no _return_not_applicable_result")
-        rk = ev._result_key
+        result_key = evaluator._result_key
         # quality_grader takes only (reason); every other evaluator takes (reason, threshold).
-        if rk == "quality_grader":
-            res = ev._return_not_applicable_result("because reasons")
+        if result_key == "quality_grader":
+            res = evaluator._return_not_applicable_result("because reasons")
         else:
-            res = ev._return_not_applicable_result("because reasons", ev._threshold)
-        assert res[rk] is None
-        assert res[f"{rk}_result"] == "not_applicable"
-        assert res[f"{rk}_status"] == "skipped"
-        assert "because reasons" in res[f"{rk}_reason"]
+            res = evaluator._return_not_applicable_result("because reasons", evaluator._threshold)
+        assert res[result_key] is None
+        assert res[f"{result_key}_result"] == "not_applicable"
+        assert res[f"{result_key}_status"] == "skipped"
+        assert "because reasons" in res[f"{result_key}_reason"]
 
     def test_is_intermediate_response(self):
         """Cover intermediate-response detection."""
@@ -481,35 +481,35 @@ class CorePromptyValidatorUnitTests(_ValidatorUnitTestSupport):
 
     def test_do_eval_nan_output_raises(self):
         """A turn-level score that evaluates to NaN must not crash with TypeError."""
-        ev = self._make_evaluator()
-        if not hasattr(ev, "_do_eval"):
+        evaluator = self._make_evaluator()
+        if not hasattr(evaluator, "_do_eval"):
             pytest.skip("no _do_eval")
-        rk = ev._result_key
+        result_key = evaluator._result_key
         level_enum = getattr(self._module(), "EvaluationLevel", None)
         if level_enum is not None:
-            ev._evaluation_level = level_enum.TURN
+            evaluator._evaluation_level = level_enum.TURN
 
         async def flow(timeout=None, **kwargs):
             return {"llm_output": {"status": "completed", "reason": "no score field"}}
 
-        ev._flow = MagicMock(side_effect=flow)
+        evaluator._flow = MagicMock(side_effect=flow)
         # The invariant: a missing score is handled deterministically (never an
         # unhandled TypeError from math.isnan(None)). The exact handling diverges
         # by evaluator and is tracked in EVALUATOR_DISCREPANCIES.md.
-        if rk in self._DO_EVAL_MISSING_SCORE_KEYERROR:
+        if result_key in self._DO_EVAL_MISSING_SCORE_KEYERROR:
             with pytest.raises(KeyError):
-                self._run_async(ev._do_eval({"query": "q", "response": "r"}))
-        elif rk in self._DO_EVAL_MISSING_SCORE_RETURNS_DICT:
-            res = self._run_async(ev._do_eval({"query": "q", "response": "r"}))
+                self._run_async(evaluator._do_eval({"query": "q", "response": "r"}))
+        elif result_key in self._DO_EVAL_MISSING_SCORE_RETURNS_DICT:
+            res = self._run_async(evaluator._do_eval({"query": "q", "response": "r"}))
             assert isinstance(res, dict)
         else:
             with pytest.raises(EvaluationException):
-                self._run_async(ev._do_eval({"query": "q", "response": "r"}))
+                self._run_async(evaluator._do_eval({"query": "q", "response": "r"}))
 
     def test_the_super_do_eval_missing_inputs_raises(self):
         """Raise when required inputs are missing."""
-        ev = self._make_evaluator()
-        do_eval = self._super_impl(ev, "do_eval")
+        evaluator = self._make_evaluator()
+        do_eval = self._super_impl(evaluator, "do_eval")
         if do_eval is None:
             pytest.skip("no _do_eval on super")
         with pytest.raises(EvaluationException):
@@ -517,169 +517,169 @@ class CorePromptyValidatorUnitTests(_ValidatorUnitTestSupport):
 
     def test_the_super_do_eval_dict_output(self):
         """Parse a dict llm_output from the prompty flow."""
-        ev = self._make_evaluator()
-        do_eval = self._super_impl(ev, "do_eval")
+        evaluator = self._make_evaluator()
+        do_eval = self._super_impl(evaluator, "do_eval")
         if do_eval is None:
             pytest.skip("no _do_eval on super")
-        rk = ev._result_key
-        ev._flow = MagicMock(side_effect=create_flow_side_effect(4, OutputType.DICT))
+        result_key = evaluator._result_key
+        evaluator._flow = MagicMock(side_effect=create_flow_side_effect(4, OutputType.DICT))
         res = self._run_async(do_eval({"query": "q", "response": "r"}))
-        assert res[f"{rk}_score"] == 4
+        assert res[f"{result_key}_score"] == 4
 
     def test_the_super_do_eval_json_string_output(self):
         """Parse a JSON-string llm_output from the prompty flow."""
-        ev = self._make_evaluator()
-        do_eval = self._super_impl(ev, "do_eval")
+        evaluator = self._make_evaluator()
+        do_eval = self._super_impl(evaluator, "do_eval")
         if do_eval is None:
             pytest.skip("no _do_eval on super")
-        rk = ev._result_key
+        result_key = evaluator._result_key
 
         async def flow(timeout=None, **kwargs):
             return {"llm_output": json.dumps({"status": "completed", "score": 3, "reason": "ok"})}
 
-        ev._flow = MagicMock(side_effect=flow)
+        evaluator._flow = MagicMock(side_effect=flow)
         res = self._run_async(do_eval({"query": "q", "response": "r"}))
-        assert res[f"{rk}_score"] == 3
+        assert res[f"{result_key}_score"] == 3
 
     def test_the_super_do_eval_plain_string_output(self):
         """Parse a free-text llm_output for a reason-based evaluator."""
-        ev = self._make_evaluator()
-        do_eval = self._super_impl(ev, "do_eval")
+        evaluator = self._make_evaluator()
+        do_eval = self._super_impl(evaluator, "do_eval")
         if do_eval is None:
             pytest.skip("no _do_eval on super")
-        rk = ev._result_key
+        result_key = evaluator._result_key
 
         async def flow(timeout=None, **kwargs):
             return {"llm_output": "The score is 4 because the response is coherent."}
 
-        ev._flow = MagicMock(side_effect=flow)
+        evaluator._flow = MagicMock(side_effect=flow)
         res = self._run_async(do_eval({"query": "q", "response": "r"}))
-        assert f"{rk}_score" in res
+        assert f"{result_key}_score" in res
 
     def test_the_super_do_eval_regex_score_branch(self):
         """Cover the regex single-digit branch for a non-reason evaluator."""
-        ev = self._make_evaluator()
-        do_eval = self._super_impl(ev, "do_eval")
+        evaluator = self._make_evaluator()
+        do_eval = self._super_impl(evaluator, "do_eval")
         if do_eval is None:
             pytest.skip("no _do_eval on super")
         # Force the non-reason-evaluator string path (regex single-digit extraction).
-        ev._result_key = "zzz_unit_not_a_reason_evaluator"
-        rk = ev._result_key
+        evaluator._result_key = "zzz_unit_not_a_reason_evaluator"
+        result_key = evaluator._result_key
 
         async def flow(timeout=None, **kwargs):
             return {"llm_output": "score 4 overall"}
 
-        ev._flow = MagicMock(side_effect=flow)
+        evaluator._flow = MagicMock(side_effect=flow)
         res = self._run_async(do_eval({"query": "q", "response": "r"}))
-        assert res[f"{rk}_score"] == 4
+        assert res[f"{result_key}_score"] == 4
 
     def test_the_super_do_eval_empty_output_raises(self):
         """Raise when the prompty flow returns no output."""
-        ev = self._make_evaluator()
-        do_eval = self._super_impl(ev, "do_eval")
+        evaluator = self._make_evaluator()
+        do_eval = self._super_impl(evaluator, "do_eval")
         if do_eval is None:
             pytest.skip("no _do_eval on super")
 
         async def flow(timeout=None, **kwargs):
             return None
 
-        ev._flow = MagicMock(side_effect=flow)
+        evaluator._flow = MagicMock(side_effect=flow)
         with pytest.raises(EvaluationException):
             self._run_async(do_eval({"query": "q", "response": "r"}))
 
     def test_the_super_real_call_convert_raises(self):
         """Propagate exceptions raised while converting kwargs to eval input."""
-        ev = self._make_evaluator()
-        real_call = self._super_impl(ev, "real_call")
+        evaluator = self._make_evaluator()
+        real_call = self._super_impl(evaluator, "real_call")
         if real_call is None:
             pytest.skip("no _real_call on super")
-        ev._convert_kwargs_to_eval_input = MagicMock(side_effect=ValueError("boom"))
+        evaluator._convert_kwargs_to_eval_input = MagicMock(side_effect=ValueError("boom"))
         with pytest.raises(ValueError):
             self._run_async(real_call(query="q", response="r"))
 
     def test_the_super_real_call_aggregates_and_fills_threshold(self):
         """Aggregate per-turn results and fill in result/threshold keys."""
-        ev = self._make_evaluator()
-        real_call = self._super_impl(ev, "real_call")
+        evaluator = self._make_evaluator()
+        real_call = self._super_impl(evaluator, "real_call")
         if real_call is None:
             pytest.skip("no _real_call on super")
-        rk = ev._result_key
-        ev._convert_kwargs_to_eval_input = MagicMock(return_value=[{"x": 5}, {"x": 2}])
+        result_key = evaluator._result_key
+        evaluator._convert_kwargs_to_eval_input = MagicMock(return_value=[{"x": 5}, {"x": 2}])
 
         async def fake_do_eval(eval_input):
-            return {f"{rk}_score": eval_input["x"]}
+            return {f"{result_key}_score": eval_input["x"]}
 
-        ev._do_eval = fake_do_eval
+        evaluator._do_eval = fake_do_eval
         res = self._run_async(real_call(query="q", response="r"))
         assert isinstance(res, dict)
 
     def test_the_super_real_call_lower_is_better_fallback(self):
         """Cover the lower-is-better fallback when filling result keys."""
-        ev = self._make_evaluator()
-        real_call = self._super_impl(ev, "real_call")
+        evaluator = self._make_evaluator()
+        real_call = self._super_impl(evaluator, "real_call")
         if real_call is None:
             pytest.skip("no _real_call on super")
-        rk = ev._result_key
-        ev._higher_is_better = False
-        ev._threshold = 3
-        ev._convert_kwargs_to_eval_input = MagicMock(return_value=[{"x": 2}, {"x": 5}])
+        result_key = evaluator._result_key
+        evaluator._higher_is_better = False
+        evaluator._threshold = 3
+        evaluator._convert_kwargs_to_eval_input = MagicMock(return_value=[{"x": 2}, {"x": 5}])
 
         async def fake_do_eval(eval_input):
-            return {f"{rk}_score": eval_input["x"]}
+            return {f"{result_key}_score": eval_input["x"]}
 
-        ev._do_eval = fake_do_eval
+        evaluator._do_eval = fake_do_eval
         res = self._run_async(real_call(query="q", response="r"))
         assert isinstance(res, dict)
 
     def test_the_super_real_call_invalid_threshold_is_swallowed(self):
         """Swallow the invalid-threshold exception while aggregating."""
-        ev = self._make_evaluator()
-        real_call = self._super_impl(ev, "real_call")
+        evaluator = self._make_evaluator()
+        real_call = self._super_impl(evaluator, "real_call")
         if real_call is None:
             pytest.skip("no _real_call on super")
-        rk = ev._result_key
-        ev._threshold = "not a number"
-        ev._convert_kwargs_to_eval_input = MagicMock(return_value=[{"x": 4}])
+        result_key = evaluator._result_key
+        evaluator._threshold = "not a number"
+        evaluator._convert_kwargs_to_eval_input = MagicMock(return_value=[{"x": 4}])
 
         async def fake_do_eval(eval_input):
-            return {f"{rk}_score": eval_input["x"]}
+            return {f"{result_key}_score": eval_input["x"]}
 
-        ev._do_eval = fake_do_eval
+        evaluator._do_eval = fake_do_eval
         res = self._run_async(real_call(query="q", response="r"))
-        assert res[f"{rk}_score"] == 4
+        assert res[f"{result_key}_score"] == 4
 
     def test_the_super_real_call_single_result(self):
         """Return a single fully-populated result unchanged."""
-        ev = self._make_evaluator()
-        real_call = self._super_impl(ev, "real_call")
+        evaluator = self._make_evaluator()
+        real_call = self._super_impl(evaluator, "real_call")
         if real_call is None:
             pytest.skip("no _real_call on super")
-        rk = ev._result_key
-        ev._convert_kwargs_to_eval_input = MagicMock(return_value=[{"x": 5}])
+        result_key = evaluator._result_key
+        evaluator._convert_kwargs_to_eval_input = MagicMock(return_value=[{"x": 5}])
 
         async def fake_do_eval(eval_input):
             return {
-                f"{rk}_score": eval_input["x"],
-                f"{rk}_result": "pass",
-                f"{rk}_threshold": ev._threshold,
+                f"{result_key}_score": eval_input["x"],
+                f"{result_key}_result": "pass",
+                f"{result_key}_threshold": evaluator._threshold,
             }
 
-        ev._do_eval = fake_do_eval
+        evaluator._do_eval = fake_do_eval
         res = self._run_async(real_call(query="q", response="r"))
-        assert res[f"{rk}_score"] == 5
+        assert res[f"{result_key}_score"] == 5
 
     def test_the_super_real_call_empty_result(self):
         """Return an empty dict when there are no eval inputs."""
-        ev = self._make_evaluator()
-        real_call = self._super_impl(ev, "real_call")
+        evaluator = self._make_evaluator()
+        real_call = self._super_impl(evaluator, "real_call")
         if real_call is None:
             pytest.skip("no _real_call on super")
-        ev._convert_kwargs_to_eval_input = MagicMock(return_value=[])
+        evaluator._convert_kwargs_to_eval_input = MagicMock(return_value=[])
 
         async def fake_do_eval(eval_input):
             return {}
 
-        ev._do_eval = fake_do_eval
+        evaluator._do_eval = fake_do_eval
         assert self._run_async(real_call(query="q", response="r")) == {}
 
 
@@ -688,33 +688,33 @@ class SuperDoEvalNotApplicableUnitTests(_ValidatorUnitTestSupport):
 
     def test_the_super_do_eval_intermediate_response(self):
         """Return not-applicable for an intermediate (tool-call) response."""
-        ev = self._make_evaluator()
-        do_eval = self._super_impl(ev, "do_eval")
+        evaluator = self._make_evaluator()
+        do_eval = self._super_impl(evaluator, "do_eval")
         if do_eval is None:
             pytest.skip("no _do_eval on super")
-        if ev._result_key in self._SUPER_DO_EVAL_NOT_APPLICABLE_UNSUPPORTED:
+        if evaluator._result_key in self._SUPER_DO_EVAL_NOT_APPLICABLE_UNSUPPORTED:
             pytest.skip("_return_not_applicable_result signature is incompatible with the base _do_eval")
-        rk = ev._result_key
+        result_key = evaluator._result_key
         intermediate = [{"role": "assistant", "content": [{"type": "function_call", "name": "f"}]}]
         res = self._run_async(do_eval({"query": "q", "response": intermediate}))
-        assert res[f"{rk}_result"] == "not_applicable"
+        assert res[f"{result_key}_result"] == "not_applicable"
 
     def test_the_super_do_eval_skipped_output(self):
         """Map a skipped llm_output to a not-applicable result."""
-        ev = self._make_evaluator()
-        do_eval = self._super_impl(ev, "do_eval")
+        evaluator = self._make_evaluator()
+        do_eval = self._super_impl(evaluator, "do_eval")
         if do_eval is None:
             pytest.skip("no _do_eval on super")
-        if ev._result_key in self._SUPER_DO_EVAL_NOT_APPLICABLE_UNSUPPORTED:
+        if evaluator._result_key in self._SUPER_DO_EVAL_NOT_APPLICABLE_UNSUPPORTED:
             pytest.skip("_return_not_applicable_result signature is incompatible with the base _do_eval")
-        rk = ev._result_key
+        result_key = evaluator._result_key
 
         async def flow(timeout=None, **kwargs):
             return {"llm_output": {"status": "skipped", "reason": "nope"}}
 
-        ev._flow = MagicMock(side_effect=flow)
+        evaluator._flow = MagicMock(side_effect=flow)
         res = self._run_async(do_eval({"query": "q", "response": "r"}))
-        assert res[f"{rk}_result"] == "not_applicable"
+        assert res[f"{result_key}_result"] == "not_applicable"
 
 
 class MessagePreprocessUnitTests(_ValidatorUnitTestSupport):
@@ -764,152 +764,152 @@ class ConversationValidatorUnitTests(_ValidatorUnitTestSupport):
 
     def test_validate_field_exists(self):
         """Cover required-field presence checks."""
-        v = self._validator()
-        assert v._validate_field_exists({"a": 1}, "a", "ctx") is None
-        self._assert_exc(v._validate_field_exists({}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
+        validator = self._validator()
+        assert validator._validate_field_exists({"a": 1}, "a", "ctx") is None
+        self._assert_exc(validator._validate_field_exists({}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
 
     def test_validate_string_field(self):
         """Cover string field type/presence checks."""
-        v = self._validator()
-        assert v._validate_string_field({"a": "x"}, "a", "ctx") is None
-        self._assert_exc(v._validate_string_field({}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
-        self._assert_exc(v._validate_string_field({"a": 1}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
+        validator = self._validator()
+        assert validator._validate_string_field({"a": "x"}, "a", "ctx") is None
+        self._assert_exc(validator._validate_string_field({}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
+        self._assert_exc(validator._validate_string_field({"a": 1}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
 
     def test_validate_list_field(self):
         """Cover list field type/presence checks."""
-        v = self._validator()
-        assert v._validate_list_field({"a": []}, "a", "ctx") is None
-        self._assert_exc(v._validate_list_field({}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
-        self._assert_exc(v._validate_list_field({"a": 1}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
+        validator = self._validator()
+        assert validator._validate_list_field({"a": []}, "a", "ctx") is None
+        self._assert_exc(validator._validate_list_field({}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
+        self._assert_exc(validator._validate_list_field({"a": 1}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
 
     def test_validate_dict_field(self):
         """Cover dict field type/presence checks."""
-        v = self._validator()
-        assert v._validate_dict_field({"a": {}}, "a", "ctx") is None
-        self._assert_exc(v._validate_dict_field({}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
-        self._assert_exc(v._validate_dict_field({"a": 1}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
+        validator = self._validator()
+        assert validator._validate_dict_field({"a": {}}, "a", "ctx") is None
+        self._assert_exc(validator._validate_dict_field({}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
+        self._assert_exc(validator._validate_dict_field({"a": 1}, "a", "ctx"), ErrorCategory.INVALID_VALUE)
 
     def test_validate_text_content_item(self):
         """Cover text content-item validation."""
-        v = self._validator()
-        assert v._validate_text_content_item({"text": "hi"}, "user") is None
-        self._assert_exc(v._validate_text_content_item({}, "user"))
-        self._assert_exc(v._validate_text_content_item({"text": 1}, "user"))
+        validator = self._validator()
+        assert validator._validate_text_content_item({"text": "hi"}, "user") is None
+        self._assert_exc(validator._validate_text_content_item({}, "user"))
+        self._assert_exc(validator._validate_text_content_item({"text": 1}, "user"))
 
     def test_validate_tool_call_content_item(self):
         """Cover tool_call content-item validation paths."""
-        v = self._validator()
+        validator = self._validator()
         # Missing / invalid type.
-        self._assert_exc(v._validate_tool_call_content_item({}))
-        self._assert_exc(v._validate_tool_call_content_item({"type": "text"}))
+        self._assert_exc(validator._validate_tool_call_content_item({}))
+        self._assert_exc(validator._validate_tool_call_content_item({"type": "text"}))
         # mcp_approval_request short-circuits to valid.
-        assert v._validate_tool_call_content_item({"type": "mcp_approval_request"}) is None
+        assert validator._validate_tool_call_content_item({"type": "mcp_approval_request"}) is None
         # Fully valid tool_call.
         valid = {"type": "tool_call", "name": "f", "arguments": {}, "tool_call_id": "c1"}
-        assert v._validate_tool_call_content_item(valid) is None
+        assert validator._validate_tool_call_content_item(valid) is None
         # Missing name / non-dict arguments / missing tool_call_id.
-        self._assert_exc(v._validate_tool_call_content_item({"type": "tool_call", "arguments": {}, "tool_call_id": "c1"}))
+        self._assert_exc(validator._validate_tool_call_content_item({"type": "tool_call", "arguments": {}, "tool_call_id": "c1"}))
         self._assert_exc(
-            v._validate_tool_call_content_item(
+            validator._validate_tool_call_content_item(
                 {"type": "tool_call", "name": "f", "arguments": 1, "tool_call_id": "c1"}
             )
         )
-        self._assert_exc(v._validate_tool_call_content_item({"type": "tool_call", "name": "f", "arguments": {}}))
+        self._assert_exc(validator._validate_tool_call_content_item({"type": "tool_call", "name": "f", "arguments": {}}))
 
     def test_validate_user_or_system_message(self):
         """Cover user/system message content validation."""
-        v = self._validator()
-        assert v._validate_user_or_system_message({"content": "hi"}, "user") is None
-        assert v._validate_user_or_system_message({"content": [{"type": "text", "text": "hi"}]}, "user") is None
-        assert v._validate_user_or_system_message({"content": [{"type": "input_text", "text": "hi"}]}, "user") is None
-        self._assert_exc(v._validate_user_or_system_message({"content": [{"type": "tool_call", "text": "x"}]}, "user"))
-        self._assert_exc(v._validate_user_or_system_message({"content": [{"type": "text", "text": 1}]}, "user"))
+        validator = self._validator()
+        assert validator._validate_user_or_system_message({"content": "hi"}, "user") is None
+        assert validator._validate_user_or_system_message({"content": [{"type": "text", "text": "hi"}]}, "user") is None
+        assert validator._validate_user_or_system_message({"content": [{"type": "input_text", "text": "hi"}]}, "user") is None
+        self._assert_exc(validator._validate_user_or_system_message({"content": [{"type": "tool_call", "text": "x"}]}, "user"))
+        self._assert_exc(validator._validate_user_or_system_message({"content": [{"type": "text", "text": 1}]}, "user"))
 
     def test_validate_assistant_message(self):
         """Cover assistant message content validation."""
-        v = self._validator()
-        assert v._validate_assistant_message({"content": "hi"}) is None
-        assert v._validate_assistant_message({"content": [{"type": "output_text", "text": "ok"}]}) is None
-        assert v._validate_assistant_message(
+        validator = self._validator()
+        assert validator._validate_assistant_message({"content": "hi"}) is None
+        assert validator._validate_assistant_message({"content": [{"type": "output_text", "text": "ok"}]}) is None
+        assert validator._validate_assistant_message(
             {"content": [{"type": "tool_call", "name": "f", "arguments": {}, "tool_call_id": "c1"}]}
         ) is None
-        self._assert_exc(v._validate_assistant_message({"content": [{"type": "input_text", "text": "x"}]}))
+        self._assert_exc(validator._validate_assistant_message({"content": [{"type": "input_text", "text": "x"}]}))
 
     def test_validate_tool_message(self):
         """Cover tool message validation paths."""
-        v = self._validator()
-        self._assert_exc(v._validate_tool_message({"content": "x", "tool_call_id": "c1"}))
-        self._assert_exc(v._validate_tool_message({"content": [{"type": "tool_result", "tool_result": {}}]}))
-        self._assert_exc(v._validate_tool_message({"tool_call_id": "c1", "content": [{"type": "text"}]}))
-        self._assert_exc(v._validate_tool_message({"tool_call_id": "c1", "content": [{"type": "tool_result"}]}))
+        validator = self._validator()
+        self._assert_exc(validator._validate_tool_message({"content": "x", "tool_call_id": "c1"}))
+        self._assert_exc(validator._validate_tool_message({"content": [{"type": "tool_result", "tool_result": {}}]}))
+        self._assert_exc(validator._validate_tool_message({"tool_call_id": "c1", "content": [{"type": "text"}]}))
+        self._assert_exc(validator._validate_tool_message({"tool_call_id": "c1", "content": [{"type": "tool_result"}]}))
         valid = {"tool_call_id": "c1", "content": [{"type": "tool_result", "tool_result": {"a": 1}}]}
-        assert v._validate_tool_message(valid) is None
+        assert validator._validate_tool_message(valid) is None
 
     def test_validate_message_dict(self):
         """Cover message-dict validation across roles."""
-        v = self._validator()
-        self._assert_exc(v._validate_message_dict({"content": "x"}))
-        self._assert_exc(v._validate_message_dict({"role": "user"}))
-        self._assert_exc(v._validate_message_dict({"role": "user", "content": 1}))
-        self._assert_exc(v._validate_message_dict({"role": "user", "content": ""}))
-        self._assert_exc(v._validate_message_dict({"role": "user", "content": [{"text": "x"}]}))
-        assert v._validate_message_dict({"role": "user", "content": "hi"}) is None
-        assert v._validate_message_dict({"role": "assistant", "content": [{"type": "text", "text": "ok"}]}) is None
-        assert v._validate_message_dict(
+        validator = self._validator()
+        self._assert_exc(validator._validate_message_dict({"content": "x"}))
+        self._assert_exc(validator._validate_message_dict({"role": "user"}))
+        self._assert_exc(validator._validate_message_dict({"role": "user", "content": 1}))
+        self._assert_exc(validator._validate_message_dict({"role": "user", "content": ""}))
+        self._assert_exc(validator._validate_message_dict({"role": "user", "content": [{"text": "x"}]}))
+        assert validator._validate_message_dict({"role": "user", "content": "hi"}) is None
+        assert validator._validate_message_dict({"role": "assistant", "content": [{"type": "text", "text": "ok"}]}) is None
+        assert validator._validate_message_dict(
             {"role": "tool", "tool_call_id": "c1", "content": [{"type": "tool_result", "tool_result": {}}]}
         ) is None
 
     def test_validate_input_messages_list(self):
         """Cover input-messages-list validation paths."""
-        v = self._validator()
-        self._assert_exc(v._validate_input_messages_list(None, "Query"), ErrorCategory.MISSING_FIELD)
-        self._assert_exc(v._validate_input_messages_list("", "Query"), ErrorCategory.MISSING_FIELD)
-        assert v._validate_input_messages_list("hi", "Query") is None
-        self._assert_exc(v._validate_input_messages_list(1, "Query"), ErrorCategory.INVALID_VALUE)
-        self._assert_exc(v._validate_input_messages_list([], "Query"), ErrorCategory.MISSING_FIELD)
-        self._assert_exc(v._validate_input_messages_list([1], "Query"), ErrorCategory.INVALID_VALUE)
-        self._assert_exc(v._validate_input_messages_list([{"role": "user"}], "Query"))
-        assert v._validate_input_messages_list([{"role": "user", "content": "hi"}], "Query") is None
+        validator = self._validator()
+        self._assert_exc(validator._validate_input_messages_list(None, "Query"), ErrorCategory.MISSING_FIELD)
+        self._assert_exc(validator._validate_input_messages_list("", "Query"), ErrorCategory.MISSING_FIELD)
+        assert validator._validate_input_messages_list("hi", "Query") is None
+        self._assert_exc(validator._validate_input_messages_list(1, "Query"), ErrorCategory.INVALID_VALUE)
+        self._assert_exc(validator._validate_input_messages_list([], "Query"), ErrorCategory.MISSING_FIELD)
+        self._assert_exc(validator._validate_input_messages_list([1], "Query"), ErrorCategory.INVALID_VALUE)
+        self._assert_exc(validator._validate_input_messages_list([{"role": "user"}], "Query"))
+        assert validator._validate_input_messages_list([{"role": "user", "content": "hi"}], "Query") is None
 
     def test_validate_conversation(self):
         """Cover conversation-dict validation paths."""
-        v = self._validator()
-        self._assert_exc(v._validate_conversation([]), ErrorCategory.INVALID_VALUE)
-        self._assert_exc(v._validate_conversation({}))
-        assert v._validate_conversation({"messages": [{"role": "user", "content": "hi"}]}) is None
+        validator = self._validator()
+        self._assert_exc(validator._validate_conversation([]), ErrorCategory.INVALID_VALUE)
+        self._assert_exc(validator._validate_conversation({}))
+        assert validator._validate_conversation({"messages": [{"role": "user", "content": "hi"}]}) is None
 
     def test_validate_query_and_response(self):
         """Cover query/response validation, required and optional."""
-        v = self._validator(requires_query=True)
-        self._assert_exc(v._validate_query(None))
-        assert v._validate_query([{"role": "user", "content": "hi"}]) is None
+        validator = self._validator(requires_query=True)
+        self._assert_exc(validator._validate_query(None))
+        assert validator._validate_query([{"role": "user", "content": "hi"}]) is None
         v2 = self._validator(requires_query=False)
         assert v2._validate_query(None) is None
-        self._assert_exc(v._validate_response(None))
-        assert v._validate_response([{"role": "assistant", "content": "ok"}]) is None
+        self._assert_exc(validator._validate_response(None))
+        assert validator._validate_response([{"role": "assistant", "content": "ok"}]) is None
 
     def test_validate_eval_input_conversation_path(self):
         """Cover validate_eval_input via the conversation branch."""
-        v = self._validator()
-        assert v.validate_eval_input(
+        validator = self._validator()
+        assert validator.validate_eval_input(
             {"conversation": {"messages": [{"role": "user", "content": "hi"}]}}
         ) is True
         with pytest.raises(EvaluationException):
-            v.validate_eval_input({"conversation": {"messages": [1]}})
+            validator.validate_eval_input({"conversation": {"messages": [1]}})
 
     def test_validate_eval_input_query_response_path(self):
         """Cover validate_eval_input via the query/response branch."""
-        v = self._validator()
-        assert v.validate_eval_input(
+        validator = self._validator()
+        assert validator.validate_eval_input(
             {
                 "query": [{"role": "user", "content": "hi"}],
                 "response": [{"role": "assistant", "content": "ok"}],
             }
         ) is True
         with pytest.raises(EvaluationException):
-            v.validate_eval_input({"query": None, "response": [{"role": "assistant", "content": "ok"}]})
+            validator.validate_eval_input({"query": None, "response": [{"role": "assistant", "content": "ok"}]})
         with pytest.raises(EvaluationException):
-            v.validate_eval_input({"query": [{"role": "user", "content": "hi"}], "response": None})
+            validator.validate_eval_input({"query": [{"role": "user", "content": "hi"}], "response": None})
 
 
 class ConversationValidatorToolCheckUnitTests(_ValidatorUnitTestSupport):
@@ -917,11 +917,11 @@ class ConversationValidatorToolCheckUnitTests(_ValidatorUnitTestSupport):
 
     def test_validate_assistant_message_unsupported_tools(self):
         """Cover the unsupported-tool rejection path."""
-        v = self._validator(check_for_unsupported_tools=True)
+        validator = self._validator(check_for_unsupported_tools=True)
         bad = {"type": "tool_call", "name": "bing_grounding", "arguments": {}, "tool_call_id": "c1"}
-        self._assert_exc(v._validate_assistant_message({"content": [bad]}), ErrorCategory.NOT_APPLICABLE)
+        self._assert_exc(validator._validate_assistant_message({"content": [bad]}), ErrorCategory.NOT_APPLICABLE)
         openapi = {"type": "openapi_call", "name": "x", "arguments": {}, "tool_call_id": "c2"}
-        self._assert_exc(v._validate_assistant_message({"content": [openapi]}), ErrorCategory.NOT_APPLICABLE)
+        self._assert_exc(validator._validate_assistant_message({"content": [openapi]}), ErrorCategory.NOT_APPLICABLE)
 
 
 class ToolDefinitionsValidatorUnitTests(_ValidatorUnitTestSupport):
@@ -1038,71 +1038,71 @@ class ConversationSerializationUnitTests(_ValidatorUnitTestSupport):
 
     def test_should_use_conversation_level(self):
         """Cover the conversation-vs-turn level decision logic."""
-        ev = self._make_evaluator()
-        if not hasattr(ev, "_should_use_conversation_level"):
+        evaluator = self._make_evaluator()
+        if not hasattr(evaluator, "_should_use_conversation_level"):
             pytest.skip("no _should_use_conversation_level")
         level_enum = getattr(self._module(), "EvaluationLevel", None)
         if level_enum is None:
             pytest.skip("no EvaluationLevel")
-        ev._evaluation_level = level_enum.CONVERSATION
-        assert ev._should_use_conversation_level({}) is True
-        ev._evaluation_level = level_enum.TURN
-        assert ev._should_use_conversation_level({"messages": [1]}) is False
-        ev._evaluation_level = None
-        assert ev._should_use_conversation_level({"messages": [1]}) is True
-        assert ev._should_use_conversation_level({}) is False
+        evaluator._evaluation_level = level_enum.CONVERSATION
+        assert evaluator._should_use_conversation_level({}) is True
+        evaluator._evaluation_level = level_enum.TURN
+        assert evaluator._should_use_conversation_level({"messages": [1]}) is False
+        evaluator._evaluation_level = None
+        assert evaluator._should_use_conversation_level({"messages": [1]}) is True
+        assert evaluator._should_use_conversation_level({}) is False
 
     def test_build_result(self):
         """Cover the result-dict builder for populated and empty scores."""
-        ev = self._make_evaluator()
-        if not hasattr(ev, "_build_result"):
+        evaluator = self._make_evaluator()
+        if not hasattr(evaluator, "_build_result"):
             pytest.skip("no _build_result")
-        rk = ev._result_key
+        result_key = evaluator._result_key
         # quality_grader has a bespoke keyword-only _build_result signature
         # (passed/failure_reasons/stage1_parsed/...); see EVALUATOR_DISCREPANCIES.md.
-        if rk == "quality_grader":
+        if result_key == "quality_grader":
             pytest.skip("quality_grader uses a bespoke _build_result signature")
         # task_adherence is the only builder that omits the `status` kwarg.
-        has_status = rk != "task_adherence"
+        has_status = result_key != "task_adherence"
         kwargs = dict(
             score=4, result="pass", reason="good", properties={"a": 1}, prompty_output_dict={"input_token_count": 2}
         )
         if has_status:
             kwargs["status"] = "completed"
-        res = ev._build_result(**kwargs)
-        assert res[rk] == 4
-        assert res[f"{rk}_result"] == "pass"
+        res = evaluator._build_result(**kwargs)
+        assert res[result_key] == 4
+        assert res[f"{result_key}_result"] == "pass"
         if has_status:
-            assert res[f"{rk}_status"] == "completed"
-        assert res[f"{rk}_properties"]["a"] == 1
-        assert res[f"{rk}_prompt_tokens"] == 2
+            assert res[f"{result_key}_status"] == "completed"
+        assert res[f"{result_key}_properties"]["a"] == 1
+        assert res[f"{result_key}_prompt_tokens"] == 2
         empty = dict(score=None, result="error", reason="bad", properties={}, prompty_output_dict={})
         if has_status:
             empty["status"] = "error"
-        res2 = ev._build_result(**empty)
-        assert res2[rk] is None
+        res2 = evaluator._build_result(**empty)
+        assert res2[result_key] is None
 
     def test_parse_prompty_output(self):
         """Cover parsing of completed, skipped and malformed prompty outputs."""
-        ev = self._make_evaluator()
-        if not hasattr(ev, "_parse_prompty_output"):
+        evaluator = self._make_evaluator()
+        if not hasattr(evaluator, "_parse_prompty_output"):
             pytest.skip("no _parse_prompty_output")
-        rk = ev._result_key
-        res = ev._parse_prompty_output(
+        result_key = evaluator._result_key
+        res = evaluator._parse_prompty_output(
             {"llm_output": {"status": "completed", "score": 4, "reason": "r", "properties": {}}}
         )
-        assert res[f"{rk}_result"] in ("pass", "fail")
-        assert isinstance(res[rk], (int, float)) and not isinstance(res[rk], bool)
+        assert res[f"{result_key}_result"] in ("pass", "fail")
+        assert isinstance(res[result_key], (int, float)) and not isinstance(res[result_key], bool)
         # A skipped prompty status normally maps to "not_applicable"; see
         # EVALUATOR_DISCREPANCIES.md for the evaluators that diverge.
-        res2 = ev._parse_prompty_output({"llm_output": {"status": "skipped", "reason": "skip"}})
-        assert res2[f"{rk}_result"] == self._PARSE_SKIPPED_RESULT.get(rk, "not_applicable")
+        res2 = evaluator._parse_prompty_output({"llm_output": {"status": "skipped", "reason": "skip"}})
+        assert res2[f"{result_key}_result"] == self._PARSE_SKIPPED_RESULT.get(result_key, "not_applicable")
         # Malformed llm_outputs are handled deterministically but inconsistently
         # per evaluator (recorded in _PARSE_MALFORMED_EXPECTATIONS); the invariant
         # is no unhandled TypeError from math.isnan.
-        expectations = self._PARSE_MALFORMED_EXPECTATIONS.get(rk)
+        expectations = self._PARSE_MALFORMED_EXPECTATIONS.get(result_key)
         if expectations is None:
-            pytest.skip(f"no recorded _parse_prompty_output expectations for {rk}")
+            pytest.skip(f"no recorded _parse_prompty_output expectations for {result_key}")
         malformed = (
             {"llm_output": {"status": "completed", "reason": "r"}},
             {"llm_output": {"status": "completed", "score": "abc"}},
@@ -1111,32 +1111,32 @@ class ConversationSerializationUnitTests(_ValidatorUnitTestSupport):
         for inp, expected in zip(malformed, expectations):
             if isinstance(expected, type) and issubclass(expected, BaseException):
                 with pytest.raises(expected):
-                    ev._parse_prompty_output(inp)
+                    evaluator._parse_prompty_output(inp)
             else:
-                out = ev._parse_prompty_output(inp)
-                assert out[f"{rk}_status"] == expected
+                out = evaluator._parse_prompty_output(inp)
+                assert out[f"{result_key}_status"] == expected
 
     def test_real_call_turn_level_splits_messages(self):
         """Split conversation messages into query/response at turn level."""
-        ev = self._make_evaluator()
-        if not hasattr(ev, "_real_call"):
+        evaluator = self._make_evaluator()
+        if not hasattr(evaluator, "_real_call"):
             pytest.skip("no _real_call")
         level_enum = getattr(self._module(), "EvaluationLevel", None)
         if level_enum is None:
             pytest.skip("no EvaluationLevel")
-        ev._evaluation_level = level_enum.TURN
+        evaluator._evaluation_level = level_enum.TURN
         captured = {}
 
         async def fake_super(**kwargs):
             captured.update(kwargs)
             return {}
 
-        ev._the_super_real_call = fake_super
+        evaluator._the_super_real_call = fake_super
         msgs = [
             {"role": "user", "content": [{"type": "text", "text": "hi"}]},
             {"role": "assistant", "content": [{"type": "text", "text": "yo"}]},
         ]
-        self._run_async(ev._real_call(messages=msgs))
+        self._run_async(evaluator._real_call(messages=msgs))
         assert "query" in captured
         assert "response" in captured
         assert "messages" not in captured
@@ -1202,49 +1202,49 @@ class MessagesOrQueryResponseUnitTests(_ValidatorUnitTestSupport):
 
     def test_mqr_messages_not_list(self):
         """Reject a non-list ``messages`` input."""
-        v = self._messages_or_query_response_validator()
+        validator = self._messages_or_query_response_validator()
         with pytest.raises(EvaluationException):
-            v.validate_eval_input({"messages": "x"})
+            validator.validate_eval_input({"messages": "x"})
 
     def test_mqr_messages_empty(self):
         """Reject an empty ``messages`` list."""
-        v = self._messages_or_query_response_validator()
+        validator = self._messages_or_query_response_validator()
         with pytest.raises(EvaluationException):
-            v.validate_eval_input({"messages": []})
+            validator.validate_eval_input({"messages": []})
 
     def test_mqr_message_not_dict(self):
         """Reject a non-dict message item."""
-        v = self._messages_or_query_response_validator()
+        validator = self._messages_or_query_response_validator()
         with pytest.raises(EvaluationException):
-            v.validate_eval_input({"messages": [1]})
+            validator.validate_eval_input({"messages": [1]})
 
     def test_mqr_message_missing_role(self):
         """Reject a message item missing the role."""
-        v = self._messages_or_query_response_validator()
+        validator = self._messages_or_query_response_validator()
         with pytest.raises(EvaluationException):
-            v.validate_eval_input({"messages": [{"content": "x"}]})
+            validator.validate_eval_input({"messages": [{"content": "x"}]})
 
     def test_mqr_invalid_role(self):
         """Reject an unknown message role."""
-        v = self._messages_or_query_response_validator()
+        validator = self._messages_or_query_response_validator()
         with pytest.raises(EvaluationException):
-            v.validate_eval_input({"messages": [{"role": "bogus", "content": "x"}]})
+            validator.validate_eval_input({"messages": [{"role": "bogus", "content": "x"}]})
 
     def test_mqr_missing_user(self):
         """Reject input that has no user message."""
-        v = self._messages_or_query_response_validator()
+        validator = self._messages_or_query_response_validator()
         with pytest.raises(EvaluationException):
-            v.validate_eval_input({"messages": [{"role": "assistant", "content": "x"}]})
+            validator.validate_eval_input({"messages": [{"role": "assistant", "content": "x"}]})
 
     def test_mqr_missing_assistant(self):
         """Reject input that has no assistant message."""
-        v = self._messages_or_query_response_validator()
+        validator = self._messages_or_query_response_validator()
         with pytest.raises(EvaluationException):
-            v.validate_eval_input({"messages": [{"role": "user", "content": "x"}]})
+            validator.validate_eval_input({"messages": [{"role": "user", "content": "x"}]})
 
     def test_mqr_last_message_no_text(self):
         """Reject input whose last message has no text content."""
-        v = self._messages_or_query_response_validator()
+        validator = self._messages_or_query_response_validator()
         msgs = [
             {"role": "user", "content": [{"type": "text", "text": "hi"}]},
             {
@@ -1253,21 +1253,21 @@ class MessagesOrQueryResponseUnitTests(_ValidatorUnitTestSupport):
             },
         ]
         with pytest.raises(EvaluationException):
-            v.validate_eval_input({"messages": msgs})
+            validator.validate_eval_input({"messages": msgs})
 
     def test_mqr_valid_messages(self):
         """Accept a well-formed messages list."""
-        v = self._messages_or_query_response_validator()
+        validator = self._messages_or_query_response_validator()
         msgs = [
             {"role": "user", "content": [{"type": "text", "text": "hi"}]},
             {"role": "assistant", "content": [{"type": "text", "text": "hello"}]},
         ]
-        assert v.validate_eval_input({"messages": msgs}) is True
+        assert validator.validate_eval_input({"messages": msgs}) is True
 
     def test_mqr_delegates_to_super_without_messages(self):
         """Delegate to the base validator when no messages key is present."""
-        v = self._messages_or_query_response_validator()
-        assert v.validate_eval_input(
+        validator = self._messages_or_query_response_validator()
+        assert validator.validate_eval_input(
             {
                 "query": [{"role": "user", "content": "hi"}],
                 "response": [{"role": "assistant", "content": "ok"}],
