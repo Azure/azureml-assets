@@ -40,6 +40,9 @@ RUN apt-get update && \
 # urllib3>=2.7.0: GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j.
 # idna>=3.15: GHSA-65pc-fj4g-8rjx.
 # aiohttp>=3.14.0: GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8.
+# torch 2.10.0 CUDA 12.6 wheels: inherited from ACPT base image; fixes
+#   GHSA-qfhq-4f3w-5fph and GHSA-vgrw-7cvw-pwgx. torchvision and torchaudio
+#   are upgraded with torch to keep the CUDA PyTorch stack compatible.
 # cryptography>=48.0.1: pinned transitive dep of azureml-core; brought in by
 #   base image and AzureML SDK dependencies, fixes GHSA-537c-gmf6-5ccf.
 # pyarrow>=23.0.1: transitive dep of azureml-dataset-runtime in the ptca env;
@@ -48,12 +51,19 @@ RUN apt-get update && \
 RUN conda install -n ptca -c conda-forge -y 'pip>=26.1.1' 'setuptools>=82.0.1' && \
     conda run -n ptca python -m pip install --upgrade \
         'urllib3>=2.7.0' 'idna>=3.15' 'aiohttp>=3.14.0' \
-        'cryptography>=48.0.1' 'pyarrow>=23.0.1'
+        'cryptography>=48.0.1' 'pyarrow>=23.0.1' && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.10.0' 'torchvision==0.25.0' 'torchaudio==2.10.0'
 
 # Fix base conda env vulnerabilities (python 3.13). Parent packages still expose
 # loose floors as of 2026-05-25, so these direct floors are required:
 # setuptools>=82.0.1: conda 26.3.2 requires setuptools>=60.0.0 only.
-# python-dotenv>=1.2.2: pydantic-settings 2.14.1 requires >=0.21.0.
+# pydantic-settings>=2.14.2: transitive dep of azureml-defaults ->
+#   azureml-inference-server-http; fixes GHSA-4xgf-cpjx-pc3j.
+# msgpack>=1.2.1: transitive dep of azureml-mlflow -> mlflow-skinny; fixes
+#   GHSA-6v7p-g79w-8964.
+# python-dotenv>=1.2.2: pydantic-settings requires >=0.21.0.
 # urllib3>=2.7.0: requests 2.34.2 requires <3,>=1.26.
 # idna>=3.15: requests 2.34.2 requires <4,>=2.5.
 # click>=8.3.3: typer 0.25.1 requires >=8.2.1; mlflow-skinny 3.12.0 requires
@@ -64,7 +74,8 @@ RUN conda install -n ptca -c conda-forge -y 'pip>=26.1.1' 'setuptools>=82.0.1' &
 # PyJWT>=2.13.0: transitive dep from the base image; fixes GHSA-jq35-7prp-9v3f
 #   and GHSA-993g-76c3-p5m4.
 RUN conda run -n base python -m pip install --upgrade \
-    'setuptools>=82.0.1' 'python-dotenv>=1.2.2' \
+    'setuptools>=82.0.1' 'pydantic-settings>=2.14.2' 'msgpack>=1.2.1' \
+    'python-dotenv>=1.2.2' \
     'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.0' \
     'cryptography>=48.0.1' 'PyJWT>=2.13.0'
 
