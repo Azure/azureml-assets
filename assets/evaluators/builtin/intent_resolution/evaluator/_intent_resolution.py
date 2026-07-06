@@ -909,6 +909,7 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                                     internal_message=str(threshold_value),
                                     target=ErrorTarget.EVALUATE,
                                     category=ErrorCategory.INVALID_VALUE,
+                                    blame=ErrorBlame.USER_ERROR,
                                 )
 
                             if not contains_threshold_key:
