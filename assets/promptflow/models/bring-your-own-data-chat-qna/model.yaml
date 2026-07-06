@@ -1,8 +1,0 @@
-path:
-  container_name: models
-  container_path: promptflow/bring_your_own_data_chat_qna
-  storage_name: automlcesdkdataresources
-  type: azureblob
-publish:
-  description: description.md
-  type: custom_model

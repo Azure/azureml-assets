@@ -164,6 +164,13 @@ def get_parser():
         )
     )
 
+    parser.add_argument(
+        "--trust_remote_code",
+        type=str2bool,
+        default=False,
+        help="If true, run model repo code when loading the base model config to persist it. Default false.",
+    )
+
     return parser
 
 
@@ -301,6 +308,32 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
     # Preprocessing component has `unparsed args` which will be parsed and returned after this method
     hf_task_runner = get_task_runner(task_name=parsed_args.task_name)()
     hf_task_runner.run_preprocess_for_finetune(parsed_args, unparsed_args)  # type: ignore
+
+    # ChatCompletion finetune loads its tokenizer from the preprocess output and calls
+    # AzuremlAutoConfig.get_model_type, which needs a model `config.json` (with `model_type`)
+    # there. Re-save the base model config (native, trust_remote_code default false) so any
+    # auto_map to remote code is dropped and finetune resolves the type without extra files.
+    model_selector_output = getattr(parsed_args, "model_selector_output", None)
+    if parsed_args.task_name == "ChatCompletion" and model_selector_output:
+        base_model_dir = next(
+            (
+                cfg.parent
+                for cfg in sorted(Path(model_selector_output).rglob("config.json"))
+                if "model_type" in json.loads(cfg.read_text(encoding="utf-8"))
+            ),
+            None,
+        )
+        if base_model_dir is not None:
+            base_cfg = AzuremlAutoConfig.from_pretrained(
+                str(base_model_dir),
+                trust_remote_code=getattr(parsed_args, "trust_remote_code", False),
+            )
+            # Drop auto_map so the finetune tokenizer resolves the built-in model_type and
+            # does not need the remote configuration/modeling .py files in this folder.
+            if getattr(base_cfg, "auto_map", None):
+                base_cfg.auto_map = {}
+            base_cfg.save_pretrained(parsed_args.output_dir)
+            logger.info(f"Saved base model config.json (auto_map cleared) to preprocess output: {base_model_dir}")
 
 
 @swallow_all_exceptions(time_delay=60)
