@@ -8,9 +8,9 @@ RUN apt-get -y update && apt-get -y upgrade && \
     apt-get -y autoremove && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Checked 2026-05-25: pip is installed by conda/bootstrap metadata, not pulled
-# by a Python parent package. Use conda for ptca so the conda-meta record is
-# updated; --no-deps avoids unrelated solver package churn.
+# pip is installed by conda/bootstrap metadata, not pulled by a Python parent
+# package. Use conda for ptca so the conda-meta record is updated; --no-deps
+# avoids unrelated solver package churn.
 RUN conda install -n ptca -c conda-forge -y --no-deps "pip>=26.1.1" && \
     conda clean -afy
 
@@ -24,9 +24,9 @@ RUN pip install azureml-metrics==0.0.33 pyarrow==14.0.1
 RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 RUN pip install azureml-acft-accelerator=={{latest-pypi-version}}
 
-# Checked 2026-05-25: final ptca overrides are still needed after all package
-# installs because parent packages either keep broad dependency ranges or are
-# latest-pypi-version resolved at build time:
+# Final ptca overrides are needed after all package installs because parent
+# packages either keep broad dependency ranges or are latest-pypi-version
+# resolved at build time:
 # - setuptools>=82.0.1 patches jaraco.context (GHSA-58pv-8j8x-9vj2).
 # - nltk>=3.9.4 is pulled by rouge-score/sacrebleu; those parents do not pin a
 #   fixed nltk release.
@@ -37,27 +37,36 @@ RUN pip install azureml-acft-accelerator=={{latest-pypi-version}}
 # - pyOpenSSL>=26.0.0 and urllib3>=2.7.0 are transitive through azure/requests
 #   stacks; no parent package pins only fixed versions.
 RUN pip install --no-cache-dir --upgrade 'setuptools>=82.0.1' 'nltk>=3.9.4' 'transformers>=5.0.0' 'onnx>=1.21.0' 'pyOpenSSL>=26.0.0' 'urllib3>=2.7.0'
-# Checked 2026-06-25: root-env overrides cover packages whose installed parents
-# accept vulnerable ranges instead of requiring fixed versions. pip has no
-# Python parent package; python-dotenv is accepted by mlflow-skinny's broad
-# range; idna/click/urllib3 are accepted by requests/cryptography/anyio/httpx
-# and mlflow/typer/uvicorn/jupyter stacks. pydantic-settings is pinned as a
-# transitive dep of the base image/AzureML inference stack; fixes
-# GHSA-4xgf-cpjx-pc3j. py-rattler is a pinned transitive dep of the base image's
-# conda stack; fixes GHSA-q53q-5r4j-5729. Use pip here because the scanner
-# records root-env dist-info metadata, and conda solving the root env can change
-# unrelated solver packages.
+# Root-env overrides cover packages whose installed parents accept vulnerable
+# ranges instead of requiring fixed versions. pip has no Python parent package;
+# python-dotenv is accepted by mlflow-skinny's broad range; idna/click/urllib3
+# are accepted by requests/cryptography/anyio/httpx and
+# mlflow/typer/uvicorn/jupyter stacks.
+# pydantic-settings>=2.14.2: transitive dep of azureml-defaults ->
+#   azureml-inference-server-http; fixes GHSA-4xgf-cpjx-pc3j.
+# msgpack>=1.2.1: transitive dep of azureml-mlflow -> mlflow-skinny; fixes
+#   GHSA-6v7p-g79w-8964.
+# py-rattler>=0.24.0: pinned transitive dep of the base image's conda stack;
+#   fixes GHSA-q53q-5r4j-5729. Use pip here because the scanner records root-env
+#   dist-info metadata, and conda solving the root env can change unrelated
+#   solver packages.
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
     'setuptools>=82.0.1' 'pyOpenSSL>=26.0.0' 'urllib3>=2.7.0' \
     'python-dotenv>=1.2.2' 'pip>=26.1.1' 'idna>=3.15' 'click>=8.3.3' \
     'aiohttp>=3.14.0' 'PyJWT>=2.13.0' 'pydantic-settings>=2.14.2' \
-    'py-rattler>=0.24.0'
+    'msgpack>=1.2.1' 'py-rattler>=0.24.0'
 
-# Checked 2026-06-16: ptca-env overrides for packages not yet pinned to fixed
-# versions by their parents inside the ptca conda environment.
+# ptca-env overrides for packages not yet pinned to fixed versions by their
+# parents inside the ptca conda environment.
 # - idna>=3.15 patches GHSA-65pc-fj4g-8rjx (ReDoS via crafted domain labels).
 # - aiohttp>=3.14.0 patches GHSA-hg6j-4rv6-33pg and GHSA-jg22-mg44-37j8
 #   (request smuggling / header-injection vulnerabilities).
 # - PyJWT>=2.13.0 patches GHSA-993g-76c3-p5m4.
+# - torch==2.10.0+cu126 is inherited from the ACPT base image; fixes
+#   GHSA-qfhq-4f3w-5fph and GHSA-vgrw-7cvw-pwgx. torchvision and torchaudio are
+#   upgraded with torch to keep the CUDA PyTorch stack compatible.
 RUN conda run -n ptca pip install --no-cache-dir --upgrade \
-    'idna>=3.15' 'aiohttp>=3.14.0' 'PyJWT>=2.13.0'
+    'idna>=3.15' 'aiohttp>=3.14.0' 'PyJWT>=2.13.0' && \
+    conda run -n ptca pip install --no-cache-dir --upgrade \
+    --index-url https://download.pytorch.org/whl/cu126 \
+    'torch==2.10.0+cu126' 'torchvision==0.25.0+cu126' 'torchaudio==2.10.0+cu126'
