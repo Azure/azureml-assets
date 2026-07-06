@@ -17,7 +17,7 @@ from pathlib import Path
 from ruamel.yaml import YAML
 from subprocess import run, PIPE, STDOUT
 from timeit import default_timer as timer
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 import azureml.assets as assets
 import azureml.assets.util as util
@@ -34,8 +34,8 @@ SUCCESS_COUNT = "success_count"
 FAILED_COUNT = "failed_count"
 COUNTERS = [SUCCESS_COUNT, FAILED_COUNT]
 BUILT_IMAGES = "built_images"
-ACR_RETRY_MAX_RETRIES = 5
-ACR_RETRY_INITIAL_WAIT = 30
+ACR_THROTTLE_MAX_RETRIES = 5
+ACR_THROTTLE_INITIAL_WAIT = 30
 ACR_SUBMISSION_DELAY = 10
 
 
@@ -155,34 +155,24 @@ def create_acr_task(image_name: str,
     return sum([step.get('timeout', DEFAULT_STEP_TIMEOUT_SECONDS) for step in task['steps']])
 
 
-def _get_acr_retry_reason(output: str) -> Optional[str]:
-    """Return the transient ACR failure reason, if any.
-
-    Returns:
-        Optional[str]: Description of a transient ACR error that should be retried,
-        or None if the output doesn't indicate a retryable failure.
-    """
-    if re.search(r'(429|too many requests|throttl)', output, re.IGNORECASE):
-        return "throttled"
-    if re.search(r"\(ResourceNotFound\).*Microsoft\.ContainerRegistry/registries/", output, re.IGNORECASE):
-        return "registry not yet available"
-    return None
+def _is_throttled(output: str) -> bool:
+    """Check if ACR output indicates throttling (HTTP 429)."""
+    return bool(re.search(r'(429|too many requests|throttl)', output, re.IGNORECASE))
 
 
-def _run_with_acr_retry(cmd, cwd, name, is_acr):
-    """Run a subprocess command, retrying on transient ACR errors with exponential backoff."""
+def _run_with_throttle_retry(cmd, cwd, name, is_acr):
+    """Run a subprocess command, retrying on ACR throttling with exponential backoff."""
     p = run(cmd, cwd=cwd, stdout=PIPE, stderr=STDOUT)
     if not is_acr:
         return p
 
-    wait = ACR_RETRY_INITIAL_WAIT
-    for attempt in range(1, ACR_RETRY_MAX_RETRIES + 1):
-        retry_reason = _get_acr_retry_reason(p.stdout.decode())
-        if p.returncode == 0 or not retry_reason:
+    wait = ACR_THROTTLE_INITIAL_WAIT
+    for attempt in range(1, ACR_THROTTLE_MAX_RETRIES + 1):
+        if p.returncode == 0 or not _is_throttled(p.stdout.decode()):
             return p
         logger.log_warning(
-            f"ACR {retry_reason} for {name}, retrying in {wait}s "
-            f"(attempt {attempt}/{ACR_RETRY_MAX_RETRIES})")
+            f"ACR throttled for {name}, retrying in {wait}s "
+            f"(attempt {attempt}/{ACR_THROTTLE_MAX_RETRIES})")
         time.sleep(wait)
         wait = min(wait * 2, 300)
         p = run(cmd, cwd=cwd, stdout=PIPE, stderr=STDOUT)
@@ -231,7 +221,7 @@ def build_image(asset_config: assets.AssetConfig,
             # Build locally
             build_context_dir = env_config.context_dir_with_path
             cmd = ["docker", "build", "--file", env_config.dockerfile, "--progress", "plain", "--tag", image_name, "."]
-        p = _run_with_acr_retry(cmd, build_context_dir, asset_config.name, is_acr=(registry is not None))
+        p = _run_with_throttle_retry(cmd, build_context_dir, asset_config.name, is_acr=(registry is not None))
     end = timer()
     logger.print(f"Image for {asset_config.name} built in {timedelta(seconds=end-start)}")
     os.makedirs(build_log.parent, exist_ok=True)
