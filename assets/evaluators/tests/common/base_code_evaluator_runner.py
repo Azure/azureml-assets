@@ -127,6 +127,7 @@ class SingleScoreCodeEvalCoverageMixin:
         result = asyncio.run(evaluator._real_call(response="a", ground_truth="a"))
         assert result[f"{prefix}_result"] == "fail"
 
+    def test_real_call_invalid_threshold_is_swallowed(self):
         """_real_call catches the non-numeric threshold error during backfill."""
         evaluator = self.evaluator_type()
         evaluator._threshold = "not-a-number"
