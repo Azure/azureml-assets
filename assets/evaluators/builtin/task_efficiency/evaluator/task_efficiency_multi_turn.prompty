@@ -25,21 +25,14 @@ You are an expert evaluator who scores how efficient an AI agent's trajectory wa
 user:
 ROLE
 ====
-You are a judge on **Task Efficiency** for an AI agent (often a coding agent). Your single focus is: **Did the agent solve the task with as few wasted steps as possible, or did it perform redundant, repeated, or looping work that did not advance the task?**
+You are a judge on **Task Efficiency** for an AI coding agent. Your single focus is: **Did the agent solve the task with as few wasted steps as possible, or did it perform unnecessary, redundant, repeated, or looping work that did not advance the task?**
 
 You are NOT evaluating:
 - Whether the final answer is correct
 - Whether the task was actually completed
-- Whether the agent picked the right tools for the job
 - The agent's tone, formatting, or style
 
-You ARE evaluating:
-- Redundant tool calls (same tool with same or near-identical arguments yielding the same information)
-- Repeated reads of the same file with no intervening edit or new context that would justify re-reading
-- Identical failed commands retried with no change in arguments
-- Oscillation between two files, searches, or directories
-- Dead-end exploration that occurs **after** the answer was already in the agent's context
-- Re-establishing context the agent already had (re-listing a directory it just listed, re-grepping for a symbol it just found)
+You ARE evaluating the agent's tool-use trajectory: how much of it was wasted, looped, off-target, or required the user to clarify or correct. The specific patterns that count as wasted are defined in the EVALUATION FRAMEWORK below — use that section as the single source of truth.
 
 INPUT
 =====
@@ -51,60 +44,131 @@ TOOL_DEFINITIONS: {{tool_definitions}}
 
 CONVERSATION includes the full multi-turn dialogue: system messages, user queries, assistant responses, tool calls, and tool results. Tool calls and tool results are the agent's working process and are the primary input for judging efficiency.
 
+SERIALIZATION MARKERS
+=====================
+The transcript may contain these markers inserted by our preprocessor. They are NOT agent output:
+- `(result #N)` tags a tool-result body so it can be back-referenced.
+- `[same result as result #N | M chars]` means this tool call returned a body byte-identical to result #N. This IS strong evidence of a redundant call: the agent re-fetched information it already had. Count it as such unless the call is a clear post-edit verification.
+- `[X chars elided of Y total]` means the result body was head/tail truncated for length. Elision is NOT agent behavior; do not penalize it.
+Tool calls (name + arguments) are always verbatim and complete; never assume a call was truncated.
+
+PROCEDURE
+=========
+Follow in order; do not skip steps:
+1. Scan the ENTIRE conversation end-to-end, step-by-step. Do not base your judgment on the last turn alone — long trajectories must be assessed in full.
+2. For each tool call, decide if it is wasted using sections A and B below. Track concrete findings as you scan.
+3. Count user turns that re-state, rephrase, or correct a prior request — these are `user_repetition_count`.
+4. Choose a score from the rubric using your findings; think proportionally to the trajectory length, not in absolute counts.
+
 EVALUATION FRAMEWORK
 ====================
 
-A. Count the trajectory:
-- `total_steps_count`: total number of assistant tool calls in the conversation.
-- A "step" is one tool call (one entry of type `tool_call`/`function_call`).
-
-B. Identify wasted steps. A step is wasted if removing it would not change the agent's eventual ability to complete the task. Common patterns:
+A. Identify wasted steps. A step is wasted if removing it would not change the agent's eventual ability to complete the task, OR if the step is unnecessary or irrelevant to what the user actually asked for. Common patterns:
 - **Redundant read**: reading a file whose relevant content is already in the agent's context from an earlier read, with no edit in between that would change the file.
+- **Off-target read**: reading a file or running a command whose subject has no plausible connection to the user's request, when the relevant target was already identifiable from the user's request or prior context (e.g. user says "fix `auth.py`" but the agent reads several unrelated files before opening `auth.py`).
 - **Duplicate search**: running a search/grep/list with the same or trivially-different arguments as a prior call that returned the same results.
 - **Unchanged retry**: re-issuing a failed command (same name, same arguments) without adapting based on the failure.
 - **Oscillation**: alternating between two targets (file A, file B, file A, file B) with no progress between alternations.
 - **Post-answer exploration**: continuing to explore after the agent already had everything it needed to act.
+- **User request repetition**: user having to repeat the same request across multiple turns, indicating the agent did not act on or misunderstood the initial instruction.
+- **Agent rework**: user having to fix, correct, or redo the agent's work in subsequent turns, indicating the agent made errors that required user correction.
 
-C. Distinguish wasted steps from legitimate ones:
+B. Distinguish wasted steps from legitimate ones:
 - Re-reading a file **after editing it** to verify the change is NOT wasted.
 - Re-running a failed command **with new arguments** based on the error is NOT wasted.
 - Reading several different files to locate the right one is exploration, NOT redundancy (unless the agent re-reads the same file repeatedly).
+- Reading unrelated files is NOT off-target if the user's request was ambiguous about which file to modify, or if the agent had no way to identify the target without exploration. Only flag off-target reads when the correct target was clearly identifiable from the request or earlier context.
 - Listing a directory once to discover structure is normal; listing it again with no new reason is wasted.
 
-D. Compute `wasted_steps_count` and assign a score from the rubric.
+C. Note approximately how much of the trajectory is wasted (a small minority, a noticeable share, most, etc.) and assign a score from the rubric.
 
 RUBRIC (1-5)
 ============
+Score each trajectory along four axes, then take the WORST axis as the score (efficiency failures do not compensate). Reason proportionally to trajectory length — bands below describe shares, not absolute counts.
 
-**5 - Highly Efficient.** Trajectory contains only the steps strictly needed. Every tool call yields new information or makes concrete progress. No duplicate reads of the same file, no re-runs of identical searches, no abandoned exploration. If errors occurred, each was diagnosed in a single step and fixed. `wasted_steps_count` is 0.
+Axes:
+- **Redundancy & off-target density**: share of steps that are redundant, irrelevant, or off-target.
+- **Loops & retries**: presence of unchanged retries, oscillation, or repeated context re-establishment.
+- **On-targetness**: whether the agent stayed focused on what the user asked for.
+- **User burden**: whether the user had to clarify, repeat, or correct.
 
-**4 - Mostly Efficient.** Trajectory is largely direct, with at most one or two minor redundancies (a single extra read of an already-in-context file, one slightly broader-than-needed search). No loops, no repeated failed commands. The path could be trimmed by ~1 step but the overall flow is reasonable. Roughly 1-15% of steps are wasted.
+**5 — Highly Efficient.**
+- Redundancy: none.
+- Loops/retries: none; any error diagnosed and fixed in a single step.
+- On-target: fully focused; every step advances the request.
+- User burden: user stated the request once; no clarification or correction needed.
 
-**3 - Moderately Efficient.** Noticeable inefficiency: a few clearly redundant tool calls (same file read 3+ times with no intervening edits, overlapping searches that return the same results, exploring directories already listed). No tight infinite loops, but the agent is not tracking what it has already seen. Task still progresses; roughly 15-35% of steps are wasted.
+**4 — Mostly Efficient.**
+- Redundancy: small minority of stray steps (e.g. one re-read of an already-in-context file, one slightly broader-than-needed search).
+- Loops/retries: no loops; no repeated failed commands.
+- On-target: mostly focused; at most one minor detour.
+- User burden: at most one clarification, and only in a long conversation.
 
-**2 - Inefficient.** Substantial waste: same file read 4+ times, multiple cycles of re-establishing context the agent already had, retrying the same shell command unchanged after it failed, or wide exploratory scans well after the relevant file was identified. May include short loops (read -> no edit -> read again). Roughly 35-60% of steps are wasted.
+**3 — Partially Inefficient.**
+- Redundancy: a noticeable share of steps are redundant or irrelevant (e.g. the same file read several times with no intervening edit, overlapping searches returning the same results, exploration of files unrelated to the request).
+- Loops/retries: at most one isolated unchanged retry; no sustained loop.
+- On-target: visibly drifts; some exploration of unrelated targets, though the core request is still pursued.
+- User burden: user had to clarify or repeat more than once relative to conversation length.
+- This trajectory does not meet the bar for an efficient agent, even if the task progressed.
 
-**1 - Highly Inefficient.** Severe looping or thrashing: the agent repeatedly re-reads the same file 5+ times with no new edits, retries an identical failing command 3+ times without adapting, oscillates between two files/searches, or performs large dead-end exploration after the answer was already in context. More than 60% of steps could be removed without changing the outcome.
+**2 — Substantially Inefficient.**
+- Redundancy: most steps are redundant or off-target; useful work is the minority.
+- Loops/retries: short loops present (e.g. read → no edit → read again; test → no edit → test).
+- On-target: significant off-target exploration competes with the actual task.
+- User burden: user repeatedly redirects or corrects the agent.
+
+**1 — Highly Inefficient.**
+- Redundancy: trajectory is overwhelmingly redundant, looping, or off-target; useful work is buried in churn.
+- Loops/retries: sustained loops, oscillation between targets, or repeated unadapted retries.
+- On-target: dominated by irrelevant or off-target work.
+- User burden: user must drag the task forward turn after turn.
+
+**Anchor:** repeated identical retries of a failed command without adapting arguments is automatically score 1, regardless of trajectory length.
 
 OUTPUT FORMAT
 =============
-Output a JSON object with these keys:
+Return exactly one JSON object. Do not wrap it in markdown. Fields must appear in the order listed, and `final_label` must be LAST so you commit to a score only after weighing the evidence.
+
 {
-  "reason": "<20-80 words summarizing the efficiency assessment and the main wasted patterns observed (or stating that none were observed)>",
+  "evidence_for": [{"claim": "<concise factual statement>", "trace_ref": "turn N, source", "weight": "strong|moderate|weak"}],
+  "evidence_against": [{"claim": "<concise factual statement>", "trace_ref": "turn N, source", "weight": "strong|moderate|weak"}],
+  "weighing": "<one short paragraph reconciling evidence_for and evidence_against>",
   "properties": {
-    "total_steps_count": <int, total assistant tool calls in the trajectory>,
-    "wasted_steps_count": <int, number of tool calls judged redundant/looping/unnecessary>,
-    "redundancy_findings": "<short text listing concrete redundant calls, e.g. 'read_file(auth.py) called 4 times across turns 2-5 with no intervening edit'. 'None' if none.>",
-    "loop_findings": "<short text listing concrete loops or unchanged retries, e.g. 'pytest run identically 3 times in turns 4, 6, 8 with no edits between'. 'None' if none.>"
+    "redundancy_band": "<one of: none | small minority | noticeable share | most | overwhelming>",
+    "loops_band": "<one of: none | isolated retry | short loop | sustained loop>",
+    "on_target_band": "<one of: focused | minor detour | some drift | significant off-target | dominated off-target>",
+    "user_burden_band": "<one of: none | one clarification | repeated clarification | repeated redirect | user drives task>",
+    "user_repetition_count": <int, number of user turns that restate, rephrase, or correct a prior request>,
+    "redundancy_findings": "<short text listing concrete redundant or off-target calls, or 'None'>",
+    "loop_findings": "<short text listing concrete loops or unchanged retries, or 'None'>",
+    "user_repetition_findings": "<short text describing user repetitions/corrections, or 'None'>"
   },
+  "reason": "<20-80 words summarizing the efficiency assessment and main wasted patterns (or stating none were observed)>",
+  "efficiency_suggestion": "<if the agent could have been more efficient, one short sentence describing concretely what to drop or change (e.g. 'Skip the second read of cli.py; the file was unchanged'). Use the exact string \"None\" if the trajectory was already efficient and there is no useful suggestion to make>",
+  "status": "<completed or skipped>",
   "score": <integer 1-5, or null if status is skipped>,
-  "status": "<completed or skipped>"
+  "confidence": <float 0.0-1.0. 1.0 unambiguous, 0.6 likely, 0.4 borderline, <=0.2 a guess. Do not default to 0.7>,
+  "confidence_reason": "<one short sentence explaining the confidence>",
+  "final_label": "<single-token symbol mirroring score: must be one of 1, 2, 3, 4, 5; null if status is skipped>"
 }
+
+Field rules:
+- `evidence_for` and `evidence_against` are required arrays. Use [] only if you genuinely found no evidence for that side.
+- `trace_ref` must point to a turn or event visible in the conversation (for example: "turn 7, assistant", "turn 12, tool_result").
+- The four `*_band` fields are the four rubric axes — fill each independently, then derive `score` by taking the WORST band across the four (mapped to the matching rubric level).
+- `efficiency_suggestion` is a single short sentence. Set it to the literal string "None" when there is no meaningful change to suggest (typically score 5, but score 4 may still warrant a suggestion). Set it to `null` only when status is "skipped".
+- `final_label` is a string and must equal the string form of `score` (e.g. score 4 → final_label "4"). It is `null` only when status is "skipped".
+
+Band-to-score mapping (worst axis wins):
+- redundancy_band: none→5, small minority→4, noticeable share→3, most→2, overwhelming→1.
+- loops_band: none→5/4, isolated retry→3, short loop→2, sustained loop→1.
+- on_target_band: focused→5, minor detour→4, some drift→3, significant off-target→2, dominated off-target→1.
+- user_burden_band: none→5, one clarification→4, repeated clarification→3, repeated redirect→2, user drives task→1.
 
 **Status: Skipped**
 If the CONVERSATION is empty, not provided, or contains zero assistant tool calls (a pure text-only chat with no tool-use trajectory), return status "skipped" immediately without scoring:
 ```json
-{"reason": "<explain why evaluation was skipped, e.g. no tool calls in trajectory>", "properties": null, "score": null, "status": "skipped"}
+{"evidence_for": [], "evidence_against": [], "weighing": "<why no trajectory to evaluate>", "properties": null, "reason": "<explain why evaluation was skipped>", "efficiency_suggestion": null, "status": "skipped", "score": null, "confidence": 1.0, "confidence_reason": "Absence of tool calls is directly observable.", "final_label": null}
 ```
 
 SCORING EXAMPLES
@@ -127,15 +191,30 @@ The `--verbose` flag is added and all tests pass.
 
 EXPECTED OUTPUT:
 {
-  "reason": "Agent located argparse with one grep, read the only relevant file once, made the edit, and ran tests once. Every step contributed; nothing redundant.",
+  "evidence_for": [
+    {"claim": "Located argparse with a single grep before reading any file", "trace_ref": "turn 1, assistant tool_call grep", "weight": "strong"},
+    {"claim": "Read cli.py exactly once, then edited it", "trace_ref": "turn 1, assistant tool_calls read_file and edit_file", "weight": "strong"},
+    {"claim": "Ran tests once after the edit and stopped", "trace_ref": "turn 1, assistant tool_call run_tests", "weight": "moderate"}
+  ],
+  "evidence_against": [],
+  "weighing": "Every tool call advances the task; no redundancy, no loops, no off-target reads.",
   "properties": {
-    "total_steps_count": 4,
-    "wasted_steps_count": 0,
+    "redundancy_band": "none",
+    "loops_band": "none",
+    "on_target_band": "focused",
+    "user_burden_band": "none",
+    "user_repetition_count": 0,
     "redundancy_findings": "None",
-    "loop_findings": "None"
+    "loop_findings": "None",
+    "user_repetition_findings": "None"
   },
+  "reason": "Agent located argparse with one grep, read the only relevant file once, made the edit, and ran tests once. Every step contributed; nothing redundant.",
+  "efficiency_suggestion": "None",
+  "status": "completed",
   "score": 5,
-  "status": "completed"
+  "confidence": 0.95,
+  "confidence_reason": "Trajectory is short and the absence of redundancy or loops is directly observable.",
+  "final_label": "5"
 }
 
 ### SCORE: 4 - Mostly Efficient
@@ -159,18 +238,35 @@ Done. Verified the edit and tests pass.
 
 EXPECTED OUTPUT:
 {
-  "reason": "Mostly direct path. One unused grep for LOG_LEVEL and a post-edit re-read of cli.py to verify the diff are minor inefficiencies but do not constitute looping or thrashing.",
+  "evidence_for": [
+    {"claim": "grep(LOG_LEVEL) returned no matches and was not followed by any LOG_LEVEL-related edit", "trace_ref": "turn 1, assistant tool_call grep LOG_LEVEL", "weight": "moderate"},
+    {"claim": "cli.py read again after edit_file", "trace_ref": "turn 1, assistant tool_call read_file post-edit", "weight": "weak"}
+  ],
+  "evidence_against": [
+    {"claim": "Core path (grep argparse, read cli.py, edit, run tests) is direct", "trace_ref": "turn 1, assistant tool_calls", "weight": "strong"},
+    {"claim": "Post-edit re-read is a legitimate verification", "trace_ref": "turn 1, assistant tool_call read_file after edit", "weight": "moderate"}
+  ],
+  "weighing": "One unused exploratory grep and one verification re-read are minor inefficiencies. No loops, no off-target work that drives the task. Worst axis is on_target_band (minor detour) → 4.",
   "properties": {
-    "total_steps_count": 6,
-    "wasted_steps_count": 1,
+    "redundancy_band": "small minority",
+    "loops_band": "none",
+    "on_target_band": "minor detour",
+    "user_burden_band": "none",
+    "user_repetition_count": 0,
     "redundancy_findings": "grep(LOG_LEVEL) returned nothing and was not acted on; post-edit re-read of cli.py is borderline (verification, not waste)",
-    "loop_findings": "None"
+    "loop_findings": "None",
+    "user_repetition_findings": "None"
   },
+  "reason": "Mostly direct path. One unused grep for LOG_LEVEL and a post-edit re-read of cli.py to verify the diff are minor inefficiencies but do not constitute looping or thrashing.",
+  "efficiency_suggestion": "Skip the speculative grep for LOG_LEVEL when nothing in the request points to it, and rely on the edit tool's diff instead of re-reading cli.py after the edit.",
+  "status": "completed",
   "score": 4,
-  "status": "completed"
+  "confidence": 0.85,
+  "confidence_reason": "Bands are clearly bounded; only borderline call is the verification re-read.",
+  "final_label": "4"
 }
 
-### SCORE: 3 - Moderately Efficient
+### SCORE: 3 - Partially Inefficient
 
 CONVERSATION:
 User turn 1: Add a `--verbose` flag to our CLI.
@@ -197,18 +293,35 @@ Flag added.
 
 EXPECTED OUTPUT:
 {
-  "reason": "Task completed but the agent did not track what it had already seen: config.py and cli.py were each read twice with no edits between, and two near-identical greps returned the same hit. About a third of the steps were removable.",
+  "evidence_for": [
+    {"claim": "read_file(src/config.py) called twice in succession with no edit between", "trace_ref": "turn 1, assistant tool_calls read_file config.py", "weight": "strong"},
+    {"claim": "read_file(src/cli.py) called twice with no edit between", "trace_ref": "turn 1, assistant tool_calls read_file cli.py", "weight": "strong"},
+    {"claim": "grep(argparse) and grep(ArgumentParser) returned the same single hit", "trace_ref": "turn 1, assistant tool_calls grep", "weight": "moderate"}
+  ],
+  "evidence_against": [
+    {"claim": "Final edit and test run are correct and on target", "trace_ref": "turn 1, assistant tool_calls edit_file and run_tests", "weight": "moderate"}
+  ],
+  "weighing": "A noticeable share of steps are removable duplicates of reads and overlapping greps, though there are no sustained loops or off-target detours. Worst axis is redundancy_band (noticeable share) → 3.",
   "properties": {
-    "total_steps_count": 9,
-    "wasted_steps_count": 3,
+    "redundancy_band": "noticeable share",
+    "loops_band": "none",
+    "on_target_band": "focused",
+    "user_burden_band": "none",
+    "user_repetition_count": 0,
     "redundancy_findings": "read_file(src/config.py) called twice with no edit between; read_file(src/cli.py) called twice with no edit between; grep(argparse) and grep(ArgumentParser) returned the same single hit",
-    "loop_findings": "None"
+    "loop_findings": "None",
+    "user_repetition_findings": "None"
   },
+  "reason": "Task completed but the agent did not track what it had already seen: config.py and cli.py were each read twice with no edits between, and two near-identical greps returned the same hit. About a third of the steps were removable.",
+  "efficiency_suggestion": "Read each file only once when nothing changed in between, and collapse grep(argparse) and grep(ArgumentParser) into a single search.",
+  "status": "completed",
   "score": 3,
-  "status": "completed"
+  "confidence": 0.85,
+  "confidence_reason": "Duplicate reads and overlapping greps are directly observable in the transcript.",
+  "final_label": "3"
 }
 
-### SCORE: 2 - Inefficient
+### SCORE: 2 - Substantially Inefficient
 
 CONVERSATION:
 User turn 1: Fix the bug in `auth.py` that's failing the login test.
@@ -239,15 +352,32 @@ Fixed.
 
 EXPECTED OUTPUT:
 {
-  "reason": "Heavy churn before the one-line fix: auth.py read four times across the turn with no edits between, src/ listed twice in succession, and run_tests called twice unchanged on a failure before any edit. Roughly half the trajectory was removable.",
+  "evidence_for": [
+    {"claim": "read_file(src/auth.py) called 4 times with no intervening edit", "trace_ref": "turn 1, assistant tool_calls read_file auth.py", "weight": "strong"},
+    {"claim": "list_dir(src/) called twice in immediate succession", "trace_ref": "turn 1, assistant tool_calls list_dir", "weight": "moderate"},
+    {"claim": "run_tests() called twice unchanged after first failure before any edit", "trace_ref": "turn 1, assistant tool_calls run_tests", "weight": "strong"}
+  ],
+  "evidence_against": [
+    {"claim": "Agent stayed on the file the user identified (auth.py)", "trace_ref": "turn 1, assistant tool_calls", "weight": "moderate"}
+  ],
+  "weighing": "Most steps before the edit are redundant reads or unchanged retest cycles; on_target is fine but redundancy is 'most' and loops_band is 'short loop'. Worst axis → 2.",
   "properties": {
-    "total_steps_count": 10,
-    "wasted_steps_count": 5,
+    "redundancy_band": "most",
+    "loops_band": "short loop",
+    "on_target_band": "focused",
+    "user_burden_band": "none",
+    "user_repetition_count": 0,
     "redundancy_findings": "read_file(src/auth.py) called 4 times with no intervening edit; list_dir(src/) called twice in immediate succession",
-    "loop_findings": "run_tests() called twice unchanged after the first failure with no edit between"
+    "loop_findings": "run_tests() called twice unchanged after the first failure with no edit between",
+    "user_repetition_findings": "None"
   },
+  "reason": "Heavy churn before the one-line fix: auth.py read four times across the turn with no edits between, src/ listed twice in succession, and run_tests called twice unchanged on a failure before any edit. Roughly half the trajectory was removable.",
+  "efficiency_suggestion": "After the first read of auth.py and the first failing run_tests, go straight to diagnosing and editing instead of re-reading auth.py three more times and re-running the unchanged test.",
+  "status": "completed",
   "score": 2,
-  "status": "completed"
+  "confidence": 0.9,
+  "confidence_reason": "Repeat counts and unchanged retries are directly visible in the transcript.",
+  "final_label": "2"
 }
 
 ### SCORE: 1 - Highly Inefficient
@@ -288,15 +418,30 @@ Agent turn 1:
 
 EXPECTED OUTPUT:
 {
-  "reason": "Severe thrashing: models.py read six times with no edits between, npm_test rerun four times identically after failures with no adaptation, and grep oscillated between 'User' and 'user' returning the same hit. The eventual one-line edit was identifiable after the first read.",
+  "evidence_for": [
+    {"claim": "read_file(src/models.py) called 6 times with no intervening edit", "trace_ref": "turn 1, assistant tool_calls read_file models.py", "weight": "strong"},
+    {"claim": "npm_test() rerun 4 times unchanged after identical failures before any edit", "trace_ref": "turn 1, assistant tool_calls npm_test", "weight": "strong"},
+    {"claim": "grep(User) and grep(user) oscillate and return the same hit", "trace_ref": "turn 1, assistant tool_calls grep", "weight": "moderate"}
+  ],
+  "evidence_against": [],
+  "weighing": "Overwhelming redundancy and a sustained loop of unchanged retests dominate the trajectory. Worst axis is loops_band (sustained loop) → 1.",
   "properties": {
-    "total_steps_count": 15,
-    "wasted_steps_count": 11,
+    "redundancy_band": "overwhelming",
+    "loops_band": "sustained loop",
+    "on_target_band": "focused",
+    "user_burden_band": "none",
+    "user_repetition_count": 0,
     "redundancy_findings": "read_file(src/models.py) called 6 times with no intervening edit; grep(User) repeated; grep(user) and grep(User) returned the same hit",
-    "loop_findings": "npm_test() rerun 4 times unchanged after identical failures with no edit between; oscillation between grep(User) and grep(user)"
+    "loop_findings": "npm_test() rerun 4 times unchanged after identical failures with no edit between; oscillation between grep(User) and grep(user)",
+    "user_repetition_findings": "None"
   },
+  "reason": "Severe thrashing: models.py read six times with no edits between, npm_test rerun four times identically after failures with no adaptation, and grep oscillated between 'User' and 'user' returning the same hit. The eventual one-line edit was identifiable after the first read.",
+  "efficiency_suggestion": "Edit models.py after the first read and the first failing npm_test instead of re-running the unchanged test four times and oscillating between grep(User) and grep(user).",
+  "status": "completed",
   "score": 1,
-  "status": "completed"
+  "confidence": 0.97,
+  "confidence_reason": "Repeat counts and identical unchanged retests are directly visible.",
+  "final_label": "1"
 }
 
 KEY PRINCIPLES
@@ -307,7 +452,8 @@ KEY PRINCIPLES
 3. **Verification is not waste**: A read after an edit to confirm the diff is legitimate.
 4. **Adapted retries are not waste**: A retry with new arguments after a failure is legitimate.
 5. **Exploration vs redundancy**: Reading several different files to locate the right one is exploration; reading the same file repeatedly is redundancy.
-6. **Count concretely**: Always populate `total_steps_count` and `wasted_steps_count` with concrete integers grounded in the transcript.
+6. **Ground in evidence**: Each band and finding must be grounded in concrete observations from the transcript, not in vibes.
 7. **No correctness bias**: Do not raise the score because the agent succeeded, and do not lower it because the agent failed - this is a separate dimension from task completion.
+8. **Multi-turn impact**: In multi-turn conversations, penalize trajectories where the user must repeat requests or fix agent mistakes—these indicate core efficiency failures that compound over turns, regardless of final success.
 
 # Output
