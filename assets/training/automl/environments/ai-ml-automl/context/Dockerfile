@@ -50,33 +50,8 @@ RUN conda create -q -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     -c conda-forge && \
     conda clean -q -a -y
 
-# Security overrides for packages installed in independent Python prefixes:
-# - pip>=26.1 fixes CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9). pip is its own parent,
-#   so explicit upgrades are the only available remediation.
-# - PyJWT>=2.13.0 is pinned as a transitive dep brought in by the base image
-#   (mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04), fixing GHSA-993g-76c3-p5m4
-#   and GHSA-jq35-7prp-9v3f.
-# - idna>=3.15 is pinned as a transitive dep brought in by the base image,
-#   fixing GHSA-65pc-fj4g-8rjx.
-# - py-rattler>=0.24.0 is pinned as a transitive dep brought in by the base image,
-#   fixing GHSA-q53q-5r4j-5729.
-# - cryptography>=48.0.1 is pinned as a transitive dep brought in by the base image
-#   and its ptca conda env, fixing GHSA-537c-gmf6-5ccf.
-RUN set -eux; \
-    base_prefix_found=0; \
-    for base_python in /opt/conda/bin/python /opt/miniconda/bin/python /opt/conda/envs/ptca/bin/python; do \
-        if [ -x "$base_python" ]; then \
-            base_prefix_found=1; \
-            "$base_python" -m pip install --no-cache-dir --upgrade \
-                'pip>=26.1' \
-                'PyJWT>=2.13.0' \
-                'idna>=3.15' \
-                'py-rattler>=0.24.0' \
-                'cryptography>=48.0.1'; \
-        fi; \
-    done; \
-    test "$base_prefix_found" = "1"; \
-    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --upgrade 'pip>=26.1'
+# pip>=26.1 fixes CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9) in the new AutoML env.
+RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --upgrade 'pip>=26.1'
 
 # Install packages via pip (avoids conda solver OOM)
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
@@ -85,7 +60,7 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
     'setuptools-git' \
     'setuptools==81.0.0' \
     'psutil>5.0.0,<6.0.0' \
-    'torch==2.8.0'
+    'torch==2.10.0'
 
 # Install pip dependencies
 RUN pip install \
