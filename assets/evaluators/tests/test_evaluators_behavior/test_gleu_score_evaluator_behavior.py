@@ -4,12 +4,12 @@
 """Behavioral tests for GLEU Score Evaluator."""
 
 import pytest
-from ..common.base_code_evaluator_runner import BaseCodeEvaluatorRunner
+from ..common.base_code_evaluator_runner import BaseCodeEvaluatorRunner, SingleScoreCodeEvalCoverageMixin
 from ...builtin.gleu_score.evaluator._gleu import GleuScoreEvaluator
 
 
 @pytest.mark.unittest
-class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
+class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner, SingleScoreCodeEvalCoverageMixin):
     """
     Behavioral tests for GLEU Score Evaluator.
 

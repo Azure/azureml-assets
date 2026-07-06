@@ -4,6 +4,7 @@
 """Behavioral tests for ROUGE Score Evaluator."""
 
 import pytest
+import asyncio
 import math
 from typing import Any, Dict
 
@@ -778,3 +779,102 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         result_different = self._extract_and_print_result(results_different, "Different Text")
 
         assert result_similar["f1_score"] > result_different["f1_score"]
+
+    # ==================== INTERNAL BRANCH COVERAGE TESTS ====================
+    # ROUGE returns three sub-scores with a dict threshold, so it cannot reuse the
+    # single-score coverage mixin. These white-box tests exercise the branches that
+    # the public single-turn __call__ path never reaches.
+
+    def _make_evaluator(self):
+        """Construct a ROUGE evaluator with a default rouge type."""
+        return self.evaluator_type(RougeType.ROUGE_1)
+
+    def test_get_binary_result_lower_is_better(self):
+        """Cover the lower-is-better comparison branch in _get_binary_result."""
+        evaluator = self._make_evaluator()
+        evaluator._higher_is_better = False
+        results = evaluator._get_binary_result(
+            rouge_precision=0.1, rouge_recall=0.1, rouge_f1_score=0.1
+        )
+        assert results["rouge_precision_passed"] is True
+        assert results["rouge_recall_passed"] is True
+        assert results["rouge_f1_score_passed"] is True
+
+    def test_real_call_backfills_pass_result(self):
+        """_real_call backfills a pass result when _do_eval omits result/threshold keys."""
+        evaluator = self._make_evaluator()
+        evaluator._threshold = 0.5
+
+        async def _do_eval_no_keys(eval_input):
+            return {"rouge_score": 0.9}
+
+        evaluator._do_eval = _do_eval_no_keys
+        result = asyncio.run(evaluator._real_call(response="a", ground_truth="a"))
+        assert result["rouge_threshold"] == 0.5
+        assert result["rouge_result"] == "pass"
+
+    def test_real_call_backfills_fail_result(self):
+        """_real_call backfills a fail result when the score is below threshold."""
+        evaluator = self._make_evaluator()
+        evaluator._threshold = 0.5
+
+        async def _do_eval_no_keys(eval_input):
+            return {"rouge_score": 0.1}
+
+        evaluator._do_eval = _do_eval_no_keys
+        result = asyncio.run(evaluator._real_call(response="a", ground_truth="a"))
+        assert result["rouge_result"] == "fail"
+
+    def test_real_call_backfills_lower_is_better(self):
+        """_real_call backfill honors lower-is-better for both pass and fail."""
+        evaluator = self._make_evaluator()
+        evaluator._threshold = 0.5
+        evaluator._higher_is_better = False
+
+        async def _do_eval_low(eval_input):
+            return {"rouge_score": 0.1}
+
+        evaluator._do_eval = _do_eval_low
+        passed = asyncio.run(evaluator._real_call(response="a", ground_truth="a"))
+        assert passed["rouge_result"] == "pass"
+
+        evaluator2 = self._make_evaluator()
+        evaluator2._threshold = 0.5
+        evaluator2._higher_is_better = False
+
+        async def _do_eval_high(eval_input):
+            return {"rouge_score": 0.9}
+
+        evaluator2._do_eval = _do_eval_high
+        failed = asyncio.run(evaluator2._real_call(response="a", ground_truth="a"))
+        assert failed["rouge_result"] == "fail"
+
+    def test_real_call_non_numeric_threshold_swallowed(self):
+        """_real_call catches the non-numeric threshold error during backfill."""
+        evaluator = self._make_evaluator()
+        # A dict threshold without a 'rouge' key resolves to None during backfill.
+        evaluator._threshold = {"precision": 0.5}
+
+        async def _do_eval_no_keys(eval_input):
+            return {"rouge_score": 0.9}
+
+        evaluator._do_eval = _do_eval_no_keys
+        result = asyncio.run(evaluator._real_call(response="a", ground_truth="a"))
+        assert "rouge_result" not in result
+
+    def test_real_call_empty_input_returns_empty(self):
+        """_real_call returns an empty dict when there are no eval inputs."""
+        evaluator = self._make_evaluator()
+        evaluator._convert_kwargs_to_eval_input = lambda **kwargs: []
+        result = asyncio.run(evaluator._real_call(response="a", ground_truth="a"))
+        assert result == {}
+
+    def test_real_call_multiple_inputs_aggregate(self):
+        """_real_call aggregates when multiple per-turn results are produced."""
+        evaluator = self._make_evaluator()
+        evaluator._convert_kwargs_to_eval_input = lambda **kwargs: [
+            {"response": "the cat sat", "ground_truth": "the cat sat"},
+            {"response": "a dog ran", "ground_truth": "the cat sat"},
+        ]
+        result = asyncio.run(evaluator._real_call(response="a", ground_truth="a"))
+        assert isinstance(result, dict)

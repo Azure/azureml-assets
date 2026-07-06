@@ -4,12 +4,12 @@
 """Behavioral tests for BLEU Score Evaluator."""
 
 import pytest
-from ..common.base_code_evaluator_runner import BaseCodeEvaluatorRunner
+from ..common.base_code_evaluator_runner import BaseCodeEvaluatorRunner, SingleScoreCodeEvalCoverageMixin
 from ...builtin.bleu_score.evaluator._bleu import BleuScoreEvaluator
 
 
 @pytest.mark.unittest
-class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
+class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner, SingleScoreCodeEvalCoverageMixin):
     """
     Behavioral tests for BLEU Score Evaluator.
 

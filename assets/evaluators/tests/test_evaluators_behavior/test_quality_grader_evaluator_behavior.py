@@ -231,3 +231,43 @@ class TestQualityGraderValidatorUnit(
     """Low-level unit tests for quality_grader's repeated validators, utils and methods."""
 
     evaluator_class = QualityGraderEvaluator
+
+
+@pytest.mark.unittest
+class TestQualityGraderDefensiveImports:
+    """Cover the abstract validator body and the UserAgentSingleton import fallback."""
+
+    def test_validator_interface_abstract_body(self):
+        """The abstract ValidatorInterface.validate_eval_input body is reachable via super()."""
+        from ...builtin.quality_grader.evaluator._quality_grader import ValidatorInterface
+
+        class _ConcreteValidator(ValidatorInterface):
+            def validate_eval_input(self, eval_input):
+                return super().validate_eval_input(eval_input)
+
+        assert _ConcreteValidator().validate_eval_input({}) is None
+
+    def test_user_agent_singleton_import_fallback(self):
+        """When the user-agent import fails, the fallback UserAgentSingleton is defined and used.
+
+        Reloads the module with the ``azure.ai.evaluation._user_agent`` import forced to fail so
+        the ``except ImportError`` fallback class is executed, then restores the module.
+        """
+        import builtins
+        import importlib
+        from ...builtin.quality_grader.evaluator import _quality_grader as qg_mod
+
+        real_import = builtins.__import__
+
+        def _blocking_import(name, *args, **kwargs):
+            if name == "azure.ai.evaluation._user_agent":
+                raise ImportError("blocked for coverage test")
+            return real_import(name, *args, **kwargs)
+
+        try:
+            builtins.__import__ = _blocking_import
+            reloaded = importlib.reload(qg_mod)
+            assert reloaded.UserAgentSingleton().value == "None"
+        finally:
+            builtins.__import__ = real_import
+            importlib.reload(qg_mod)

@@ -195,3 +195,33 @@ class TestRegexMatchEvaluatorBehavior(BaseCodeEvaluatorRunner):
     def _run_evaluation_with_evaluator(self, evaluator, **kwargs):
         """Run evaluation with a pre-constructed evaluator."""
         return evaluator(**kwargs)
+
+    # ==================== VALIDATION / INTERNAL BRANCH TESTS ====================
+
+    def test_empty_patterns_list_raises(self):
+        """An empty patterns list is rejected during construction."""
+        from ...builtin.regex_match.evaluator._regex_match import EvaluationException
+
+        with pytest.raises(EvaluationException, match="At least one pattern"):
+            RegexMatchEvaluator(patterns=[])
+
+    def test_empty_pattern_string_raises(self):
+        """An empty pattern string is rejected during construction."""
+        from ...builtin.regex_match.evaluator._regex_match import EvaluationException
+
+        with pytest.raises(EvaluationException, match="must not be empty"):
+            RegexMatchEvaluator(patterns="")
+
+    def test_invalid_regex_pattern_raises(self):
+        """An invalid static regex pattern raises during compilation."""
+        from ...builtin.regex_match.evaluator._regex_match import EvaluationException
+
+        # Long, unbalanced pattern (> 30 chars) also exercises the preview truncation.
+        with pytest.raises(EvaluationException, match="Invalid regular expression"):
+            RegexMatchEvaluator(patterns="(" * 40)
+
+    def test_resolve_pattern_without_ground_truth_returns_unchanged(self):
+        """_resolve_pattern returns the pattern unchanged when ground_truth is missing."""
+        evaluator = RegexMatchEvaluator(patterns=r"answer: {{ground_truth}}")
+        resolved = evaluator._resolve_pattern(r"answer: {{ground_truth}}", {})
+        assert resolved == r"answer: {{ground_truth}}"
