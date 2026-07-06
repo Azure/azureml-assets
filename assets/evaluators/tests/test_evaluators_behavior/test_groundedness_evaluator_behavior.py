@@ -794,7 +794,9 @@ class TestGroundednessInternalBranches:
         ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
         eval_input = {
             "query": "q",
-            "response": [{"role": "assistant", "content": [{"type": "function_call", "name": "f", "arguments": "{}"}]}],
+            "response": [
+                {"role": "assistant", "content": [{"type": "function_call", "name": "f", "arguments": "{}"}]}
+            ],
             "context": "c",
         }
         result = asyncio.run(ev._do_eval(eval_input))

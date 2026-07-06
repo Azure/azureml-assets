@@ -413,7 +413,7 @@ class _ValidatorUnitTestSupport:
 
 
 class CorePromptyValidatorUnitTests(_ValidatorUnitTestSupport):
-    """Capability manifest plus the base token/not-applicable/do_eval/real_call tests every prompty evaluator shares."""
+    """Capability manifest plus base token/not-applicable/do_eval/real_call tests every prompty evaluator shares."""
 
     def test_capability_manifest(self):
         """Fail (not skip) when an evaluator gains or loses a probed capability.
@@ -712,7 +712,10 @@ class CorePromptyValidatorUnitTests(_ValidatorUnitTestSupport):
 
 
 class SuperDoEvalNotApplicableUnitTests(_ValidatorUnitTestSupport):
-    """Base ``_do_eval`` not-applicable paths, for evaluators whose ``_return_not_applicable_result`` matches the base signature."""
+    """Base ``_do_eval`` not-applicable paths.
+
+    For evaluators whose ``_return_not_applicable_result`` matches the base signature.
+    """
 
     def test_the_super_do_eval_intermediate_response(self):
         """Return not-applicable for an intermediate (tool-call) response."""
@@ -841,22 +844,34 @@ class ConversationValidatorUnitTests(_ValidatorUnitTestSupport):
         valid = {"type": "tool_call", "name": "f", "arguments": {}, "tool_call_id": "c1"}
         assert validator._validate_tool_call_content_item(valid) is None
         # Missing name / non-dict arguments / missing tool_call_id.
-        self._assert_exc(validator._validate_tool_call_content_item({"type": "tool_call", "arguments": {}, "tool_call_id": "c1"}))
+        self._assert_exc(
+            validator._validate_tool_call_content_item({"type": "tool_call", "arguments": {}, "tool_call_id": "c1"})
+        )
         self._assert_exc(
             validator._validate_tool_call_content_item(
                 {"type": "tool_call", "name": "f", "arguments": 1, "tool_call_id": "c1"}
             )
         )
-        self._assert_exc(validator._validate_tool_call_content_item({"type": "tool_call", "name": "f", "arguments": {}}))
+        self._assert_exc(
+            validator._validate_tool_call_content_item({"type": "tool_call", "name": "f", "arguments": {}})
+        )
 
     def test_validate_user_or_system_message(self):
         """Cover user/system message content validation."""
         validator = self._validator()
         assert validator._validate_user_or_system_message({"content": "hi"}, "user") is None
-        assert validator._validate_user_or_system_message({"content": [{"type": "text", "text": "hi"}]}, "user") is None
-        assert validator._validate_user_or_system_message({"content": [{"type": "input_text", "text": "hi"}]}, "user") is None
-        self._assert_exc(validator._validate_user_or_system_message({"content": [{"type": "tool_call", "text": "x"}]}, "user"))
-        self._assert_exc(validator._validate_user_or_system_message({"content": [{"type": "text", "text": 1}]}, "user"))
+        assert validator._validate_user_or_system_message(
+            {"content": [{"type": "text", "text": "hi"}]}, "user"
+        ) is None
+        assert validator._validate_user_or_system_message(
+            {"content": [{"type": "input_text", "text": "hi"}]}, "user"
+        ) is None
+        self._assert_exc(
+            validator._validate_user_or_system_message({"content": [{"type": "tool_call", "text": "x"}]}, "user")
+        )
+        self._assert_exc(
+            validator._validate_user_or_system_message({"content": [{"type": "text", "text": 1}]}, "user")
+        )
 
     def test_validate_assistant_message(self):
         """Cover assistant message content validation."""
@@ -874,7 +889,9 @@ class ConversationValidatorUnitTests(_ValidatorUnitTestSupport):
         self._assert_exc(validator._validate_tool_message({"content": "x", "tool_call_id": "c1"}))
         self._assert_exc(validator._validate_tool_message({"content": [{"type": "tool_result", "tool_result": {}}]}))
         self._assert_exc(validator._validate_tool_message({"tool_call_id": "c1", "content": [{"type": "text"}]}))
-        self._assert_exc(validator._validate_tool_message({"tool_call_id": "c1", "content": [{"type": "tool_result"}]}))
+        self._assert_exc(
+            validator._validate_tool_message({"tool_call_id": "c1", "content": [{"type": "tool_result"}]})
+        )
         valid = {"tool_call_id": "c1", "content": [{"type": "tool_result", "tool_result": {"a": 1}}]}
         assert validator._validate_tool_message(valid) is None
 
@@ -887,7 +904,9 @@ class ConversationValidatorUnitTests(_ValidatorUnitTestSupport):
         self._assert_exc(validator._validate_message_dict({"role": "user", "content": ""}))
         self._assert_exc(validator._validate_message_dict({"role": "user", "content": [{"text": "x"}]}))
         assert validator._validate_message_dict({"role": "user", "content": "hi"}) is None
-        assert validator._validate_message_dict({"role": "assistant", "content": [{"type": "text", "text": "ok"}]}) is None
+        assert validator._validate_message_dict(
+            {"role": "assistant", "content": [{"type": "text", "text": "ok"}]}
+        ) is None
         assert validator._validate_message_dict(
             {"role": "tool", "tool_call_id": "c1", "content": [{"type": "tool_result", "tool_result": {}}]}
         ) is None

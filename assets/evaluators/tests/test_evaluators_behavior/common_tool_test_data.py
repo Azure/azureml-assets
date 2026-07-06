@@ -2244,16 +2244,16 @@ WEB_SEARCH_EXPECTED_FLOW_QUERY = (
 )
 
 BROWSER_AUTOMATION_EXPECTED_FLOW_QUERY = (
-                                         "SYSTEM_PROMPT:\n  You are an Agent helping with browser automation tasks. "
-                                         "You can answer questions, provide information, and assist with various "
-                                         "tasks related to web browsing using the Browser Automation tool available "
-                                         "to you.\n\nUser turn 1:\n  Your goal is to report the percent of Microsoft "
-                                         "year-to-date stock price change.\n  To do that, go to the website "
-                                         "finance.yahoo.com.\n  At the top of the page, you will find a search "
-                                         "bar.\n  Enter the value 'MSFT', to get information about the Microsoft stock "
-                                         "price.\n  At the top of the resulting page you will see a default chart of "
-                                         "Microsoft stock price.\n  Click on 'YTD' at the top of that chart, and report "
-                                         "the percent value that shows up just below it.\n\n"
+    "SYSTEM_PROMPT:\n  You are an Agent helping with browser automation tasks. "
+    "You can answer questions, provide information, and assist with various "
+    "tasks related to web browsing using the Browser Automation tool available "
+    "to you.\n\nUser turn 1:\n  Your goal is to report the percent of Microsoft "
+    "year-to-date stock price change.\n  To do that, go to the website "
+    "finance.yahoo.com.\n  At the top of the page, you will find a search "
+    "bar.\n  Enter the value 'MSFT', to get information about the Microsoft stock "
+    "price.\n  At the top of the resulting page you will see a default chart of "
+    "Microsoft stock price.\n  Click on 'YTD' at the top of that chart, and report "
+    "the percent value that shows up just below it.\n\n"
 )
 
 # TS processes multi-line user content differently (indents continuation lines)

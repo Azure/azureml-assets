@@ -126,7 +126,9 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
             tool_definitions=self.VALID_TOOL_DEFINITIONS,
         )
         flow_input_json = json.dumps(captured, default=str)
-        assert "fetch_weather" in flow_input_json or "send_email" in flow_input_json, "tool definitions did not reach the flow"
+        assert (
+            "fetch_weather" in flow_input_json or "send_email" in flow_input_json
+        ), "tool definitions did not reach the flow"
 
     # ==================== TOOL DEFINITIONS TESTS ====================
 
