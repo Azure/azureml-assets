@@ -17,7 +17,7 @@ from pathlib import Path
 from ruamel.yaml import YAML
 from subprocess import run, PIPE, STDOUT
 from timeit import default_timer as timer
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import azureml.assets as assets
 import azureml.assets.util as util
@@ -155,8 +155,13 @@ def create_acr_task(image_name: str,
     return sum([step.get('timeout', DEFAULT_STEP_TIMEOUT_SECONDS) for step in task['steps']])
 
 
-def _get_acr_retry_reason(output: str) -> str:
-    """Return the transient ACR failure reason, if any."""
+def _get_acr_retry_reason(output: str) -> Optional[str]:
+    """Return the transient ACR failure reason, if any.
+
+    Returns:
+        Optional[str]: Description of a transient ACR error that should be retried,
+        or None if the output doesn't indicate a retryable failure.
+    """
     if re.search(r'(429|too many requests|throttl)', output, re.IGNORECASE):
         return "throttled"
     if re.search(r"\(ResourceNotFound\).*Microsoft\.ContainerRegistry/registries/", output,
