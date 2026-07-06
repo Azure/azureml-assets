@@ -77,6 +77,20 @@ def _replace(modname, old, new):
     print(f"[ok]   patched: {modname}")
 
 
+def _replace_if_present(modname, old, new):
+    """Replace an exact source anchor when present; skip if a newer package no longer needs it."""
+    path = _module_path(modname)
+    src = _read(path)
+    if MARKER in src and old not in src:
+        print(f"[skip] already applied: {modname}")
+        return
+    if old not in src:
+        print(f"[skip] optional anchor not found: {modname}")
+        return
+    _write(path, src.replace(old, new))
+    print(f"[ok]   patched: {modname}")
+
+
 def _append(modname, block, *, require):
     """Append a block to a module's file once (idempotent)."""
     path = _module_path(modname)
@@ -352,7 +366,7 @@ def main():
     _replace("kernels._versions", _KERNELS_RESOLVER_OLD, _KERNELS_RESOLVER_NEW)
 
     # vLLM <-> flash-attn 4 / transformers FA integration
-    _replace("vllm.model_executor.layers.rotary_embedding.common", _VLLM_ROTARY_OLD, _VLLM_ROTARY_NEW)
+    _replace_if_present("vllm.model_executor.layers.rotary_embedding.common", _VLLM_ROTARY_OLD, _VLLM_ROTARY_NEW)
     _replace("transformers.integrations.flash_attention", _TF_SAUX_OLD, _TF_SAUX_NEW)
 
     # verl 0.7.1 worker layer <-> vendored post-0.8.0 vLLM rollout
