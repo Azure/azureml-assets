@@ -6,7 +6,7 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 # msgpack>=1.2.1: pinned transitive dep brought in by the base image; fixes GHSA-6v7p-g79w-8964.
 # pydantic-settings>=2.14.2: pinned transitive dep brought in by the base image; fixes GHSA-4xgf-cpjx-pc3j.
 # cryptography>=48.0.1: pinned transitive dep brought in by the base image and AzureML SDK dependencies; fixes GHSA-537c-gmf6-5ccf.
-# torch==2.10.0+cu126: pinned dep from ACPT base image; fixes GHSA-qfhq-4f3w-5fph and GHSA-vgrw-7cvw-pwgx.
+# torch==2.10.0: pinned dep from ACPT base image; fixes GHSA-qfhq-4f3w-5fph and GHSA-vgrw-7cvw-pwgx.
 ENV PIP_PROGRESS_BAR=off
 
 RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' && \
@@ -29,8 +29,8 @@ RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' && \
         'cryptography>=48.0.1' && \
     rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/cryptography-46.0.7.dist-info && \
     conda run -n ptca python -m pip install --upgrade --no-cache-dir \
-        --extra-index-url https://download.pytorch.org/whl/cu126 \
-        'torch==2.10.0+cu126' && \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.10.0' && \
     conda clean -a -y && \
     rm -rf /opt/conda/pkgs
 
