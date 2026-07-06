@@ -3,6 +3,7 @@
 
 """Behavioral tests for Task Adherence Evaluator."""
 
+import asyncio
 from typing import Any, Dict, List
 
 import pytest
@@ -614,3 +615,14 @@ class TestTaskAdherenceValidatorUnit(
     """Low-level unit tests for task_adherence's repeated validators, utils and methods."""
 
     evaluator_class = TaskAdherenceEvaluator
+
+
+@pytest.mark.unittest
+class TestTaskAdherenceDoEvalBranches:
+    """Cover task_adherence-specific ``_do_eval`` branches not exercised by the shared mixins."""
+
+    def test_missing_query_and_response_raises(self):
+        """Raise when neither query nor response is present in the turn-level input."""
+        evaluator = create_mocked_evaluator(TaskAdherenceEvaluator, "task_adherence")
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({}))

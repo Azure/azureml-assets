@@ -3,7 +3,9 @@
 
 """Behavioral tests for Tool Output Utilization Evaluator."""
 
+import asyncio
 import json
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -27,14 +29,20 @@ from ...builtin.tool_output_utilization.evaluator._tool_output_utilization impor
     ConversationValidator,
     ToolDefinitionsValidator,
     ToolOutputUtilizationEvaluator,
+    _filter_to_used_tools,
     _get_agent_response,
+    _get_conversation_history,
+    _log_safe_summary,
     _stringify_tool_result,
+    reformat_agent_response,
+    reformat_tool_definitions,
 )
 # ErrorTarget is rebuilt by the module at import time so it carries the
 # evaluator-specific TOOL_OUTPUT_UTILIZATION_EVALUATOR member.
 from ...builtin.tool_output_utilization.evaluator._tool_output_utilization import (  # noqa: E402
     ErrorTarget,
 )
+from ..common.evaluator_mock_config import create_mocked_evaluator
 
 
 @pytest.mark.unittest
@@ -588,3 +596,77 @@ class TestToolOutputUtilizationValidatorUnit(
     """Low-level unit tests for tool_output_utilization's repeated validators, utils and methods."""
 
     evaluator_class = ToolOutputUtilizationEvaluator
+
+
+@pytest.mark.unittest
+class TestToolOutputUtilizationInternalBranches:
+    """Cover tool_output_utilization helper, conversion and eval branches not hit elsewhere."""
+
+    def test_filter_to_used_tools_nested_function_shape(self):
+        """Match used tools when the tool call uses the nested function shape."""
+        result = _filter_to_used_tools(
+            [{"name": "search"}],
+            [[{"role": "assistant", "content": [{"type": "tool_call", "tool_call": {"function": "search"}}]}]],
+        )
+        assert result == [{"name": "search"}]
+
+    def test_filter_to_used_tools_no_match_returns_original(self):
+        """Return the original definitions (and log) when used tools match nothing."""
+        definitions = [{"name": "other"}]
+        result = _filter_to_used_tools(
+            definitions,
+            [[{"role": "assistant", "content": [{"type": "tool_call", "name": "search"}]}]],
+            logger=MagicMock(),
+        )
+        assert result == definitions
+
+    def test_get_conversation_history_skips_role_less_and_trailing_agent(self):
+        """Skip role-less messages and flush a trailing agent response before validating balance."""
+        query = [
+            {"content": "no role"},
+            {"role": "user", "content": [{"type": "text", "text": "hi"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "answer"}]},
+        ]
+        with pytest.raises(EvaluationException):
+            _get_conversation_history(query)
+
+    def test_stringify_tool_result_falls_back_on_unserializable(self):
+        """Fall back to ``str`` when a tool result cannot be JSON-serialized."""
+        circular = {}
+        circular["self"] = circular
+        assert isinstance(_stringify_tool_result(circular), str)
+
+    def test_reformat_agent_response_empty_extraction_logs_and_falls_back(self):
+        """Fall back to the original response (and log) when no agent text is extracted."""
+        response = [{"role": "user", "content": [{"type": "text", "text": "hi"}]}]
+        assert reformat_agent_response(response, logger=MagicMock()) == response
+
+    def test_reformat_tool_definitions_parse_error_logs_and_falls_back(self):
+        """Fall back to the raw definitions (and log) when parsing raises."""
+        definitions = [123]
+        assert reformat_tool_definitions(definitions, logger=MagicMock()) == definitions
+
+    def test_log_safe_summary_handles_raising_object(self):
+        """Return a safe placeholder when summarizing an object whose length raises."""
+        class _Bad:
+            def __len__(self):
+                raise RuntimeError("boom")
+
+        assert "summary unavailable" in _log_safe_summary(_Bad())
+
+    def test_do_eval_missing_inputs_raises(self):
+        """Raise when ``_do_eval`` is invoked without any of the required inputs."""
+        evaluator = create_mocked_evaluator(ToolOutputUtilizationEvaluator, "tool_output_utilization")
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({}))
+
+    def test_do_eval_invalid_output_raises(self):
+        """Raise when the judge returns a non-dict ``llm_output`` payload."""
+        evaluator = create_mocked_evaluator(ToolOutputUtilizationEvaluator, "tool_output_utilization")
+
+        async def _bad_flow(**kwargs):
+            return {"llm_output": "not-a-dict"}
+
+        evaluator._flow = _bad_flow
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({"query": "q", "response": "r", "tool_definitions": []}))

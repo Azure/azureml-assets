@@ -3,10 +3,15 @@
 
 """Behavioral tests for Response Completeness Evaluator."""
 
-import pytest
+import asyncio
 import math
+from unittest.mock import MagicMock
+
+import pytest
+from azure.ai.evaluation._exceptions import EvaluationException
 from ..common.base_prompty_evaluator_runner import BasePromptyEvaluatorRunner
 from ..common.evaluator_mock_config import (
+    create_mocked_evaluator,
     run_none_score_not_applicable,
     run_intermediate_response_not_applicable,
 )
@@ -602,3 +607,35 @@ class TestResponseCompletenessValidatorUnit(
     """Low-level unit tests for response_completeness's repeated validators, utils and methods."""
 
     evaluator_class = ResponseCompletenessEvaluator
+
+
+# region _do_eval override branch coverage
+
+@pytest.mark.unittest
+class TestResponseCompletenessDoEvalBranches:
+    """Cover response_completeness's override ``_do_eval`` list-preprocessing and invalid-output branches."""
+
+    def test_list_query_is_preprocessed(self):
+        """A list-typed query is preprocessed before the flow call."""
+        evaluator = create_mocked_evaluator(ResponseCompletenessEvaluator, "response_completeness")
+        result = asyncio.run(
+            evaluator._do_eval(
+                {
+                    "ground_truth": "The capital of France is Paris.",
+                    "response": "Paris is the capital of France.",
+                    "query": [{"role": "user", "content": [{"type": "text", "text": "capital of France?"}]}],
+                }
+            )
+        )
+        assert result["response_completeness_score"] == 5
+
+    def test_non_dict_output_raises(self):
+        """A non-dict flow output raises an invalid-output error."""
+        evaluator = create_mocked_evaluator(ResponseCompletenessEvaluator, "response_completeness")
+
+        async def str_flow(timeout=None, **kwargs):
+            return {"llm_output": "not-a-dict"}
+
+        evaluator._flow = MagicMock(side_effect=str_flow)
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({"ground_truth": "gt", "response": "r"}))

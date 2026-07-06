@@ -3,7 +3,13 @@
 
 """Behavioral tests for Tool Input Accuracy Evaluator."""
 
+import asyncio
+from unittest.mock import MagicMock
+
 import pytest
+
+from azure.ai.evaluation._exceptions import EvaluationException
+
 from .base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
@@ -21,7 +27,11 @@ from .base_validator_unit_test import (
 )
 from ...builtin.tool_input_accuracy.evaluator._tool_input_accuracy import (
     ToolInputAccuracyEvaluator,
+    _log_safe_summary,
+    reformat_agent_response,
+    reformat_conversation_history,
 )
+from ..common.evaluator_mock_config import create_mocked_evaluator
 
 
 @pytest.mark.unittest
@@ -124,3 +134,138 @@ class TestToolInputAccuracyValidatorUnit(
     """Low-level unit tests for tool_input_accuracy's repeated validators, utils and methods."""
 
     evaluator_class = ToolInputAccuracyEvaluator
+
+
+@pytest.mark.unittest
+class TestToolInputAccuracyInternalBranches:
+    """Cover tool_input_accuracy reformat, conversion and eval branches not hit elsewhere."""
+
+    _TOOL_CALL_RESPONSE = [
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "tool_call",
+                    "tool_call_id": "c1",
+                    "name": "search",
+                    "arguments": {"q": "x"},
+                }
+            ],
+        }
+    ]
+    _TEXT_RESPONSE = [
+        {"role": "assistant", "content": [{"type": "text", "text": "hi there"}]}
+    ]
+
+    def test_reformat_agent_response_empty_extraction_logs_and_falls_back(self):
+        """Fall back to the original response (and log) when no agent text is extracted."""
+        response = [{"role": "user", "content": [{"type": "text", "text": "hi"}]}]
+        result = reformat_agent_response(response, logger=MagicMock())
+        assert result == response
+
+    def test_reformat_agent_response_parse_error_logs_and_falls_back(self):
+        """Fall back to the original response (and log) when parsing raises."""
+        response = [123]
+        result = reformat_agent_response(response, logger=MagicMock())
+        assert result == response
+
+    def test_reformat_conversation_history_malformed_logs_and_falls_back(self):
+        """Skip role-less messages and fall back to the raw query when history is malformed."""
+        query = [{"content": "no role"}]
+        result = reformat_conversation_history(query, logger=MagicMock(), include_tool_calls=True)
+        assert result == query
+
+    def test_reformat_conversation_history_formats_multi_turn(self):
+        """Format a balanced multi-turn conversation into a readable string."""
+        query = [
+            {"role": "user", "content": [{"type": "text", "text": "first"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "answer"}]},
+            {"role": "user", "content": [{"type": "text", "text": "second"}]},
+        ]
+        result = reformat_conversation_history(query)
+        assert "answer" in result
+
+    def test_convert_kwargs_requires_response(self):
+        """Return the response-required error when no response is supplied."""
+        evaluator = create_mocked_evaluator(ToolInputAccuracyEvaluator, "tool_input_accuracy")
+        result = evaluator._convert_kwargs_to_eval_input(query="q")
+        assert "error_message" in result
+
+    def test_convert_kwargs_no_tool_calls_in_response(self):
+        """Return the no-tool-calls error when the response has no tool calls."""
+        evaluator = create_mocked_evaluator(ToolInputAccuracyEvaluator, "tool_input_accuracy")
+        result = evaluator._convert_kwargs_to_eval_input(query="q", response=self._TEXT_RESPONSE)
+        assert result["error_message"] == evaluator._NO_TOOL_CALLS_MESSAGE
+
+    def test_convert_kwargs_wraps_dict_definitions(self):
+        """Wrap dict-shaped tool definitions when the response is a string."""
+        evaluator = create_mocked_evaluator(ToolInputAccuracyEvaluator, "tool_input_accuracy")
+        result = evaluator._convert_kwargs_to_eval_input(
+            query="q",
+            response="just a string response",
+            tool_definitions={"name": "x", "type": "function", "parameters": {}},
+        )
+        assert isinstance(result, dict)
+
+    def test_convert_kwargs_string_response_empty_definitions(self):
+        """Return the no-definitions error when a string response has no definitions."""
+        evaluator = create_mocked_evaluator(ToolInputAccuracyEvaluator, "tool_input_accuracy")
+        result = evaluator._convert_kwargs_to_eval_input(
+            query="q", response="just a string response", tool_definitions=[]
+        )
+        assert result["error_message"] == evaluator._NO_TOOL_DEFINITIONS_MESSAGE
+
+    def test_convert_kwargs_extraction_fails_no_definitions(self):
+        """Return the no-definitions error when extraction fails with an empty list."""
+        evaluator = create_mocked_evaluator(ToolInputAccuracyEvaluator, "tool_input_accuracy")
+        result = evaluator._convert_kwargs_to_eval_input(
+            query="q", response=[dict(m) for m in self._TOOL_CALL_RESPONSE], tool_definitions=[]
+        )
+        assert result["error_message"] == evaluator._NO_TOOL_DEFINITIONS_MESSAGE
+
+    def test_convert_kwargs_extraction_fails_unmatched_definitions(self):
+        """Return the missing-definitions error when a used tool has no definition."""
+        evaluator = create_mocked_evaluator(ToolInputAccuracyEvaluator, "tool_input_accuracy")
+        result = evaluator._convert_kwargs_to_eval_input(
+            query="q",
+            response=[dict(m) for m in self._TOOL_CALL_RESPONSE],
+            tool_definitions=[{"name": "other", "type": "function", "parameters": {}}],
+        )
+        assert result["error_message"] == evaluator._TOOL_DEFINITIONS_MISSING_MESSAGE
+
+    def test_do_eval_missing_query_raises(self):
+        """Raise when ``_do_eval`` is invoked without a query."""
+        evaluator = create_mocked_evaluator(ToolInputAccuracyEvaluator, "tool_input_accuracy")
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({}))
+
+    def test_do_eval_invalid_output_raises(self):
+        """Raise when the judge returns a non-dict ``llm_output`` payload."""
+        evaluator = create_mocked_evaluator(ToolInputAccuracyEvaluator, "tool_input_accuracy")
+
+        async def _bad_flow(**kwargs):
+            return {"llm_output": "not-a-dict"}
+
+        evaluator._flow = _bad_flow
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({"query": "q"}))
+
+    def test_real_call_error_message_returns_not_applicable(self):
+        """Return a not-applicable result when input conversion yields an error message."""
+        evaluator = create_mocked_evaluator(ToolInputAccuracyEvaluator, "tool_input_accuracy")
+        result = asyncio.run(
+            evaluator._real_call(
+                query="q",
+                response=[dict(m) for m in self._TEXT_RESPONSE],
+                tool_definitions=[{"name": "other", "type": "function", "parameters": {}}],
+            )
+        )
+        assert result["tool_input_accuracy"] is None
+
+    def test_log_safe_summary_handles_raising_object(self):
+        """Return a safe placeholder when summarizing an object whose length raises."""
+        class _Bad:
+            def __len__(self):
+                raise RuntimeError("boom")
+
+        assert "summary unavailable" in _log_safe_summary(_Bad())

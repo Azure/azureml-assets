@@ -7,7 +7,12 @@ Behavioral tests for Tool Selection Evaluator using AIProjectClient.
 Tests various input scenarios: query, response, tool_definitions, and tool_calls.
 """
 
+import asyncio
+
 import pytest
+
+from azure.ai.evaluation._exceptions import EvaluationException
+
 from .base_tool_calls_evaluator_behavior_test import BaseToolCallEvaluatorBehaviorTest
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
@@ -24,7 +29,13 @@ from .base_validator_unit_test import (
 )
 from ...builtin.tool_selection.evaluator._tool_selection import (
     ToolSelectionEvaluator,
+    _extract_tool_names_from_calls,
+    _format_value,
+    _get_built_in_tool_definition,
+    _get_conversation_history,
+    _log_safe_summary,
 )
+from ..common.evaluator_mock_config import create_mocked_evaluator
 
 
 @pytest.mark.unittest
@@ -155,3 +166,133 @@ class TestToolSelectionValidatorUnit(
     """Low-level unit tests for tool_selection's repeated validators, utils and methods."""
 
     evaluator_class = ToolSelectionEvaluator
+
+
+@pytest.mark.unittest
+class TestToolSelectionInternalBranches:
+    """Cover tool_selection helper, conversion and eval branches not hit elsewhere."""
+
+    _TOOL_CALL_RESPONSE = [
+        {
+            "role": "assistant",
+            "content": [
+                {"type": "tool_call", "tool_call_id": "c1", "name": "search", "arguments": {"q": "x"}}
+            ],
+        }
+    ]
+    _TEXT_RESPONSE = [{"role": "assistant", "content": [{"type": "text", "text": "hi"}]}]
+
+    def test_validate_tool_calls_rejects_non_dict_item(self):
+        """Return an error when a tool call is not a dictionary."""
+        evaluator = create_mocked_evaluator(ToolSelectionEvaluator, "tool_selection")
+        assert isinstance(evaluator._validator._validate_tool_calls([123]), EvaluationException)
+
+    def test_extract_tool_names_handles_function_and_direct_shapes(self):
+        """Extract names from both the function-call and direct-name tool call shapes."""
+        names = _extract_tool_names_from_calls([{"function": {"name": "f1"}}, {"name": "f2"}])
+        assert names == ["f1", "f2"]
+
+    def test_get_built_in_tool_definition_unknown_returns_none(self):
+        """Return None for an unknown built-in tool name."""
+        assert _get_built_in_tool_definition("nonexistent_tool") is None
+
+    def test_format_value_returns_non_string_unchanged(self):
+        """Return non-string, non-None values unchanged."""
+        assert _format_value(123) == 123
+
+    def test_get_conversation_history_skips_role_less_message(self):
+        """Skip role-less messages and validate turn balance before returning."""
+        query = [
+            {"content": "no role"},
+            {"role": "user", "content": [{"type": "text", "text": "hi"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "answer"}]},
+        ]
+        with pytest.raises(EvaluationException):
+            _get_conversation_history(query)
+
+    def test_log_safe_summary_handles_raising_object(self):
+        """Return a safe placeholder when summarizing an object whose length raises."""
+        class _Bad:
+            def __len__(self):
+                raise RuntimeError("boom")
+
+        assert "summary unavailable" in _log_safe_summary(_Bad())
+
+    def test_convert_kwargs_no_tool_calls_in_response(self):
+        """Return the no-tool-calls error when the response has no tool calls."""
+        evaluator = create_mocked_evaluator(ToolSelectionEvaluator, "tool_selection")
+        result = evaluator._convert_kwargs_to_eval_input(query="q", response=self._TEXT_RESPONSE)
+        assert result["error_message"] == evaluator._NO_TOOL_CALLS_MESSAGE
+
+    def test_convert_kwargs_wraps_dict_definitions(self):
+        """Wrap dict-shaped tool definitions when the response is a string."""
+        evaluator = create_mocked_evaluator(ToolSelectionEvaluator, "tool_selection")
+        result = evaluator._convert_kwargs_to_eval_input(
+            query="q",
+            response="just a string response",
+            tool_definitions={"name": "x", "type": "function", "parameters": {}},
+        )
+        assert isinstance(result, dict)
+
+    def test_convert_kwargs_extraction_fails_no_definitions(self):
+        """Return the no-definitions error when extraction fails with an empty list."""
+        evaluator = create_mocked_evaluator(ToolSelectionEvaluator, "tool_selection")
+        result = evaluator._convert_kwargs_to_eval_input(
+            query="q", response=[dict(m) for m in self._TOOL_CALL_RESPONSE], tool_definitions=[]
+        )
+        assert result["error_message"] == evaluator._NO_TOOL_DEFINITIONS_MESSAGE
+
+    def test_convert_kwargs_extraction_fails_unmatched_definitions(self):
+        """Return the missing-definitions error when a used tool has no definition."""
+        evaluator = create_mocked_evaluator(ToolSelectionEvaluator, "tool_selection")
+        result = evaluator._convert_kwargs_to_eval_input(
+            query="q",
+            response=[dict(m) for m in self._TOOL_CALL_RESPONSE],
+            tool_definitions=[{"name": "other", "type": "function", "parameters": {}}],
+        )
+        assert result["error_message"] == evaluator._TOOL_DEFINITIONS_MISSING_MESSAGE
+
+    def test_convert_kwargs_string_response_empty_definitions(self):
+        """Return the no-definitions error when a string response has no definitions."""
+        evaluator = create_mocked_evaluator(ToolSelectionEvaluator, "tool_selection")
+        result = evaluator._convert_kwargs_to_eval_input(
+            query="q", response="just a string response", tool_definitions=[]
+        )
+        assert result["error_message"] == evaluator._NO_TOOL_DEFINITIONS_MESSAGE
+
+    def test_do_eval_missing_query_raises(self):
+        """Raise when ``_do_eval`` is invoked without a query."""
+        evaluator = create_mocked_evaluator(ToolSelectionEvaluator, "tool_selection")
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({}))
+
+    def test_do_eval_invalid_output_raises(self):
+        """Raise when the judge returns a non-dict ``llm_output`` payload."""
+        evaluator = create_mocked_evaluator(ToolSelectionEvaluator, "tool_selection")
+
+        async def _bad_flow(**kwargs):
+            return {"llm_output": "not-a-dict"}
+
+        evaluator._flow = _bad_flow
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({"query": "q"}))
+
+    def test_real_call_error_message_returns_not_applicable(self):
+        """Return a not-applicable result when input conversion yields an error message."""
+        evaluator = create_mocked_evaluator(ToolSelectionEvaluator, "tool_selection")
+        result = asyncio.run(
+            evaluator._real_call(
+                query="q",
+                response=[dict(m) for m in self._TEXT_RESPONSE],
+                tool_definitions=[{"name": "other", "type": "function", "parameters": {}}],
+            )
+        )
+        assert result["tool_selection"] is None
+
+    def test_calculate_tool_selection_accuracy_with_calls(self):
+        """Compute selection accuracy as a percentage when tools were called."""
+        evaluator = create_mocked_evaluator(ToolSelectionEvaluator, "tool_selection")
+        accuracy = evaluator._calculate_tool_selection_accuracy(
+            {"correct_tool_selections": 3, "wrong_tool_selections": 1}
+        )
+        assert accuracy == 75.0

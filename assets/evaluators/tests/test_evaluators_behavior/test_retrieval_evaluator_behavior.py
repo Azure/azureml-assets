@@ -3,6 +3,8 @@
 
 """Behavioral tests for Retrieval Evaluator — None score handling."""
 
+import asyncio
+
 import pytest
 
 from .base_validator_unit_test import (
@@ -11,7 +13,11 @@ from .base_validator_unit_test import (
     SuperDoEvalNotApplicableUnitTests,
 )
 from ...builtin.retrieval.evaluator._retrieval import RetrievalEvaluator
-from ..common.evaluator_mock_config import run_none_score_not_applicable
+from ..common.evaluator_mock_config import (
+    INTERMEDIATE_FUNCTION_CALL_RESPONSE,
+    create_mocked_evaluator,
+    run_none_score_not_applicable,
+)
 
 
 # region None score handling tests
@@ -46,3 +52,30 @@ class TestRetrievalValidatorUnit(
     """Low-level unit tests for retrieval's repeated validators, utils and methods."""
 
     evaluator_class = RetrievalEvaluator
+
+
+# region _do_eval override branch coverage
+
+@pytest.mark.unittest
+class TestRetrievalDoEvalBranches:
+    """Cover retrieval's override ``_do_eval`` intermediate and list-preprocessing branches."""
+
+    def test_intermediate_response_not_applicable(self):
+        """An intermediate (function_call) response short-circuits to a not-applicable result."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        result = asyncio.run(evaluator._do_eval({"response": INTERMEDIATE_FUNCTION_CALL_RESPONSE}))
+        assert result["retrieval_result"] == "not_applicable"
+
+    def test_list_inputs_are_preprocessed(self):
+        """List-typed query and response inputs are preprocessed before the flow call."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        result = asyncio.run(
+            evaluator._do_eval(
+                {
+                    "query": [{"role": "user", "content": [{"type": "text", "text": "What are the hours?"}]}],
+                    "response": [{"role": "assistant", "content": [{"type": "text", "text": "9 to 5."}]}],
+                    "context": "The office is open 9 to 5.",
+                }
+            )
+        )
+        assert result["retrieval_score"] == 5

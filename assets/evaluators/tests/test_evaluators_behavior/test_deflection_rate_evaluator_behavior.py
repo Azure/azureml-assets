@@ -3,9 +3,12 @@
 
 """Behavioral tests for Deflection Rate Evaluator."""
 
+import asyncio
 from typing import Any, Dict
+from unittest.mock import MagicMock
 
 import pytest
+from azure.ai.evaluation._exceptions import EvaluationException
 from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest, _TurnLevelUtilE2ETests
 from ..common.evaluator_mock_config import create_mocked_evaluator, build_none_score_evaluator
 from .base_validator_unit_test import (
@@ -146,3 +149,38 @@ class TestDeflectionRateValidatorUnit(
     """Low-level unit tests for deflection_rate's repeated validators, utils and methods."""
 
     evaluator_class = DeflectionRateEvaluator
+
+
+# region _do_eval override branch coverage
+
+@pytest.mark.unittest
+class TestDeflectionRateDoEvalBranches:
+    """Cover deflection_rate's override ``_do_eval`` raise and string-score branches."""
+
+    def test_missing_response_raises(self):
+        """A missing response raises a MISSING_FIELD error."""
+        evaluator = create_mocked_evaluator(DeflectionRateEvaluator, "deflection_rate")
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({}))
+
+    def test_string_score_is_parsed(self):
+        """A digit string score from the flow is parsed to an int."""
+        evaluator = create_mocked_evaluator(DeflectionRateEvaluator, "deflection_rate")
+
+        async def str_score_flow(timeout=None, **kwargs):
+            return {"llm_output": {"score": "1", "explanation": "x", "deflection_type": "y"}}
+
+        evaluator._flow = MagicMock(side_effect=str_score_flow)
+        result = asyncio.run(evaluator._do_eval({"response": "The agent deflected the request."}))
+        assert result["deflection_rate"] == 1
+
+    def test_non_dict_output_raises(self):
+        """A non-dict flow output raises an invalid-output error."""
+        evaluator = create_mocked_evaluator(DeflectionRateEvaluator, "deflection_rate")
+
+        async def str_flow(timeout=None, **kwargs):
+            return {"llm_output": "not-a-dict"}
+
+        evaluator._flow = MagicMock(side_effect=str_flow)
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({"response": "r"}))

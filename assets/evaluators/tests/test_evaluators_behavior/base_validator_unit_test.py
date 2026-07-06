@@ -525,6 +525,16 @@ class CorePromptyValidatorUnitTests(_ValidatorUnitTestSupport):
         evaluator._flow = MagicMock(side_effect=create_flow_side_effect(4, OutputType.DICT))
         res = self._run_async(do_eval({"query": "q", "response": "r"}))
         assert res[f"{result_key}_score"] == 4
+        # List inputs exercise the message-preprocessing branch before the flow call.
+        res_list = self._run_async(
+            do_eval(
+                {
+                    "query": [{"role": "user", "content": [{"type": "text", "text": "q"}]}],
+                    "response": [{"role": "assistant", "content": [{"type": "text", "text": "r"}]}],
+                }
+            )
+        )
+        assert res_list[f"{result_key}_score"] == 4
 
     def test_the_super_do_eval_json_string_output(self):
         """Parse a JSON-string llm_output from the prompty flow."""
@@ -623,6 +633,24 @@ class CorePromptyValidatorUnitTests(_ValidatorUnitTestSupport):
         evaluator._higher_is_better = False
         evaluator._threshold = 3
         evaluator._convert_kwargs_to_eval_input = MagicMock(return_value=[{"x": 2}, {"x": 5}])
+
+        async def fake_do_eval(eval_input):
+            return {f"{result_key}_score": eval_input["x"]}
+
+        evaluator._do_eval = fake_do_eval
+        res = self._run_async(real_call(query="q", response="r"))
+        assert isinstance(res, dict)
+
+    def test_the_super_real_call_higher_is_better_fills_result(self):
+        """Cover the higher-is-better pass and fail branches when filling result keys."""
+        evaluator = self._make_evaluator()
+        real_call = self._super_impl(evaluator, "real_call")
+        if real_call is None:
+            pytest.skip("no _real_call on super")
+        result_key = evaluator._result_key
+        evaluator._higher_is_better = True
+        evaluator._threshold = 3
+        evaluator._convert_kwargs_to_eval_input = MagicMock(return_value=[{"x": 5}, {"x": 1}])
 
         async def fake_do_eval(eval_input):
             return {f"{result_key}_score": eval_input["x"]}
@@ -739,6 +767,8 @@ class MessagePreprocessUnitTests(_ValidatorUnitTestSupport):
             {"role": "tool", "content": [{"type": "function_call_output", "function_call_output": {"x": 1}}]},
             {"role": "assistant", "content": [{"type": "openapi_call", "name": "g"}]},
             {"role": "tool", "content": [{"type": "openapi_call_output", "openapi_call_output": {"y": 2}}]},
+            "non-dict-message",
+            {"role": "user", "content": "string-content-not-a-list"},
         ]
         out = fn(msgs)
         assert out[0]["content"][0]["type"] == "tool_call"
@@ -747,6 +777,9 @@ class MessagePreprocessUnitTests(_ValidatorUnitTestSupport):
         assert out[2]["content"][0]["type"] == "tool_call"
         assert out[3]["content"][0]["type"] == "tool_result"
         assert out[3]["content"][0]["tool_result"] == {"y": 2}
+        # Non-dict messages and messages whose content is not a list are skipped unchanged.
+        assert out[4] == "non-dict-message"
+        assert out[5]["content"] == "string-content-not-a-list"
         assert fn("x") == "x"
 
     def test_preprocess_messages(self):
@@ -939,6 +972,16 @@ class ToolDefinitionsValidatorUnitTests(_ValidatorUnitTestSupport):
         assert isinstance(validator._validate_tool_definitions([123]), EvaluationException)
         openapi = [{"type": "openapi", "functions": [{"name": "f", "parameters": {}}]}]
         assert validator._validate_tool_definitions(openapi) is None
+        # An openapi definition whose ``functions`` field is not a list surfaces the list-field error.
+        assert isinstance(
+            validator._validate_tool_definitions([{"type": "openapi", "functions": "not-a-list"}]),
+            EvaluationException,
+        )
+        # An openapi definition whose nested function definition is invalid surfaces that error.
+        assert isinstance(
+            validator._validate_tool_definitions([{"type": "openapi", "functions": [{"parameters": {}}]}]),
+            EvaluationException,
+        )
         required = cls(error_target=target, optional_tool_definitions=False)
         assert isinstance(required._validate_tool_definitions(None), EvaluationException)
 
@@ -950,6 +993,21 @@ class ToolDefinitionsValidatorUnitTests(_ValidatorUnitTestSupport):
         assert isinstance(validator._validate_tool_definition("not-a-dict"), EvaluationException)
         assert isinstance(validator._validate_tool_definition({"parameters": {}}), EvaluationException)
         assert isinstance(validator._validate_tool_definition({"name": "f"}), EvaluationException)
+
+    def test_validate_eval_input_with_tool_definitions(self):
+        """Cover the tool-definitions ``validate_eval_input`` override (happy path and raise)."""
+        cls = self._tool_definitions_validator_cls()
+        target = self._target()
+        validator = cls(error_target=target)
+        base_input = {
+            "query": [{"role": "user", "content": "hi"}],
+            "response": [{"role": "assistant", "content": "ok"}],
+        }
+        assert validator.validate_eval_input(
+            {**base_input, "tool_definitions": [{"name": "f", "parameters": {}}]}
+        ) is True
+        with pytest.raises(EvaluationException):
+            validator.validate_eval_input({**base_input, "tool_definitions": 123})
 
 
 class ConversationSerializationUnitTests(_ValidatorUnitTestSupport):

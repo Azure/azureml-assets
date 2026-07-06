@@ -1005,3 +1005,59 @@ class TestTaskNavigationEfficiencyRealCall:
         assert isinstance(
             asyncio.run(lower._the_super_real_call(actions=[], expected_actions=["a"])), dict
         )
+
+
+@pytest.mark.unittest
+class TestTaskNavigationEfficiencyCoverageGaps:
+    """Direct tests for residual defensive branches to complete coverage."""
+
+    def test_validate_expected_actions_empty_list(self):
+        """An empty expected_actions list returns a validation error."""
+        result = _make_tne()._validator._validate_expected_actions([])
+        assert isinstance(result, EvaluationException)
+
+    def test_enum_matching_mode_is_accepted(self):
+        """An enum matching_mode instance is accepted by the constructor."""
+        evaluator = TaskNavigationEfficiencyEvaluator(
+            matching_mode=TaskNavigationEfficiencyMatchingMode.IN_ORDER_MATCH
+        )
+        assert evaluator.matching_mode == TaskNavigationEfficiencyMatchingMode.IN_ORDER_MATCH
+
+    def test_parse_tools_attaches_tool_results(self):
+        """Tool messages contribute results that are attached to their matching tool calls."""
+        actions = [
+            {
+                "role": "assistant",
+                "content": [
+                    {"type": "tool_call", "tool_call_id": "c1", "name": "f", "arguments": {}}
+                ],
+            },
+            {
+                "role": "tool",
+                "tool_call_id": "c1",
+                "content": [{"type": "tool_result", "tool_result": "ok"}],
+            },
+        ]
+        tool_calls = _make_tne()._parse_tools_from_actions(actions)
+        assert tool_calls[0].get("tool_result") == "ok"
+
+    def test_extract_non_dict_tool_call_raises(self):
+        """A non-dict tool call produced by parsing raises during extraction."""
+        evaluator = _make_tne()
+        evaluator._parse_tools_from_actions = lambda actions: [123]
+        with pytest.raises(EvaluationException):
+            evaluator._extract_tool_names_and_params_from_actions([])
+
+    def test_extract_wrong_type_tool_call_raises(self):
+        """A tool call whose type is not 'tool_call' raises during extraction."""
+        evaluator = _make_tne()
+        evaluator._parse_tools_from_actions = lambda actions: [{"type": "other"}]
+        with pytest.raises(EvaluationException):
+            evaluator._extract_tool_names_and_params_from_actions([])
+
+    def test_do_eval_parses_invalid_json_string_actions(self):
+        """Invalid-JSON string actions fall through the JSON parse and evaluate as empty."""
+        result = asyncio.run(
+            _make_tne()._do_eval({"actions": "invalid-json[", "expected_actions": ["a"]})
+        )
+        assert isinstance(result, dict)

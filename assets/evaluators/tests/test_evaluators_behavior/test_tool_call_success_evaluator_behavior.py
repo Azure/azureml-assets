@@ -3,6 +3,7 @@
 
 """Behavioral tests for Tool Call Success Evaluator."""
 
+import asyncio
 import json
 
 import pytest
@@ -28,9 +29,14 @@ from ...builtin.tool_call_success.evaluator._tool_call_success import (
     ToolCallSuccessEvaluator,
     ToolDefinitionsValidator,
     _collect_failed_tool_calls,
+    _filter_to_used_tools,
+    _format_value,
     _get_tool_calls_results,
+    _log_safe_summary,
+    _reformat_tool_calls_results,
     _stringify_tool_result,
 )
+from ..common.evaluator_mock_config import create_mocked_evaluator
 
 
 @pytest.mark.unittest
@@ -921,3 +927,176 @@ class TestToolCallSuccessValidatorUnit(
     """Low-level unit tests for tool_call_success's repeated validators, utils and methods."""
 
     evaluator_class = ToolCallSuccessEvaluator
+
+
+@pytest.mark.unittest
+class TestToolCallSuccessDoEvalBranches:
+    """Cover tool_call_success ``_do_eval`` branches not exercised by the shared mixins."""
+
+    def test_missing_response_raises(self):
+        """Raise when the response field is absent."""
+        evaluator = create_mocked_evaluator(ToolCallSuccessEvaluator, "tool_call_success")
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({}))
+
+    def test_none_response_raises(self):
+        """Raise when the response is explicitly None."""
+        evaluator = create_mocked_evaluator(ToolCallSuccessEvaluator, "tool_call_success")
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({"response": None}))
+
+    def test_invalid_response_type_raises(self):
+        """Raise when the response is neither a list nor a string."""
+        evaluator = create_mocked_evaluator(ToolCallSuccessEvaluator, "tool_call_success")
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({"query": "q", "response": 123}))
+
+    def test_string_response_is_passed_through(self):
+        """Pass a string response directly to the judge without reformatting."""
+        evaluator = create_mocked_evaluator(ToolCallSuccessEvaluator, "tool_call_success")
+        result = asyncio.run(evaluator._do_eval({"query": "q", "response": "final text answer"}))
+        assert f"{evaluator._result_key}_score" in result
+
+    def test_failed_tool_call_short_circuits(self):
+        """Short-circuit to a deterministic fail result when a tool reports a failed status."""
+        evaluator = create_mocked_evaluator(ToolCallSuccessEvaluator, "tool_call_success")
+        response = [
+            {
+                "role": "assistant",
+                "content": [
+                    {"type": "tool_call", "tool_call_id": "c1", "name": "search", "arguments": {}}
+                ],
+            },
+            {
+                "role": "tool",
+                "tool_call_id": "c1",
+                "content": [{"type": "tool_result", "tool_result": "boom", "status": "failed"}],
+            },
+        ]
+        result = asyncio.run(evaluator._do_eval({"query": "q", "response": response}))
+        assert result[f"{evaluator._result_key}_result"] == "fail"
+
+    def test_llm_skipped_status_returns_not_applicable(self):
+        """Return a not-applicable result when the judge reports a skipped status."""
+        evaluator = create_mocked_evaluator(ToolCallSuccessEvaluator, "tool_call_success")
+
+        async def _skipped_flow(**kwargs):
+            return {"llm_output": {"status": "skipped", "reason": "not applicable"}}
+
+        evaluator._flow = _skipped_flow
+        result = asyncio.run(evaluator._do_eval({"query": "q", "response": "text"}))
+        assert isinstance(result, dict)
+
+    def test_list_response_with_tool_calls_success(self):
+        """Evaluate a well-formed tool-call response through the judge success path."""
+        evaluator = create_mocked_evaluator(ToolCallSuccessEvaluator, "tool_call_success")
+        response = [
+            {
+                "role": "assistant",
+                "content": [
+                    {"type": "tool_call", "tool_call_id": "c1", "name": "search", "arguments": {"q": "x"}}
+                ],
+            },
+            {
+                "role": "tool",
+                "tool_call_id": "c1",
+                "content": [{"type": "tool_result", "tool_result": "found"}],
+            },
+        ]
+        tool_definitions = [
+            {"name": "search", "parameters": {"properties": {"q": {"type": "string"}}}}
+        ]
+        result = asyncio.run(
+            evaluator._do_eval(
+                {"query": "q", "response": response, "tool_definitions": tool_definitions}
+            )
+        )
+        assert f"{evaluator._result_key}_score" in result
+
+    def test_list_query_is_preprocessed(self):
+        """Preprocess a list-shaped query before invoking the judge."""
+        evaluator = create_mocked_evaluator(ToolCallSuccessEvaluator, "tool_call_success")
+        query = [{"role": "user", "content": [{"type": "text", "text": "hi"}]}]
+        result = asyncio.run(
+            evaluator._do_eval({"query": query, "response": "final text answer"})
+        )
+        assert f"{evaluator._result_key}_score" in result
+
+    def test_non_dict_llm_output_raises(self):
+        """Raise when the judge returns a non-dict ``llm_output`` payload."""
+        evaluator = create_mocked_evaluator(ToolCallSuccessEvaluator, "tool_call_success")
+
+        async def _bad_flow(**kwargs):
+            return {"llm_output": "not-a-dict"}
+
+        evaluator._flow = _bad_flow
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({"query": "q", "response": "text"}))
+
+
+@pytest.mark.unittest
+class TestToolCallSuccessHelperBranches:
+    """Cover module-level helper branches not reached through ``_do_eval``."""
+
+    def test_format_value_none(self):
+        """Render None as the literal string ``None``."""
+        assert _format_value(None) == "None"
+
+    def test_stringify_tool_result_falls_back_on_unserializable(self):
+        """Fall back to ``str`` when JSON encoding raises."""
+        circular = {}
+        circular["self"] = circular
+        rendered = _stringify_tool_result(circular)
+        assert isinstance(rendered, str)
+
+    def test_filter_to_used_tools_nested_function_shape(self):
+        """Match used tools declared with the nested ``tool_call.function`` shape."""
+        msgs = [
+            {
+                "role": "assistant",
+                "content": [
+                    {"type": "tool_call", "tool_call": {"function": "search"}}
+                ],
+            }
+        ]
+        tool_definitions = [{"name": "search"}, {"name": "unused"}]
+        filtered = _filter_to_used_tools(tool_definitions, msgs)
+        assert filtered == [{"name": "search"}]
+
+    def test_get_tool_calls_results_nested_function_shape(self):
+        """Format tool calls declared with the nested ``tool_call.function`` object."""
+        msgs = [
+            {
+                "role": "assistant",
+                "content": [
+                    {
+                        "type": "tool_call",
+                        "tool_call": {
+                            "id": "c1",
+                            "function": {"name": "search", "arguments": {"q": "x"}},
+                        },
+                    }
+                ],
+            },
+            {
+                "role": "tool",
+                "tool_call_id": "c1",
+                "content": [{"type": "tool_result", "tool_result": "found"}],
+            },
+        ]
+        out = _get_tool_calls_results(msgs)
+        assert out[0] == '[TOOL_CALL] search(q="x")'
+        assert out[1] == "[TOOL_RESULT] found"
+
+    def test_log_safe_summary_handles_raising_object(self):
+        """Return a fallback summary when introspecting the payload raises."""
+        class _Bad:
+            def __len__(self):
+                raise RuntimeError("boom")
+
+        summary = _log_safe_summary(_Bad())
+        assert "summary unavailable" in summary
+
+    def test_reformat_tool_calls_results_none_returns_empty(self):
+        """Return an empty string when reformatting a ``None`` response."""
+        assert _reformat_tool_calls_results(None) == ""

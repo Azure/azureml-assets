@@ -3,6 +3,7 @@
 
 """Behavioral tests for Task Completion Evaluator."""
 
+import asyncio
 import pytest
 from typing import Any, Dict, List
 
@@ -896,3 +897,14 @@ class TestTaskCompletionValidatorUnit(
     """Low-level unit tests for task_completion's repeated validators, utils and methods."""
 
     evaluator_class = TaskCompletionEvaluator
+
+
+@pytest.mark.unittest
+class TestTaskCompletionDoEvalBranches:
+    """Cover task_completion-specific ``_do_eval`` branches not exercised by the shared mixins."""
+
+    def test_missing_query_and_response_raises(self):
+        """Raise when either query or response is missing in the turn-level input."""
+        evaluator = create_mocked_evaluator(TaskCompletionEvaluator, "task_completion")
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({"query": "only a query"}))

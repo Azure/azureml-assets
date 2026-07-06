@@ -22,6 +22,7 @@ from ...builtin.quality_grader.evaluator._quality_grader import (
     QualityGraderEvaluator,
     _coerce_bool,
     _coerce_number,
+    _log_safe_summary,
 )
 
 
@@ -96,6 +97,20 @@ class TestQualityGraderCoercionHelpers:
         assert _coerce_number("abc") is None
         assert _coerce_number(None) is None
         assert _coerce_number(True) is None
+        assert _coerce_number([1, 2]) is None
+        assert _coerce_number({"a": 1}) is None
+
+    def test_log_safe_summary_structural_variants(self):
+        """_log_safe_summary returns shape-only metadata and falls back safely on errors."""
+        assert "top_keys" in _log_safe_summary({"b": 1, "a": 2})
+        assert "roles" in _log_safe_summary([{"role": "user"}, {"role": "assistant"}])
+        assert "len" in _log_safe_summary("a short string")
+
+        class _RaisingLen:
+            def __len__(self):
+                raise RuntimeError("boom")
+
+        assert "unavailable" in _log_safe_summary(_RaisingLen())
 
 
 @pytest.mark.unittest

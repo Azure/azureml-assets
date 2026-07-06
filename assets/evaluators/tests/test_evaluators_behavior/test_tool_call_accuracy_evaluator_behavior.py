@@ -7,7 +7,12 @@ Behavioral tests for Tool Call Accuracy Evaluator using AIProjectClient.
 Tests various input scenarios: query, response, tool_definitions, and tool_calls.
 """
 
+import asyncio
+
 import pytest
+
+from azure.ai.evaluation._exceptions import EvaluationException
+
 from .base_tool_calls_evaluator_behavior_test import BaseToolCallEvaluatorBehaviorTest
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
@@ -22,7 +27,9 @@ from .base_validator_unit_test import (
 )
 from ...builtin.tool_call_accuracy.evaluator._tool_call_accuracy import (
     ToolCallAccuracyEvaluator,
+    _get_built_in_definition,
 )
+from ..common.evaluator_mock_config import create_mocked_evaluator
 
 
 @pytest.mark.unittest
@@ -105,3 +112,107 @@ class TestToolCallAccuracyValidatorUnit(
     """Low-level unit tests for tool_call_accuracy's repeated validators, utils and methods."""
 
     evaluator_class = ToolCallAccuracyEvaluator
+
+
+@pytest.mark.unittest
+class TestToolCallAccuracyInternalBranches:
+    """Cover tool_call_accuracy input-conversion and helper branches not hit elsewhere."""
+
+    _VALID_TOOL_CALL = {
+        "type": "tool_call",
+        "tool_call_id": "c1",
+        "name": "search",
+        "arguments": {"q": "x"},
+    }
+    _SEARCH_DEFINITION = {
+        "name": "search",
+        "type": "function",
+        "description": "search",
+        "parameters": {"type": "object", "properties": {"q": {"type": "string"}}},
+    }
+
+    def test_get_built_in_definition_unknown_returns_none(self):
+        """Return None when the tool name is not a known built-in."""
+        assert _get_built_in_definition("not_a_builtin_tool") is None
+
+    def test_validate_tool_calls_rejects_non_dict_item(self):
+        """Flag a tool-call list whose items are not dictionaries."""
+        evaluator = create_mocked_evaluator(ToolCallAccuracyEvaluator, "tool_call_accuracy")
+        result = evaluator._validator._validate_tool_calls([123])
+        assert isinstance(result, EvaluationException)
+
+    def test_convert_kwargs_without_tool_calls_returns_error(self):
+        """Return the no-tool-calls error message when none are supplied."""
+        evaluator = create_mocked_evaluator(ToolCallAccuracyEvaluator, "tool_call_accuracy")
+        result = evaluator._convert_kwargs_to_eval_input(query="q")
+        assert result["error_message"] == evaluator._NO_TOOL_CALLS_MESSAGE
+
+    def test_convert_kwargs_wraps_non_list_inputs(self):
+        """Wrap dict-shaped tool calls and definitions into lists before extraction."""
+        evaluator = create_mocked_evaluator(ToolCallAccuracyEvaluator, "tool_call_accuracy")
+        result = evaluator._convert_kwargs_to_eval_input(
+            query="q",
+            tool_calls=dict(self._VALID_TOOL_CALL),
+            tool_definitions=dict(self._SEARCH_DEFINITION),
+        )
+        assert isinstance(result, dict)
+
+    def test_convert_kwargs_missing_definitions_when_none_provided(self):
+        """Return the no-definitions error when extraction fails with an empty list."""
+        evaluator = create_mocked_evaluator(ToolCallAccuracyEvaluator, "tool_call_accuracy")
+        result = evaluator._convert_kwargs_to_eval_input(
+            query="q", tool_calls=[dict(self._VALID_TOOL_CALL)], tool_definitions=[]
+        )
+        assert result["error_message"] == evaluator._NO_TOOL_DEFINITIONS_MESSAGE
+
+    def test_convert_kwargs_missing_definitions_when_unmatched(self):
+        """Return the missing-definitions error when a used tool has no definition."""
+        evaluator = create_mocked_evaluator(ToolCallAccuracyEvaluator, "tool_call_accuracy")
+        result = evaluator._convert_kwargs_to_eval_input(
+            query="q",
+            tool_calls=[dict(self._VALID_TOOL_CALL)],
+            tool_definitions=[{"name": "other", "type": "function", "parameters": {}}],
+        )
+        assert result["error_message"] == evaluator._TOOL_DEFINITIONS_MISSING_MESSAGE
+
+    def test_convert_kwargs_string_tool_calls_empty_definitions(self):
+        """Return the no-definitions error when string tool calls resolve to no definitions."""
+        evaluator = create_mocked_evaluator(ToolCallAccuracyEvaluator, "tool_call_accuracy")
+        result = evaluator._convert_kwargs_to_eval_input(
+            query="q", tool_calls="just a string", tool_definitions=[]
+        )
+        assert result["error_message"] == evaluator._NO_TOOL_DEFINITIONS_MESSAGE
+
+    def test_do_eval_invalid_output_raises(self):
+        """Raise when the judge returns a non-dict ``llm_output`` payload."""
+        evaluator = create_mocked_evaluator(ToolCallAccuracyEvaluator, "tool_call_accuracy")
+
+        async def _bad_flow(**kwargs):
+            return {"llm_output": "not-a-dict"}
+
+        evaluator._flow = _bad_flow
+        eval_input = {
+            "query": "q",
+            "tool_calls": [dict(self._VALID_TOOL_CALL)],
+            "tool_definitions": [dict(self._SEARCH_DEFINITION)],
+        }
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval(eval_input))
+
+    def test_do_eval_missing_query_raises(self):
+        """Raise when ``_do_eval`` is invoked without a query."""
+        evaluator = create_mocked_evaluator(ToolCallAccuracyEvaluator, "tool_call_accuracy")
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({"tool_calls": [dict(self._VALID_TOOL_CALL)]}))
+
+    def test_real_call_error_message_returns_not_applicable(self):
+        """Return a not-applicable result when input conversion yields an error message."""
+        evaluator = create_mocked_evaluator(ToolCallAccuracyEvaluator, "tool_call_accuracy")
+        result = asyncio.run(
+            evaluator._real_call(
+                query="q",
+                tool_calls=[dict(self._VALID_TOOL_CALL)],
+                tool_definitions=[{"name": "other", "type": "function", "parameters": {}}],
+            )
+        )
+        assert isinstance(result, dict)
