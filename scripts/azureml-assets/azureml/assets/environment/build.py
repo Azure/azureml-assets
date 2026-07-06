@@ -34,8 +34,8 @@ SUCCESS_COUNT = "success_count"
 FAILED_COUNT = "failed_count"
 COUNTERS = [SUCCESS_COUNT, FAILED_COUNT]
 BUILT_IMAGES = "built_images"
-ACR_THROTTLE_MAX_RETRIES = 5
-ACR_THROTTLE_INITIAL_WAIT = 30
+ACR_RETRY_MAX_RETRIES = 5
+ACR_RETRY_INITIAL_WAIT = 30
 ACR_SUBMISSION_DELAY = 10
 
 
@@ -164,8 +164,7 @@ def _get_acr_retry_reason(output: str) -> Optional[str]:
     """
     if re.search(r'(429|too many requests|throttl)', output, re.IGNORECASE):
         return "throttled"
-    if re.search(r"\(ResourceNotFound\).*Microsoft\.ContainerRegistry/registries/", output,
-                 re.IGNORECASE | re.DOTALL):
+    if re.search(r"\(ResourceNotFound\).*Microsoft\.ContainerRegistry/registries/", output, re.IGNORECASE):
         return "registry not yet available"
     return None
 
@@ -176,14 +175,14 @@ def _run_with_acr_retry(cmd, cwd, name, is_acr):
     if not is_acr:
         return p
 
-    wait = ACR_THROTTLE_INITIAL_WAIT
-    for attempt in range(1, ACR_THROTTLE_MAX_RETRIES + 1):
+    wait = ACR_RETRY_INITIAL_WAIT
+    for attempt in range(1, ACR_RETRY_MAX_RETRIES + 1):
         retry_reason = _get_acr_retry_reason(p.stdout.decode())
         if p.returncode == 0 or not retry_reason:
             return p
         logger.log_warning(
             f"ACR {retry_reason} for {name}, retrying in {wait}s "
-            f"(attempt {attempt}/{ACR_THROTTLE_MAX_RETRIES})")
+            f"(attempt {attempt}/{ACR_RETRY_MAX_RETRIES})")
         time.sleep(wait)
         wait = min(wait * 2, 300)
         p = run(cmd, cwd=cwd, stdout=PIPE, stderr=STDOUT)

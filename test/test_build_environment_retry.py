@@ -61,6 +61,6 @@ def test_build_image_retries_when_acr_registry_is_not_ready(monkeypatch, tmp_pat
 
     assert result[2] == 0
     assert len(calls) == 2
-    assert sleeps == [environment_build.ACR_THROTTLE_INITIAL_WAIT]
+    assert sleeps == [environment_build.ACR_RETRY_INITIAL_WAIT]
     assert "registry not yet available" in warnings[0]
     assert build_log.read_text(encoding="utf-8") == "build complete"
