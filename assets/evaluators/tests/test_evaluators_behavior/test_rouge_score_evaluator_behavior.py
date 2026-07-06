@@ -14,6 +14,7 @@ except ImportError:
     from typing_extensions import override
 from ..common.base_code_evaluator_runner import BaseCodeEvaluatorRunner
 from ...builtin.rouge_score.evaluator._rouge import RougeScoreEvaluator, RougeType
+from azure.ai.evaluation._exceptions import EvaluationException
 
 
 @pytest.mark.unittest
@@ -648,7 +649,7 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
 
     def test_invalid_threshold_type_int(self):
         """Test with invalid threshold type (int instead of float)."""
-        with pytest.raises(TypeError):
+        with pytest.raises(EvaluationException):
             self._init_evaluator(
                 rouge_type=RougeType.ROUGE_1,
                 precision_threshold=1,  # int instead of float
@@ -656,7 +657,7 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
 
     def test_invalid_threshold_type_string(self):
         """Test with invalid threshold type (string)."""
-        with pytest.raises(TypeError):
+        with pytest.raises(EvaluationException):
             self._init_evaluator(
                 rouge_type=RougeType.ROUGE_1,
                 recall_threshold="0.5",  # string instead of float

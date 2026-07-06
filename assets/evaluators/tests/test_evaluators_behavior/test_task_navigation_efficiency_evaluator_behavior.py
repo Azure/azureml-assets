@@ -504,7 +504,7 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior(BaseCodeEvaluatorRunner):
 
     def test_invalid_matching_mode_string(self):
         """Test with invalid matching mode string."""
-        with pytest.raises(ValueError):
+        with pytest.raises(EvaluationException):
             self._init_evaluator(matching_mode="invalid_mode")
 
     def test_invalid_matching_mode_type(self):
