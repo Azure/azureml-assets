@@ -32,7 +32,6 @@ from ...builtin.tool_call_success.evaluator._tool_call_success import (
     _filter_to_used_tools,
     _format_value,
     _get_tool_calls_results,
-    _log_safe_summary,
     _reformat_tool_calls_results,
     _stringify_tool_result,
 )
@@ -1087,15 +1086,6 @@ class TestToolCallSuccessHelperBranches:
         out = _get_tool_calls_results(msgs)
         assert out[0] == '[TOOL_CALL] search(q="x")'
         assert out[1] == "[TOOL_RESULT] found"
-
-    def test_log_safe_summary_handles_raising_object(self):
-        """Return a fallback summary when introspecting the payload raises."""
-        class _Bad:
-            def __len__(self):
-                raise RuntimeError("boom")
-
-        summary = _log_safe_summary(_Bad())
-        assert "summary unavailable" in summary
 
     def test_reformat_tool_calls_results_none_returns_empty(self):
         """Return an empty string when reformatting a ``None`` response."""

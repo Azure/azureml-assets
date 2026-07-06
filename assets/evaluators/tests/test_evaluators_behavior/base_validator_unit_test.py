@@ -1237,8 +1237,14 @@ class AgentResponseReformatUnitTests(_ValidatorUnitTestSupport):
         reformat = module.reformat_agent_response
         assert reformat(None) == ""
         assert reformat([]) == ""
+        # A response with no agent text extracts nothing; passing a logger exercises the
+        # empty-extraction debug-log branch before falling back to the raw input.
         weird = [{"role": "user", "content": [{"type": "text", "text": "hi"}]}]
-        assert reformat(weird) == weird
+        assert reformat(weird, logger=logging.getLogger("agent_reformat_test")) == weird
+        # A non-dict message item makes parsing raise; the except-branch logs a safe
+        # summary and falls back to the raw input unchanged.
+        malformed = [123]
+        assert reformat(malformed, logger=logging.getLogger("agent_reformat_test")) == malformed
 
 
 class LogSafeSummaryUnitTests(_ValidatorUnitTestSupport):
@@ -1253,6 +1259,13 @@ class LogSafeSummaryUnitTests(_ValidatorUnitTestSupport):
         assert "type=list" in fn([{"role": "user"}, "x"])
         assert "type=dict" in fn({"b": 1, "a": 2})
         assert "type=int" in fn(5)
+
+        class _RaisesOnLen:
+            def __len__(self):
+                raise RuntimeError("boom")
+
+        # The except-branch returns a safe placeholder instead of leaking or raising.
+        assert "summary unavailable" in fn(_RaisesOnLen())
 
 
 class MessagesOrQueryResponseUnitTests(_ValidatorUnitTestSupport):
@@ -1430,6 +1443,10 @@ class ConversationHistoryReformatUnitTests(_ValidatorUnitTestSupport):
         query = [{"role": "assistant", "content": [{"type": "text", "text": "hi"}]}]
         out = reformat(query, logger=logging.getLogger("tool_reformat_test"))
         assert out == query
+        # A role-less message is skipped; with no balanced turns the helper falls back
+        # to the raw query unchanged (covers the role-less continue branch).
+        role_less = [{"content": "no role"}]
+        assert reformat(role_less, logger=logging.getLogger("tool_reformat_test")) == role_less
 
 
 class SimplifyMessagesUnitTests(_ValidatorUnitTestSupport):
@@ -1455,3 +1472,99 @@ class SimplifyMessagesUnitTests(_ValidatorUnitTestSupport):
         assert all(not (isinstance(m, dict) and m.get("role") == "tool") for m in out_drop)
         bad = [{"role": "user", "content": 123}]
         assert fn(bad, logger=logging.getLogger("simplify_test")) == bad
+
+
+class ToolResponseEvalUnitTests(_ValidatorUnitTestSupport):
+    """Shared convert-kwargs / do_eval / real_call error-path tests for response-based tool evaluators.
+
+    ``tool_input_accuracy`` and ``tool_selection`` expose byte-identical
+    ``_convert_kwargs_to_eval_input`` error branches, the same ``_do_eval``
+    missing-input / invalid-output raises, and the same ``_real_call``
+    error->not-applicable path. Composing this mixin runs them against each
+    evaluator's own inlined copies (resolved via ``evaluator_class``); the
+    per-evaluator ``_result_key`` drives the not-applicable assertion. None of
+    these paths reach the judge flow (they short-circuit on input validation or
+    override ``_flow``), so the unmocked evaluator built by ``_make_evaluator`` is
+    sufficient.
+    """
+
+    _TOOL_CALL_RESPONSE = [
+        {
+            "role": "assistant",
+            "content": [
+                {"type": "tool_call", "tool_call_id": "c1", "name": "search", "arguments": {"q": "x"}}
+            ],
+        }
+    ]
+    _TEXT_RESPONSE = [{"role": "assistant", "content": [{"type": "text", "text": "hi there"}]}]
+
+    def test_convert_kwargs_no_tool_calls_in_response(self):
+        """Return the no-tool-calls error when the response has no tool calls."""
+        evaluator = self._make_evaluator()
+        result = evaluator._convert_kwargs_to_eval_input(query="q", response=self._TEXT_RESPONSE)
+        assert result["error_message"] == evaluator._NO_TOOL_CALLS_MESSAGE
+
+    def test_convert_kwargs_wraps_dict_definitions(self):
+        """Wrap dict-shaped tool definitions when the response is a string."""
+        evaluator = self._make_evaluator()
+        result = evaluator._convert_kwargs_to_eval_input(
+            query="q",
+            response="just a string response",
+            tool_definitions={"name": "x", "type": "function", "parameters": {}},
+        )
+        assert isinstance(result, dict)
+
+    def test_convert_kwargs_string_response_empty_definitions(self):
+        """Return the no-definitions error when a string response has no definitions."""
+        evaluator = self._make_evaluator()
+        result = evaluator._convert_kwargs_to_eval_input(
+            query="q", response="just a string response", tool_definitions=[]
+        )
+        assert result["error_message"] == evaluator._NO_TOOL_DEFINITIONS_MESSAGE
+
+    def test_convert_kwargs_extraction_fails_no_definitions(self):
+        """Return the no-definitions error when extraction fails with an empty list."""
+        evaluator = self._make_evaluator()
+        result = evaluator._convert_kwargs_to_eval_input(
+            query="q", response=[dict(m) for m in self._TOOL_CALL_RESPONSE], tool_definitions=[]
+        )
+        assert result["error_message"] == evaluator._NO_TOOL_DEFINITIONS_MESSAGE
+
+    def test_convert_kwargs_extraction_fails_unmatched_definitions(self):
+        """Return the missing-definitions error when a used tool has no definition."""
+        evaluator = self._make_evaluator()
+        result = evaluator._convert_kwargs_to_eval_input(
+            query="q",
+            response=[dict(m) for m in self._TOOL_CALL_RESPONSE],
+            tool_definitions=[{"name": "other", "type": "function", "parameters": {}}],
+        )
+        assert result["error_message"] == evaluator._TOOL_DEFINITIONS_MISSING_MESSAGE
+
+    def test_do_eval_missing_query_raises(self):
+        """Raise when ``_do_eval`` is invoked without the required inputs."""
+        evaluator = self._make_evaluator()
+        with pytest.raises(EvaluationException):
+            self._run_async(evaluator._do_eval({}))
+
+    def test_do_eval_invalid_output_raises(self):
+        """Raise when the judge returns a non-dict ``llm_output`` payload."""
+        evaluator = self._make_evaluator()
+
+        async def _bad_flow(**kwargs):
+            return {"llm_output": "not-a-dict"}
+
+        evaluator._flow = _bad_flow
+        with pytest.raises(EvaluationException):
+            self._run_async(evaluator._do_eval({"query": "q"}))
+
+    def test_real_call_error_message_returns_not_applicable(self):
+        """Return a not-applicable result when input conversion yields an error message."""
+        evaluator = self._make_evaluator()
+        result = self._run_async(
+            evaluator._real_call(
+                query="q",
+                response=[dict(m) for m in self._TEXT_RESPONSE],
+                tool_definitions=[{"name": "other", "type": "function", "parameters": {}}],
+            )
+        )
+        assert result[evaluator._result_key] is None

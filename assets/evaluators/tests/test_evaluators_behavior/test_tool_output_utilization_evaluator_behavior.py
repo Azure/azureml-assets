@@ -32,9 +32,7 @@ from ...builtin.tool_output_utilization.evaluator._tool_output_utilization impor
     _filter_to_used_tools,
     _get_agent_response,
     _get_conversation_history,
-    _log_safe_summary,
     _stringify_tool_result,
-    reformat_agent_response,
     reformat_tool_definitions,
 )
 # ErrorTarget is rebuilt by the module at import time so it carries the
@@ -600,7 +598,7 @@ class TestToolOutputUtilizationValidatorUnit(
 
 @pytest.mark.unittest
 class TestToolOutputUtilizationInternalBranches:
-    """Cover tool_output_utilization helper, conversion and eval branches not hit elsewhere."""
+    """Cover tool_output_utilization-specific helper and eval branches not shared via mixins."""
 
     def test_filter_to_used_tools_nested_function_shape(self):
         """Match used tools when the tool call uses the nested function shape."""
@@ -636,23 +634,10 @@ class TestToolOutputUtilizationInternalBranches:
         circular["self"] = circular
         assert isinstance(_stringify_tool_result(circular), str)
 
-    def test_reformat_agent_response_empty_extraction_logs_and_falls_back(self):
-        """Fall back to the original response (and log) when no agent text is extracted."""
-        response = [{"role": "user", "content": [{"type": "text", "text": "hi"}]}]
-        assert reformat_agent_response(response, logger=MagicMock()) == response
-
     def test_reformat_tool_definitions_parse_error_logs_and_falls_back(self):
         """Fall back to the raw definitions (and log) when parsing raises."""
         definitions = [123]
         assert reformat_tool_definitions(definitions, logger=MagicMock()) == definitions
-
-    def test_log_safe_summary_handles_raising_object(self):
-        """Return a safe placeholder when summarizing an object whose length raises."""
-        class _Bad:
-            def __len__(self):
-                raise RuntimeError("boom")
-
-        assert "summary unavailable" in _log_safe_summary(_Bad())
 
     def test_do_eval_missing_inputs_raises(self):
         """Raise when ``_do_eval`` is invoked without any of the required inputs."""
