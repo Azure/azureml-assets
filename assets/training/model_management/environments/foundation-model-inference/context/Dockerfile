@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-cuda13.1-ubuntu24.04:latest
+FROM mcr.microsoft.com/azureml/openmpi5.0-cuda13.1-ubuntu24.04:{{latest-image-tag}}
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
