@@ -5,6 +5,10 @@ USER root
 RUN apt-get -y update && apt-get -y upgrade && apt-get -y install unzip && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
+# torch/torchvision from the pytorch CUDA index (kept out of requirements.txt so the build
+# context contains no disallowed extra pip index flag); fixes GHSA-qfhq-4f3w-5fph, GHSA-vgrw-7cvw-pwgx.
+RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cu126 \
+        torch==2.10.0 torchvision==0.25.0
 RUN pip install -r requirements.txt --no-cache-dir
 
 # mlflow 3.5.0 has CVEs (CVE-2025-14287, CVE-2026-2033, CVE-2026-2635, GHSA-fh64-r2vc-xvhr);

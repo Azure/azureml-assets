@@ -23,9 +23,6 @@ azure-storage-blob==12.13.0
 deepspeed==0.17.1
 GPUtil==1.4.0
 mup==1.0.0
---extra-index-url https://download.pytorch.org/whl/cu126
-torch==2.10.0+cu126
-torchvision==0.25.0+cu126
 safetensors==0.5.2
 setuptools>=82.0.0
 mlflow==3.5.0
