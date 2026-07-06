@@ -39,15 +39,6 @@ RUN set -eux; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
 
-# idna>=3.16 is pinned as a transitive dep of the base miniconda prefix;
-# brought in by mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04, fixes GHSA-65pc-fj4g-8rjx.
-# PyJWT>=2.13.0 is pinned as a transitive dep of the base miniconda prefix;
-# brought in by mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04, fixes GHSA-993g-76c3-p5m4 and GHSA-jq35-7prp-9v3f.
-RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade \
-        'idna>=3.16' \
-        'PyJWT>=2.13.0' && \
-    /opt/miniconda/bin/python -c "import idna, jwt; idna_version=tuple(map(int, idna.__version__.split('.'))); jwt_version=tuple(map(int, jwt.__version__.split('.'))); assert idna_version >= (3, 16), idna.__version__; assert jwt_version >= (2, 13, 0), jwt.__version__"
-
 # Create conda environment (minimal; packages installed via pip to avoid solver OOM)
 RUN conda create -y -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
@@ -72,7 +63,7 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
     'setuptools-git' \
     'setuptools==82.0.1' \
     'wheel>=0.46.2' \
-    'torch==2.8.0' \
+    'torch==2.10.0' \
     'scipy==1.10.1' \
     'psutil>5.0.0,<6.0.0' \
     'pip>=26.1'
@@ -152,9 +143,14 @@ RUN pip install \
 # pyarrow>=23.0.1          GHSA-rgxp-2hwp-jwgg / CVE-2026-25087 use-after-free
 #                          in Apache Arrow C++. Chain (L1):
 #                          azureml-dataset-runtime -> pyarrow.
+# torch==2.10.0            GHSA-vgrw-7cvw-pwgx, GHSA-qfhq-4f3w-5fph.
+#                          Direct AutoML DNN dependency; the later AzureML /
+#                          pytorch-transformers install can resolve back to
+#                          torch 2.8.0, so enforce the patched final version.
 RUN pip install --no-cache-dir --upgrade 'distributed>=2026.1.0' 'protobuf>=5.29.6' 'cryptography>=46.0.5' \
     'bokeh>=3.8.2' \
     'onnx>=1.21.0' \
+    'torch==2.10.0' \
     'urllib3>=2.7.0' \
     'ujson>=5.12.1' \
     'pyarrow>=23.0.1'
