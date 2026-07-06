@@ -22,7 +22,7 @@ RUN conda install -y -n ptca -c conda-forge pip==26.1.1 && \
 #   aiohttp: no parent currently pins >=3.14.0 (GHSA-jg22-mg44-37j8 / GHSA-hg6j-4rv6-33pg).
 #   starlette: no parent currently pins >=1.0.1 (GHSA-86qp-5c8j-p5mr).
 #   pydantic-settings: pinned transitive dep of the base image, fixes GHSA-4xgf-cpjx-pc3j.
-RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade \
+RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade --progress-bar off \
         'urllib3>=2.7.0' \
         'idna>=3.15' \
         'aiohttp>=3.14.0' \
@@ -33,6 +33,19 @@ RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade \
            /opt/conda/envs/ptca/lib/python3.10/site-packages/aiohttp-3.13*.dist-info \
            /opt/conda/envs/ptca/lib/python3.10/site-packages/starlette-1.0.0.dist-info \
            /opt/conda/envs/ptca/lib/python3.10/site-packages/pydantic_settings-2.14.1.dist-info
+
+# ptca env (python 3.10): torch is inherited from the torch280 base image;
+# pin the patched CUDA build for GHSA-vgrw-7cvw-pwgx and GHSA-qfhq-4f3w-5fph,
+# and keep torchvision/torchaudio aligned with the torch ABI.
+RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade \
+        --progress-bar off \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.10.0+cu126' \
+        'torchvision==0.25.0+cu126' \
+        'torchaudio==2.10.0+cu126' && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/torch-2.8*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.10/site-packages/torchvision-0.23*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.10/site-packages/torchaudio-2.8*.dist-info
 
 # Base conda env (python 3.13) leaf overrides. Programmatic metadata checks on
 # 2026-05-25 found no available parent package that tightens these vulnerable
@@ -49,13 +62,14 @@ RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade \
 #   aiohttp: no parent currently pins >=3.14.0 (GHSA-jg22-mg44-37j8 / GHSA-hg6j-4rv6-33pg).
 #   PyJWT: no parent currently pins >=2.13.0 (GHSA-jq35-7prp-9v3f / GHSA-993g-76c3-p5m4).
 #   pydantic-settings: pinned transitive dep of the base image, fixes GHSA-4xgf-cpjx-pc3j.
+#   msgpack: pinned transitive dep of mlflow-skinny/base image, fixes GHSA-6v7p-g79w-8964.
 #   cryptography: pinned transitive dep of the base Python stack; brought in by
 #   the base image, fixes GHSA-537c-gmf6-5ccf.
-RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade --no-binary=cffi \
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade --progress-bar off --no-binary=cffi \
         'cryptography==48.0.1' && \
     rm -rf /opt/conda/lib/python3.13/site-packages/cryptography-46*.dist-info
 
-RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade \
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade --progress-bar off \
         'pip==26.1.1' \
         'py-rattler>=0.24.0' \
         'python-dotenv>=1.2.2' \
@@ -64,7 +78,8 @@ RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade \
         'click>=8.3.3' \
         'aiohttp>=3.14.0' \
         'PyJWT>=2.13.0' \
-        'pydantic-settings>=2.14.2' && \
+        'pydantic-settings>=2.14.2' \
+        'msgpack>=1.2.1' && \
     rm -rf /opt/conda/lib/python3.13/site-packages/pip-26.0*.dist-info \
            /opt/conda/lib/python3.13/site-packages/py__rattler-0.23*.dist-info \
            /opt/conda/lib/python3.13/site-packages/python__dotenv-1.2.1.dist-info \
@@ -73,8 +88,9 @@ RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade \
            /opt/conda/lib/python3.13/site-packages/click-8.2*.dist-info \
            /opt/conda/lib/python3.13/site-packages/aiohttp-3.13*.dist-info \
            /opt/conda/lib/python3.13/site-packages/PyJWT-2.12*.dist-info \
-           /opt/conda/lib/python3.13/site-packages/pydantic_settings-2.12*.dist-info
+           /opt/conda/lib/python3.13/site-packages/pydantic_settings-2.12*.dist-info \
+           /opt/conda/lib/python3.13/site-packages/msgpack-1.1*.dist-info
 
 COPY requirements.txt .
-RUN pip install -r requirements.txt
-RUN pip install --no-build-isolation git+https://github.com/facebookresearch/detectron2.git@a1ce2f9
+RUN pip install --progress-bar off -r requirements.txt
+RUN pip install --progress-bar off --no-build-isolation git+https://github.com/facebookresearch/detectron2.git@a1ce2f9
