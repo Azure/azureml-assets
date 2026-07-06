@@ -24,7 +24,7 @@ BASE_ENVIRONMENT = "base_env"
 # Subdirectory within an evaluator asset that contains its source code, and the minimum
 # percentage of that source which must be exercised by the asset's tests (via coverage.py).
 EVALUATOR_SOURCE_DIRNAME = "evaluator"
-EVALUATOR_COVERAGE_THRESHOLD = 85
+EVALUATOR_COVERAGE_THRESHOLD = 98
 
 
 def create_isolated_environment(asset_config: assets.AssetConfig, env_name: str) -> str:
