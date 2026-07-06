@@ -2248,11 +2248,11 @@ BROWSER_AUTOMATION_EXPECTED_FLOW_QUERY = (
                                          "You can answer questions, provide information, and assist with various "
                                          "tasks related to web browsing using the Browser Automation tool available "
                                          "to you.\n\nUser turn 1:\n  Your goal is to report the percent of Microsoft "
-                                         "year-to-date stock price change.\nTo do that, go to the website "
-                                         "finance.yahoo.com.\nAt the top of the page, you will find a search "
-                                         "bar.\nEnter the value 'MSFT', to get information about the Microsoft stock "
-                                         "price.\nAt the top of the resulting page you will see a default chart of "
-                                         "Microsoft stock price.\nClick on 'YTD' at the top of that chart, and report "
+                                         "year-to-date stock price change.\n  To do that, go to the website "
+                                         "finance.yahoo.com.\n  At the top of the page, you will find a search "
+                                         "bar.\n  Enter the value 'MSFT', to get information about the Microsoft stock "
+                                         "price.\n  At the top of the resulting page you will see a default chart of "
+                                         "Microsoft stock price.\n  Click on 'YTD' at the top of that chart, and report "
                                          "the percent value that shows up just below it.\n\n"
 )
 
@@ -2322,11 +2322,11 @@ WEB_SEARCH_IR_EXPECTED_FLOW_QUERY = "User turn 1:\n  what's the weather like in 
 
 BROWSER_AUTOMATION_IR_EXPECTED_FLOW_QUERY = (
                                             "User turn 1:\n  Your goal is to report the percent of Microsoft "
-                                            "year-to-date stock price change.\nTo do that, go to the website "
-                                            "finance.yahoo.com.\nAt the top of the page, you will find a search "
-                                            "bar.\nEnter the value 'MSFT', to get information about the Microsoft "
-                                            "stock price.\nAt the top of the resulting page you will see a default "
-                                            "chart of Microsoft stock price.\nClick on 'YTD' at the top of that "
+                                            "year-to-date stock price change.\n  To do that, go to the website "
+                                            "finance.yahoo.com.\n  At the top of the page, you will find a search "
+                                            "bar.\n  Enter the value 'MSFT', to get information about the Microsoft "
+                                            "stock price.\n  At the top of the resulting page you will see a default "
+                                            "chart of Microsoft stock price.\n  Click on 'YTD' at the top of that "
                                             "chart, and report the percent value that shows up just below it.\n\n"
 )
 
@@ -2392,9 +2392,9 @@ BING_CUSTOM_SEARCH_EXPECTED_FLOW_RESPONSE = (
 )
 
 FILE_SEARCH_EXPECTED_FLOW_RESPONSE = (
-                                     "[TOOL_CALL] file_search_call(queries=\"['good restaurant recommendation', 'best "
+                                     "[TOOL_CALL] file_search_call(queries=['good restaurant recommendation', 'best "
                                      "restaurant', 'top rated restaurant', 'recommended restaurants', \"what's a good "
-                                     "restaurant\"]\")\n[TOOL_RESULT] [{'attributes': {}, 'file_id': "
+                                     "restaurant\"])\n[TOOL_RESULT] [{'attributes': {}, 'file_id': "
                                      "'assistant-StE61XCSBRyLv11Ytyckea', 'filename': 'french_cafe_menu.md', 'score': "
                                      "0.0333, 'text': '# Le Jardin de Paris', 'vector_store_id': ''}, {'attributes': "
                                      "{}, 'file_id': 'assistant-Xpu5yP1AQZiB86Hz5iG4uv', 'filename': "
@@ -2461,7 +2461,7 @@ OPENAPI_EXPECTED_FLOW_RESPONSE = (
 
 WEB_SEARCH_EXPECTED_FLOW_RESPONSE = (
                                     '[TOOL_CALL] web_search(query="current weather Napoli Italy", type="search", '
-                                    'queries="[\'current weather Napoli Italy\']")\nThe current weather in Napoli, '
+                                    'queries=[\'current weather Napoli Italy\'])\nThe current weather in Napoli, '
                                     'Italy is partly cloudy with a temperature of around 10°C, feeling like 7°C.'
 )
 
@@ -2496,8 +2496,8 @@ MEMORY_SEARCH_EXPECTED_FLOW_RESPONSE = (
 )
 
 KB_MCP_EXPECTED_FLOW_RESPONSE = (
-                                "[TOOL_CALL] knowledge_base_retrieve(request=\"{'knowledgeAgentIntents': ['Provide "
-                                "general information about the Earth.']}\")\n[TOOL_RESULT] Retrieved 11 "
+                                "[TOOL_CALL] knowledge_base_retrieve(request={'knowledgeAgentIntents': ['Provide "
+                                "general information about the Earth.']})\n[TOOL_RESULT] Retrieved 11 "
                                 "documents.\nHere's an interesting overview about Earth from space, focusing on "
                                 "nighttime images and what they tell us about our planet and humanity."
 )
@@ -2551,6 +2551,16 @@ MEMORY_SEARCH_TOU_EXPECTED_FLOW_RESPONSE = (
     '"scope": "user_123", "updated_at": 1771323829}]\n'
     "Sure! I'll order your usual\u2014one dark roast coffee. "
     "Would you like any specific size or extras (milk, sugar, etc.) with that?"
+)
+
+# kb_mcp has a dict-valued argument (request). TOU's _get_agent_response wraps dict/list
+# argument values in quotes, whereas the SDK helper used by TA/TC now renders them raw.
+# TA/TC therefore use the (unquoted) base KB_MCP_EXPECTED_FLOW_RESPONSE and TOU uses this.
+KB_MCP_TOU_EXPECTED_FLOW_RESPONSE = (
+                                    "[TOOL_CALL] knowledge_base_retrieve(request=\"{'knowledgeAgentIntents': "
+                                    "['Provide general information about the Earth.']}\")\n[TOOL_RESULT] Retrieved "
+                                    "11 documents.\nHere's an interesting overview about Earth from space, focusing "
+                                    "on nighttime images and what they tell us about our planet and humanity."
 )
 
 # Restricted built-in tools newly enabled in Phase 2 (azure_ai_search, sharepoint,
@@ -3011,24 +3021,6 @@ FILE_SEARCH_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE = [
                         "what's a good restaurant",
                     ],
                 },
-                "tool_result": [
-                    {
-                        "attributes": {},
-                        "file_id": "assistant-StE61XCSBRyLv11Ytyckea",
-                        "filename": "french_cafe_menu.md",
-                        "score": 0.0333,
-                        "text": "# Le Jardin de Paris",
-                        "vector_store_id": "",
-                    },
-                    {
-                        "attributes": {},
-                        "file_id": "assistant-Xpu5yP1AQZiB86Hz5iG4uv",
-                        "filename": "italian_diner_menu.md",
-                        "score": 0.0328,
-                        "text": "# Trattoria Bella Notte",
-                        "vector_store_id": "",
-                    },
-                ],
             },
         ],
     },
@@ -3094,7 +3086,6 @@ IMAGE_GEN_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE = [
                     "size": "1024x1024",
                     "revised_prompt": "Microsoft logo on a white background",
                 },
-                "tool_result": "<generated_image_data>",
             },
         ],
     },
@@ -3132,33 +3123,6 @@ MEMORY_SEARCH_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE = [
                 "tool_call_id": "memupdateo_2f31edffff39a63f00699441f5791081909eaae75cd08dd354",
                 "name": "memory_search",
                 "arguments": {},
-                "tool_result": [
-                    {
-                        "content": "User prefers dark roast coffee.",
-                        "kind": "user_profile",
-                        "memory_id": "3a353f9202ca41bf95a4a9ef21d90d41",
-                        "scope": "user_123",
-                        "updated_at": 1771323829,
-                    },
-                    {
-                        "content": "User prefers dark roast coffee.",
-                        "kind": "user_profile",
-                        "memory_id": "3a353f9202ca41bf95a4a9ef21d90d41",
-                        "scope": "user_123",
-                        "updated_at": 1771323829,
-                    },
-                    {
-                        "content": (
-                            "The user stated a preference for dark roast coffee. Dark roast coffee is "
-                            "characterized by a bold flavor, rich aroma, and lower acidity compared to "
-                            "lighter roasts."
-                        ),
-                        "kind": "chat_summary",
-                        "memory_id": "9117c9f9d7424f0290c523d1cd3de45a",
-                        "scope": "user_123",
-                        "updated_at": 1771323829,
-                    },
-                ],
             },
         ],
     },
@@ -3250,7 +3214,6 @@ KB_MCP_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE = [
                         "knowledgeAgentIntents": ["Provide general information about the Earth."],
                     },
                 },
-                "tool_result": "Retrieved 11 documents.",
             },
         ],
     },
@@ -3293,7 +3256,6 @@ MCP_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE = [
                 "arguments": {
                     "query": "how Azure Functions work",
                 },
-                "tool_result": "Retrieved documentation about Azure Functions.",
             },
         ],
     },

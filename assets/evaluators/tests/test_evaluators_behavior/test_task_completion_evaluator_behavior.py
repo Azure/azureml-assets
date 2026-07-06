@@ -667,7 +667,9 @@ class TestSerializeMessages:
         ]
         expected = (
             "User turn 1:\n"
-            "  Hello, I need help.  I am trying to book a flight.  From London to Paris, next Monday.\n"
+            "  Hello, I need help.\n"
+            "  I am trying to book a flight.\n"
+            "  From London to Paris, next Monday.\n"
             "\n"
             "Agent turn 1:\n"
             "  Sure! Let me look that up for you."
@@ -705,7 +707,8 @@ class TestSerializeMessages:
         ]
         expected = (
             "User turn 1:\n"
-            "  Step 1: set up the environment.  Step 2: install the dependencies.\n"
+            "  Step 1: set up the environment.\n"
+            "  Step 2: install the dependencies.\n"
             "\n"
             "Agent turn 1:\n"
             "  Environment set up successfully.\n"
@@ -760,14 +763,16 @@ class TestSerializeMessages:
         ]
         expected = (
             "User turn 1:\n"
-            "  What is the weather in Paris?  And also in London?\n"
+            "  What is the weather in Paris?\n"
+            "  And also in London?\n"
             "\n"
             "Agent turn 1:\n"
             "  Paris is sunny and 22 C.\n"
             "  London is cloudy and 15 C.\n"
             "\n"
             "User turn 2:\n"
-            "  Which city is warmer?  By how many degrees?\n"
+            "  Which city is warmer?\n"
+            "  By how many degrees?\n"
             "\n"
             "Agent turn 2:\n"
             '  [TOOL_CALL] compare_temps(city1="Paris", city2="London")\n'

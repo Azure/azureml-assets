@@ -84,7 +84,7 @@ class TestToolOutputUtilizationEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest,
 
     test_kb_mcp_expected_flow_inputs = {
         "query": data.KB_MCP_EXPECTED_FLOW_QUERY,
-        "response": data.KB_MCP_EXPECTED_FLOW_RESPONSE,
+        "response": data.KB_MCP_TOU_EXPECTED_FLOW_RESPONSE,
         "tool_definitions": data.KB_MCP_EXPECTED_FLOW_TOOL_DEFINITIONS_STR,
     }
 
