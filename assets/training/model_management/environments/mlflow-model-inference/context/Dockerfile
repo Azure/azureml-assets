@@ -8,7 +8,10 @@ RUN apt-get update && \
         runit \
         rsyslog \
         xz-utils \
-        liblzma5 && \
+        liblzma5 \
+        libxml2 \
+        tar \
+        libsqlite3-0 && \
     apt-get autoremove -y && \
     apt-get clean -y && \
     rm -rf /usr/share/man/* && \
