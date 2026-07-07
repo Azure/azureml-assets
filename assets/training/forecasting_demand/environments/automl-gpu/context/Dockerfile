@@ -8,37 +8,12 @@ COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:2025
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 ENV ENABLE_METADATA=true
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
-    apt-get install -y --only-upgrade \
-        systemd \
-        systemd-sysv \
-        libudev1 \
-        libpam-systemd \
-        systemd-timesyncd \
-        libsystemd0 \
-        libnss-systemd \
-        libpython3.10-stdlib \
-        python3.10 \
-        libpython3.10-minimal \
-        python3.10-minimal \
-        libpam0g \
-        libpam-modules-bin \
-        libpam-modules \
-        libpam-runtime \
-        libarchive13 \
-        libgnutls30 && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY conda_dependencies.yaml .
 RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
     conda clean -a -y
-
-# CVE-2026-6357: upgrade pip in base miniconda (/opt/miniconda ships 26.0.1)
-RUN /opt/miniconda/bin/python -m pip install --upgrade --no-cache-dir 'pip>=26.1.1' && \
-    rm -rf /opt/miniconda/lib/python3.10/site-packages/pip-26.0.*.dist-info
 
 # distributed/bokeh/onnx/torch: parent packages cap these below patched versions.
 # GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6,

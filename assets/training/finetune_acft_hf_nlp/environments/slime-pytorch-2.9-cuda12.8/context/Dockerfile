@@ -31,16 +31,11 @@ RUN set -eux; \
             {} +; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
-        build-essential \
-        cmake \
         dnsutils \
-        git \
         git-lfs \
         libnuma-dev \
         ninja-build \
         nvtop \
-        openssh-client \
-        openssh-server \
         rsync; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*

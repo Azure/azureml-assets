@@ -8,42 +8,6 @@ COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:2025
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 ENV ENABLE_METADATA=true
 
-# Upgrade vulnerable OS packages installed by parent base image layers:
-# openssh (USN-8222-1), XZ Utils (USN-8362-1), OpenSSL (USN-8414-1),
-# nginx (USN-8354-1/USN-8398-1), systemd (USN-8402-1), and libgcrypt (USN-8319-1).
-RUN set -eux; \
-    apt-get update; \
-    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade; \
-    for package in \
-        liblzma5 \
-        libgcrypt20 \
-        libnginx-mod-http-echo \
-        libnginx-mod-http-geoip2 \
-        libssl3 \
-        libssl3t64 \
-        libsystemd-shared \
-        libsystemd0 \
-        libudev1 \
-        nginx \
-        nginx-common \
-        nginx-light \
-        openssh-client \
-        openssh-server \
-        openssh-sftp-server \
-        openssl \
-        systemd \
-        systemd-dev \
-        systemd-resolved \
-        systemd-timesyncd \
-        xz-utils; \
-    do \
-        if dpkg-query -W -f='${db:Status-Abbrev}' "$package" 2>/dev/null | grep -q '^ii '; then \
-            DEBIAN_FRONTEND=noninteractive apt-get install --only-upgrade -y --no-install-recommends "$package"; \
-        fi; \
-    done; \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
 # Create conda environment (minimal -- packages installed via pip to avoid solver OOM)
 RUN conda create -q -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
