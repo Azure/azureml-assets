@@ -1,8 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: nemotron-speech-streaming-en-0.6b
-version: 1
-isArchived: true
 path: ./
-tags:
-  foundryLocal: ""
-type: custom_model
+isArchived: true
+system_metadata:
+  foundryLocal: ''
+version: 1

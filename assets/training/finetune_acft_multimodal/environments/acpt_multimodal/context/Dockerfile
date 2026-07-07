@@ -1,4 +1,3 @@
-# PTCA image
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 USER root
@@ -38,17 +37,21 @@ RUN pip install azureml-acft-accelerator=={{latest-pypi-version}}
 # - pyOpenSSL>=26.0.0 and urllib3>=2.7.0 are transitive through azure/requests
 #   stacks; no parent package pins only fixed versions.
 RUN pip install --no-cache-dir --upgrade 'setuptools>=82.0.1' 'nltk>=3.9.4' 'transformers>=5.0.0' 'onnx>=1.21.0' 'pyOpenSSL>=26.0.0' 'urllib3>=2.7.0'
-# Checked 2026-05-25: root-env overrides cover packages whose installed parents
+# Checked 2026-06-25: root-env overrides cover packages whose installed parents
 # accept vulnerable ranges instead of requiring fixed versions. pip has no
 # Python parent package; python-dotenv is accepted by mlflow-skinny's broad
 # range; idna/click/urllib3 are accepted by requests/cryptography/anyio/httpx
-# and mlflow/typer/uvicorn/jupyter stacks. Use pip here because the scanner
+# and mlflow/typer/uvicorn/jupyter stacks. pydantic-settings is pinned as a
+# transitive dep of the base image/AzureML inference stack; fixes
+# GHSA-4xgf-cpjx-pc3j. py-rattler is a pinned transitive dep of the base image's
+# conda stack; fixes GHSA-q53q-5r4j-5729. Use pip here because the scanner
 # records root-env dist-info metadata, and conda solving the root env can change
 # unrelated solver packages.
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
     'setuptools>=82.0.1' 'pyOpenSSL>=26.0.0' 'urllib3>=2.7.0' \
     'python-dotenv>=1.2.2' 'pip>=26.1.1' 'idna>=3.15' 'click>=8.3.3' \
-    'aiohttp>=3.14.0' 'PyJWT>=2.13.0'
+    'aiohttp>=3.14.0' 'PyJWT>=2.13.0' 'pydantic-settings>=2.14.2' \
+    'py-rattler>=0.24.0'
 
 # Checked 2026-06-16: ptca-env overrides for packages not yet pinned to fixed
 # versions by their parents inside the ptca conda environment.

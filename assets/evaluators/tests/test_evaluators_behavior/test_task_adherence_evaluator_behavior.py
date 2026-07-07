@@ -3,27 +3,42 @@
 
 """Behavioral tests for Task Adherence Evaluator."""
 
-import os
+import asyncio
 from typing import Any, Dict, List
-from unittest.mock import MagicMock
 
 import pytest
-from azure.ai.evaluation import AzureOpenAIModelConfiguration
 from azure.ai.evaluation._exceptions import EvaluationException
 
 from .base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
+from .base_evaluator_behavior_test import _TurnLevelUtilE2ETests, _MessagesUtilE2ETests
 from .base_tool_evaluation_test import BaseToolEvaluationTest
+from .base_validator_unit_test import (
+    AgentResponseReformatUnitTests,
+    ConversationSerializationUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ConversationValidatorUnitTests,
+    CorePromptyValidatorUnitTests,
+    MessagePreprocessUnitTests,
+    MessagesOrQueryResponseUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    ToolDefinitionsValidatorUnitTests,
+)
 from . import common_tool_test_data as data
 from ...builtin.task_adherence.evaluator._task_adherence import (
     TaskAdherenceEvaluator,
     EvaluationLevel,
     serialize_messages,
 )
-from ..common.evaluator_mock_config import get_flow_side_effect_for_evaluator
+from ..common.evaluator_mock_config import (
+    create_mocked_evaluator,
+    run_none_score_not_applicable,
+)
 
 
 @pytest.mark.unittest
-class TestTaskAdherenceEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, BaseToolEvaluationTest):
+class TestTaskAdherenceEvaluatorBehavior(
+    BaseToolsEvaluatorBehaviorTest, BaseToolEvaluationTest, _TurnLevelUtilE2ETests, _MessagesUtilE2ETests
+):
     """
     Behavioral tests for Task Adherence Evaluator.
 
@@ -144,15 +159,7 @@ class TestTaskAdherenceEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, BaseToo
 
 def _create_mocked_evaluator():
     """Create a TaskAdherenceEvaluator with both _flow and _multi_turn_flow mocked."""
-    model_config = AzureOpenAIModelConfiguration(
-        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
-        azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
-    )
-    evaluator = TaskAdherenceEvaluator(model_config=model_config)
-    mock_side_effect = get_flow_side_effect_for_evaluator("task_adherence")
-    evaluator._flow = MagicMock(side_effect=mock_side_effect)
-    evaluator._multi_turn_flow = MagicMock(side_effect=mock_side_effect)
-    return evaluator
+    return create_mocked_evaluator(TaskAdherenceEvaluator, "task_adherence")
 
 
 # region Conversation-level (messages) behavioral tests
@@ -331,7 +338,7 @@ class TestTaskAdherenceMultiturnBehavior:
             evaluator(messages=messages)
 
     def test_messages_intermediate_response(self):
-        """Messages ending with only tool calls are rejected."""
+        """Messages ending with only tool calls are accepted (mid-execution guard removed to align with SDK)."""
         evaluator = _create_mocked_evaluator()
         messages = [
             {"role": "user", "content": [{"type": "text", "text": "Search for info."}]},
@@ -347,8 +354,8 @@ class TestTaskAdherenceMultiturnBehavior:
                 ],
             },
         ]
-        with pytest.raises(EvaluationException, match="must contain text content"):
-            evaluator(messages=messages)
+        result = evaluator(messages=messages)
+        assert isinstance(result, dict)
 
 # endregion
 
@@ -357,18 +364,9 @@ class TestTaskAdherenceMultiturnBehavior:
 
 def _create_mocked_evaluator_with_level(evaluation_level=None):
     """Create a TaskAdherenceEvaluator with evaluation_level and mocked flows."""
-    model_config = AzureOpenAIModelConfiguration(
-        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
-        azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
+    return create_mocked_evaluator(
+        TaskAdherenceEvaluator, "task_adherence", evaluation_level=evaluation_level
     )
-    evaluator = TaskAdherenceEvaluator(
-        model_config=model_config,
-        evaluation_level=evaluation_level,
-    )
-    mock_side_effect = get_flow_side_effect_for_evaluator("task_adherence")
-    evaluator._flow = MagicMock(side_effect=mock_side_effect)
-    evaluator._multi_turn_flow = MagicMock(side_effect=mock_side_effect)
-    return evaluator
 
 
 @pytest.mark.unittest
@@ -609,3 +607,59 @@ class TestTaskAdherenceSerializeMessages:
 
 
 # endregion
+
+
+# region None score handling tests
+
+
+@pytest.mark.unittest
+class TestTaskAdherenceNoneScoreHandling:
+    """Regression tests for None-score handling in _do_eval (math.isnan(None) fix).
+
+    When the flow returns a skipped/None score, _do_eval must return the standardized
+    not-applicable result instead of crashing on math.isnan(None).
+    """
+
+    def test_turn_level_none_score_does_not_crash(self):
+        """Turn-level eval with score=None from _flow returns not-applicable."""
+        run_none_score_not_applicable(
+            TaskAdherenceEvaluator,
+            "task_adherence",
+            query="Plan a trip to Paris.",
+            response="Here is your itinerary.",
+        )
+
+    def test_conversation_level_none_score_does_not_crash(self):
+        """Conversation-level eval with score=None from _multi_turn_flow returns not-applicable."""
+        run_none_score_not_applicable(TaskAdherenceEvaluator, "task_adherence", messages=VALID_MESSAGES)
+
+
+# endregion
+
+
+@pytest.mark.unittest
+class TestTaskAdherenceValidatorUnit(
+    CorePromptyValidatorUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    MessagePreprocessUnitTests,
+    ConversationValidatorUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ToolDefinitionsValidatorUnitTests,
+    ConversationSerializationUnitTests,
+    MessagesOrQueryResponseUnitTests,
+    AgentResponseReformatUnitTests,
+):
+    """Low-level unit tests for task_adherence's repeated validators, utils and methods."""
+
+    evaluator_class = TaskAdherenceEvaluator
+
+
+@pytest.mark.unittest
+class TestTaskAdherenceDoEvalBranches:
+    """Cover task_adherence-specific ``_do_eval`` branches not exercised by the shared mixins."""
+
+    def test_missing_query_and_response_raises(self):
+        """Raise when neither query nor response is present in the turn-level input."""
+        evaluator = create_mocked_evaluator(TaskAdherenceEvaluator, "task_adherence")
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({}))

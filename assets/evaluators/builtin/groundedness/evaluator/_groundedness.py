@@ -650,25 +650,6 @@ class MessagesOrQueryResponseInputValidator(ConversationValidator):
                     category=ErrorCategory.INVALID_VALUE,
                     target=self.error_target,
                 )
-            # The final assistant message must contain text
-            last_content = messages[-1].get("content", "")
-            if isinstance(last_content, list):
-                has_text = any(
-                    isinstance(c, dict) and c.get("type") in ("text",)
-                    or isinstance(c, str)
-                    for c in last_content
-                )
-                if not has_text:
-                    raise EvaluationException(
-                        message=(
-                            "The last message must contain text content, "
-                            "not only tool calls. The conversation appears to be "
-                            "mid-execution — provide the agent's final text response."
-                        ),
-                        blame=ErrorBlame.USER_ERROR,
-                        category=ErrorCategory.INVALID_VALUE,
-                        target=self.error_target,
-                    )
             return True
         return super().validate_eval_input(eval_input)
 
@@ -1622,6 +1603,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                                     internal_message=str(threshold_value),
                                     target=ErrorTarget.EVALUATE,
                                     category=ErrorCategory.INVALID_VALUE,
+                                    blame=ErrorBlame.USER_ERROR,
                                 )
 
                             if not contains_threshold_key:
@@ -1719,7 +1701,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         try:
             logger.debug("Extracting context from response")
             tool_calls = self._parse_tools_from_response(response=response)
-            logger.debug(f"Tool Calls parsed successfully: {tool_calls}")
+            logger.debug("Tool calls parsed successfully: count=%d", len(tool_calls) if tool_calls else 0)
 
             if not tool_calls:
                 return NO_CONTEXT

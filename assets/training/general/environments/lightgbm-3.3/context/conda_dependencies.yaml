@@ -29,3 +29,5 @@ dependencies:
   - py-cpuinfo==5.0.0
   - torch-tb-profiler~=0.4.0
   - starlette>=1.0.1
+  - pyarrow>=23.0.1  # pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg
+  - cryptography==48.0.1  # pinned transitive dep of azureml-core/azureml-mlflow; fixes GHSA-537c-gmf6-5ccf

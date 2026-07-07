@@ -1,48 +1,81 @@
 FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
 
-
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
 COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/ /var/mlflow_resources/
 
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
-# ENV AML_APP_ROOT="/var/mlflow_resources"
-# ENV AZUREML_ENTRY_SCRIPT="mlflow_score_script.py"
-
 ENV ENABLE_METADATA=true
 
-# System package security upgrades.
-# USN-8222-1: openssh-{client,server,sftp-server} 1:9.6p1-3ubuntu13.15 -> 1:9.6p1-3ubuntu13.16
-# Parent: ubuntu 24.04 noble base image (mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04).
-# `apt-get -y upgrade` alone has been observed to leave the held openssh version in
-# place when an older base layer is cached, so reinstall the openssh-* packages
-# explicitly to force pickup of the patched version (same pattern used in
-# assets/training/aoai/proxy_components/environments/context/Dockerfile and
-# assets/training/finetune_acft_hf_nlp/environments/data_import/context/Dockerfile).
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
-    apt-get install --reinstall -y openssh-client openssh-server openssh-sftp-server && \
+# Upgrade vulnerable OS packages installed by parent base image layers:
+# openssh (USN-8222-1), XZ Utils (USN-8362-1), OpenSSL (USN-8414-1),
+# nginx (USN-8354-1/USN-8398-1), systemd (USN-8402-1), and libgcrypt (USN-8319-1).
+RUN set -eux; \
+    apt-get update; \
+    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade; \
+    for package in \
+        liblzma5 \
+        libgcrypt20 \
+        libnginx-mod-http-echo \
+        libnginx-mod-http-geoip2 \
+        libssl3 \
+        libssl3t64 \
+        libsystemd-shared \
+        libsystemd0 \
+        libudev1 \
+        nginx \
+        nginx-common \
+        nginx-light \
+        openssh-client \
+        openssh-server \
+        openssh-sftp-server \
+        openssl \
+        systemd \
+        systemd-dev \
+        systemd-resolved \
+        systemd-timesyncd \
+        xz-utils; \
+    do \
+        if dpkg-query -W -f='${db:Status-Abbrev}' "$package" 2>/dev/null | grep -q '^ii '; then \
+            DEBIAN_FRONTEND=noninteractive apt-get install --only-upgrade -y --no-install-recommends "$package"; \
+        fi; \
+    done; \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# begin conda create
 # Create conda environment (minimal -- packages installed via pip to avoid solver OOM)
-RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
+RUN conda create -q -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
     -c conda-forge && \
-    conda clean -a -y
+    conda clean -q -a -y
 
-# Security: upgrade pip to fix CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9). Two pips need
-# upgrading because they live in independent prefixes:
-#   1. /opt/miniconda/bin/pip — ships with the parent base image
-#      (mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04) at version 26.0.1.
-#      VCM SCA scans this site-packages tree at
-#      opt/miniconda/lib/python3.10/site-packages/pip-26.0.1.dist-info/METADATA.
-#   2. $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip — created by `conda create` above.
-# pip is its own parent (no upstream package can pull in a fixed pip), so explicit
-# upgrades are the only available remediation.
-RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'pip>=26.1' && \
+# Security overrides for packages installed in independent Python prefixes:
+# - pip>=26.1 fixes CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9). pip is its own parent,
+#   so explicit upgrades are the only available remediation.
+# - PyJWT>=2.13.0 is pinned as a transitive dep brought in by the base image
+#   (mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04), fixing GHSA-993g-76c3-p5m4
+#   and GHSA-jq35-7prp-9v3f.
+# - idna>=3.15 is pinned as a transitive dep brought in by the base image,
+#   fixing GHSA-65pc-fj4g-8rjx.
+# - py-rattler>=0.24.0 is pinned as a transitive dep brought in by the base image,
+#   fixing GHSA-q53q-5r4j-5729.
+# - cryptography>=48.0.1 is pinned as a transitive dep brought in by the base image
+#   and its ptca conda env, fixing GHSA-537c-gmf6-5ccf.
+RUN set -eux; \
+    base_prefix_found=0; \
+    for base_python in /opt/conda/bin/python /opt/miniconda/bin/python /opt/conda/envs/ptca/bin/python; do \
+        if [ -x "$base_python" ]; then \
+            base_prefix_found=1; \
+            "$base_python" -m pip install --no-cache-dir --upgrade \
+                'pip>=26.1' \
+                'PyJWT>=2.13.0' \
+                'idna>=3.15' \
+                'py-rattler>=0.24.0' \
+                'cryptography>=48.0.1'; \
+        fi; \
+    done; \
+    test "$base_prefix_found" = "1"; \
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --upgrade 'pip>=26.1'
 
 # Install packages via pip (avoids conda solver OOM)
@@ -53,12 +86,9 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
     'setuptools==81.0.0' \
     'psutil>5.0.0,<6.0.0' \
     'torch==2.8.0'
-# end conda create
 
-# begin pip install
 # Install pip dependencies
 RUN pip install \
-                # begin pypi dependencies
                 azureml-core=={{latest-pypi-version}} \
                 azureml-mlflow=={{latest-pypi-version}} \
                 azureml-pipeline-core=={{latest-pypi-version}} \
@@ -72,7 +102,6 @@ RUN pip install \
                 azureml-train-automl=={{latest-pypi-version}} \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
                 azureml-defaults=={{latest-pypi-version}} \
-                # TODO: replace the hard coded above by a referenceto azureml-train-automl[tabular]
                 'mlflow-skinny==2.16.0' \
                 'xgboost==1.5.2' \
                 'cmdstanpy==1.0.4' \
@@ -80,12 +109,8 @@ RUN pip install \
                 'inference-schema' \
                 'mltable>=1.0.0' \
                 'pillow==12.2.0'
-                # end pypi dependencies
-# end pip install
 
-# begin pip ad-hoc
 # Install pip ad-hoc dependencies for security updates
-#
 # distributed>=2026.1.0 (CVE-2026-23528): XSS leading to RCE via Dask dashboard
 #   Chain: azureml-train-automl-runtime -> dask[complete] -> distributed
 #   Parent (azureml-train-automl-runtime==1.62.0, latest) still pins dask[complete]<=2023.2.0;
@@ -102,18 +127,30 @@ RUN pip install \
 #   mlflow-skinny declares python-dotenv<2,>=0.19.0 but the pinned mlflow-skinny==2.16.0
 #   does not; it is brought in by another transitive path). No parent constraint
 #   blocks 1.2.2, so override directly.
-RUN pip install --upgrade \
-    'distributed>=2026.1.0' \
-    'bokeh>=3.8.2' \
-    'onnx>=1.21.0' \
-    'pillow>=12.2.0' \
-    'python-dotenv>=1.2.2'
-RUN pip install --no-deps --force-reinstall 'skl2onnx==1.19.1'
-RUN pip install --no-deps --force-reinstall 'onnxconverter-common==1.16.0'
-RUN pip install --no-deps --force-reinstall 'onnxmltools==1.14.0'
-RUN pip install --no-deps --force-reinstall 'pandas==2.0.0'
+#
+# pyarrow>=23.0.1 (GHSA-rgxp-2hwp-jwgg / CVE-2026-25087): use-after-free
+#   in Apache Arrow C++. Parent packages still resolve pyarrow 17.0.0 in this
+#   image through AzureML AutoML runtime dependencies, so override directly until
+#   upstream pins move to a patched version.
+# cryptography>=48.0.1 (GHSA-537c-gmf6-5ccf): pinned transitive dep of
+#   azureml-core/azureml-automl packages; fixes vulnerable cryptography 46.0.7
+#   resolved in the AzureML AutoML environment.
 # onnx: azureml-automl-runtime pins onnx<=1.17.0; override needed for
 #   GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6,
 #   GHSA-538c-55jv-c5g9, GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m
 # pillow: upgraded from 12.1.1 for GHSA-whj4-6x5x-4v2j
-# end pip ad-hoc
+RUN pip install --no-cache-dir --upgrade \
+    'distributed>=2026.1.0' \
+    'bokeh>=3.8.2' \
+    'cryptography>=48.0.1' \
+    'onnx>=1.21.0' \
+    'pillow>=12.2.0' \
+    'python-dotenv>=1.2.2' \
+    'pyarrow>=23.0.1'  # pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg / CVE-2026-25087
+RUN pip install --no-deps --force-reinstall 'skl2onnx==1.19.1'
+RUN pip install --no-deps --force-reinstall 'onnxconverter-common==1.16.0'
+RUN pip install --no-deps --force-reinstall 'onnxmltools==1.14.0'
+RUN pip install --no-deps --force-reinstall 'pandas==2.0.0'
+COPY patch_automl_pandas2_sparse.py /tmp/patch_automl_pandas2_sparse.py
+RUN python /tmp/patch_automl_pandas2_sparse.py && \
+    rm /tmp/patch_automl_pandas2_sparse.py

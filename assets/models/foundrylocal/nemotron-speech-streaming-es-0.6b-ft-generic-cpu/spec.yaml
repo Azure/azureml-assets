@@ -1,35 +1,41 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: nemotron-speech-streaming-es-0.6b-ft-generic-cpu
-version: 1
-isArchived: true
 path: ./
+isArchived: true
 tags:
-  foundryLocal: ""
-  license: "MIT"
-  licenseDescription: "This model is provided under the License Terms available at <https://github.com/microsoft/Foundry-Local/blob/main/licenses/nemotron-speech-streaming.md>."
-  author: Microsoft
-  inputModalities: "audio"
-  outputModalities: "text"
-  task: automatic-speech-recognition
-  maxOutputTokens: 2048
-  alias: nemotron-speech-streaming-es-0.6b
-  directoryPath: v1
-  promptTemplate: ""
-  capabilities: ""
-  supportsReasoning: ""
-  reasoningStart: ""
-  reasoningEnd: ""
+  capabilities: ''
+  supportsReasoning: ''
+  reasoningStart: ''
+  reasoningEnd: ''
   contextLength: 0
-  minFLVersion: "1.1.0"
-  disable-maap: "true"
-type: custom_model
+  minFLVersion: 1.1.0
+system_metadata:
+  alias: nemotron-speech-streaming-es-0.6b
+  publisher: Microsoft
+  directoryPath: v1
+  foundryLocal: ''
+  inputModalities:
+  - audio
+  license: MIT
+  licenseDescription: This model is provided under the License Terms available at <https://github.com/microsoft/Foundry-Local/blob/main/licenses/nemotron-speech-streaming.md>.
+  maxOutputTokens: 2048
+  outputModalities:
+  - text
+  promptTemplate: ''
+  tasks:
+    inferenceTasks:
+    - automatic-speech-recognition
+  platformCapabilities:
+    enableMaap: false
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/nemotron-speech-streaming-en-0.6b/versions/1
   variantMetadata:
-    modelType: 'ONNX'
-    quantization: ['RTN']
-    device: 'cpu'
-    executionProvider: 'CPUExecutionProvider'
+    modelType: ONNX
+    quantization:
+    - RTN
+    device: cpu
+    executionProvider: CPUExecutionProvider
     fileSizeBytes: 764952489
     vRamFootprintBytes: 764952489
+version: 1

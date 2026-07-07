@@ -600,6 +600,35 @@ _GROUNDEDNESS_THRESHOLD = 2.5
 _CONTEXT_COVERAGE_THRESHOLD = 1.5
 
 
+def _log_safe_summary(obj):
+    """Return a non-sensitive structural summary of a payload for safe logging.
+
+    The raw payload may contain customer-controlled data (LLM output text,
+    conversation history, tool arguments/results, etc.) which can include
+    credentials or PII. This helper returns shape-only metadata - type,
+    length, top-level keys/roles - sufficient to diagnose schema drift
+    without exposing values.
+    """
+    try:
+        type_name = type(obj).__name__
+        if isinstance(obj, list):
+            roles = []
+            for item in obj[:10]:
+                if isinstance(item, dict):
+                    role = item.get("role")
+                    if isinstance(role, str):
+                        roles.append(role)
+            roles_summary = roles if roles else "n/a"
+            return f"type={type_name} len={len(obj)} roles={roles_summary}"
+        if isinstance(obj, dict):
+            keys = sorted(k for k in obj.keys() if isinstance(k, str))[:10]
+            return f"type={type_name} top_keys={keys}"
+        length = len(obj) if hasattr(obj, "__len__") else "n/a"
+        return f"type={type_name} len={length}"
+    except Exception:
+        return f"type={type(obj).__name__} (summary unavailable)"
+
+
 class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     """Evaluates overall response quality using a two-stage grading pipeline.
 
@@ -901,8 +930,12 @@ class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             return llm_output
         try:
             return json.loads(llm_output)
-        except (json.JSONDecodeError, TypeError):
-            logger.warning("Failed to parse LLM output as JSON: %s", llm_output)
+        except (json.JSONDecodeError, TypeError) as e:
+            logger.warning(
+                "Failed to parse LLM output as JSON. Output shape: %s. Error: %s",
+                _log_safe_summary(llm_output),
+                e,
+            )
             return {}
 
     def _build_result(

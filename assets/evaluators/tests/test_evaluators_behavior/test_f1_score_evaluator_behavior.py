@@ -4,12 +4,12 @@
 """Behavioral tests for F1 Score Evaluator."""
 
 import pytest
-from ..common.base_code_evaluator_runner import BaseCodeEvaluatorRunner
+from ..common.base_code_evaluator_runner import BaseCodeEvaluatorRunner, SingleScoreCodeEvalCoverageMixin
 from ...builtin.f1_score.evaluator._f1_score import F1ScoreEvaluator
 
 
 @pytest.mark.unittest
-class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
+class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner, SingleScoreCodeEvalCoverageMixin):
     """
     Behavioral tests for F1 Score Evaluator.
 

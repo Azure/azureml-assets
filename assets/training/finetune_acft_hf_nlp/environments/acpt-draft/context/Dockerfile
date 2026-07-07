@@ -1,4 +1,3 @@
-#PTCA image
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 USER root
 
@@ -40,7 +39,7 @@ RUN conda run -n base python -m pip install --no-cache-dir 'aiohttp>=3.14.0' \
 # Python 3.13 conda env overrides for vulnerable preinstalled transitive deps
 # after checking latest parent metadata on 2026-05-25:
 #  - python-dotenv>=1.2.2 (GHSA-mf9w-mj56-hr94): metadata probes found
-#    pydantic-settings 2.14.1 requires only >=0.21.0, uvicorn 0.48.0 requires
+#    pydantic-settings 2.14.2 requires only >=0.21.0, uvicorn 0.48.0 requires
 #    >=0.13 for [standard], and anaconda-auth 0.15.0 has no version floor.
 #  - urllib3>=2.7.0 (GHSA-qccp-gfcp-xxvc / CVE-2026-44431, GHSA-mf9v-mfxr-j63j /
 #    CVE-2026-44432): requests 2.34.2 still permits urllib3<3,>=1.26.
@@ -55,13 +54,18 @@ RUN conda run -n base python -m pip install --no-cache-dir 'aiohttp>=3.14.0' \
 #    it explicitly after the upgrade.
 #  - PyJWT>=2.13.0 (GHSA-993g-76c3-p5m4, GHSA-jq35-7prp-9v3f): two CVEs fixed in 2.13.0;
 #    installed as transitive dep at 2.12.1 in both Python envs.
+#  - py-rattler>=0.24.0 (GHSA-q53q-5r4j-5729): pinned transitive dep brought in by
+#    base image in the Python 3.13 conda env.
+#  - cryptography>=48.0.1 (GHSA-537c-gmf6-5ccf): pinned transitive dep brought in by
+#    base image in the Python 3.13 conda env.
+#  - pydantic-settings>=2.14.2 (GHSA-4xgf-cpjx-pc3j): pinned transitive dep
+#    brought in by base image in the Python 3.13 conda env.
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
         'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'pip>=26.1' \
-        'PyJWT>=2.13.0' \
+        'PyJWT>=2.13.0' 'py-rattler>=0.24.0' 'cryptography>=48.0.1' 'pydantic-settings>=2.14.2' \
  && pip install --no-cache-dir --upgrade 'pip>=26.1' 'PyJWT>=2.13.0' \
  && rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0.1-*.json \
           /opt/conda/conda-meta/pip-26.0.1-*.json
-# clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 COPY loss /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/core/loss.py
 COPY eagle3 /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/core/eagle3.py

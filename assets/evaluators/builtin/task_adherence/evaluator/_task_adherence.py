@@ -697,31 +697,6 @@ class MessagesOrQueryResponseInputValidator(ToolDefinitionsValidator):
                     category=ErrorCategory.INVALID_VALUE,
                     target=self.error_target,
                 )
-            last_content = messages[-1].get("content", "")
-            if isinstance(last_content, list):
-                has_text = any(
-                    (
-                        isinstance(content_item, dict)
-                        and content_item.get("type") in (
-                            ContentType.TEXT,
-                            ContentType.INPUT_TEXT,
-                            ContentType.OUTPUT_TEXT,
-                        )
-                    )
-                    or isinstance(content_item, str)
-                    for content_item in last_content
-                )
-                if not has_text:
-                    raise EvaluationException(
-                        message=(
-                            "The last message must contain text content, "
-                            "not only tool calls. The conversation appears to be "
-                            "mid-execution — provide the agent's final text response."
-                        ),
-                        blame=ErrorBlame.USER_ERROR,
-                        category=ErrorCategory.INVALID_VALUE,
-                        target=self.error_target,
-                    )
 
             for message in messages:
                 error = self._validate_message_dict(message)
@@ -1228,6 +1203,7 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                                     internal_message=str(threshold_value),
                                     target=ErrorTarget.EVALUATE,
                                     category=ErrorCategory.INVALID_VALUE,
+                                    blame=ErrorBlame.USER_ERROR,
                                 )
 
                             if not contains_threshold_key:

@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import json
 import os
 import logging
 from enum import Enum
@@ -69,15 +70,12 @@ class ConversationValidator(ValidatorInterface):
     error_target: ErrorTarget
 
     UNSUPPORTED_TOOLS: List[str] = [
-        "azure_ai_search",
         "bing_custom_search",
         "bing_grounding",
         "browser_automation",
         "code_interpreter_call",
         "computer_call",
-        "azure_fabric",
         "openapi_call",
-        "sharepoint_grounding",
         "web_search"
     ]
 
@@ -716,9 +714,43 @@ def reformat_conversation_history(query, logger=None, include_system_messages=Fa
         #   Lower percentage of mode in Likert scale (73.4% vs 75.4%)
         #   Lower pairwise agreement between LLMs (85% vs 90% at the pass/fail level with threshold of 3)
         if logger:
-            logger.warning(f"Conversation history could not be parsed, falling back to original query: {query}")
-            print(e)
+            logger.warning(
+                "Conversation history could not be parsed; falling back to raw input. "
+                "Evaluator accuracy will degrade. Input shape: %s. Error: %s",
+                _log_safe_summary(query),
+                e,
+            )
         return query
+
+
+def _stringify_tool_result(result):
+    """Render a tool_result value as a string the LLM judge can read.
+
+    Tool outputs arrive in mixed shapes depending on the producer:
+    - Function / MCP tools usually emit a plain ``str``.
+    - Built-in grounding tools (``azure_ai_search``, ``azure_fabric``,
+      ``sharepoint_grounding``) emit a list/dict (documents, snippets,
+      titles, URLs). Falling back to ``f"{result}"`` here produced a
+      Python ``repr`` with single quotes and trailing commas that the
+      LLM had to reverse-engineer, which is the root cause of the
+      "validator didn't parse SharePoint output" problem these
+      evaluators surfaced.
+
+    Strategy: pass strings through unchanged (zero behavior change for
+    function/MCP tools), serialize anything else as JSON with
+    ``default=str`` so non-JSON-native values (dates, enums, etc.) do
+    not raise. ``None`` is rendered as the empty string so the LLM
+    sees an empty ``[TOOL_RESULT]`` block instead of the literal text
+    ``None``.
+    """
+    if result is None:
+        return ""
+    if isinstance(result, str):
+        return result
+    try:
+        return json.dumps(result, default=str, ensure_ascii=False)
+    except (TypeError, ValueError):
+        return str(result)
 
 
 def _get_agent_response(agent_response_msgs, include_tool_messages=False):
@@ -733,7 +765,7 @@ def _get_agent_response(agent_response_msgs, include_tool_messages=False):
                 for content in msg.get("content", []):
                     if content.get("type") == "tool_result":
                         result = content.get("tool_result")
-                        tool_results[msg["tool_call_id"]] = f"[TOOL_RESULT] {result}"
+                        tool_results[msg["tool_call_id"]] = f"[TOOL_RESULT] {_stringify_tool_result(result)}"
 
     # Second pass: parse assistant messages and tool calls
     for msg in agent_response_msgs:
@@ -823,10 +855,41 @@ def reformat_tool_definitions(tool_definitions, logger=None):
         # See comments on reformat_conversation_history for more details.
         if logger:
             logger.warning(
-                "Tool definitions could not be parsed, falling back to original definitions"
-                f": {tool_definitions}. Error: {e}"
+                "Tool definitions could not be parsed; falling back to raw definitions. "
+                "Input shape: %s. Error: %s",
+                _log_safe_summary(tool_definitions),
+                e,
             )
         return tool_definitions
+
+
+def _log_safe_summary(obj):
+    """Return a non-sensitive structural summary of a payload for safe logging.
+
+    The raw payload may contain customer-controlled data (conversation history,
+    tool definitions, tool arguments/results, file content, etc.) which can
+    include credentials or PII. This helper returns shape-only metadata - type,
+    length, top-level roles/keys - sufficient to diagnose schema drift without
+    exposing values.
+    """
+    try:
+        type_name = type(obj).__name__
+        if isinstance(obj, list):
+            roles = []
+            for item in obj[:10]:
+                if isinstance(item, dict):
+                    role = item.get("role")
+                    if isinstance(role, str):
+                        roles.append(role)
+            roles_summary = roles if roles else "n/a"
+            return f"type={type_name} len={len(obj)} roles={roles_summary}"
+        if isinstance(obj, dict):
+            keys = sorted(k for k in obj.keys() if isinstance(k, str))[:10]
+            return f"type={type_name} top_keys={keys}"
+        length = len(obj) if hasattr(obj, "__len__") else "n/a"
+        return f"type={type_name} len={length}"
+    except Exception:
+        return f"type={type(obj).__name__} (summary unavailable)"
 
 
 # ```
@@ -1026,6 +1089,7 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                                     internal_message=str(threshold_value),
                                     target=ErrorTarget.EVALUATE,
                                     category=ErrorCategory.INVALID_VALUE,
+                                    blame=ErrorBlame.USER_ERROR,
                                 )
 
                             if not contains_threshold_key:

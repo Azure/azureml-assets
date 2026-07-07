@@ -106,7 +106,23 @@ RUN find /opt/conda/envs/ptca/lib/python3.10/site-packages/ray -type d -name 'th
       rm -rf "$dir"/aiohttp* "$dir"/idna*; \
       pip install --no-cache-dir --target "$dir" 'aiohttp>=3.14.0' 'idna>=3.15'; \
     done
+# Ray's uber jar (ray/jars/ray_dist.jar) shades log4j-core 2.25.3, which is vulnerable to
+# CVE-2026-34478 / CVE-2026-34480 (GHSA-445c-vh5m-36rj, GHSA-3pxv-7cmr-fjr4), fixed in 2.25.4.
+# No released Ray version ships 2.25.4 yet (ray-project/ray#62845, PR #63844), so patch the
+# shaded log4j-core entries in place. Pure-Python (zipfile), so no JDK 'jar' tool is needed.
+COPY patch_log4j /tmp/patch_log4j.py
+RUN /opt/conda/envs/ptca/bin/python /tmp/patch_log4j.py && rm -f /tmp/patch_log4j.py
 COPY vllm_rollout /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/workers/rollout/vllm_rollout/vllm_rollout.py
+# ---- verl RFT (GRPO) compatibility patches ----------------------------------
+# Reconciles the bundled kernels / transformers / vLLM / verl / flash-attn lineages
+# so the verl Reinforced Fine-Tuning (GRPO) recipe runs end-to-end (model load,
+# FSDP2, async vLLM agentic rollout, validation, GRPO update). The script applies a
+# small set of idempotent, anchor-verified source patches and fails the build if any
+# target anchor is missing. Run in the training conda env.
+COPY verl_rft_compat_patches /tmp/verl_rft_compat_patches.py
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir "accelerate==1.14.0" && \
+    /opt/conda/envs/ptca/bin/python /tmp/verl_rft_compat_patches.py && \
+    rm -f /tmp/verl_rft_compat_patches.py
 RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
 ENV PYTHONHASHSEED=random \
     PYTHONDONTWRITEBYTECODE=1

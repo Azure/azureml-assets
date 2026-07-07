@@ -68,18 +68,13 @@ RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
 #   CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9) on older base tags is now redundant. The
 #   azureml-envs/lightgbm-3.3 conda env still pins pip=26.1.1 via the conda create
 #   above to lock in the fix.
-# cryptography: azureml-core==1.61.0.post3 (latest) pulls pyopenssl<26.0.0 which caps
-#   cryptography transitively, causing the conda env to resolve to 45.0.7 (vulnerable
-#   to CVE-2026-26007, CVE-2026-34073, CVE-2026-39892 / GHSA-r6ph-v2qm-q3c2,
-#   GHSA-m959-cc7f-wv43, GHSA-p423-j2cm-9vmq). azureml-mlflow==1.62.0.post2 (latest)
-#   caps cryptography<47.0.0, so pin 46.0.7 explicitly (latest within the cap).
-#   Parent package (azureml-core) cannot be upgraded past 1.61.0.post3 as that is
-#   the latest released version on PyPI as of 2026-05-12.
-# aiohttp / protobuf / distributed: kept overrides to ensure latest patched versions;
+# cryptography: pinned transitive dep of azureml-core/azureml-mlflow; fixes GHSA-537c-gmf6-5ccf.
+# aiohttp / protobuf / distributed / pyarrow: kept overrides to ensure latest patched versions;
 #   parent constraints (azureml-mlflow caps mlflow-skinny<=3.9.0 -> protobuf<7,
 #   dask~=2026.3.0 -> distributed<2026.3.1) would otherwise allow older patch
 #   levels with outstanding CVEs, so explicit floor pins are required.
+# pyarrow>=23.0.1: pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg.
 # starlette>=1.0.1 / idna>=3.15: transitive via fastapi / requests (base miniconda ships idna<3.15); drop when parents/base update
 RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
-    'aiohttp>=3.14.0' 'protobuf>=6.33.5' 'distributed>=2026.1.0' cryptography==46.0.7 'idna>=3.15' 'starlette>=1.0.1' && \
+    'aiohttp>=3.14.0' 'protobuf>=6.33.5' 'distributed>=2026.1.0' cryptography==48.0.1 'idna>=3.15' 'starlette>=1.0.1' 'pyarrow>=23.0.1' && \
     /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'idna>=3.15'

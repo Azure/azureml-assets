@@ -9,7 +9,8 @@ WORKDIR /opt
 
 ARG SLIME_COMMIT=9b50665190d70cefcc9cc42e5994ad4de5f0cd88
 ARG PATCH_VERSION=latest
-ARG SGLANG_VERSION=0.5.10.post1
+ARG SGLANG_DEPENDENCY_VERSION=0.5.10.post1
+ARG SGLANG_VERSION=0.5.11
 ARG MEGATRON_COMMIT=1dcf0dafa884ad52ffb243625717a3471643e087
 ARG MBRIDGE_COMMIT=89eb10887887bc74853f89a4de258c0702932a1c
 ARG LOG4J_VERSION=2.25.4
@@ -90,14 +91,32 @@ RUN python -m pip install --no-cache-dir \
         https://github.com/yeshsurya/TransformerEngine/releases/download/transformer_engine-2.10.0%2B769ed77-cp312-cp312-linux_x86_64/transformer_engine-2.10.0+769ed77-cp312-cp312-linux_x86_64.whl && \
     python -m pip install --no-cache-dir transformer-engine==2.10.0
 
+# transformer-engine needs the FlashAttention backend for thd/packed (varlen)
+# attention on A100 (sm80). Without flash-attn, TE finds no usable attention
+# backend and aborts the first training forward with "No dot product attention
+# backend is available for the provided inputs". cuDNN-fused does not cover this
+# thd + padding_causal config on sm80, and the Unfused backend does not support
+# thd, so flash-attn is required. No public wheel exists for this torch 2.9 /
+# cu12.8 / cp312 stack, so install the hosted prebuilt wheel (TE 2.10 supports
+# flash-attn <= 2.8.3) instead of building from source in the release pipeline.
+RUN python -m pip install --no-cache-dir \
+        https://github.com/yeshsurya/flash-attention/releases/download/flash_attn-2.8.3-cp312-cp312-linux_x86_64/flash_attn-2.8.3-cp312-cp312-linux_x86_64.whl
+
 COPY requirements.txt /tmp/slime-requirements.txt
 RUN python -m pip install --no-cache-dir -r /tmp/slime-requirements.txt && \
     rm /tmp/slime-requirements.txt
 
-RUN python -m pip install --no-cache-dir "sglang==${SGLANG_VERSION}"
+# Bootstrap the validated dependency set, then upgrade only SGLang so its newer
+# wheel does not replace this image's torch/CUDA stack.
+RUN python -m pip install --no-cache-dir "sglang==${SGLANG_DEPENDENCY_VERSION}" && \
+    python -m pip install --no-cache-dir --no-deps --upgrade "sglang==${SGLANG_VERSION}"
 RUN python -m pip install --no-cache-dir \
         https://github.com/zhuzilin/sgl-router/releases/download/v0.3.2-5f8d397/sglang_router-0.3.2-cp38-abi3-manylinux_2_28_x86_64.whl \
         --force-reinstall
+
+COPY patch_sglang_cve_2026_5760.py /tmp/patch_sglang_cve_2026_5760.py
+RUN python /tmp/patch_sglang_cve_2026_5760.py && \
+    rm /tmp/patch_sglang_cve_2026_5760.py
 
 COPY patch_ray_log4j.py /tmp/patch_ray_log4j.py
 # Ray vendors Log4j inside ray_dist.jar as expanded fat-jar contents plus
@@ -115,6 +134,9 @@ RUN LOG4J_VERSION=${LOG4J_VERSION} \
 RUN cd /opt/slime && \
     python -m pip install --no-cache-dir -e . --no-deps
 
+# Apply Retail RFT compatibility patches: slime numpy/attention/GLM-4.6V fixes and
+# neutralize transformer-engine 2.10's import-time PyPI-metadata / duplicate-.so
+# checks (the meta package is a platlib wheel; the libraries themselves load fine).
 COPY patch_slime_rft_fixes.py /tmp/patch_slime_rft_fixes.py
 RUN python /tmp/patch_slime_rft_fixes.py && \
     rm /tmp/patch_slime_rft_fixes.py
@@ -145,11 +167,16 @@ RUN apt-get update && \
 
 # Security: upgrade Python packages with known vulnerabilities
 # (aiohttp GHSA-jg22-mg44-37j8 / GHSA-hg6j-4rv6-33pg, starlette GHSA-86qp-5c8j-p5mr,
-#  idna GHSA-65pc-fj4g-8rjx in main site-packages and ray's vendored thirdparty copy)
+#  idna GHSA-65pc-fj4g-8rjx in main site-packages and ray's vendored thirdparty copy;
+#  pyarrow GHSA-rgxp-2hwp-jwgg / CVE-2026-25087 use-after-free in Apache Arrow C++)
 RUN python -m pip install --no-cache-dir \
         "aiohttp>=3.14.0" \
         "starlette>=1.0.1" \
-        "idna>=3.15"
+        "idna>=3.15" \
+        "pyarrow>=23.0.1"
+
+# pinned transitive dep of base image; fixes GHSA-537c-gmf6-5ccf
+RUN python -m pip install --no-cache-dir "cryptography==48.0.1"
 
 COPY patch_ray_thirdparty.py /tmp/patch_ray_thirdparty.py
 # Upgrade vulnerable packages inside ray's vendored thirdparty_files directory and
