@@ -27,6 +27,7 @@ JACKSON_DATABIND_PREFIXES = (
 
 
 def find_ray_dist() -> pathlib.Path:
+    """Find Ray's vendored distribution jar."""
     ray_root = pathlib.Path(ray.__file__).resolve().parent
     matches = [
         candidate
@@ -39,6 +40,7 @@ def find_ray_dist() -> pathlib.Path:
 
 
 def download_maven_artifacts(version: str) -> tuple[bytes, bytes]:
+    """Download the Jackson Databind jar and pom artifacts."""
     base_url = f"https://repo.maven.apache.org/maven2/{GROUP_PATH}/{ARTIFACT}/{version}"
     jar = download_verified(
         f"{base_url}/{ARTIFACT}-{version}.jar",
@@ -52,6 +54,7 @@ def download_maven_artifacts(version: str) -> tuple[bytes, bytes]:
 
 
 def download_verified(url: str, expected_sha1: str) -> bytes:
+    """Download a URL and verify its SHA-1 checksum."""
     with urllib.request.urlopen(url, timeout=120) as response:
         payload = response.read()
     actual_sha1 = hashlib.sha1(payload).hexdigest()
@@ -61,6 +64,7 @@ def download_verified(url: str, expected_sha1: str) -> bytes:
 
 
 def is_jackson_databind_entry(filename: str) -> bool:
+    """Return whether a jar entry belongs to Jackson Databind."""
     return filename.startswith(JACKSON_DATABIND_PREFIXES) or any(
         fragment in filename
         for fragment in (
@@ -71,6 +75,7 @@ def is_jackson_databind_entry(filename: str) -> bool:
 
 
 def copy_zip_info(source_info: zipfile.ZipInfo, filename: str) -> zipfile.ZipInfo:
+    """Copy zip entry metadata while replacing the filename."""
     target_info = zipfile.ZipInfo(filename, source_info.date_time)
     target_info.comment = source_info.comment
     target_info.extra = source_info.extra
@@ -85,6 +90,7 @@ def build_replacement_entries(
     jar_payload: bytes,
     pom_payload: bytes,
 ) -> dict[str, tuple[zipfile.ZipInfo, bytes]]:
+    """Build replacement Jackson Databind entries from downloaded artifacts."""
     replacements = {}
     with zipfile.ZipFile(io.BytesIO(jar_payload), "r") as jar:
         for source_info in jar.infolist():
@@ -109,6 +115,7 @@ def patch_ray_dist(
     ray_dist: pathlib.Path,
     replacements: dict[str, tuple[zipfile.ZipInfo, bytes]],
 ) -> None:
+    """Patch Ray's distribution jar with replacement Jackson Databind entries."""
     fd, patched_name = tempfile.mkstemp(suffix=".jar")
     os.close(fd)
     patched_path = pathlib.Path(patched_name)
@@ -149,6 +156,7 @@ def patch_ray_dist(
 
 
 def validate_patch(ray_dist: pathlib.Path, version: str) -> None:
+    """Validate that the patched jar reports the expected Databind version."""
     properties_name = f"{MAVEN_METADATA_PREFIX}pom.properties"
     with zipfile.ZipFile(ray_dist, "r") as jar:
         properties = jar.read(properties_name).decode("utf-8")
@@ -158,6 +166,7 @@ def validate_patch(ray_dist: pathlib.Path, version: str) -> None:
 
 
 def main() -> None:
+    """Patch Ray's vendored Jackson Databind dependency."""
     version = os.environ["JACKSON_DATABIND_VERSION"]
     ray_dist = find_ray_dist()
     jar_payload, pom_payload = download_maven_artifacts(version)
