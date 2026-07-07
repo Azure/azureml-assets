@@ -372,7 +372,7 @@ class TestGroundednessMultiturnBehavior:
             evaluator(messages=messages)
 
     def test_messages_intermediate_response(self):
-        """Messages ending with only tool calls (no text) are rejected."""
+        """Messages ending with only tool calls (no final text) are accepted (mid-execution guard removed)."""
         evaluator = _create_mocked_groundedness_evaluator()
         intermediate_messages = [
             {"role": "user", "content": [{"type": "text", "text": "Search for info."}]},
@@ -388,8 +388,8 @@ class TestGroundednessMultiturnBehavior:
                 ],
             },
         ]
-        with pytest.raises(EvaluationException, match="must contain text content"):
-            evaluator(messages=intermediate_messages)
+        result = evaluator(messages=intermediate_messages)
+        assert isinstance(result, dict)
 
     def test_messages_pass_fail_threshold(self):
         """Score result respects threshold for pass/fail."""

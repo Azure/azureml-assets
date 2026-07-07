@@ -2392,17 +2392,18 @@ BING_CUSTOM_SEARCH_EXPECTED_FLOW_RESPONSE = (
 )
 
 FILE_SEARCH_EXPECTED_FLOW_RESPONSE = (
-                                     "[TOOL_CALL] file_search_call(queries=['good restaurant recommendation', 'best "
-                                     "restaurant', 'top rated restaurant', 'recommended restaurants', \"what's a good "
-                                     "restaurant\"])\n[TOOL_RESULT] [{'attributes': {}, 'file_id': "
-                                     "'assistant-StE61XCSBRyLv11Ytyckea', 'filename': 'french_cafe_menu.md', 'score': "
-                                     "0.0333, 'text': '# Le Jardin de Paris', 'vector_store_id': ''}, {'attributes': "
-                                     "{}, 'file_id': 'assistant-Xpu5yP1AQZiB86Hz5iG4uv', 'filename': "
-                                     "'italian_diner_menu.md', 'score': 0.0328, 'text': '# Trattoria Bella Notte', "
-                                     "'vector_store_id': ''}]\nIf you're looking for a good restaurant, here are two "
-                                     "tasty options based on the menus provided:\n\n1. **Le Jardin de Paris** (French "
-                                     "Café)\n2. **Trattoria Bella Notte** (Italian Diner)\n\nBoth are excellent "
-                                     "choices—pick based on whether you’re in the mood for French or Italian!"
+    "[TOOL_CALL] file_search_call(queries=['good restaurant recommendation', 'best restaurant', 'top rated restaurant'"
+    ", 'recommended restaurants', \"what's a good restaurant\"])\n"
+    "[TOOL_RESULT] [{'attributes': {}, 'file_id': 'assistant-StE61XCSBRyLv11Ytyckea', 'filename': 'french_cafe_menu.md"
+    "', 'score': 0.0333, 'text': '# Le Jardin de Paris', 'vector_store_id': ''}, {'attributes': {}, 'file_id': 'assist"
+    "ant-Xpu5yP1AQZiB86Hz5iG4uv', 'filename': 'italian_diner_menu.md', 'score': 0.0328, 'text': '# Trattoria Bella Not"
+    "te', 'vector_store_id': ''}]\n"
+    "If you're looking for a good restaurant, here are two tasty options based on the menus provided:\n"
+    "\n"
+    "1. **Le Jardin de Paris** (French Caf\u00e9)\n"
+    "2. **Trattoria Bella Notte** (Italian Diner)\n"
+    "\n"
+    "Both are excellent choices\u2014pick based on whether you\u2019re in the mood for French or Italian!"
 )
 
 AZURE_AI_SEARCH_EXPECTED_FLOW_RESPONSE = (
@@ -2496,10 +2497,21 @@ MEMORY_SEARCH_EXPECTED_FLOW_RESPONSE = (
 )
 
 KB_MCP_EXPECTED_FLOW_RESPONSE = (
-                                "[TOOL_CALL] knowledge_base_retrieve(request={'knowledgeAgentIntents': ['Provide "
-                                "general information about the Earth.']})\n[TOOL_RESULT] Retrieved 11 "
-                                "documents.\nHere's an interesting overview about Earth from space, focusing on "
-                                "nighttime images and what they tell us about our planet and humanity."
+    "[TOOL_CALL] knowledge_base_retrieve(request={'knowledgeAgentIntents': ['Provide general information about the Ear"
+    "th.']})\n"
+    "[TOOL_RESULT] Retrieved 11 documents.\n"
+    "Here's an interesting overview about Earth from space, focusing on nighttime images and what they tell us about o"
+    "ur planet and humanity."
+)
+
+# tool_output_utilization keeps its own _get_agent_response (_stringify_tool_result), which
+# still quotes the tool-call arguments payload; the SDK path used by TA/TC dropped that
+# quoting in azure-ai-evaluation 1.18.0, so kb_mcp now needs a TOU-specific expected value.
+KB_MCP_TOU_EXPECTED_FLOW_RESPONSE = (
+    "[TOOL_CALL] knowledge_base_retrieve(request=\"{'knowledgeAgentIntents': ['Provide "
+    "general information about the Earth.']}\")\n[TOOL_RESULT] Retrieved 11 "
+    "documents.\nHere's an interesting overview about Earth from space, focusing on "
+    "nighttime images and what they tell us about our planet and humanity."
 )
 
 MCP_EXPECTED_FLOW_RESPONSE = (
@@ -3055,10 +3067,9 @@ FILE_SEARCH_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE = [
     {
         "role": "assistant",
         "content": [
-            "If you're looking for a good restaurant, here are two tasty options based on the menus "
-            "provided:\n\n1. **Le Jardin de Paris** (French Caf\u00e9)\n2. **Trattoria Bella Notte** "
-            "(Italian Diner)\n\nBoth are excellent choices\u2014pick based on whether you\u2019re in "
-            "the mood for French or Italian!",
+            "If you're looking for a good restaurant, here are two tasty options based on the menus provided:\n\n1. **"
+            "Le Jardin de Paris** (French Caf\u00e9)\n2. **Trattoria Bella Notte** (Italian Diner)\n\nBoth are excelle"
+            "nt choices\u2014pick based on whether you\u2019re in the mood for French or Italian!",
         ],
     },
 ]
@@ -3102,7 +3113,9 @@ IMAGE_GEN_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE = [
     },
     {
         "role": "assistant",
-        "content": ["Here is an image of the Microsoft logo."],
+        "content": [
+            "Here is an image of the Microsoft logo.",
+        ],
     },
 ]
 
@@ -3149,11 +3162,8 @@ MEMORY_SEARCH_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE = [
                         "updated_at": 1771323829,
                     },
                     {
-                        "content": (
-                            "The user stated a preference for dark roast coffee. Dark roast coffee is "
-                            "characterized by a bold flavor, rich aroma, and lower acidity compared to "
-                            "lighter roasts."
-                        ),
+                        "content": "The user stated a preference for dark roast coffee. Dark roast coffee is character"
+                        "ized by a bold flavor, rich aroma, and lower acidity compared to lighter roasts.",
                         "kind": "chat_summary",
                         "memory_id": "9117c9f9d7424f0290c523d1cd3de45a",
                         "scope": "user_123",
@@ -3166,8 +3176,8 @@ MEMORY_SEARCH_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE = [
     {
         "role": "assistant",
         "content": [
-            "Sure! I'll order your usual\u2014one dark roast coffee. Would you like any specific "
-            "size or extras (milk, sugar, etc.) with that?",
+            "Sure! I'll order your usual\u2014one dark roast coffee. Would you like any specific size or extras (milk,"
+            " sugar, etc.) with that?",
         ],
     },
 ]
@@ -3211,7 +3221,9 @@ KB_MCP_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE = [
                 "name": "knowledge_base_retrieve",
                 "arguments": {
                     "request": {
-                        "knowledgeAgentIntents": ["Provide general information about the Earth."],
+                        "knowledgeAgentIntents": [
+                            "Provide general information about the Earth.",
+                        ],
                     },
                 },
             },
@@ -3231,8 +3243,8 @@ KB_MCP_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE = [
     {
         "role": "assistant",
         "content": [
-            "Here's an interesting overview about Earth from space, focusing on nighttime images "
-            "and what they tell us about our planet and humanity.",
+            "Here's an interesting overview about Earth from space, focusing on nighttime images and what they tell us"
+            " about our planet and humanity.",
         ],
     },
 ]
@@ -3272,7 +3284,9 @@ MCP_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE = [
     },
     {
         "role": "assistant",
-        "content": ["Azure Functions is a serverless compute service."],
+        "content": [
+            "Azure Functions is a serverless compute service.",
+        ],
     },
 ]
 
