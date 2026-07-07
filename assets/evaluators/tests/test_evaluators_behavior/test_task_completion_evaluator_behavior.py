@@ -267,7 +267,7 @@ class TestTaskCompletionMultiturnBehavior:
         assert result["task_completion"] in (0, 1)
 
     def test_messages_intermediate_response(self):
-        """Messages ending with only tool calls (no text) are rejected."""
+        """Messages ending with only tool calls (no final text) are accepted (mid-execution guard removed)."""
         evaluator = _create_mocked_evaluator()
         intermediate_messages = [
             {"role": "user", "content": [{"type": "text", "text": "Book a flight."}]},
@@ -283,8 +283,8 @@ class TestTaskCompletionMultiturnBehavior:
                 ],
             },
         ]
-        with pytest.raises(EvaluationException, match="must contain text content"):
-            evaluator(messages=intermediate_messages)
+        result = evaluator(messages=intermediate_messages)
+        assert isinstance(result, dict)
 
     def test_messages_string_content(self):
         """Messages with string content (not list) are handled and user text is preserved."""
@@ -426,8 +426,8 @@ class TestTaskCompletionMultiturnBehavior:
         with pytest.raises(EvaluationException, match="assistant"):
             evaluator(messages=messages)
 
-    def test_messages_rejects_conversation_ending_with_tool(self):
-        """Messages ending with a tool message raise validation error."""
+    def test_messages_allows_conversation_ending_with_tool(self):
+        """Messages ending with a tool message are accepted (mid-execution guard removed to align with SDK)."""
         evaluator = _create_mocked_evaluator()
         messages = [
             {"role": "user", "content": [{"type": "text", "text": "What's the weather?"}]},
@@ -448,8 +448,8 @@ class TestTaskCompletionMultiturnBehavior:
                 "content": [{"type": "tool_result", "tool_result": {"temp": "14C"}}],
             },
         ]
-        with pytest.raises(EvaluationException, match="must contain text content"):
-            evaluator(messages=messages)
+        result = evaluator(messages=messages)
+        assert isinstance(result, dict)
 
     def test_messages_allows_consecutive_user_messages(self):
         """Consecutive user messages followed by assistant are valid."""

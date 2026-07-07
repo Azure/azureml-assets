@@ -233,8 +233,12 @@ class TestCoherenceMultiturnBehavior:
         result = evaluator(messages=messages)
         assert "coherence" in result
 
-    def test_messages_intermediate_response_rejected(self):
-        """Messages ending with only tool calls (no text) are rejected."""
+    def test_messages_intermediate_response_accepted(self):
+        """Messages ending with only tool calls (no final text) are accepted.
+
+        The "final message must contain text" guard was intentionally removed to align with
+        azure-ai-evaluation (SDK PR #47526); mid-execution conversations are no longer rejected.
+        """
         evaluator = _create_mocked_coherence_evaluator()
         messages = [
             {"role": "user", "content": [{"type": "text", "text": "Find me flights."}]},
@@ -250,8 +254,8 @@ class TestCoherenceMultiturnBehavior:
                 ],
             },
         ]
-        with pytest.raises(EvaluationException, match="must contain text content"):
-            evaluator(messages=messages)
+        result = evaluator(messages=messages)
+        assert isinstance(result, dict)
 
     def test_messages_uses_multi_turn_flow(self):
         """Verify that messages path calls _multi_turn_flow, not _flow."""

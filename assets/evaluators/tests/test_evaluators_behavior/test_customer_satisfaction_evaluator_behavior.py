@@ -153,7 +153,7 @@ class TestCustomerSatisfactionSessionBehavior:
         assert 1.0 <= result["customer_satisfaction"] <= 5.0
 
     def test_messages_intermediate_response(self):
-        """Messages ending with a function_call are rejected by validation (must contain text)."""
+        """Messages ending with a function_call are accepted (mid-execution guard removed to align with SDK)."""
         evaluator = _create_mocked_evaluator()
         intermediate_messages = [
             {"role": "user", "content": [{"type": "text", "text": "Cancel my order."}]},
@@ -169,8 +169,8 @@ class TestCustomerSatisfactionSessionBehavior:
                 ],
             },
         ]
-        with pytest.raises(EvaluationException, match="must contain text content"):
-            evaluator(messages=intermediate_messages)
+        result = evaluator(messages=intermediate_messages)
+        assert isinstance(result, dict)
 
     def test_messages_string_content(self):
         """Messages with string content (not list) are handled and user text is preserved."""
@@ -307,8 +307,8 @@ class TestCustomerSatisfactionSessionBehavior:
         with pytest.raises(EvaluationException):
             evaluator(messages=messages)
 
-    def test_messages_rejects_conversation_ending_with_tool(self):
-        """Messages ending with a tool message raise validation error."""
+    def test_messages_allows_conversation_ending_with_tool(self):
+        """Messages ending with a tool message are accepted (mid-execution guard removed to align with SDK)."""
         evaluator = _create_mocked_evaluator()
         messages = [
             {"role": "user", "content": [{"type": "text", "text": "Check status"}]},
@@ -324,8 +324,8 @@ class TestCustomerSatisfactionSessionBehavior:
                 "content": [{"type": "tool_result", "tool_result": {"status": "ok"}}],
             },
         ]
-        with pytest.raises(EvaluationException):
-            evaluator(messages=messages)
+        result = evaluator(messages=messages)
+        assert isinstance(result, dict)
 
     def test_messages_allows_consecutive_user_messages(self):
         """Consecutive user messages are accepted."""
