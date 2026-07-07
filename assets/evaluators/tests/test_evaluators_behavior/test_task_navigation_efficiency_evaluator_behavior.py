@@ -767,8 +767,8 @@ class TestTaskNavigationEfficiencyConstructor:
         assert evaluator.matching_mode == TaskNavigationEfficiencyMatchingMode.EXACT_MATCH
 
     def test_invalid_string_matching_mode_raises(self):
-        """An unknown string matching_mode raises ValueError."""
-        with pytest.raises(ValueError):
+        """An unknown string matching_mode raises EvaluationException."""
+        with pytest.raises(EvaluationException):
             TaskNavigationEfficiencyEvaluator(matching_mode="not-a-mode")
 
     def test_invalid_type_matching_mode_raises(self):
@@ -861,33 +861,33 @@ class TestTaskNavigationEfficiencyDoEval:
         assert pairs and pairs[0][0] == "f"
 
     def test_do_eval_empty_expected_raises(self):
-        """Empty expected_actions raises a ValueError."""
-        with pytest.raises(ValueError):
+        """Empty expected_actions raises an EvaluationException."""
+        with pytest.raises(EvaluationException):
             self._do(_make_tne(), [], [])
 
     def test_do_eval_tuple_first_not_list_raises(self):
-        """A tuple whose first element is not a list raises TypeError."""
-        with pytest.raises(TypeError):
+        """A tuple whose first element is not a list raises EvaluationException."""
+        with pytest.raises(EvaluationException):
             self._do(_make_tne(), [], ("notlist", {}))
 
     def test_do_eval_tuple_second_not_dict_raises(self):
-        """A tuple whose second element is not a dict raises TypeError."""
-        with pytest.raises(TypeError):
+        """A tuple whose second element is not a dict raises EvaluationException."""
+        with pytest.raises(EvaluationException):
             self._do(_make_tne(), [], (["a"], "notdict"))
 
     def test_do_eval_param_value_not_dict_raises(self):
-        """A parameters mapping whose value is not a dict raises TypeError."""
-        with pytest.raises(TypeError):
+        """A parameters mapping whose value is not a dict raises EvaluationException."""
+        with pytest.raises(EvaluationException):
             self._do(_make_tne(), [], (["a"], {"a": "notdict"}))
 
     def test_do_eval_param_value_not_serializable_raises(self):
-        """A parameter value that is not JSON-serializable raises TypeError."""
-        with pytest.raises(TypeError):
+        """A parameter value that is not JSON-serializable raises EvaluationException."""
+        with pytest.raises(EvaluationException):
             self._do(_make_tne(), [], (["a"], {"a": {"k": {1, 2}}}))
 
     def test_do_eval_expected_wrong_type_raises(self):
-        """An expected_actions of the wrong overall shape raises TypeError."""
-        with pytest.raises(TypeError):
+        """An expected_actions of the wrong overall shape raises EvaluationException."""
+        with pytest.raises(EvaluationException):
             self._do(_make_tne(), [], [1, 2, 3])
 
     def test_do_eval_unsupported_matching_mode_raises(self):
@@ -906,13 +906,13 @@ class TestTaskNavigationEfficiencyDoEval:
         assert result["task_navigation_efficiency_status"] == "completed"
 
     def test_do_eval_param_key_not_str_raises(self):
-        """A parameters mapping with a non-string tool-name key raises TypeError."""
-        with pytest.raises(TypeError):
+        """A parameters mapping with a non-string tool-name key raises EvaluationException."""
+        with pytest.raises(EvaluationException):
             self._do(_make_tne(), [], (["a"], {123: {"x": "y"}}))
 
     def test_do_eval_param_inner_key_not_str_raises(self):
-        """A parameter dictionary with a non-string key raises TypeError."""
-        with pytest.raises(TypeError):
+        """A parameter dictionary with a non-string key raises EvaluationException."""
+        with pytest.raises(EvaluationException):
             self._do(_make_tne(), [], (["a"], {"a": {123: "y"}}))
 
     def test_normalize_param_value_branches(self):

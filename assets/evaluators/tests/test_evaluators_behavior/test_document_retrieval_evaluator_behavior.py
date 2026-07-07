@@ -743,7 +743,7 @@ class TestDocumentRetrievalEvaluatorBehavior(BaseCodeEvaluatorRunner):
     def test_get_binary_result_unknown_metric_raises(self):
         """_get_binary_result rejects a metric with no configured threshold."""
         evaluator = self.evaluator_type()
-        with pytest.raises(ValueError, match="No threshold set"):
+        with pytest.raises(EvaluationException, match="No threshold set"):
             evaluator._get_binary_result(unknown_metric=0.5)
 
     def test_non_numeric_relevance_score_raises(self):
