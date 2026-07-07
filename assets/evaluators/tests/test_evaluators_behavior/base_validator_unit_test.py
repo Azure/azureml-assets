@@ -1333,7 +1333,12 @@ class MessagesOrQueryResponseUnitTests(_ValidatorUnitTestSupport):
             validator.validate_eval_input({"messages": [{"role": "user", "content": "x"}]})
 
     def test_mqr_last_message_no_text(self):
-        """Reject input whose last message has no text content."""
+        """Accept input whose last message has no text content.
+
+        The mid-execution text guard (which rejected a final assistant message
+        lacking text content, e.g. a trailing tool_call) has been removed, so
+        such mid-execution inputs are now valid.
+        """
         validator = self._messages_or_query_response_validator()
         msgs = [
             {"role": "user", "content": [{"type": "text", "text": "hi"}]},
@@ -1342,8 +1347,7 @@ class MessagesOrQueryResponseUnitTests(_ValidatorUnitTestSupport):
                 "content": [{"type": "tool_call", "name": "f", "arguments": {}, "tool_call_id": "c1"}],
             },
         ]
-        with pytest.raises(EvaluationException):
-            validator.validate_eval_input({"messages": msgs})
+        assert validator.validate_eval_input({"messages": msgs}) is True
 
     def test_mqr_valid_messages(self):
         """Accept a well-formed messages list."""
