@@ -4,12 +4,12 @@
 """Behavioral tests for METEOR Score Evaluator."""
 
 import pytest
-from ..common.base_code_evaluator_runner import BaseCodeEvaluatorRunner
+from ..common.base_code_evaluator_runner import BaseCodeEvaluatorRunner, SingleScoreCodeEvalCoverageMixin
 from ...builtin.meteor_score.evaluator._meteor import MeteorScoreEvaluator
 
 
 @pytest.mark.unittest
-class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
+class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner, SingleScoreCodeEvalCoverageMixin):
     """
     Behavioral tests for METEOR Score Evaluator.
 

@@ -86,6 +86,22 @@ class TestBBEHEvaluatorBehavior(BaseCodeEvaluatorRunner):
 
     # Edge cases
     EMPTY_STRING = ""
+
+    # LaTeX dollar-sign wrapping ($...$)
+    DOLLAR_ANSWER = "42"
+    DOLLAR_RESPONSE = "The answer is: $42$"
+
+    # LaTeX texttt formatting
+    TEXTTT_ANSWER = "hello"
+    TEXTTT_RESPONSE = "The final answer is: \\texttt{hello}"
+
+    # Reference-side parenthesized MCQ (ground truth is "(b)")
+    REF_PAREN_ANSWER = "(b)"
+    REF_PAREN_RESPONSE = "The answer is: b"
+
+    # Trailing question-mark ending
+    QUESTION_ANSWER = "why"
+    QUESTION_RESPONSE = "The answer is: why?"
     # endregion
 
     # ==================== EXACT MATCH TESTS ====================
@@ -213,3 +229,41 @@ class TestBBEHEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "empty_ground_truth")
         self.assert_fail(result_data)
+
+    # ==================== ADDITIONAL LATEX / FUZZY-MATCH BRANCH TESTS ====================
+
+    def test_latex_dollar_sign(self):
+        """Test LaTeX $...$ wrapping is stripped."""
+        results = self._run_evaluation(
+            response=self.DOLLAR_RESPONSE,
+            ground_truth=self.DOLLAR_ANSWER,
+        )
+        result_data = self._extract_and_print_result(results, "latex_dollar_sign")
+        self.assert_pass(result_data)
+
+    def test_latex_texttt_answer(self):
+        r"""Test LaTeX \texttt{} answer extraction."""
+        results = self._run_evaluation(
+            response=self.TEXTTT_RESPONSE,
+            ground_truth=self.TEXTTT_ANSWER,
+        )
+        result_data = self._extract_and_print_result(results, "latex_texttt_answer")
+        self.assert_pass(result_data)
+
+    def test_reference_parenthesized_answer(self):
+        """Test reference-side (b) matches bare prediction b."""
+        results = self._run_evaluation(
+            response=self.REF_PAREN_RESPONSE,
+            ground_truth=self.REF_PAREN_ANSWER,
+        )
+        result_data = self._extract_and_print_result(results, "reference_parenthesized")
+        self.assert_pass(result_data)
+
+    def test_trailing_question_mark(self):
+        """Test trailing question mark is tolerated."""
+        results = self._run_evaluation(
+            response=self.QUESTION_RESPONSE,
+            ground_truth=self.QUESTION_ANSWER,
+        )
+        result_data = self._extract_and_print_result(results, "trailing_question_mark")
+        self.assert_pass(result_data)
