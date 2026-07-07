@@ -260,7 +260,7 @@ class TestTaskCompletionMultiturnBehavior:
         assert result["task_completion"] in (0, 1)
 
     def test_messages_intermediate_response(self):
-        """Messages ending with only tool calls (no text) are rejected."""
+        """Messages ending with only tool calls (no final text) are accepted (mid-execution guard removed)."""
         evaluator = _create_mocked_evaluator()
         intermediate_messages = [
             {"role": "user", "content": [{"type": "text", "text": "Book a flight."}]},
@@ -276,8 +276,8 @@ class TestTaskCompletionMultiturnBehavior:
                 ],
             },
         ]
-        with pytest.raises(EvaluationException, match="must contain text content"):
-            evaluator(messages=intermediate_messages)
+        result = evaluator(messages=intermediate_messages)
+        assert isinstance(result, dict)
 
     def test_messages_string_content(self):
         """Messages with string content (not list) are handled and user text is preserved."""
@@ -419,8 +419,8 @@ class TestTaskCompletionMultiturnBehavior:
         with pytest.raises(EvaluationException, match="assistant"):
             evaluator(messages=messages)
 
-    def test_messages_rejects_conversation_ending_with_tool(self):
-        """Messages ending with a tool message raise validation error."""
+    def test_messages_allows_conversation_ending_with_tool(self):
+        """Messages ending with a tool message are accepted (mid-execution guard removed to align with SDK)."""
         evaluator = _create_mocked_evaluator()
         messages = [
             {"role": "user", "content": [{"type": "text", "text": "What's the weather?"}]},
@@ -441,8 +441,8 @@ class TestTaskCompletionMultiturnBehavior:
                 "content": [{"type": "tool_result", "tool_result": {"temp": "14C"}}],
             },
         ]
-        with pytest.raises(EvaluationException, match="must contain text content"):
-            evaluator(messages=messages)
+        result = evaluator(messages=messages)
+        assert isinstance(result, dict)
 
     def test_messages_allows_consecutive_user_messages(self):
         """Consecutive user messages followed by assistant are valid."""
@@ -669,7 +669,9 @@ class TestSerializeMessages:
         ]
         expected = (
             "User turn 1:\n"
-            "  Hello, I need help.  I am trying to book a flight.  From London to Paris, next Monday.\n"
+            "  Hello, I need help.\n"
+            "  I am trying to book a flight.\n"
+            "  From London to Paris, next Monday.\n"
             "\n"
             "Agent turn 1:\n"
             "  Sure! Let me look that up for you."
@@ -707,7 +709,8 @@ class TestSerializeMessages:
         ]
         expected = (
             "User turn 1:\n"
-            "  Step 1: set up the environment.  Step 2: install the dependencies.\n"
+            "  Step 1: set up the environment.\n"
+            "  Step 2: install the dependencies.\n"
             "\n"
             "Agent turn 1:\n"
             "  Environment set up successfully.\n"
@@ -762,14 +765,16 @@ class TestSerializeMessages:
         ]
         expected = (
             "User turn 1:\n"
-            "  What is the weather in Paris?  And also in London?\n"
+            "  What is the weather in Paris?\n"
+            "  And also in London?\n"
             "\n"
             "Agent turn 1:\n"
             "  Paris is sunny and 22 C.\n"
             "  London is cloudy and 15 C.\n"
             "\n"
             "User turn 2:\n"
-            "  Which city is warmer?  By how many degrees?\n"
+            "  Which city is warmer?\n"
+            "  By how many degrees?\n"
             "\n"
             "Agent turn 2:\n"
             '  [TOOL_CALL] compare_temps(city1="Paris", city2="London")\n'

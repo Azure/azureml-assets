@@ -294,7 +294,7 @@ class TestTaskAdherenceMultiturnBehavior:
             evaluator(messages=messages)
 
     def test_messages_intermediate_response(self):
-        """Messages ending with only tool calls are rejected."""
+        """Messages ending with only tool calls are accepted (mid-execution guard removed to align with SDK)."""
         evaluator = _create_mocked_evaluator()
         messages = [
             {"role": "user", "content": [{"type": "text", "text": "Search for info."}]},
@@ -310,8 +310,8 @@ class TestTaskAdherenceMultiturnBehavior:
                 ],
             },
         ]
-        with pytest.raises(EvaluationException, match="must contain text content"):
-            evaluator(messages=messages)
+        result = evaluator(messages=messages)
+        assert isinstance(result, dict)
 
 # endregion
 
