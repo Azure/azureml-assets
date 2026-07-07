@@ -3,27 +3,42 @@
 
 """Behavioral tests for Task Completion Evaluator."""
 
-import os
+import asyncio
 import pytest
 from typing import Any, Dict, List
-from unittest.mock import MagicMock
 
-from azure.ai.evaluation import AzureOpenAIModelConfiguration
 from azure.ai.evaluation._exceptions import EvaluationException
 
 from .base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
+from .base_evaluator_behavior_test import _TurnLevelUtilE2ETests, _MessagesUtilE2ETests
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
+from .base_validator_unit_test import (
+    AgentResponseReformatUnitTests,
+    ConversationSerializationUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ConversationValidatorUnitTests,
+    CorePromptyValidatorUnitTests,
+    MessagePreprocessUnitTests,
+    MessagesOrQueryResponseUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    ToolDefinitionsValidatorUnitTests,
+)
 from ...builtin.task_completion.evaluator._task_completion import (
     TaskCompletionEvaluator,
     EvaluationLevel,
     serialize_messages,
 )
-from ..common.evaluator_mock_config import get_flow_side_effect_for_evaluator
+from ..common.evaluator_mock_config import (
+    create_mocked_evaluator,
+    run_none_score_not_applicable,
+)
 
 
 @pytest.mark.unittest
-class TestTaskCompletionEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, BaseToolEvaluationTest):
+class TestTaskCompletionEvaluatorBehavior(
+    BaseToolsEvaluatorBehaviorTest, BaseToolEvaluationTest, _TurnLevelUtilE2ETests, _MessagesUtilE2ETests
+):
     """
     Behavioral tests for Task Completion Evaluator.
 
@@ -129,15 +144,7 @@ class TestTaskCompletionEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, BaseTo
 
 def _create_mocked_evaluator():
     """Create a TaskCompletionEvaluator with both _flow and _multi_turn_flow mocked."""
-    model_config = AzureOpenAIModelConfiguration(
-        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
-        azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
-    )
-    evaluator = TaskCompletionEvaluator(model_config=model_config)
-    mock_side_effect = get_flow_side_effect_for_evaluator("task_completion")
-    evaluator._flow = MagicMock(side_effect=mock_side_effect)
-    evaluator._multi_turn_flow = MagicMock(side_effect=mock_side_effect)
-    return evaluator
+    return create_mocked_evaluator(TaskCompletionEvaluator, "task_completion")
 
 
 # region Multi-turn (messages) behavioral tests
@@ -488,18 +495,9 @@ class TestTaskCompletionMultiturnBehavior:
 
 def _create_mocked_evaluator_with_level(evaluation_level=None):
     """Create a TaskCompletionEvaluator with evaluation_level and mocked flows."""
-    model_config = AzureOpenAIModelConfiguration(
-        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
-        azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
+    return create_mocked_evaluator(
+        TaskCompletionEvaluator, "task_completion", evaluation_level=evaluation_level
     )
-    evaluator = TaskCompletionEvaluator(
-        model_config=model_config,
-        evaluation_level=evaluation_level,
-    )
-    mock_side_effect = get_flow_side_effect_for_evaluator("task_completion")
-    evaluator._flow = MagicMock(side_effect=mock_side_effect)
-    evaluator._multi_turn_flow = MagicMock(side_effect=mock_side_effect)
-    return evaluator
 
 
 @pytest.mark.unittest
@@ -859,3 +857,59 @@ class TestSerializeMessages:
 
 
 # endregion
+
+
+# region None score handling tests
+
+
+@pytest.mark.unittest
+class TestTaskCompletionNoneScoreHandling:
+    """Regression tests for None-score handling in _do_eval (math.isnan(None) fix).
+
+    When the flow returns a skipped/None score, _do_eval must return the standardized
+    not-applicable result instead of crashing on math.isnan(None).
+    """
+
+    def test_turn_level_none_score_does_not_crash(self):
+        """Turn-level eval with score=None from _flow returns not-applicable."""
+        run_none_score_not_applicable(
+            TaskCompletionEvaluator,
+            "task_completion",
+            query="Plan a trip to Paris.",
+            response="Here is your itinerary.",
+        )
+
+    def test_conversation_level_none_score_does_not_crash(self):
+        """Conversation-level eval with score=None from _multi_turn_flow returns not-applicable."""
+        run_none_score_not_applicable(TaskCompletionEvaluator, "task_completion", messages=VALID_MESSAGES)
+
+
+# endregion
+
+
+@pytest.mark.unittest
+class TestTaskCompletionValidatorUnit(
+    CorePromptyValidatorUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    MessagePreprocessUnitTests,
+    ConversationValidatorUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ToolDefinitionsValidatorUnitTests,
+    ConversationSerializationUnitTests,
+    MessagesOrQueryResponseUnitTests,
+    AgentResponseReformatUnitTests,
+):
+    """Low-level unit tests for task_completion's repeated validators, utils and methods."""
+
+    evaluator_class = TaskCompletionEvaluator
+
+
+@pytest.mark.unittest
+class TestTaskCompletionDoEvalBranches:
+    """Cover task_completion-specific ``_do_eval`` branches not exercised by the shared mixins."""
+
+    def test_missing_query_and_response_raises(self):
+        """Raise when either query or response is missing in the turn-level input."""
+        evaluator = create_mocked_evaluator(TaskCompletionEvaluator, "task_completion")
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({"query": "only a query"}))

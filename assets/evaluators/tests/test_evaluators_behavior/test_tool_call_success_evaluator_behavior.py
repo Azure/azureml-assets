@@ -3,6 +3,7 @@
 
 """Behavioral tests for Tool Call Success Evaluator."""
 
+import asyncio
 import json
 
 import pytest
@@ -10,22 +11,36 @@ import pytest
 from azure.ai.evaluation._exceptions import EvaluationException
 
 from .base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
+from .base_evaluator_behavior_test import _TurnLevelUtilE2ETests
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
+from .base_validator_unit_test import (
+    ConversationValidatorToolCheckUnitTests,
+    ConversationValidatorUnitTests,
+    CorePromptyValidatorUnitTests,
+    LogSafeSummaryUnitTests,
+    MessagePreprocessUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    ToolDefinitionsValidatorUnitTests,
+)
 from ...builtin.tool_call_success.evaluator._tool_call_success import (
     ConversationValidator,
     ExtendedErrorTarget,
     ToolCallSuccessEvaluator,
     ToolDefinitionsValidator,
     _collect_failed_tool_calls,
+    _filter_to_used_tools,
+    _format_value,
     _get_tool_calls_results,
+    _reformat_tool_calls_results,
     _stringify_tool_result,
 )
+from ..common.evaluator_mock_config import create_mocked_evaluator
 
 
 @pytest.mark.unittest
 class TestToolCallSuccessEvaluatorBehavior(
-    BaseToolsEvaluatorBehaviorTest, BaseToolEvaluationTest
+    BaseToolsEvaluatorBehaviorTest, BaseToolEvaluationTest, _TurnLevelUtilE2ETests
 ):
     """
     Behavioral tests for Tool Call Success Evaluator.
@@ -105,6 +120,14 @@ class TestToolCallSuccessEvaluatorBehavior(
     requires_query = False
 
     MINIMAL_RESPONSE = BaseToolsEvaluatorBehaviorTest.tool_results_without_arguments
+
+    def test_skipped_llm_status_returns_not_applicable(self):
+        """Flow output with status='skipped' yields a not-applicable result, not a crash."""
+        self.run_skipped_llm_status_not_applicable_test()
+
+    def test_intermediate_response_returns_not_applicable(self):
+        """A response ending in an unresolved function_call is treated as not-applicable."""
+        self.run_intermediate_response_not_applicable_test()
 
     # --- Phase 2 overrides: these three tools used to be unsupported but TCS now
     # accepts them, so we override the base-class tests (which still branch to
@@ -888,3 +911,182 @@ class TestRealWorldSharePointTrace:
         assert body == raw_json
         # And it's still valid JSON the judge can parse.
         assert json.loads(body) == self._SHAREPOINT_PAYLOAD
+
+
+@pytest.mark.unittest
+class TestToolCallSuccessValidatorUnit(
+    CorePromptyValidatorUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    MessagePreprocessUnitTests,
+    ConversationValidatorUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ToolDefinitionsValidatorUnitTests,
+    LogSafeSummaryUnitTests,
+):
+    """Low-level unit tests for tool_call_success's repeated validators, utils and methods."""
+
+    evaluator_class = ToolCallSuccessEvaluator
+
+
+@pytest.mark.unittest
+class TestToolCallSuccessDoEvalBranches:
+    """Cover tool_call_success ``_do_eval`` branches not exercised by the shared mixins."""
+
+    def test_missing_response_raises(self):
+        """Raise when the response field is absent."""
+        evaluator = create_mocked_evaluator(ToolCallSuccessEvaluator, "tool_call_success")
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({}))
+
+    def test_none_response_raises(self):
+        """Raise when the response is explicitly None."""
+        evaluator = create_mocked_evaluator(ToolCallSuccessEvaluator, "tool_call_success")
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({"response": None}))
+
+    def test_invalid_response_type_raises(self):
+        """Raise when the response is neither a list nor a string."""
+        evaluator = create_mocked_evaluator(ToolCallSuccessEvaluator, "tool_call_success")
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({"query": "q", "response": 123}))
+
+    def test_string_response_is_passed_through(self):
+        """Pass a string response directly to the judge without reformatting."""
+        evaluator = create_mocked_evaluator(ToolCallSuccessEvaluator, "tool_call_success")
+        result = asyncio.run(evaluator._do_eval({"query": "q", "response": "final text answer"}))
+        assert f"{evaluator._result_key}_score" in result
+
+    def test_failed_tool_call_short_circuits(self):
+        """Short-circuit to a deterministic fail result when a tool reports a failed status."""
+        evaluator = create_mocked_evaluator(ToolCallSuccessEvaluator, "tool_call_success")
+        response = [
+            {
+                "role": "assistant",
+                "content": [
+                    {"type": "tool_call", "tool_call_id": "c1", "name": "search", "arguments": {}}
+                ],
+            },
+            {
+                "role": "tool",
+                "tool_call_id": "c1",
+                "content": [{"type": "tool_result", "tool_result": "boom", "status": "failed"}],
+            },
+        ]
+        result = asyncio.run(evaluator._do_eval({"query": "q", "response": response}))
+        assert result[f"{evaluator._result_key}_result"] == "fail"
+
+    def test_llm_skipped_status_returns_not_applicable(self):
+        """Return a not-applicable result when the judge reports a skipped status."""
+        evaluator = create_mocked_evaluator(ToolCallSuccessEvaluator, "tool_call_success")
+
+        async def _skipped_flow(**kwargs):
+            return {"llm_output": {"status": "skipped", "reason": "not applicable"}}
+
+        evaluator._flow = _skipped_flow
+        result = asyncio.run(evaluator._do_eval({"query": "q", "response": "text"}))
+        assert isinstance(result, dict)
+
+    def test_list_response_with_tool_calls_success(self):
+        """Evaluate a well-formed tool-call response through the judge success path."""
+        evaluator = create_mocked_evaluator(ToolCallSuccessEvaluator, "tool_call_success")
+        response = [
+            {
+                "role": "assistant",
+                "content": [
+                    {"type": "tool_call", "tool_call_id": "c1", "name": "search", "arguments": {"q": "x"}}
+                ],
+            },
+            {
+                "role": "tool",
+                "tool_call_id": "c1",
+                "content": [{"type": "tool_result", "tool_result": "found"}],
+            },
+        ]
+        tool_definitions = [
+            {"name": "search", "parameters": {"properties": {"q": {"type": "string"}}}}
+        ]
+        result = asyncio.run(
+            evaluator._do_eval(
+                {"query": "q", "response": response, "tool_definitions": tool_definitions}
+            )
+        )
+        assert f"{evaluator._result_key}_score" in result
+
+    def test_list_query_is_preprocessed(self):
+        """Preprocess a list-shaped query before invoking the judge."""
+        evaluator = create_mocked_evaluator(ToolCallSuccessEvaluator, "tool_call_success")
+        query = [{"role": "user", "content": [{"type": "text", "text": "hi"}]}]
+        result = asyncio.run(
+            evaluator._do_eval({"query": query, "response": "final text answer"})
+        )
+        assert f"{evaluator._result_key}_score" in result
+
+    def test_non_dict_llm_output_raises(self):
+        """Raise when the judge returns a non-dict ``llm_output`` payload."""
+        evaluator = create_mocked_evaluator(ToolCallSuccessEvaluator, "tool_call_success")
+
+        async def _bad_flow(**kwargs):
+            return {"llm_output": "not-a-dict"}
+
+        evaluator._flow = _bad_flow
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({"query": "q", "response": "text"}))
+
+
+@pytest.mark.unittest
+class TestToolCallSuccessHelperBranches:
+    """Cover module-level helper branches not reached through ``_do_eval``."""
+
+    def test_format_value_none(self):
+        """Render None as the literal string ``None``."""
+        assert _format_value(None) == "None"
+
+    def test_stringify_tool_result_falls_back_on_unserializable(self):
+        """Fall back to ``str`` when JSON encoding raises."""
+        circular = {}
+        circular["self"] = circular
+        rendered = _stringify_tool_result(circular)
+        assert isinstance(rendered, str)
+
+    def test_filter_to_used_tools_nested_function_shape(self):
+        """Match used tools declared with the nested ``tool_call.function`` shape."""
+        msgs = [
+            {
+                "role": "assistant",
+                "content": [
+                    {"type": "tool_call", "tool_call": {"function": "search"}}
+                ],
+            }
+        ]
+        tool_definitions = [{"name": "search"}, {"name": "unused"}]
+        filtered = _filter_to_used_tools(tool_definitions, msgs)
+        assert filtered == [{"name": "search"}]
+
+    def test_get_tool_calls_results_nested_function_shape(self):
+        """Format tool calls declared with the nested ``tool_call.function`` object."""
+        msgs = [
+            {
+                "role": "assistant",
+                "content": [
+                    {
+                        "type": "tool_call",
+                        "tool_call": {
+                            "id": "c1",
+                            "function": {"name": "search", "arguments": {"q": "x"}},
+                        },
+                    }
+                ],
+            },
+            {
+                "role": "tool",
+                "tool_call_id": "c1",
+                "content": [{"type": "tool_result", "tool_result": "found"}],
+            },
+        ]
+        out = _get_tool_calls_results(msgs)
+        assert out[0] == '[TOOL_CALL] search(q="x")'
+        assert out[1] == "[TOOL_RESULT] found"
+
+    def test_reformat_tool_calls_results_none_returns_empty(self):
+        """Return an empty string when reformatting a ``None`` response."""
+        assert _reformat_tool_calls_results(None) == ""

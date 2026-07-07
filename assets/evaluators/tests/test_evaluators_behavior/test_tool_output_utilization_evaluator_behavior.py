@@ -3,7 +3,9 @@
 
 """Behavioral tests for Tool Output Utilization Evaluator."""
 
+import asyncio
 import json
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -12,19 +14,33 @@ from azure.ai.evaluation._exceptions import EvaluationException
 from .base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
 from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
 from .base_tool_evaluation_test import BaseToolEvaluationTest
+from .base_validator_unit_test import (
+    AgentResponseReformatUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ConversationValidatorUnitTests,
+    CorePromptyValidatorUnitTests,
+    LogSafeSummaryUnitTests,
+    MessagePreprocessUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    ToolDefinitionsValidatorUnitTests,
+)
 from . import common_tool_test_data as data
 from ...builtin.tool_output_utilization.evaluator._tool_output_utilization import (
     ConversationValidator,
     ToolDefinitionsValidator,
     ToolOutputUtilizationEvaluator,
+    _filter_to_used_tools,
     _get_agent_response,
+    _get_conversation_history,
     _stringify_tool_result,
+    reformat_tool_definitions,
 )
 # ErrorTarget is rebuilt by the module at import time so it carries the
 # evaluator-specific TOOL_OUTPUT_UTILIZATION_EVALUATOR member.
 from ...builtin.tool_output_utilization.evaluator._tool_output_utilization import (  # noqa: E402
     ErrorTarget,
 )
+from ..common.evaluator_mock_config import create_mocked_evaluator
 
 
 @pytest.mark.unittest
@@ -105,6 +121,14 @@ class TestToolOutputUtilizationEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest,
 
     MINIMAL_RESPONSE = BaseEvaluatorBehaviorTest.VALID_RESPONSE
     requires_tool_definitions = True
+
+    def test_skipped_llm_status_returns_not_applicable(self):
+        """Flow output with status='skipped' yields a not-applicable result, not a crash."""
+        self.run_skipped_llm_status_not_applicable_test()
+
+    def test_intermediate_response_returns_not_applicable(self):
+        """A response ending in an unresolved function_call is treated as not-applicable."""
+        self.run_intermediate_response_not_applicable_test()
 
     # --- Phase 2 overrides: these three tools used to be unsupported but TOU now
     # accepts them, so we override the base-class tests (which still branch to
@@ -554,3 +578,80 @@ class TestRealWorldSharePointTrace:
         body = result_lines[0][len("[TOOL_RESULT] "):]
         assert body == raw_json
         assert json.loads(body) == self._SHAREPOINT_PAYLOAD
+
+
+@pytest.mark.unittest
+class TestToolOutputUtilizationValidatorUnit(
+    CorePromptyValidatorUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    MessagePreprocessUnitTests,
+    ConversationValidatorUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ToolDefinitionsValidatorUnitTests,
+    AgentResponseReformatUnitTests,
+    LogSafeSummaryUnitTests,
+):
+    """Low-level unit tests for tool_output_utilization's repeated validators, utils and methods."""
+
+    evaluator_class = ToolOutputUtilizationEvaluator
+
+
+@pytest.mark.unittest
+class TestToolOutputUtilizationInternalBranches:
+    """Cover tool_output_utilization-specific helper and eval branches not shared via mixins."""
+
+    def test_filter_to_used_tools_nested_function_shape(self):
+        """Match used tools when the tool call uses the nested function shape."""
+        result = _filter_to_used_tools(
+            [{"name": "search"}],
+            [[{"role": "assistant", "content": [{"type": "tool_call", "tool_call": {"function": "search"}}]}]],
+        )
+        assert result == [{"name": "search"}]
+
+    def test_filter_to_used_tools_no_match_returns_original(self):
+        """Return the original definitions (and log) when used tools match nothing."""
+        definitions = [{"name": "other"}]
+        result = _filter_to_used_tools(
+            definitions,
+            [[{"role": "assistant", "content": [{"type": "tool_call", "name": "search"}]}]],
+            logger=MagicMock(),
+        )
+        assert result == definitions
+
+    def test_get_conversation_history_skips_role_less_and_trailing_agent(self):
+        """Skip role-less messages and flush a trailing agent response before validating balance."""
+        query = [
+            {"content": "no role"},
+            {"role": "user", "content": [{"type": "text", "text": "hi"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "answer"}]},
+        ]
+        with pytest.raises(EvaluationException):
+            _get_conversation_history(query)
+
+    def test_stringify_tool_result_falls_back_on_unserializable(self):
+        """Fall back to ``str`` when a tool result cannot be JSON-serialized."""
+        circular = {}
+        circular["self"] = circular
+        assert isinstance(_stringify_tool_result(circular), str)
+
+    def test_reformat_tool_definitions_parse_error_logs_and_falls_back(self):
+        """Fall back to the raw definitions (and log) when parsing raises."""
+        definitions = [123]
+        assert reformat_tool_definitions(definitions, logger=MagicMock()) == definitions
+
+    def test_do_eval_missing_inputs_raises(self):
+        """Raise when ``_do_eval`` is invoked without any of the required inputs."""
+        evaluator = create_mocked_evaluator(ToolOutputUtilizationEvaluator, "tool_output_utilization")
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({}))
+
+    def test_do_eval_invalid_output_raises(self):
+        """Raise when the judge returns a non-dict ``llm_output`` payload."""
+        evaluator = create_mocked_evaluator(ToolOutputUtilizationEvaluator, "tool_output_utilization")
+
+        async def _bad_flow(**kwargs):
+            return {"llm_output": "not-a-dict"}
+
+        evaluator._flow = _bad_flow
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({"query": "q", "response": "r", "tool_definitions": []}))

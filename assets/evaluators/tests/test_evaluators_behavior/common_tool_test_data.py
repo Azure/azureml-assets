@@ -2244,18 +2244,16 @@ WEB_SEARCH_EXPECTED_FLOW_QUERY = (
 )
 
 BROWSER_AUTOMATION_EXPECTED_FLOW_QUERY = (
-    "SYSTEM_PROMPT:\n"
-    "  You are an Agent helping with browser automation tasks. You can answer questions, provide information, and assi"
-    "st with various tasks related to web browsing using the Browser Automation tool available to you.\n"
-    "\n"
-    "User turn 1:\n"
-    "  Your goal is to report the percent of Microsoft year-to-date stock price change.\n"
-    "  To do that, go to the website finance.yahoo.com.\n"
-    "  At the top of the page, you will find a search bar.\n"
-    "  Enter the value 'MSFT', to get information about the Microsoft stock price.\n"
-    "  At the top of the resulting page you will see a default chart of Microsoft stock price.\n"
-    "  Click on 'YTD' at the top of that chart, and report the percent value that shows up just below it.\n"
-    "\n"
+    "SYSTEM_PROMPT:\n  You are an Agent helping with browser automation tasks. "
+    "You can answer questions, provide information, and assist with various "
+    "tasks related to web browsing using the Browser Automation tool available "
+    "to you.\n\nUser turn 1:\n  Your goal is to report the percent of Microsoft "
+    "year-to-date stock price change.\n  To do that, go to the website "
+    "finance.yahoo.com.\n  At the top of the page, you will find a search "
+    "bar.\n  Enter the value 'MSFT', to get information about the Microsoft stock "
+    "price.\n  At the top of the resulting page you will see a default chart of "
+    "Microsoft stock price.\n  Click on 'YTD' at the top of that chart, and report "
+    "the percent value that shows up just below it.\n\n"
 )
 
 # TS processes multi-line user content differently (indents continuation lines)
@@ -2323,14 +2321,13 @@ OPENAPI_IR_EXPECTED_FLOW_QUERY = "User turn 1:\n  What's the weather like in Cai
 WEB_SEARCH_IR_EXPECTED_FLOW_QUERY = "User turn 1:\n  what's the weather like in Napoli, Italy?\n\n"
 
 BROWSER_AUTOMATION_IR_EXPECTED_FLOW_QUERY = (
-    "User turn 1:\n"
-    "  Your goal is to report the percent of Microsoft year-to-date stock price change.\n"
-    "  To do that, go to the website finance.yahoo.com.\n"
-    "  At the top of the page, you will find a search bar.\n"
-    "  Enter the value 'MSFT', to get information about the Microsoft stock price.\n"
-    "  At the top of the resulting page you will see a default chart of Microsoft stock price.\n"
-    "  Click on 'YTD' at the top of that chart, and report the percent value that shows up just below it.\n"
-    "\n"
+                                            "User turn 1:\n  Your goal is to report the percent of Microsoft "
+                                            "year-to-date stock price change.\n  To do that, go to the website "
+                                            "finance.yahoo.com.\n  At the top of the page, you will find a search "
+                                            "bar.\n  Enter the value 'MSFT', to get information about the Microsoft "
+                                            "stock price.\n  At the top of the resulting page you will see a default "
+                                            "chart of Microsoft stock price.\n  Click on 'YTD' at the top of that "
+                                            "chart, and report the percent value that shows up just below it.\n\n"
 )
 
 IMAGE_GEN_IR_EXPECTED_FLOW_QUERY = "User turn 1:\n  Generate an image of Microsoft logo.\n\n"
@@ -2464,10 +2461,9 @@ OPENAPI_EXPECTED_FLOW_RESPONSE = (
 )
 
 WEB_SEARCH_EXPECTED_FLOW_RESPONSE = (
-    "[TOOL_CALL] web_search(query=\"current weather Napoli Italy\", type=\"search\", queries=['current weather Napoli "
-    "Italy'])\n"
-    "The current weather in Napoli, Italy is partly cloudy with a temperature of around 10\u00b0C, feeling like 7"
-    "\u00b0C."
+                                    '[TOOL_CALL] web_search(query="current weather Napoli Italy", type="search", '
+                                    'queries=[\'current weather Napoli Italy\'])\nThe current weather in Napoli, '
+                                    'Italy is partly cloudy with a temperature of around 10°C, feeling like 7°C.'
 )
 
 BROWSER_AUTOMATION_EXPECTED_FLOW_RESPONSE = (
@@ -2567,6 +2563,16 @@ MEMORY_SEARCH_TOU_EXPECTED_FLOW_RESPONSE = (
     '"scope": "user_123", "updated_at": 1771323829}]\n'
     "Sure! I'll order your usual\u2014one dark roast coffee. "
     "Would you like any specific size or extras (milk, sugar, etc.) with that?"
+)
+
+# kb_mcp has a dict-valued argument (request). TOU's _get_agent_response wraps dict/list
+# argument values in quotes, whereas the SDK helper used by TA/TC now renders them raw.
+# TA/TC therefore use the (unquoted) base KB_MCP_EXPECTED_FLOW_RESPONSE and TOU uses this.
+KB_MCP_TOU_EXPECTED_FLOW_RESPONSE = (
+                                    "[TOOL_CALL] knowledge_base_retrieve(request=\"{'knowledgeAgentIntents': "
+                                    "['Provide general information about the Earth.']}\")\n[TOOL_RESULT] Retrieved "
+                                    "11 documents.\nHere's an interesting overview about Earth from space, focusing "
+                                    "on nighttime images and what they tell us about our planet and humanity."
 )
 
 # Restricted built-in tools newly enabled in Phase 2 (azure_ai_search, sharepoint,

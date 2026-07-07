@@ -3,6 +3,9 @@
 
 """Behavioral tests for Document Retrieval Evaluator."""
 
+import asyncio
+import math
+
 import pytest
 from typing import Any, Dict, List
 
@@ -728,3 +731,101 @@ class TestDocumentRetrievalEvaluatorBehavior(BaseCodeEvaluatorRunner):
         result_data = self._extract_and_print_result(results, "Duplicate Documents in Retrieval")
         # Should process without error (behavior may vary based on implementation)
         assert result_data["total_retrieved"] == 3
+
+    # ==================== INTERNAL BRANCH COVERAGE TESTS ====================
+
+    def test_compute_fidelity_zero_index_returns_nan(self):
+        """Fidelity is NaN when the ideal set has no relevant documents."""
+        evaluator = self.evaluator_type()
+        # Ideal labels at/below the minimum yield a zero weighted-sum denominator.
+        assert math.isnan(evaluator._compute_fidelity([1], [0]))
+
+    def test_get_binary_result_unknown_metric_raises(self):
+        """_get_binary_result rejects a metric with no configured threshold."""
+        evaluator = self.evaluator_type()
+        with pytest.raises(EvaluationException, match="No threshold set"):
+            evaluator._get_binary_result(unknown_metric=0.5)
+
+    def test_non_numeric_relevance_score_raises(self):
+        """A non-numeric relevance score is rejected during input validation."""
+        evaluator = self.evaluator_type()
+        eval_input = {
+            "retrieval_ground_truth": [{"document_id": "doc1", "query_relevance_label": 2}],
+            "retrieved_documents": [{"document_id": "doc1", "relevance_score": "high"}],
+        }
+        with pytest.raises(EvaluationException, match="numerical value"):
+            evaluator._validate_eval_input(eval_input)
+
+    def test_too_many_documents_raises(self):
+        """Inputs exceeding the 10000-item limit are rejected during validation."""
+        evaluator = self.evaluator_type()
+        eval_input = {
+            "retrieval_ground_truth": [{"document_id": "doc1", "query_relevance_label": 2}],
+            "retrieved_documents": [
+                {"document_id": f"doc{i}", "relevance_score": 0.5} for i in range(10001)
+            ],
+        }
+        with pytest.raises(EvaluationException, match="no more than 10000"):
+            evaluator._validate_eval_input(eval_input)
+
+    def _real_call_with_stub(self, score, higher_is_better=True, threshold=0.5):
+        """Run _real_call with a single-input _do_eval stub that omits result/threshold keys."""
+        evaluator = self.evaluator_type()
+        evaluator._threshold = threshold
+        evaluator._higher_is_better = higher_is_better
+        evaluator._convert_kwargs_to_eval_input = lambda **kwargs: [{}]
+
+        async def _do_eval_no_keys(eval_input):
+            return {"document_retrieval_score": score}
+
+        evaluator._do_eval = _do_eval_no_keys
+        return asyncio.run(
+            evaluator._real_call(retrieval_ground_truth=[], retrieved_documents=[])
+        )
+
+    def test_real_call_backfills_pass_result(self):
+        """_real_call backfills a pass result and threshold when _do_eval omits them."""
+        result = self._real_call_with_stub(0.9)
+        assert result["document_retrieval_threshold"] == 0.5
+        assert result["document_retrieval_result"] == "pass"
+
+    def test_real_call_backfills_fail_result(self):
+        """_real_call backfills a fail result when the score is below threshold."""
+        assert self._real_call_with_stub(0.1)["document_retrieval_result"] == "fail"
+
+    def test_real_call_backfills_lower_is_better(self):
+        """_real_call backfill honors lower-is-better for both pass and fail."""
+        assert self._real_call_with_stub(0.1, higher_is_better=False)["document_retrieval_result"] == "pass"
+        assert self._real_call_with_stub(0.9, higher_is_better=False)["document_retrieval_result"] == "fail"
+
+    def test_real_call_non_numeric_threshold_swallowed(self):
+        """_real_call catches the non-numeric threshold error during backfill."""
+        result = self._real_call_with_stub(0.9, threshold="not-a-number")
+        assert "document_retrieval_result" not in result
+
+    def test_real_call_empty_input_returns_empty(self):
+        """_real_call returns an empty dict when there are no eval inputs."""
+        evaluator = self.evaluator_type()
+        evaluator._convert_kwargs_to_eval_input = lambda **kwargs: []
+        result = asyncio.run(
+            evaluator._real_call(retrieval_ground_truth=[], retrieved_documents=[])
+        )
+        assert result == {}
+
+    def test_real_call_multiple_inputs_aggregate(self):
+        """_real_call aggregates when multiple per-turn results are produced."""
+        evaluator = self.evaluator_type()
+        evaluator._convert_kwargs_to_eval_input = lambda **kwargs: [{}, {}]
+
+        async def _do_eval_full(eval_input):
+            return {
+                "document_retrieval_score": 0.9,
+                "document_retrieval_result": "pass",
+                "document_retrieval_threshold": 0.5,
+            }
+
+        evaluator._do_eval = _do_eval_full
+        result = asyncio.run(
+            evaluator._real_call(retrieval_ground_truth=[], retrieved_documents=[])
+        )
+        assert isinstance(result, dict)

@@ -8,12 +8,32 @@ Tests various input scenarios: query, response, tool_definitions, and tool_calls
 """
 
 import pytest
+
+from azure.ai.evaluation._exceptions import EvaluationException
+
 from .base_tool_calls_evaluator_behavior_test import BaseToolCallEvaluatorBehaviorTest
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
+from .base_validator_unit_test import (
+    ConversationHistoryReformatUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ConversationValidatorUnitTests,
+    CorePromptyValidatorUnitTests,
+    LogSafeSummaryUnitTests,
+    MessagePreprocessUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    ToolDefinitionExtractionUnitTests,
+    ToolDefinitionsValidatorUnitTests,
+    ToolResponseEvalUnitTests,
+)
 from ...builtin.tool_selection.evaluator._tool_selection import (
     ToolSelectionEvaluator,
+    _extract_tool_names_from_calls,
+    _format_value,
+    _get_built_in_tool_definition,
+    _get_conversation_history,
 )
+from ..common.evaluator_mock_config import create_mocked_evaluator
 
 
 @pytest.mark.unittest
@@ -119,3 +139,70 @@ class TestToolSelectionEvaluatorBehavior(BaseToolCallEvaluatorBehaviorTest, Base
     is_tool_definition_required = True
 
     evaluator_type = ToolSelectionEvaluator
+
+    def test_skipped_llm_status_returns_not_applicable(self):
+        """Flow output with status='skipped' yields a not-applicable result, not a crash."""
+        self.run_skipped_llm_status_not_applicable_test()
+
+    def test_intermediate_response_returns_not_applicable(self):
+        """A response ending in an unresolved function_call is treated as not-applicable."""
+        self.run_intermediate_response_not_applicable_test()
+
+
+@pytest.mark.unittest
+class TestToolSelectionValidatorUnit(
+    CorePromptyValidatorUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    MessagePreprocessUnitTests,
+    ConversationValidatorUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ToolDefinitionsValidatorUnitTests,
+    ToolDefinitionExtractionUnitTests,
+    LogSafeSummaryUnitTests,
+    ConversationHistoryReformatUnitTests,
+    ToolResponseEvalUnitTests,
+):
+    """Low-level unit tests for tool_selection's repeated validators, utils and methods."""
+
+    evaluator_class = ToolSelectionEvaluator
+
+
+@pytest.mark.unittest
+class TestToolSelectionInternalBranches:
+    """Cover tool_selection-specific helper and accuracy branches not shared via mixins."""
+
+    def test_validate_tool_calls_rejects_non_dict_item(self):
+        """Return an error when a tool call is not a dictionary."""
+        evaluator = create_mocked_evaluator(ToolSelectionEvaluator, "tool_selection")
+        assert isinstance(evaluator._validator._validate_tool_calls([123]), EvaluationException)
+
+    def test_extract_tool_names_handles_function_and_direct_shapes(self):
+        """Extract names from both the function-call and direct-name tool call shapes."""
+        names = _extract_tool_names_from_calls([{"function": {"name": "f1"}}, {"name": "f2"}])
+        assert names == ["f1", "f2"]
+
+    def test_get_built_in_tool_definition_unknown_returns_none(self):
+        """Return None for an unknown built-in tool name."""
+        assert _get_built_in_tool_definition("nonexistent_tool") is None
+
+    def test_format_value_returns_non_string_unchanged(self):
+        """Return non-string, non-None values unchanged."""
+        assert _format_value(123) == 123
+
+    def test_get_conversation_history_skips_role_less_message(self):
+        """Skip role-less messages and validate turn balance before returning."""
+        query = [
+            {"content": "no role"},
+            {"role": "user", "content": [{"type": "text", "text": "hi"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "answer"}]},
+        ]
+        with pytest.raises(EvaluationException):
+            _get_conversation_history(query)
+
+    def test_calculate_tool_selection_accuracy_with_calls(self):
+        """Compute selection accuracy as a percentage when tools were called."""
+        evaluator = create_mocked_evaluator(ToolSelectionEvaluator, "tool_selection")
+        accuracy = evaluator._calculate_tool_selection_accuracy(
+            {"correct_tool_selections": 3, "wrong_tool_selections": 1}
+        )
+        assert accuracy == 75.0

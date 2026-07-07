@@ -11,8 +11,21 @@ from unittest.mock import MagicMock
 from azure.ai.evaluation import AzureOpenAIModelConfiguration
 from azure.ai.evaluation._exceptions import EvaluationException
 
-from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
+from .base_evaluator_behavior_test import (
+    BaseEvaluatorBehaviorTest,
+    _TurnLevelUtilE2ETests,
+    _MessagesUtilE2ETests,
+)
 from .base_tool_evaluation_test import BaseToolEvaluationTest
+from .base_validator_unit_test import (
+    ConversationSerializationUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ConversationValidatorUnitTests,
+    CorePromptyValidatorUnitTests,
+    MessagePreprocessUnitTests,
+    MessagesOrQueryResponseUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+)
 from . import common_tool_test_data as data
 from ...builtin.coherence.evaluator._coherence import (
     CoherenceEvaluator,
@@ -20,14 +33,16 @@ from ...builtin.coherence.evaluator._coherence import (
     serialize_messages,
 )
 from ..common.evaluator_mock_config import (
+    create_multi_turn_mock_side_effect,
     get_flow_side_effect_for_evaluator,
-    create_none_score_flow_side_effect,
-    assert_none_score_result,
+    run_none_score_not_applicable,
 )
 
 
 @pytest.mark.unittest
-class TestCoherenceEvaluatorBehavior(BaseEvaluatorBehaviorTest, BaseToolEvaluationTest):
+class TestCoherenceEvaluatorBehavior(
+    BaseEvaluatorBehaviorTest, BaseToolEvaluationTest, _TurnLevelUtilE2ETests, _MessagesUtilE2ETests
+):
     """
     Behavioral tests for Coherence Evaluator.
 
@@ -114,31 +129,28 @@ class TestCoherenceEvaluatorBehavior(BaseEvaluatorBehaviorTest, BaseToolEvaluati
     evaluator_type = CoherenceEvaluator
 
 
-def _create_multi_turn_mock_side_effect(
-    score: int = 5,
-    status: str = "completed",
-    reason: str = "Conversation is coherent overall.",
-    properties: Dict[str, Any] = None,
+@pytest.mark.unittest
+class TestCoherenceValidatorUnit(
+    CorePromptyValidatorUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    MessagePreprocessUnitTests,
+    ConversationValidatorUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ConversationSerializationUnitTests,
+    MessagesOrQueryResponseUnitTests,
 ):
-    """Create a mock side effect that returns dict output for multi-turn coherence."""
-    if properties is None and status == "completed":
-        properties = {
-            "gating_summary": "User flow mostly on-topic.",
-            "conversation_flow_summary": "Agent responses follow context across turns.",
-            "agent_coherence_issues": "None",
-        }
+    """Low-level unit tests for coherence's repeated validators, utils and methods."""
 
-    async def flow_side_effect(timeout, **kwargs):
-        return {
-            "llm_output": {
-                "score": score if status == "completed" else None,
-                "status": status,
-                "reason": reason,
-                "properties": properties if status == "completed" else None,
-            }
-        }
+    evaluator_class = CoherenceEvaluator
 
-    return flow_side_effect
+
+# Default multi-turn flow payload for coherence (completed conversation output).
+_MULTI_TURN_REASON = "Conversation is coherent overall."
+_MULTI_TURN_PROPERTIES = {
+    "gating_summary": "User flow mostly on-topic.",
+    "conversation_flow_summary": "Agent responses follow context across turns.",
+    "agent_coherence_issues": "None",
+}
 
 
 def _create_mocked_coherence_evaluator(evaluation_level=None, multi_turn_side_effect=None):
@@ -149,7 +161,10 @@ def _create_mocked_coherence_evaluator(evaluation_level=None, multi_turn_side_ef
     )
     evaluator = CoherenceEvaluator(model_config=model_config, evaluation_level=evaluation_level)
     evaluator._flow = MagicMock(side_effect=get_flow_side_effect_for_evaluator("coherence"))
-    evaluator._multi_turn_flow = MagicMock(side_effect=multi_turn_side_effect or _create_multi_turn_mock_side_effect())
+    evaluator._multi_turn_flow = MagicMock(
+        side_effect=multi_turn_side_effect
+        or create_multi_turn_mock_side_effect(reason=_MULTI_TURN_REASON, properties=_MULTI_TURN_PROPERTIES)
+    )
     return evaluator
 
 
@@ -260,7 +275,7 @@ class TestCoherenceMultiturnBehavior:
 
     def test_messages_skip_output_maps_to_not_applicable(self):
         """Skipped multi-turn output follows standardized skipped schema."""
-        skipped_side_effect = _create_multi_turn_mock_side_effect(
+        skipped_side_effect = create_multi_turn_mock_side_effect(
             status="skipped",
             reason="Conversation is mostly derailed by unrelated topic jumps.",
         )
@@ -428,24 +443,16 @@ class TestCoherenceNoneScoreHandling:
 
     def test_turn_level_none_score_does_not_crash(self):
         """Turn-level eval with score=None from _flow should not raise TypeError."""
-        evaluator = _create_mocked_coherence_evaluator()
-        evaluator._flow = MagicMock(side_effect=create_none_score_flow_side_effect())
-        result = evaluator(
+        run_none_score_not_applicable(
+            CoherenceEvaluator,
+            "coherence",
             query="What is the weather?",
             response="It is sunny today.",
         )
-        assert_none_score_result(result, "coherence")
 
     def test_conversation_level_none_score_does_not_crash(self):
         """Conversation-level eval with score=None should not crash."""
-        evaluator = _create_mocked_coherence_evaluator()
-        evaluator._multi_turn_flow = MagicMock(
-            side_effect=create_none_score_flow_side_effect(
-                reason="No agent responses to evaluate."
-            )
-        )
-        result = evaluator(messages=VALID_MESSAGES)
-        assert_none_score_result(result, "coherence")
+        run_none_score_not_applicable(CoherenceEvaluator, "coherence", messages=VALID_MESSAGES)
 
 
 # endregion
