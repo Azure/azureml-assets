@@ -1,8 +1,7 @@
-# Shared Go toolchain version used across builder stages.
-# Bumped to 1.26.3 to fix multiple stdlib CVEs (GO-2026-49xx / GO-2026-4918 / etc.)
-# affecting both the trivy and oras binaries when built from source.
+# Shared Go toolchain version used across builder stages; compiled from source so the
+# trivy and oras binaries link a patched Go stdlib. Bump to the latest patched Go.
 ARG GO_VERSION=1.26.4
-ARG TRIVY_VERSION=0.70.0
+ARG TRIVY_VERSION=0.72.0
 ARG ORAS_VERSION=1.3.2
 
 # Mode toggles: "build" (compile from source with patched Go + deps) or
@@ -27,11 +26,12 @@ RUN curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go
  && tar -C /usr/local -xzf /tmp/go.tar.gz \
  && rm /tmp/go.tar.gz
 ENV PATH=/usr/local/go/bin:$PATH
-# Build ORAS with patched golang.org/x/crypto to fix:
-# CVE-2025-58181 (GHSA-j5w8-q4qc-rx2x) and CVE-2025-47914 (GHSA-f6x5-jh6r-wrfv)
+# Build ORAS; pin patched module versions on top of the release tag for any dep the
+# tagged release still carries that the scanner flags.
 RUN git clone --depth 1 --branch v${ORAS_VERSION} https://github.com/oras-project/oras.git /tmp/oras \
  && cd /tmp/oras \
  && go get golang.org/x/crypto@latest \
+ && go get oras.land/oras-go/v2@v2.6.1 \
  && go mod tidy \
  && GOBIN=/out go install ./cmd/oras \
  && test -x /out/oras \
@@ -61,18 +61,9 @@ FROM oras-${ORAS_MODE} AS oras-final
 # =========================================
 # Builder: compile Trivy with patched Go + deps
 # =========================================
-# Trivy v0.70.0 is the latest upstream release (2026-04-17) and ships with several
-# vulnerable Go modules and Go stdlib. We rebuild it from source with the same
-# patched-Go pattern used for ORAS, pinning each dep at the Qualys-required minimum
-# patched version. Targeted CVEs include (non-exhaustive):
-#   stdlib                              -> GO-2026-4971 / 4976 / 4977 / 4980 / 4981 / 4986 / ...
-#   golang.org/x/crypto    >= v0.52.0   -> GO-2026-5005 / 5006 / 5017 / 5019 / 5020 / 5023 (CRITICAL) ...
-#   golang.org/x/net       >= v0.55.0   -> GO-2026-5026 (CRITICAL) / 5025 / 5027 / 5028 / 5029 / 5030
-#   in-toto-golang         >= v0.11.0   -> GHSA-pmwq-pjrm-6p5r
-#   go-git/v5              >= v5.19.0   -> GHSA-389r-gv7p-r3rp (CVE-2026-45022)
-#   go-billy/v5            >= v5.9.0    -> GHSA-m3xc-h892-ggx6 / GHSA-qw64-3x98-g7q2
-#   containerd             >= v1.7.33   -> CVE-2026-47262 (QID 5014189) / CVE-2026-53488 (QID 5014196)
-#   containerd/v2          >= v2.2.5    -> CVE-2026-47262 / 50195 / 53488 / 53489 / 53492 (QID 5014189/94/96/79/92)
+# Build Trivy from source so it links a patched Go stdlib (GO_VERSION). Prefer bumping
+# TRIVY_VERSION to the latest release (its go.mod carries fixed modules) over hand-pinning
+# deps; add a `go get pkg@version` below only for a module the latest release still lags.
 FROM ubuntu:24.04 AS trivy-build
 ARG GO_VERSION
 ARG TRIVY_VERSION
@@ -87,13 +78,7 @@ ENV PATH=/usr/local/go/bin:$PATH
 # Build env replicates trivy's magefile (CGO disabled, jsonv2 experiment, version ldflag).
 RUN git clone --depth 1 --branch v${TRIVY_VERSION} https://github.com/aquasecurity/trivy.git /tmp/trivy \
  && cd /tmp/trivy \
- && go get golang.org/x/crypto@v0.52.0 \
- && go get golang.org/x/net@v0.55.0 \
- && go get github.com/in-toto/in-toto-golang@v0.11.0 \
- && go get github.com/go-git/go-git/v5@v5.19.0 \
- && go get github.com/go-git/go-billy/v5@v5.9.0 \
- && go get github.com/containerd/containerd@v1.7.33 \
- && go get github.com/containerd/containerd/v2@v2.2.5 \
+ && go get oras.land/oras-go/v2@v2.6.1 \
  && go mod tidy \
  && CGO_ENABLED=0 GOEXPERIMENT=jsonv2 go build \
       -ldflags="-s -w -X=github.com/aquasecurity/trivy/pkg/version/app.ver=${TRIVY_VERSION}" \
@@ -101,7 +86,7 @@ RUN git clone --depth 1 --branch v${TRIVY_VERSION} https://github.com/aquasecuri
  && test -x /out/trivy \
  && /out/trivy --version \
  && echo "--- linked Go module versions (verifying CVE-fix pins) ---" \
- && go version -m /out/trivy | grep -E '(stdlib|golang\.org/x/crypto|golang\.org/x/net|in-toto-golang|go-git/v5|go-billy/v5|containerd)' \
+ && go version -m /out/trivy | grep -E '(stdlib|oras-go|rekor|golang\.org/x/(crypto|net)|in-toto-golang|go-git/v5|go-billy/v5|containerd)' \
  && rm -rf /tmp/trivy
 
 # =========================================
