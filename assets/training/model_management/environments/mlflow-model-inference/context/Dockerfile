@@ -1,22 +1,5 @@
 FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:{{latest-image-tag}}
 
-# Exception: xz-utils/liblzma5 are explicitly upgraded here to pull
-# 5.2.5-2ubuntu1.1 (USN-8362-1 / CVE-2026-34743) until the base rebuilds.
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        nginx-light \
-        runit \
-        rsyslog \
-        xz-utils \
-        liblzma5 \
-        libxml2 \
-        tar \
-        libsqlite3-0 && \
-    apt-get autoremove -y && \
-    apt-get clean -y && \
-    rm -rf /usr/share/man/* && \
-    rm -rf /var/lib/apt/lists/*
-
 RUN mkdir -p /var/runit
 RUN mkdir -p /var/azureml-app
 RUN mkdir -p /opt/miniconda/
