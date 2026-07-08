@@ -38,27 +38,13 @@ RUN pip install --upgrade --no-cache-dir 'fastmcp>=3.2.0'
 # Mako: transitive dep (mlflow → alembic → Mako); alembic has no version constraint; override needed (GHSA-v92g-xgxw-vvmm)
 # python-dotenv: transitive dep (fastmcp → python-dotenv); fastmcp 3.2.4 uses >=1.1.0; override needed (GHSA-mf9w-mj56-hr94)
 # onnx: azureml-acft-accelerator 0.0.89 caps onnx<=1.17.0; override needed for GHSA-3r9x-f23j-gc73, GHSA-hqmj-h5c6-369m etc.
-# skops: transitive dep (mlflow → skops); mlflow 3.12.0 declares 'skops<1' (loose floor), so pip
+# skops: transitive dep (mlflow → skops); mlflow 3.11.1 declares 'skops<1' (loose floor), so pip
 #        resolves to 0.11.0 which has CVE-2025-54412/54413/54886
 #        (GHSA-m7f4-hrc6-fwg3, GHSA-4v6w-xpmh-gfgp, GHSA-378x-6p4f-8jgm); override to >=0.13.0
 # urllib3: transitive dep brought in by many parents (requests, botocore, kubernetes, etc.); the closest
-#          parent `requests` 2.34.2 declares `urllib3>=1.26,<3` (loose floor) so upgrading requests does
+#          parent `requests` declares `urllib3>=1.26,<3` (loose floor) so upgrading requests does
 #          not pull urllib3>=2.7.0; direct override required for GHSA-mf9v-mfxr-j63j, GHSA-qccp-gfcp-xxvc
 RUN pip install --upgrade --no-cache-dir pyasn1==0.6.3 'python-multipart>=0.0.26' 'Mako>=1.3.11' 'python-dotenv>=1.2.2' 'onnx>=1.21.0' 'skops>=0.13.0' 'urllib3>=2.7.0'
-
-# Base conda env (Python 3.13) packages scanned from /opt/conda need direct pip overrides.
-# Dependency inspection shows parents only use loose ranges:
-# - urllib3: requests 2.33.1 declares urllib3<3,>=1.26.
-# - idna: requests 2.33.1, httpx 0.28.1, anyio 4.12.1 and yarl 1.23.0 accept vulnerable 3.11.
-# - click: anaconda-cli-base 0.8.2, typer 0.25.1 and extras from httpx/python-dotenv/cryptography accept 8.2.1.
-# python-dotenv has no installed parent in base; it is a vulnerable base package itself. Upgrading parents
-# does not force patched child versions, and conda updates would introduce py-rattler, so use pip in base.
-# PyJWT: base env ships 2.12.1 which has GHSA-jq35-7prp-9v3f and GHSA-993g-76c3-p5m4 (fixed in 2.13.0);
-#        no parent in base pins PyJWT to a safe floor, so explicit override is required.
-# pydantic-settings: pinned transitive/base image package from the base conda env; fixes GHSA-4xgf-cpjx-pc3j.
-# py-rattler: pinned transitive/base image package from the base conda env; fixes GHSA-q53q-5r4j-5729.
-# cryptography: pinned transitive/base image package from the base conda env; fixes GHSA-537c-gmf6-5ccf.
-RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.0' 'PyJWT>=2.13.0' 'pydantic-settings>=2.14.2' 'py-rattler>=0.24.0' 'cryptography>=48.0.1'
 
 # pip is the package manager in both base and ptca conda envs. defaults has no pip>=26.1.1 package,
 # while a normal conda-forge solve pulls unrelated conda updates and py-rattler. Install only the
@@ -69,6 +55,14 @@ RUN conda install -n base -c conda-forge --no-deps -y 'pip>=26.1.1' && \
 # aiohttp and cryptography in ptca env (Python 3.10) are present in the base image; force upgrades here explicitly.
 # cryptography is pinned as a transitive/base image package to fix GHSA-537c-gmf6-5ccf.
 RUN conda run -n ptca python -m pip install --upgrade --no-cache-dir 'aiohttp>=3.14.0' 'cryptography>=48.0.1'
+
+# torch is inherited from the ACPT base image and required by torchvision/torchaudio;
+# upgrade the matching CUDA 12.6 PyTorch wheel set to fix GHSA-vgrw-7cvw-pwgx and GHSA-qfhq-4f3w-5fph.
+RUN conda run -n ptca python -m pip install --upgrade --no-cache-dir \
+    --index-url https://download.pytorch.org/whl/cu126 \
+    'torch==2.10.0+cu126' \
+    'torchvision==0.25.0+cu126' \
+    'torchaudio==2.10.0+cu126'
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
