@@ -46,7 +46,7 @@ ENV CONDA_PREFIX=${AZUREML_CONDA_ENVIRONMENT_PATH}
 WORKDIR /
 
 # When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference==0.2.57 --no-cache-dir
+RUN pip install llm-optimized-inference==0.2.58 --no-cache-dir
 
 # Remove unwanted services if present
 RUN rm -rf /var/runit/gunicorn \
