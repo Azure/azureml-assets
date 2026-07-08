@@ -40,17 +40,19 @@ COPY __init__ /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/rewar
 COPY azure_grader /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/reward_score/azure_grader.py
 COPY azure_python_grader /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/reward_score/azure_python_grader.py
 COPY utils /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/vllm/utils.py
-# vllm is a direct top-level runtime dependency in this image. PyPI metadata checks show
-# verl only declares vllm under the unused [vllm] extra, so there is no parent package to
-# upgrade for GHSA-hpv8-x276-m59f / GHSA-83vm-p52w-f9pw.
-RUN pip install --no-cache-dir vllm==0.20.1
+# vllm is a direct top-level runtime dependency in this image; pin the patched release for
+# GHSA-3ww4-5jv9-j5gm, GHSA-94f4-hr76-p5j6, and GHSA-q8gq-377p-jq3r.
+RUN pip install --no-cache-dir vllm==0.22.0
+# vllm's resolver can upgrade numpy, but verl 0.7.1 requires numpy<2.
+RUN pip install --no-cache-dir numpy==1.26.4
 # Keep xgrammar at the patched floor even when pulled transitively by vllm.
 RUN pip install --no-cache-dir 'xgrammar>=0.1.32'
 RUN pip install openai==2.14.0
 RUN pip install --force-reinstall --no-cache-dir --no-build-isolation git+https://github.com/deepseek-ai/DeepGEMM.git@c9f8b34dcdacc20aa746b786f983492c51072870
 RUN pip install --no-cache-dir 'flash-attn-4>=4.0.0b9'
 # Security overrides for pip-installed packages whose parent packages do not pin them safely.
-# cryptography==46.0.7: CVE-2026-41727; not pre-installed in ptca env, pulled by azureml-mlflow
+# cryptography>=48.0.1: GHSA-537c-gmf6-5ccf; transitive dep pulled by azureml-mlflow
+# pydantic-settings>=2.14.2: GHSA-4xgf-cpjx-pc3j; transitive dep pulled by fastmcp
 # fastmcp>=3.2.0: GHSA-rww4-4w9c-7733, GHSA-m8x7-r2rg-vh5g, GHSA-vv7q-7jx5-f767
 # Mako>=1.3.11: CVE-2025-46803; transitive dep of alembic, parent uses loose floor
 # lxml>=6.1.0: GHSA-vfmq-68hx-4jfw; transitive dep of multiple packages, parent uses loose floor
@@ -62,8 +64,10 @@ RUN pip install --no-cache-dir 'flash-attn-4>=4.0.0b9'
 #   pins pyopenssl<26.0.0, so explicit override is required.
 # starlette>=1.0.1: GHSA-86qp-5c8j-p5mr; placed here (after vllm) so that vllm's transitive
 #   fastapi dependency cannot downgrade starlette to the vulnerable 0.x series.
-RUN pip install --upgrade cryptography==46.0.7 'fastmcp>=3.2.0' 'Mako>=1.3.11' 'lxml>=6.1.0' 'transformers==5.6.0' 'GitPython>=3.1.47' 'pyOpenSSL>=26.0.0' 'starlette>=1.0.1'
+RUN pip install --upgrade 'cryptography>=48.0.1' 'pydantic-settings>=2.14.2' 'fastmcp>=3.2.0' 'Mako>=1.3.11' 'lxml>=6.1.0' 'transformers==5.6.0' 'GitPython>=3.1.47' 'pyOpenSSL>=26.0.0' 'starlette>=1.0.1'
 # Base env (py3.13) and ptca env (py3.10) overrides for packages where every parent pins a loose floor.
+# cryptography>=48.0.1 (base env, py3.13): GHSA-537c-gmf6-5ccf. The base image ships
+#   cryptography 46.0.7, so patch the inherited base env copy here.
 # python-dotenv>=1.2.2: GHSA-mf9w-mj56-hr94; transitive dep of pydantic-settings, uvicorn,
 #   and fastmcp. All parents use loose floors, so no parent upgrade can force >=1.2.2.
 # pip>=26.1.1: GHSA-jp4c-xjxw-mgf9 / VCM 5011855 (CVE-2026-6357). pip is bootstrapped by
@@ -89,7 +93,7 @@ RUN pip install --upgrade cryptography==46.0.7 'fastmcp>=3.2.0' 'Mako>=1.3.11' '
 # PyJWT>=2.13.0 (base env, py3.13): GHSA-993g-76c3-p5m4, GHSA-jq35-7prp-9v3f / VCM 5013533,
 #   5013521. PyJWT is pulled transitively by various auth/azure packages; no parent pins
 #   >=2.13.0 in published releases. Direct override is the only remediation.
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.1.1' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'PyJWT>=2.13.0' && \
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'cryptography>=48.0.1' 'python-dotenv>=1.2.2' 'pip>=26.1.1' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'PyJWT>=2.13.0' && \
     rm -f /opt/conda/conda-meta/pip-26.0*.json
 # GHSA-65pc-fj4g-8rjx: idna>=3.15 for ptca env (base env covered above)
 # GHSA-993g-76c3-p5m4, GHSA-jq35-7prp-9v3f: PyJWT>=2.13.0 for ptca env (base env covered above)
@@ -106,12 +110,15 @@ RUN find /opt/conda/envs/ptca/lib/python3.10/site-packages/ray -type d -name 'th
       rm -rf "$dir"/aiohttp* "$dir"/idna*; \
       pip install --no-cache-dir --target "$dir" 'aiohttp>=3.14.0' 'idna>=3.15'; \
     done
-# Ray's uber jar (ray/jars/ray_dist.jar) shades log4j-core 2.25.3, which is vulnerable to
-# CVE-2026-34478 / CVE-2026-34480 (GHSA-445c-vh5m-36rj, GHSA-3pxv-7cmr-fjr4), fixed in 2.25.4.
-# No released Ray version ships 2.25.4 yet (ray-project/ray#62845, PR #63844), so patch the
-# shaded log4j-core entries in place. Pure-Python (zipfile), so no JDK 'jar' tool is needed.
-COPY patch_log4j /tmp/patch_log4j.py
-RUN /opt/conda/envs/ptca/bin/python /tmp/patch_log4j.py && rm -f /tmp/patch_log4j.py
+# Ray's distribution jar shades jackson-databind 2.18.6. Patch the shaded entries to
+# 2.19.4 for GHSA-rmj7-2vxq-3g9f, GHSA-j3rv-43j4-c7qm, GHSA-5jmj-h7xm-6q6v,
+# and GHSA-hgj6-7826-r7m5.
+COPY patch_ray_jackson_databind.py /tmp/patch_ray_jackson_databind.py
+RUN JACKSON_DATABIND_VERSION=2.19.4 \
+    JACKSON_DATABIND_JAR_SHA1=7a39bf9257b726b90b80f27fa3f5174bc75162a5 \
+    JACKSON_DATABIND_POM_SHA1=74fcb3f686a19c4dd71f6b45fc6d700672100569 \
+    /opt/conda/envs/ptca/bin/python /tmp/patch_ray_jackson_databind.py && \
+    rm -f /tmp/patch_ray_jackson_databind.py
 COPY vllm_rollout /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/workers/rollout/vllm_rollout/vllm_rollout.py
 # ---- verl RFT (GRPO) compatibility patches ----------------------------------
 # Reconciles the bundled kernels / transformers / vLLM / verl / flash-attn lineages
@@ -127,4 +134,3 @@ RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
 ENV PYTHONHASHSEED=random \
     PYTHONDONTWRITEBYTECODE=1
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/ /opt/conda/pkgs/
-
