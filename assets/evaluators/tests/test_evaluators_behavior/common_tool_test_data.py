@@ -2244,16 +2244,16 @@ WEB_SEARCH_EXPECTED_FLOW_QUERY = (
 )
 
 BROWSER_AUTOMATION_EXPECTED_FLOW_QUERY = (
-                                         "SYSTEM_PROMPT:\n  You are an Agent helping with browser automation tasks. "
-                                         "You can answer questions, provide information, and assist with various "
-                                         "tasks related to web browsing using the Browser Automation tool available "
-                                         "to you.\n\nUser turn 1:\n  Your goal is to report the percent of Microsoft "
-                                         "year-to-date stock price change.\nTo do that, go to the website "
-                                         "finance.yahoo.com.\nAt the top of the page, you will find a search "
-                                         "bar.\nEnter the value 'MSFT', to get information about the Microsoft stock "
-                                         "price.\nAt the top of the resulting page you will see a default chart of "
-                                         "Microsoft stock price.\nClick on 'YTD' at the top of that chart, and report "
-                                         "the percent value that shows up just below it.\n\n"
+    "SYSTEM_PROMPT:\n  You are an Agent helping with browser automation tasks. "
+    "You can answer questions, provide information, and assist with various "
+    "tasks related to web browsing using the Browser Automation tool available "
+    "to you.\n\nUser turn 1:\n  Your goal is to report the percent of Microsoft "
+    "year-to-date stock price change.\n  To do that, go to the website "
+    "finance.yahoo.com.\n  At the top of the page, you will find a search "
+    "bar.\n  Enter the value 'MSFT', to get information about the Microsoft stock "
+    "price.\n  At the top of the resulting page you will see a default chart of "
+    "Microsoft stock price.\n  Click on 'YTD' at the top of that chart, and report "
+    "the percent value that shows up just below it.\n\n"
 )
 
 # TS processes multi-line user content differently (indents continuation lines)
@@ -2322,11 +2322,11 @@ WEB_SEARCH_IR_EXPECTED_FLOW_QUERY = "User turn 1:\n  what's the weather like in 
 
 BROWSER_AUTOMATION_IR_EXPECTED_FLOW_QUERY = (
                                             "User turn 1:\n  Your goal is to report the percent of Microsoft "
-                                            "year-to-date stock price change.\nTo do that, go to the website "
-                                            "finance.yahoo.com.\nAt the top of the page, you will find a search "
-                                            "bar.\nEnter the value 'MSFT', to get information about the Microsoft "
-                                            "stock price.\nAt the top of the resulting page you will see a default "
-                                            "chart of Microsoft stock price.\nClick on 'YTD' at the top of that "
+                                            "year-to-date stock price change.\n  To do that, go to the website "
+                                            "finance.yahoo.com.\n  At the top of the page, you will find a search "
+                                            "bar.\n  Enter the value 'MSFT', to get information about the Microsoft "
+                                            "stock price.\n  At the top of the resulting page you will see a default "
+                                            "chart of Microsoft stock price.\n  Click on 'YTD' at the top of that "
                                             "chart, and report the percent value that shows up just below it.\n\n"
 )
 
@@ -2392,17 +2392,18 @@ BING_CUSTOM_SEARCH_EXPECTED_FLOW_RESPONSE = (
 )
 
 FILE_SEARCH_EXPECTED_FLOW_RESPONSE = (
-                                     "[TOOL_CALL] file_search_call(queries=\"['good restaurant recommendation', 'best "
-                                     "restaurant', 'top rated restaurant', 'recommended restaurants', \"what's a good "
-                                     "restaurant\"]\")\n[TOOL_RESULT] [{'attributes': {}, 'file_id': "
-                                     "'assistant-StE61XCSBRyLv11Ytyckea', 'filename': 'french_cafe_menu.md', 'score': "
-                                     "0.0333, 'text': '# Le Jardin de Paris', 'vector_store_id': ''}, {'attributes': "
-                                     "{}, 'file_id': 'assistant-Xpu5yP1AQZiB86Hz5iG4uv', 'filename': "
-                                     "'italian_diner_menu.md', 'score': 0.0328, 'text': '# Trattoria Bella Notte', "
-                                     "'vector_store_id': ''}]\nIf you're looking for a good restaurant, here are two "
-                                     "tasty options based on the menus provided:\n\n1. **Le Jardin de Paris** (French "
-                                     "Café)\n2. **Trattoria Bella Notte** (Italian Diner)\n\nBoth are excellent "
-                                     "choices—pick based on whether you’re in the mood for French or Italian!"
+    "[TOOL_CALL] file_search_call(queries=['good restaurant recommendation', 'best restaurant', 'top rated restaurant'"
+    ", 'recommended restaurants', \"what's a good restaurant\"])\n"
+    "[TOOL_RESULT] [{'attributes': {}, 'file_id': 'assistant-StE61XCSBRyLv11Ytyckea', 'filename': 'french_cafe_menu.md"
+    "', 'score': 0.0333, 'text': '# Le Jardin de Paris', 'vector_store_id': ''}, {'attributes': {}, 'file_id': 'assist"
+    "ant-Xpu5yP1AQZiB86Hz5iG4uv', 'filename': 'italian_diner_menu.md', 'score': 0.0328, 'text': '# Trattoria Bella Not"
+    "te', 'vector_store_id': ''}]\n"
+    "If you're looking for a good restaurant, here are two tasty options based on the menus provided:\n"
+    "\n"
+    "1. **Le Jardin de Paris** (French Caf\u00e9)\n"
+    "2. **Trattoria Bella Notte** (Italian Diner)\n"
+    "\n"
+    "Both are excellent choices\u2014pick based on whether you\u2019re in the mood for French or Italian!"
 )
 
 AZURE_AI_SEARCH_EXPECTED_FLOW_RESPONSE = (
@@ -2461,7 +2462,7 @@ OPENAPI_EXPECTED_FLOW_RESPONSE = (
 
 WEB_SEARCH_EXPECTED_FLOW_RESPONSE = (
                                     '[TOOL_CALL] web_search(query="current weather Napoli Italy", type="search", '
-                                    'queries="[\'current weather Napoli Italy\']")\nThe current weather in Napoli, '
+                                    'queries=[\'current weather Napoli Italy\'])\nThe current weather in Napoli, '
                                     'Italy is partly cloudy with a temperature of around 10°C, feeling like 7°C.'
 )
 
@@ -2496,10 +2497,21 @@ MEMORY_SEARCH_EXPECTED_FLOW_RESPONSE = (
 )
 
 KB_MCP_EXPECTED_FLOW_RESPONSE = (
-                                "[TOOL_CALL] knowledge_base_retrieve(request=\"{'knowledgeAgentIntents': ['Provide "
-                                "general information about the Earth.']}\")\n[TOOL_RESULT] Retrieved 11 "
-                                "documents.\nHere's an interesting overview about Earth from space, focusing on "
-                                "nighttime images and what they tell us about our planet and humanity."
+    "[TOOL_CALL] knowledge_base_retrieve(request={'knowledgeAgentIntents': ['Provide general information about the Ear"
+    "th.']})\n"
+    "[TOOL_RESULT] Retrieved 11 documents.\n"
+    "Here's an interesting overview about Earth from space, focusing on nighttime images and what they tell us about o"
+    "ur planet and humanity."
+)
+
+# tool_output_utilization keeps its own _get_agent_response (_stringify_tool_result), which
+# still quotes the tool-call arguments payload; the SDK path used by TA/TC dropped that
+# quoting in azure-ai-evaluation 1.18.0, so kb_mcp now needs a TOU-specific expected value.
+KB_MCP_TOU_EXPECTED_FLOW_RESPONSE = (
+    "[TOOL_CALL] knowledge_base_retrieve(request=\"{'knowledgeAgentIntents': ['Provide "
+    "general information about the Earth.']}\")\n[TOOL_RESULT] Retrieved 11 "
+    "documents.\nHere's an interesting overview about Earth from space, focusing on "
+    "nighttime images and what they tell us about our planet and humanity."
 )
 
 MCP_EXPECTED_FLOW_RESPONSE = (
@@ -2551,6 +2563,16 @@ MEMORY_SEARCH_TOU_EXPECTED_FLOW_RESPONSE = (
     '"scope": "user_123", "updated_at": 1771323829}]\n'
     "Sure! I'll order your usual\u2014one dark roast coffee. "
     "Would you like any specific size or extras (milk, sugar, etc.) with that?"
+)
+
+# kb_mcp has a dict-valued argument (request). TOU's _get_agent_response wraps dict/list
+# argument values in quotes, whereas the SDK helper used by TA/TC now renders them raw.
+# TA/TC therefore use the (unquoted) base KB_MCP_EXPECTED_FLOW_RESPONSE and TOU uses this.
+KB_MCP_TOU_EXPECTED_FLOW_RESPONSE = (
+                                    "[TOOL_CALL] knowledge_base_retrieve(request=\"{'knowledgeAgentIntents': "
+                                    "['Provide general information about the Earth.']}\")\n[TOOL_RESULT] Retrieved "
+                                    "11 documents.\nHere's an interesting overview about Earth from space, focusing "
+                                    "on nighttime images and what they tell us about our planet and humanity."
 )
 
 # Restricted built-in tools newly enabled in Phase 2 (azure_ai_search, sharepoint,
@@ -3011,24 +3033,6 @@ FILE_SEARCH_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE = [
                         "what's a good restaurant",
                     ],
                 },
-                "tool_result": [
-                    {
-                        "attributes": {},
-                        "file_id": "assistant-StE61XCSBRyLv11Ytyckea",
-                        "filename": "french_cafe_menu.md",
-                        "score": 0.0333,
-                        "text": "# Le Jardin de Paris",
-                        "vector_store_id": "",
-                    },
-                    {
-                        "attributes": {},
-                        "file_id": "assistant-Xpu5yP1AQZiB86Hz5iG4uv",
-                        "filename": "italian_diner_menu.md",
-                        "score": 0.0328,
-                        "text": "# Trattoria Bella Notte",
-                        "vector_store_id": "",
-                    },
-                ],
             },
         ],
     },
@@ -3063,10 +3067,9 @@ FILE_SEARCH_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE = [
     {
         "role": "assistant",
         "content": [
-            "If you're looking for a good restaurant, here are two tasty options based on the menus "
-            "provided:\n\n1. **Le Jardin de Paris** (French Caf\u00e9)\n2. **Trattoria Bella Notte** "
-            "(Italian Diner)\n\nBoth are excellent choices\u2014pick based on whether you\u2019re in "
-            "the mood for French or Italian!",
+            "If you're looking for a good restaurant, here are two tasty options based on the menus provided:\n\n1. **"
+            "Le Jardin de Paris** (French Caf\u00e9)\n2. **Trattoria Bella Notte** (Italian Diner)\n\nBoth are excelle"
+            "nt choices\u2014pick based on whether you\u2019re in the mood for French or Italian!",
         ],
     },
 ]
@@ -3094,7 +3097,6 @@ IMAGE_GEN_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE = [
                     "size": "1024x1024",
                     "revised_prompt": "Microsoft logo on a white background",
                 },
-                "tool_result": "<generated_image_data>",
             },
         ],
     },
@@ -3111,7 +3113,9 @@ IMAGE_GEN_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE = [
     },
     {
         "role": "assistant",
-        "content": ["Here is an image of the Microsoft logo."],
+        "content": [
+            "Here is an image of the Microsoft logo.",
+        ],
     },
 ]
 
@@ -3132,33 +3136,6 @@ MEMORY_SEARCH_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE = [
                 "tool_call_id": "memupdateo_2f31edffff39a63f00699441f5791081909eaae75cd08dd354",
                 "name": "memory_search",
                 "arguments": {},
-                "tool_result": [
-                    {
-                        "content": "User prefers dark roast coffee.",
-                        "kind": "user_profile",
-                        "memory_id": "3a353f9202ca41bf95a4a9ef21d90d41",
-                        "scope": "user_123",
-                        "updated_at": 1771323829,
-                    },
-                    {
-                        "content": "User prefers dark roast coffee.",
-                        "kind": "user_profile",
-                        "memory_id": "3a353f9202ca41bf95a4a9ef21d90d41",
-                        "scope": "user_123",
-                        "updated_at": 1771323829,
-                    },
-                    {
-                        "content": (
-                            "The user stated a preference for dark roast coffee. Dark roast coffee is "
-                            "characterized by a bold flavor, rich aroma, and lower acidity compared to "
-                            "lighter roasts."
-                        ),
-                        "kind": "chat_summary",
-                        "memory_id": "9117c9f9d7424f0290c523d1cd3de45a",
-                        "scope": "user_123",
-                        "updated_at": 1771323829,
-                    },
-                ],
             },
         ],
     },
@@ -3185,11 +3162,8 @@ MEMORY_SEARCH_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE = [
                         "updated_at": 1771323829,
                     },
                     {
-                        "content": (
-                            "The user stated a preference for dark roast coffee. Dark roast coffee is "
-                            "characterized by a bold flavor, rich aroma, and lower acidity compared to "
-                            "lighter roasts."
-                        ),
+                        "content": "The user stated a preference for dark roast coffee. Dark roast coffee is character"
+                        "ized by a bold flavor, rich aroma, and lower acidity compared to lighter roasts.",
                         "kind": "chat_summary",
                         "memory_id": "9117c9f9d7424f0290c523d1cd3de45a",
                         "scope": "user_123",
@@ -3202,8 +3176,8 @@ MEMORY_SEARCH_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE = [
     {
         "role": "assistant",
         "content": [
-            "Sure! I'll order your usual\u2014one dark roast coffee. Would you like any specific "
-            "size or extras (milk, sugar, etc.) with that?",
+            "Sure! I'll order your usual\u2014one dark roast coffee. Would you like any specific size or extras (milk,"
+            " sugar, etc.) with that?",
         ],
     },
 ]
@@ -3247,10 +3221,11 @@ KB_MCP_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE = [
                 "name": "knowledge_base_retrieve",
                 "arguments": {
                     "request": {
-                        "knowledgeAgentIntents": ["Provide general information about the Earth."],
+                        "knowledgeAgentIntents": [
+                            "Provide general information about the Earth.",
+                        ],
                     },
                 },
-                "tool_result": "Retrieved 11 documents.",
             },
         ],
     },
@@ -3268,8 +3243,8 @@ KB_MCP_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE = [
     {
         "role": "assistant",
         "content": [
-            "Here's an interesting overview about Earth from space, focusing on nighttime images "
-            "and what they tell us about our planet and humanity.",
+            "Here's an interesting overview about Earth from space, focusing on nighttime images and what they tell us"
+            " about our planet and humanity.",
         ],
     },
 ]
@@ -3293,7 +3268,6 @@ MCP_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE = [
                 "arguments": {
                     "query": "how Azure Functions work",
                 },
-                "tool_result": "Retrieved documentation about Azure Functions.",
             },
         ],
     },
@@ -3310,7 +3284,9 @@ MCP_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE = [
     },
     {
         "role": "assistant",
-        "content": ["Azure Functions is a serverless compute service."],
+        "content": [
+            "Azure Functions is a serverless compute service.",
+        ],
     },
 ]
 

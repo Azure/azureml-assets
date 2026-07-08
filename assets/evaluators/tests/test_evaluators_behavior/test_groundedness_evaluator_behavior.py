@@ -3,31 +3,51 @@
 
 """Behavioral tests for Groundedness Evaluator."""
 
+import asyncio
 import os
 import pytest
 from typing import Any, Dict, List
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from azure.ai.evaluation import AzureOpenAIModelConfiguration
 from azure.ai.evaluation._exceptions import EvaluationException
 
-from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
+from .base_evaluator_behavior_test import (
+    BaseEvaluatorBehaviorTest,
+    _TurnLevelUtilE2ETests,
+    _MessagesUtilE2ETests,
+)
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
+from .base_validator_unit_test import (
+    ConversationSerializationUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ConversationValidatorUnitTests,
+    CorePromptyValidatorUnitTests,
+    MessagePreprocessUnitTests,
+    MessagesOrQueryResponseUnitTests,
+    SimplifyMessagesUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+)
 from ...builtin.groundedness.evaluator._groundedness import (
     GroundednessEvaluator,
     EvaluationLevel,
     serialize_messages,
+    simplify_messages,
 )
+from ...builtin.groundedness.evaluator import _groundedness as _groundedness_module
 from ..common.evaluator_mock_config import (
+    create_mocked_evaluator,
+    create_multi_turn_mock_side_effect,
     get_flow_side_effect_for_evaluator,
-    create_none_score_flow_side_effect,
-    assert_none_score_result,
+    run_none_score_not_applicable,
 )
 
 
 @pytest.mark.unittest
-class TestGroundednessEvaluatorBehavior(BaseEvaluatorBehaviorTest, BaseToolEvaluationTest):
+class TestGroundednessEvaluatorBehavior(
+    BaseEvaluatorBehaviorTest, BaseToolEvaluationTest, _TurnLevelUtilE2ETests, _MessagesUtilE2ETests
+):
     """
     Behavioral tests for Groundedness Evaluator.
 
@@ -82,24 +102,13 @@ class TestGroundednessEvaluatorBehavior(BaseEvaluatorBehaviorTest, BaseToolEvalu
 # region Conversation-level (messages) behavioral tests
 
 
-def _create_multi_turn_mock_side_effect():
-    """Create a mock side effect that returns dict output for multi-turn groundedness."""
-
-    async def flow_side_effect(timeout, **kwargs):
-        return {
-            "llm_output": {
-                "score": 5,
-                "reason": "All responses are grounded in the provided conversation evidence.",
-                "status": "completed",
-                "properties": {
-                    "grounding_sources": ["Tool result"],
-                    "grounded_claims": "All claims supported.",
-                    "ungrounded_claims": "None",
-                },
-            }
-        }
-
-    return flow_side_effect
+# Default multi-turn flow payload for groundedness (completed conversation output).
+_MULTI_TURN_REASON = "All responses are grounded in the provided conversation evidence."
+_MULTI_TURN_PROPERTIES = {
+    "grounding_sources": ["Tool result"],
+    "grounded_claims": "All claims supported.",
+    "ungrounded_claims": "None",
+}
 
 
 def _create_mocked_groundedness_evaluator():
@@ -111,7 +120,9 @@ def _create_mocked_groundedness_evaluator():
     evaluator = GroundednessEvaluator(model_config=model_config)
     mock_side_effect = get_flow_side_effect_for_evaluator("groundedness")
     evaluator._flow = MagicMock(side_effect=mock_side_effect)
-    evaluator._multi_turn_flow = MagicMock(side_effect=_create_multi_turn_mock_side_effect())
+    evaluator._multi_turn_flow = MagicMock(
+        side_effect=create_multi_turn_mock_side_effect(reason=_MULTI_TURN_REASON, properties=_MULTI_TURN_PROPERTIES)
+    )
     return evaluator
 
 
@@ -361,7 +372,7 @@ class TestGroundednessMultiturnBehavior:
             evaluator(messages=messages)
 
     def test_messages_intermediate_response(self):
-        """Messages ending with only tool calls (no text) are rejected."""
+        """Messages ending with only tool calls (no final text) are accepted (mid-execution guard removed)."""
         evaluator = _create_mocked_groundedness_evaluator()
         intermediate_messages = [
             {"role": "user", "content": [{"type": "text", "text": "Search for info."}]},
@@ -377,8 +388,8 @@ class TestGroundednessMultiturnBehavior:
                 ],
             },
         ]
-        with pytest.raises(EvaluationException, match="must contain text content"):
-            evaluator(messages=intermediate_messages)
+        result = evaluator(messages=intermediate_messages)
+        assert isinstance(result, dict)
 
     def test_messages_pass_fail_threshold(self):
         """Score result respects threshold for pass/fail."""
@@ -408,7 +419,9 @@ def _create_mocked_groundedness_evaluator_with_level(evaluation_level=None):
     )
     mock_side_effect = get_flow_side_effect_for_evaluator("groundedness")
     evaluator._flow = MagicMock(side_effect=mock_side_effect)
-    evaluator._multi_turn_flow = MagicMock(side_effect=_create_multi_turn_mock_side_effect())
+    evaluator._multi_turn_flow = MagicMock(
+        side_effect=create_multi_turn_mock_side_effect(reason=_MULTI_TURN_REASON, properties=_MULTI_TURN_PROPERTIES)
+    )
     return evaluator
 
 
@@ -636,6 +649,18 @@ class TestGroundednessSerializeMessages:
         assert "Rule 1." in result
         assert "Rule 2." in result
 
+    def test_agent_response_entry_string_is_indented(self):
+        """A string (non-list) agent-response entry is indented via the string else-branch."""
+        messages = [
+            {"role": "user", "content": "Question?"},
+            {"role": "assistant", "content": "replaced by patch"},
+        ]
+        with patch.object(_groundedness_module, "_get_agent_response", return_value="line one\nline two"):
+            result = serialize_messages(messages)
+        assert "Agent turn 1:" in result
+        assert "line one" in result
+        assert "line two" in result
+
 
 # endregion
 
@@ -652,25 +677,158 @@ class TestGroundednessNoneScoreHandling:
 
     def test_turn_level_none_score_does_not_crash(self):
         """Turn-level eval with score=None from _flow should not raise TypeError."""
-        evaluator = _create_mocked_groundedness_evaluator()
-        evaluator._flow = MagicMock(side_effect=create_none_score_flow_side_effect())
         # Turn-level path: response + context, no query
-        result = evaluator(
+        run_none_score_not_applicable(
+            GroundednessEvaluator,
+            "groundedness",
             response="The sky is blue.",
             context="The sky appears blue due to Rayleigh scattering.",
         )
-        assert_none_score_result(result, "groundedness")
 
     def test_conversation_level_none_score_does_not_crash(self):
         """Conversation-level eval with score=None should not crash."""
-        evaluator = _create_mocked_groundedness_evaluator()
-        evaluator._multi_turn_flow = MagicMock(
-            side_effect=create_none_score_flow_side_effect(
-                reason="No agent responses to evaluate."
-            )
+        run_none_score_not_applicable(
+            GroundednessEvaluator, "groundedness", messages=VALID_GROUNDEDNESS_MESSAGES
         )
-        result = evaluator(messages=VALID_GROUNDEDNESS_MESSAGES)
-        assert_none_score_result(result, "groundedness")
 
 
 # endregion
+
+
+@pytest.mark.unittest
+class TestGroundednessValidatorUnit(
+    CorePromptyValidatorUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    MessagePreprocessUnitTests,
+    ConversationValidatorUnitTests,
+    ConversationValidatorToolCheckUnitTests,
+    ConversationSerializationUnitTests,
+    MessagesOrQueryResponseUnitTests,
+    SimplifyMessagesUnitTests,
+):
+    """Low-level unit tests for groundedness's repeated validators, utils and methods."""
+
+    evaluator_class = GroundednessEvaluator
+
+
+@pytest.mark.unittest
+class TestGroundednessInternalBranches:
+    """Direct-call tests covering internal helper branches for full line coverage."""
+
+    def test_simplify_messages_drops_tool_call_only_assistant(self):
+        """Assistant message with only a tool_call is dropped when drop_tool_calls=True."""
+        messages = [{"role": "assistant", "content": [{"type": "tool_call", "name": "f", "arguments": {}}]}]
+        assert simplify_messages(messages, drop_tool_calls=True) == []
+
+    def test_serialize_messages_single_turn_appends_agent_text(self):
+        """Single user/assistant turn serializes with an 'Agent turn' string block."""
+        result = serialize_messages([{"role": "user", "content": "q"}, {"role": "assistant", "content": "a"}])
+        assert "Agent turn 1:" in result
+
+    def test_validate_context_list_with_content(self):
+        """A non-empty list context is considered valid."""
+        ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
+        assert ev._validate_context(["hello"]) is True
+
+    def test_validate_context_non_string_non_list_truthy(self):
+        """A truthy context that is neither list nor string is considered valid."""
+        ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
+        assert ev._validate_context(123) is True
+
+    def test_parse_prompty_output_non_dict_properties_reset(self):
+        """Non-dict 'properties' in llm_output is reset to an empty dict."""
+        ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
+        result = ev._parse_prompty_output({"llm_output": {"status": "completed", "properties": "x", "score": 5}})
+        assert result[ev._result_key] == 5.0
+
+    def test_parse_prompty_output_non_numeric_score_becomes_none(self):
+        """A score value that is neither string nor number becomes None."""
+        ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
+        result = ev._parse_prompty_output({"llm_output": {"status": "completed", "score": ["l"]}})
+        assert result[ev._result_key] is None
+
+    def test_is_single_entry_string(self):
+        """A string input is treated as a single entry."""
+        ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
+        assert ev._is_single_entry("s") is True
+
+    def test_filter_file_search_results_removes_matching_tool_messages(self):
+        """File-search tool result messages are filtered out by tool_call_id."""
+        ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
+        ev._parse_tools_from_response = MagicMock(return_value=[{"name": "file_search", "tool_call_id": "tc1"}])
+        messages = [
+            {"role": "tool", "tool_call_id": "tc1"},
+            {"role": "assistant", "content": "x"},
+        ]
+        assert ev._filter_file_search_results(messages) == [{"role": "assistant", "content": "x"}]
+
+    def test_get_context_from_agent_response_extracts_file_search_text(self):
+        """Context text is extracted from file_search tool results."""
+        ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
+        ev._parse_tools_from_response = MagicMock(
+            return_value=[
+                {
+                    "type": "tool_call",
+                    "name": "file_search",
+                    "tool_result": [{"file_name": "f.txt", "content": [{"text": "hello"}]}],
+                }
+            ]
+        )
+        context = ev._get_context_from_agent_response([{"role": "assistant"}], None)
+        assert "hello" in context
+
+    def test_get_context_from_agent_response_skips_non_tool_call_entries(self):
+        """Parsed entries that are not tool_calls are skipped, yielding no context."""
+        ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
+        ev._parse_tools_from_response = MagicMock(return_value=[{"type": "other"}])
+        assert ev._get_context_from_agent_response([{"role": "assistant"}], None) == "<>"
+
+    def test_get_context_from_agent_response_handles_parse_exception(self):
+        """An exception while parsing tool calls falls back to the no-context marker."""
+        ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
+        ev._parse_tools_from_response = MagicMock(side_effect=ValueError("boom"))
+        assert ev._get_context_from_agent_response([{"role": "assistant"}], None) == "<>"
+
+    def test_do_eval_intermediate_response_returns_not_applicable(self):
+        """An intermediate (function_call) response yields a not-applicable result."""
+        ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
+        eval_input = {
+            "query": "q",
+            "response": [
+                {"role": "assistant", "content": [{"type": "function_call", "name": "f", "arguments": "{}"}]}
+            ],
+            "context": "c",
+        }
+        result = asyncio.run(ev._do_eval(eval_input))
+        assert result[ev._result_key] is None
+        assert result[f"{ev._result_key}_result"] == "not_applicable"
+
+    def test_do_eval_query_none_invalid_output_raises(self):
+        """A NaN score from the base evaluator (query absent) raises EvaluationException."""
+        ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
+
+        async def _nan(eval_input):
+            return {ev._result_key: float("nan")}
+
+        ev._the_super_do_eval = _nan
+        with pytest.raises(EvaluationException):
+            asyncio.run(ev._do_eval({"response": [{"role": "assistant", "content": "a"}], "context": "c"}))
+
+    def test_do_eval_with_query_invalid_output_raises(self):
+        """A NaN score from the base evaluator (query present) raises EvaluationException."""
+        ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
+
+        async def _nan(eval_input):
+            return {ev._result_key: float("nan")}
+
+        ev._the_super_do_eval = _nan
+        with pytest.raises(EvaluationException):
+            asyncio.run(
+                ev._do_eval(
+                    {
+                        "query": [{"role": "user", "content": "q"}],
+                        "response": [{"role": "assistant", "content": "a"}],
+                        "context": "c",
+                    }
+                )
+            )
