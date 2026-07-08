@@ -13,4 +13,4 @@ image:
     System: ""
     Docker: ""
     Oras: "1.3.2"
-    Trivy: "0.70.0"
+    Trivy: "0.72.0"
