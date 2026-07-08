@@ -2,7 +2,7 @@
 # AML training infra reads $AZUREML_CONDA_ENVIRONMENT_PATH at startup, so this
 # env-path layout is required for curated envs.
 
-FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.6-ubuntu24.04:20260621.v1
+FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.6-ubuntu24.04:20260707.v1
 
 USER root
 
@@ -51,10 +51,10 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH -q -y \
         -c conda-forge && \
     conda clean -a -y
 
-# Step 2: torch from the pytorch CUDA index (split out so pip doesn't pull CPU-only wheels).
+# Step 2: PyTorch from the CUDA 12.6 index (split out so pip doesn't pull CPU-only wheels).
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
         --index-url https://download.pytorch.org/whl/cu126 \
-        torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0
+        torch==2.10.0 torchvision==0.25.0 torchaudio==2.10.0
 
 # Step 3: everything else from requirements.txt.
 WORKDIR /workspace

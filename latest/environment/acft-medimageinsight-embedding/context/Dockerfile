@@ -4,16 +4,11 @@ USER root
 
 RUN apt-get -y update && apt-get -y upgrade && apt-get -y install unzip && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# pip 26.0.1 in both conda envs has GHSA-jp4c-xjxw-mgf9. pip is the bootstrap installer,
-# not a runtime dependency from requirements.txt or their transitive deps. The current ACPT
-# base tag (biweekly.202605.2) still ships pip 26.0.1 in conda-meta; conda-forge has 26.1.1
-# and updates the conda metadata that the SBOM scanner reads. Use --no-deps to avoid pulling
-# unrelated conda-forge package updates into the base image.
-RUN /opt/conda/bin/conda install -n ptca -c conda-forge -y --no-deps 'pip>=26.1' && \
-    /opt/conda/bin/conda install -n base -c conda-forge -y --no-deps 'pip>=26.1' && \
-    /opt/conda/bin/conda clean -afy
-
 COPY requirements.txt .
+# torch/torchvision from the pytorch CUDA index (kept out of requirements.txt so the build
+# context contains no disallowed extra pip index flag); fixes GHSA-qfhq-4f3w-5fph, GHSA-vgrw-7cvw-pwgx.
+RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cu126 \
+        torch==2.10.0 torchvision==0.25.0
 RUN pip install -r requirements.txt --no-cache-dir
 
 # mlflow 3.5.0 has CVEs (CVE-2025-14287, CVE-2026-2033, CVE-2026-2635, GHSA-fh64-r2vc-xvhr);
@@ -35,7 +30,7 @@ RUN pip uninstall -y fastmcp mcp
 #   No parent release floors aiohttp>=3.14.0, so explicit override is required.
 # pyarrow: resolves to 20.0.0 which has GHSA-rgxp-2hwp-jwgg; no parent release floors
 #   pyarrow>=23.0.1, so explicit override is required.
-# cryptography: pinned transitive dep of ACPT base image; brought in by base image, fixes GHSA-537c-gmf6-5ccf.
+# cryptography: transitive dep of ACPT base image and AzureML requirements; fixes GHSA-537c-gmf6-5ccf.
 RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.47' 'aiohttp>=3.14.0' 'pyarrow>=23.0.1' 'cryptography>=48.0.1'
 
 # Upgrade vulnerable packages in the system Python (3.13)
@@ -53,7 +48,8 @@ RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.47' 'aio
 #   release floors aiohttp>=3.14.0, so explicit override is required.
 # PyJWT: resolves to 2.12.1 which has GHSA-jq35-7prp-9v3f and GHSA-993g-76c3-p5m4. No parent
 #   release floors PyJWT>=2.13.0, so explicit override is required.
-# py-rattler: pinned transitive dep of ACPT base image conda tooling; brought in by base image, fixes GHSA-q53q-5r4j-5729.
-# cryptography: pinned transitive dep of ACPT base image; brought in by base image, fixes GHSA-537c-gmf6-5ccf.
-# pydantic-settings: pinned transitive dep of ACPT base image; brought in by base image, fixes GHSA-4xgf-cpjx-pc3j.
-RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'urllib3>=2.7.0' 'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.0' 'PyJWT>=2.13.0' 'py-rattler>=0.24.0' 'cryptography>=48.0.1' 'pydantic-settings>=2.14.2'
+# py-rattler: transitive dep of ACPT base image conda tooling; fixes GHSA-q53q-5r4j-5729.
+# cryptography: transitive dep of ACPT base image and AzureML requirements; fixes GHSA-537c-gmf6-5ccf.
+# pydantic-settings: transitive dep of AzureML requirements that can downgrade the patched base; fixes GHSA-4xgf-cpjx-pc3j.
+# msgpack: transitive dep of AzureML/MLflow requirements that can downgrade the patched base; fixes GHSA-6v7p-g79w-8964.
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'urllib3>=2.7.0' 'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.0' 'PyJWT>=2.13.0' 'py-rattler>=0.24.0' 'cryptography>=48.0.1' 'pydantic-settings>=2.14.2' 'msgpack>=1.2.1'
