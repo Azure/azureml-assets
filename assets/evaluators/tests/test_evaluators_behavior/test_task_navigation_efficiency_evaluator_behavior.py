@@ -271,6 +271,59 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior(BaseCodeEvaluatorRunner):
         assert "recall_score" in result_data["properties"]
         assert "f1_score" in result_data["properties"]
 
+    # ==================== SDK INPUT-NAME ALIAS TESTS ====================
+
+    def test_sdk_aliases_equivalent_to_canonical_names(self):
+        """SDK names (response/ground_truth) produce identical results to actions/expected_actions."""
+        canonical = self._run_evaluation(
+            actions=self.VALID_ACTIONS,
+            expected_actions=self.VALID_EXPECTED_ACTIONS,
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        sdk = self._run_evaluation(
+            response=self.VALID_ACTIONS,
+            ground_truth=self.VALID_EXPECTED_ACTIONS,
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        canonical_data = self._extract_and_print_result(canonical, "Alias - Canonical Names")
+        sdk_data = self._extract_and_print_result(sdk, "Alias - SDK Names")
+        self.assert_pass(canonical_data)
+        self.assert_pass(sdk_data)
+        assert sdk_data["score"] == canonical_data["score"]
+        assert sdk_data["properties"] == canonical_data["properties"]
+
+    def test_response_alias_only(self):
+        """'response' alias maps to 'actions' when actions is absent."""
+        results = self._run_evaluation(
+            response=self.VALID_ACTIONS,
+            expected_actions=self.VALID_EXPECTED_ACTIONS,
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Alias - response only")
+        self.assert_pass(result_data)
+
+    def test_ground_truth_alias_only(self):
+        """'ground_truth' alias maps to 'expected_actions' when expected_actions is absent."""
+        results = self._run_evaluation(
+            actions=self.VALID_ACTIONS,
+            ground_truth=self.VALID_EXPECTED_ACTIONS,
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Alias - ground_truth only")
+        self.assert_pass(result_data)
+
+    def test_canonical_names_take_precedence_over_aliases(self):
+        """When both canonical and alias keys are present, the canonical key wins."""
+        results = self._run_evaluation(
+            actions=self.VALID_ACTIONS,
+            expected_actions=self.VALID_EXPECTED_ACTIONS,
+            response=self.STRING_ACTIONS,  # invalid value; ignored because 'actions' present
+            ground_truth=["ignored"],  # ignored because 'expected_actions' present
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Alias - Canonical Precedence")
+        self.assert_pass(result_data)
+
     # ==================== EXACT MATCH MODE TESTS ====================
 
     def test_exact_match_perfect_match(self):
