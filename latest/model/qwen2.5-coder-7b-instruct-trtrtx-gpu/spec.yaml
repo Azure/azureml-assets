@@ -6,9 +6,6 @@ tags:
   contextLength: 32768
   capabilities: ''
   supportsReasoning: ''
-  reasoningStart: ''
-  reasoningEnd: ''
-  minFLVersion: 0.0.0
 system_metadata:
   alias: qwen2.5-coder-7b
   publisher: Microsoft
@@ -37,6 +34,9 @@ system_metadata:
     - chat-completion
   platformCapabilities:
     enableMaap: false
+  reasoningStart: ''
+  reasoningEnd: ''
+  minFLVersion: 0.0.0
 variantInfo:
   parents:
   - assetId: 

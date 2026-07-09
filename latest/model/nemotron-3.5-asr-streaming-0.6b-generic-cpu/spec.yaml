@@ -5,10 +5,7 @@ isArchived: true
 tags:
   capabilities: ''
   supportsReasoning: ''
-  reasoningStart: ''
-  reasoningEnd: ''
   contextLength: 0
-  minFLVersion: 1.2.1
 system_metadata:
   alias: nemotron-3.5-asr-streaming-0.6b
   publisher: Microsoft
@@ -29,6 +26,9 @@ system_metadata:
     - automatic-speech-recognition
   platformCapabilities:
     enableMaap: false
+  reasoningStart: ''
+  reasoningEnd: ''
+  minFLVersion: 1.2.1
 variantInfo:
   parents:
   - assetId: 

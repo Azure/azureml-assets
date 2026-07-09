@@ -5,10 +5,7 @@ isArchived: true
 tags:
   capabilities: reasoning
   supportsReasoning: 'true'
-  reasoningStart: <think>
-  reasoningEnd: </think>
   contextLength: 32768
-  minFLVersion: 0.0.0
 system_metadata:
   alias: phi-4-reasoning
   publisher: Microsoft
@@ -27,6 +24,9 @@ system_metadata:
     - chat-completion
   platformCapabilities:
     enableMaap: false
+  reasoningStart: <think>
+  reasoningEnd: </think>
+  minFLVersion: 0.0.0
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/Phi-4-reasoning/versions/1

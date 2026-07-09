@@ -5,10 +5,7 @@ isArchived: true
 tags:
   capabilities: tool-calling
   supportsReasoning: ''
-  reasoningStart: ''
-  reasoningEnd: ''
   contextLength: 4096
-  minFLVersion: 0.0.0
 system_metadata:
   alias: phi-4-mini
   publisher: Microsoft
@@ -36,6 +33,9 @@ system_metadata:
     - chat-completion
   platformCapabilities:
     enableMaap: false
+  reasoningStart: ''
+  reasoningEnd: ''
+  minFLVersion: 0.0.0
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/Phi-4-mini-instruct/versions/1
