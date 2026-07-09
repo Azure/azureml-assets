@@ -6,9 +6,6 @@ tags:
   contextLength: 16384
   capabilities: ''
   supportsReasoning: ''
-  reasoningStart: ''
-  reasoningEnd: ''
-  minFLVersion: 0.0.0
 system_metadata:
   alias: phi-4
   publisher: Microsoft
@@ -27,6 +24,9 @@ system_metadata:
     - chat-completion
   platformCapabilities:
     enableMaap: false
+  reasoningStart: ''
+  reasoningEnd: ''
+  minFLVersion: 0.0.0
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/Phi-4/versions/7
