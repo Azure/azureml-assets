@@ -24,7 +24,6 @@ from azure.ai.evaluation._common.utils import (
     serialize_messages,
 )
 from azure.ai.evaluation._common._experimental import experimental
-from enum import Enum
 
 from azure.ai.evaluation._evaluators._common._validators import (
     ValidatorInterface,
@@ -41,17 +40,8 @@ else:
 logger = logging.getLogger(__name__)
 
 
-# Create extended ErrorTarget enum with the new member
-def _create_extended_error_target():
-    """Create an extended ErrorTarget enum that includes CUSTOMER_SATISFACTION_EVALUATOR."""
-    existing_members = {member.name: member.value for member in ErrorTarget}
-    existing_members["CUSTOMER_SATISFACTION_EVALUATOR"] = "CustomerSatisfactionEvaluator"
-
-    ExtendedErrorTarget = Enum("ExtendedErrorTarget", existing_members)
-    return ExtendedErrorTarget
-
-
-ExtendedErrorTarget = _create_extended_error_target()
+# Use the SDK's ErrorTarget member when the installed version defines it; otherwise fall back to EVALUATE.
+_ERROR_TARGET = getattr(ErrorTarget, "CUSTOMER_SATISFACTION_EVALUATOR", ErrorTarget.EVALUATE)
 
 
 @experimental
@@ -123,12 +113,12 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         # Validate and store evaluation level
         self._evaluation_level = _resolve_evaluation_level(
-            evaluation_level, ExtendedErrorTarget.CUSTOMER_SATISFACTION_EVALUATOR
+            evaluation_level, _ERROR_TARGET
         )
 
         # Initialize input validator
         self._validator = MessagesOrQueryResponseInputValidator(
-            error_target=ExtendedErrorTarget.CUSTOMER_SATISFACTION_EVALUATOR,
+            error_target=_ERROR_TARGET,
             requires_query=True,
             enforce_tool_definitions=False,
         )
@@ -386,7 +376,7 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 internal_message="Both query and response required for Customer Satisfaction evaluator.",
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.MISSING_FIELD,
-                target=ExtendedErrorTarget.CUSTOMER_SATISFACTION_EVALUATOR,
+                target=_ERROR_TARGET,
             )
 
         if _is_intermediate_response(eval_input.get("response")):

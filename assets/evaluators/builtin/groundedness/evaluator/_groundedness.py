@@ -46,6 +46,25 @@ from azure.ai.evaluation._evaluators._common._validators import (
     MessagesOrQueryResponseInputValidator,
 )
 
+try:
+    from azure.ai.evaluation._evaluators._common._validators import (
+        GroundednessConversationValidator,
+    )
+except ImportError:
+    class GroundednessConversationValidator(ConversationValidator):
+        """Fallback used when the installed SDK lacks GroundednessConversationValidator.
+
+        Groundedness keeps rejecting ``azure_ai_search`` / ``azure_fabric`` /
+        ``sharepoint_grounding`` tool calls, whose structured results the
+        groundedness judge cannot yet consume as context.
+        """
+
+        UNSUPPORTED_TOOLS: List[str] = ConversationValidator.UNSUPPORTED_TOOLS + [
+            "azure_ai_search",
+            "azure_fabric",
+            "sharepoint_grounding",
+        ]
+
 
 try:
     from azure.ai.evaluation._user_agent import UserAgentSingleton
@@ -238,13 +257,13 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         )
 
         # Initialize input validators
-        self._validator = ConversationValidator(
+        self._validator = GroundednessConversationValidator(
             error_target=ErrorTarget.GROUNDEDNESS_EVALUATOR,
             requires_query=False,
             check_for_unsupported_tools=True
         )
 
-        self._validator_with_query = ConversationValidator(
+        self._validator_with_query = GroundednessConversationValidator(
             error_target=ErrorTarget.GROUNDEDNESS_EVALUATOR, requires_query=True,
             check_for_unsupported_tools=True
         )

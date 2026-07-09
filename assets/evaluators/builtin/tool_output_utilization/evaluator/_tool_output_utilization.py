@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+import json
 import logging
 from enum import Enum
 from typing import Dict, Union, List
@@ -12,13 +13,14 @@ from azure.ai.evaluation._exceptions import (
     EvaluationException,
     ErrorBlame,
     ErrorCategory,
+    ErrorMessage,
     ErrorTarget,
 )
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 from azure.ai.evaluation._common.utils import (
-    reformat_conversation_history,
     reformat_agent_response,
     reformat_tool_definitions,
+    _extract_text_from_content,
     _is_intermediate_response,
     _preprocess_messages,
 )
@@ -495,3 +497,218 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             category=ErrorCategory.FAILED_EXECUTION,
             target=ErrorTarget.TOOL_OUTPUT_UTILIZATION_EVALUATOR,
         )
+
+
+def _get_conversation_history(query, include_system_messages=False, include_tool_messages=False):
+    """Parse conversation history from a list of messages into structured format.
+
+    :param query: List of message dictionaries containing the conversation history
+    :type query: List[dict]
+    :param include_system_messages: Whether to include system messages in the output
+    :type include_system_messages: bool
+    :param include_tool_messages: Whether to include tool-related messages in agent responses
+    :type include_tool_messages: bool
+    :return: Dict containing parsed user_queries, agent_responses, and optionally system_message
+    :rtype: Dict[str, Union[List[List[str]], str]]
+    :raises EvaluationException: If conversation history is malformed (mismatched user/agent turns
+    """
+    all_user_queries, all_agent_responses = [], []
+    cur_user_query, cur_agent_response = [], []
+    system_message = None
+
+    for msg in query:
+        role = msg.get("role")
+        if not role:
+            continue
+        if include_system_messages and role == "system":
+            system_message = msg.get("content", "")
+
+        elif role == "user" and "content" in msg:
+            if cur_agent_response:
+                formatted_agent_response = _get_agent_response(
+                    cur_agent_response, include_tool_messages=include_tool_messages
+                )
+                all_agent_responses.append([formatted_agent_response])
+                cur_agent_response = []
+            text_in_msg = _extract_text_from_content(msg["content"])
+            if text_in_msg:
+                cur_user_query.append(text_in_msg)
+
+        elif role in ("assistant", "tool"):
+            if cur_user_query:
+                all_user_queries.append(cur_user_query)
+                cur_user_query = []
+            cur_agent_response.append(msg)
+
+    if cur_user_query:
+        all_user_queries.append(cur_user_query)
+    if cur_agent_response:
+        formatted_agent_response = _get_agent_response(cur_agent_response, include_tool_messages=include_tool_messages)
+        all_agent_responses.append([formatted_agent_response])
+
+    if len(all_user_queries) != len(all_agent_responses) + 1:
+        raise EvaluationException(
+            message=ErrorMessage.MALFORMED_CONVERSATION_HISTORY,
+            internal_message=ErrorMessage.MALFORMED_CONVERSATION_HISTORY,
+            target=ErrorTarget.CONVERSATION_HISTORY_PARSING,
+            category=ErrorCategory.INVALID_VALUE,
+            blame=ErrorBlame.USER_ERROR,
+        )
+
+    result = {"user_queries": all_user_queries, "agent_responses": all_agent_responses}
+    if include_system_messages and system_message:
+        result["system_message"] = system_message
+    return result
+
+
+def _pretty_format_conversation_history(conversation_history):
+    """Format the conversation history for better readability."""
+    formatted_history = ""
+    if conversation_history.get("system_message"):
+        formatted_history += "SYSTEM_PROMPT:\n"
+        formatted_history += "  " + conversation_history["system_message"] + "\n\n"
+    for i, (user_query, agent_response) in enumerate(
+        zip(
+            conversation_history["user_queries"],
+            conversation_history["agent_responses"] + [None],
+        )
+    ):
+        formatted_history += f"User turn {i+1}:\n"
+        for msg in user_query:
+            formatted_history += "  " + "\n  ".join(msg)
+        formatted_history += "\n\n"
+        if agent_response:
+            formatted_history += f"Agent turn {i+1}:\n"
+            for msg in agent_response:
+                formatted_history += "  " + "\n  ".join(msg)
+            formatted_history += "\n\n"
+    return formatted_history
+
+
+def reformat_conversation_history(query, logger=None, include_system_messages=False, include_tool_messages=False):
+    """Reformats the conversation history to a more compact representation."""
+    try:
+        conversation_history = _get_conversation_history(
+            query,
+            include_system_messages=include_system_messages,
+            include_tool_messages=include_tool_messages,
+        )
+        return _pretty_format_conversation_history(conversation_history)
+    except Exception as e:
+        # If the conversation history cannot be parsed for whatever reason, the original query is returned
+        # This is a fallback to ensure that the evaluation can still proceed.
+        # However the accuracy of the evaluation will be affected.
+        # From our tests the negative impact on IntentResolution is:
+        #   Higher intra model variance (0.142 vs 0.046)
+        #   Higher inter model variance (0.345 vs 0.607)
+        #   Lower percentage of mode in Likert scale (73.4% vs 75.4%)
+        #   Lower pairwise agreement between LLMs (85% vs 90% at the pass/fail level with threshold of 3)
+        if logger:
+            logger.warning(
+                "Conversation history could not be parsed; falling back to raw input. "
+                "Evaluator accuracy will degrade. Input shape: %s. Error: %s",
+                _log_safe_summary(query),
+                e,
+            )
+        return query
+
+
+def _stringify_tool_result(result):
+    """Render a tool_result value as a string the LLM judge can read.
+
+    Tool outputs arrive in mixed shapes depending on the producer:
+    - Function / MCP tools usually emit a plain ``str``.
+    - Built-in grounding tools (``azure_ai_search``, ``azure_fabric``,
+      ``sharepoint_grounding``) emit a list/dict (documents, snippets,
+      titles, URLs). Falling back to ``f"{result}"`` here produced a
+      Python ``repr`` with single quotes and trailing commas that the
+      LLM had to reverse-engineer, which is the root cause of the
+      "validator didn't parse SharePoint output" problem these
+      evaluators surfaced.
+
+    Strategy: pass strings through unchanged (zero behavior change for
+    function/MCP tools), serialize anything else as JSON with
+    ``default=str`` so non-JSON-native values (dates, enums, etc.) do
+    not raise. ``None`` is rendered as the empty string so the LLM
+    sees an empty ``[TOOL_RESULT]`` block instead of the literal text
+    ``None``.
+    """
+    if result is None:
+        return ""
+    if isinstance(result, str):
+        return result
+    try:
+        return json.dumps(result, default=str, ensure_ascii=False)
+    except (TypeError, ValueError):
+        return str(result)
+
+
+def _get_agent_response(agent_response_msgs, include_tool_messages=False):
+    """Extract formatted agent response including text, and optionally tool calls/results."""
+    agent_response_text = []
+    tool_results = {}
+
+    # First pass: collect tool results
+    if include_tool_messages:
+        for msg in agent_response_msgs:
+            if msg.get("role") == "tool" and "tool_call_id" in msg:
+                for content in msg.get("content", []):
+                    if content.get("type") == "tool_result":
+                        result = content.get("tool_result")
+                        tool_results[msg["tool_call_id"]] = f"[TOOL_RESULT] {_stringify_tool_result(result)}"
+
+    # Second pass: parse assistant messages and tool calls
+    for msg in agent_response_msgs:
+        if "role" in msg and msg.get("role") == "assistant" and "content" in msg:
+            text = _extract_text_from_content(msg["content"])
+            if text:
+                agent_response_text.extend(text)
+            if include_tool_messages:
+                for content in msg.get("content", []):
+                    # Todo: Verify if this is the correct way to handle tool calls
+                    if content.get("type") == "tool_call":
+                        if "tool_call" in content and "function" in content.get("tool_call", {}):
+                            tc = content.get("tool_call", {})
+                            func_name = tc.get("function", {}).get("name", "")
+                            args = tc.get("function", {}).get("arguments", {})
+                            tool_call_id = tc.get("id")
+                        else:
+                            tool_call_id = content.get("tool_call_id")
+                            func_name = content.get("name", "")
+                            args = content.get("arguments", {})
+                        args_str = ", ".join(f'{k}="{v}"' for k, v in args.items())
+                        call_line = f"[TOOL_CALL] {func_name}({args_str})"
+                        agent_response_text.append(call_line)
+                        if tool_call_id in tool_results:
+                            agent_response_text.append(tool_results[tool_call_id])
+
+    return agent_response_text
+
+
+def _log_safe_summary(obj):
+    """Return a non-sensitive structural summary of a payload for safe logging.
+
+    The raw payload may contain customer-controlled data (conversation history,
+    tool definitions, tool arguments/results, file content, etc.) which can
+    include credentials or PII. This helper returns shape-only metadata - type,
+    length, top-level roles/keys - sufficient to diagnose schema drift without
+    exposing values.
+    """
+    try:
+        type_name = type(obj).__name__
+        if isinstance(obj, list):
+            roles = []
+            for item in obj[:10]:
+                if isinstance(item, dict):
+                    role = item.get("role")
+                    if isinstance(role, str):
+                        roles.append(role)
+            roles_summary = roles if roles else "n/a"
+            return f"type={type_name} len={len(obj)} roles={roles_summary}"
+        if isinstance(obj, dict):
+            keys = sorted(k for k in obj.keys() if isinstance(k, str))[:10]
+            return f"type={type_name} top_keys={keys}"
+        length = len(obj) if hasattr(obj, "__len__") else "n/a"
+        return f"type={type_name} len={length}"
+    except Exception:
+        return f"type={type(obj).__name__} (summary unavailable)"

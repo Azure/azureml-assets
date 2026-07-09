@@ -4,7 +4,6 @@
 import json
 import logging
 import os
-from enum import Enum
 from typing import Dict, List, Optional, Union
 
 from typing_extensions import overload, override
@@ -84,17 +83,8 @@ def _coerce_number(value) -> Optional[float]:
     return None
 
 
-# Create extended ErrorTarget enum with the new member
-def _create_extended_error_target():
-    """Create an extended ErrorTarget enum that includes QUALITY_GRADER_EVALUATOR."""
-    existing_members = {member.name: member.value for member in ErrorTarget}
-    existing_members["QUALITY_GRADER_EVALUATOR"] = "QualityGraderEvaluator"
-
-    _ExtendedErrorTarget = Enum("ExtendedErrorTarget", existing_members)
-    return _ExtendedErrorTarget
-
-
-ExtendedErrorTarget = _create_extended_error_target()
+# Use the SDK's ErrorTarget member when the installed version defines it; otherwise fall back to EVALUATE.
+_ERROR_TARGET = getattr(ErrorTarget, "QUALITY_GRADER_EVALUATOR", ErrorTarget.EVALUATE)
 
 
 # Thresholds for response quality checks (first prompt)
@@ -181,7 +171,7 @@ class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         # Initialize input validator
         self._validator = ConversationValidator(
-            error_target=ExtendedErrorTarget.QUALITY_GRADER_EVALUATOR,
+            error_target=_ERROR_TARGET,
         )
 
         super().__init__(

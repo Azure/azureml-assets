@@ -10,7 +10,6 @@ from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, Err
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 from azure.ai.evaluation._common.utils import reformat_agent_response, _is_intermediate_response
 from azure.ai.evaluation._common._experimental import experimental
-from enum import Enum
 
 from azure.ai.evaluation._evaluators._common._validators import (
     ValidatorInterface,
@@ -21,17 +20,8 @@ from azure.ai.evaluation._evaluators._common._validators import (
 logger = logging.getLogger(__name__)
 
 
-# Create extended ErrorTarget enum with the new member
-def _create_extended_error_target():
-    """Create an extended ErrorTarget enum that includes DEFLECTION_RATE_EVALUATOR."""
-    existing_members = {member.name: member.value for member in ErrorTarget}
-    existing_members["DEFLECTION_RATE_EVALUATOR"] = "DeflectionRateEvaluator"
-
-    ExtendedErrorTarget = Enum("ExtendedErrorTarget", existing_members)
-    return ExtendedErrorTarget
-
-
-ExtendedErrorTarget = _create_extended_error_target()
+# Use the SDK's ErrorTarget member when the installed version defines it; otherwise fall back to EVALUATE.
+_ERROR_TARGET = getattr(ErrorTarget, "DEFLECTION_RATE_EVALUATOR", ErrorTarget.EVALUATE)
 
 
 @experimental
@@ -98,7 +88,7 @@ class DeflectionRateEvaluator(PromptyEvaluatorBase[Union[str, int]]):
 
         # Initialize input validator
         self._validator = ConversationValidator(
-            error_target=ExtendedErrorTarget.DEFLECTION_RATE_EVALUATOR,
+            error_target=_ERROR_TARGET,
             requires_query=False
         )
 
@@ -195,7 +185,7 @@ class DeflectionRateEvaluator(PromptyEvaluatorBase[Union[str, int]]):
                 internal_message="Response must be provided as input to the Deflection Rate evaluator.",
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.MISSING_FIELD,
-                target=ExtendedErrorTarget.DEFLECTION_RATE_EVALUATOR,
+                target=_ERROR_TARGET,
             )
 
         # Check for intermediate response (function_call or mcp_approval_request)
@@ -244,5 +234,5 @@ class DeflectionRateEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             message="Evaluator returned invalid output.",
             blame=ErrorBlame.SYSTEM_ERROR,
             category=ErrorCategory.FAILED_EXECUTION,
-            target=ExtendedErrorTarget.DEFLECTION_RATE_EVALUATOR,
+            target=_ERROR_TARGET,
         )
