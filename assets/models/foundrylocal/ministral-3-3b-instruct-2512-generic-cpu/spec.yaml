@@ -5,10 +5,7 @@ isArchived: true
 tags:
   capabilities: tool-calling
   supportsReasoning: ''
-  reasoningStart: ''
-  reasoningEnd: ''
   contextLength: 262144
-  minFLVersion: 1.2.0
 system_metadata:
   alias: ministral-3-3b-instruct-2512
   publisher: Microsoft
@@ -35,6 +32,9 @@ system_metadata:
     - vision-language-chat
   platformCapabilities:
     enableMaap: false
+  reasoningStart: ''
+  reasoningEnd: ''
+  minFLVersion: 1.2.0
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/ministral-3-3b-instruct-2512/versions/1

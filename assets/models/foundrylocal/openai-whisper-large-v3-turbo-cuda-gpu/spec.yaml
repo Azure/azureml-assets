@@ -6,9 +6,6 @@ tags:
   contextLength: 448
   capabilities: ''
   supportsReasoning: ''
-  reasoningStart: ''
-  reasoningEnd: ''
-  minFLVersion: 0.0.0
 system_metadata:
   alias: whisper-large-v3-turbo
   publisher: Microsoft
@@ -27,6 +24,9 @@ system_metadata:
     - automatic-speech-recognition
   platformCapabilities:
     enableMaap: false
+  reasoningStart: ''
+  reasoningEnd: ''
+  minFLVersion: 0.0.0
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/openai-whisper-large-v3-turbo/versions/1
