@@ -193,4 +193,13 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           check_name: Test Results for ${{ github.workflow }}
-          junit_files: ${{ env.pytest_reports }}/**/*.xml
+          # Quote 'off' so YAML does not coerce it to the boolean false; the action
+          # expects the literal string "off" to disable PR comments (the comment
+          # path can otherwise 404 when updating a comment that no longer exists).
+          comment_mode: 'off'
+          # Exclude coverage.py reports (Cobertura XML) emitted alongside the JUnit
+          # reports for evaluator assets; they are not JUnit files and would otherwise
+          # be reported as "Invalid format" parse errors by this action.
+          junit_files: |
+            ${{ env.pytest_reports }}/**/*.xml
+            !${{ env.pytest_reports }}/**/*-coverage.xml
