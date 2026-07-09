@@ -5,5 +5,5 @@ categories:
 test:
   pytest:
     enabled: true
+    conda_environment: ../../tests/conda.yaml
     tests_dir: ../../tests/test_evaluators_behavior/test_ifeval_evaluator_behavior.py
-    pip_requirements: ../tests/requirements.txt
