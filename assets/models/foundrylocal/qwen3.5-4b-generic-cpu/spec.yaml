@@ -5,10 +5,7 @@ isArchived: true
 tags:
   capabilities: reasoning,tool-calling
   supportsReasoning: 'true'
-  reasoningStart: <think>
-  reasoningEnd: </think>
   contextLength: 262144
-  minFLVersion: 1.1.0
 system_metadata:
   alias: qwen3.5-4b
   publisher: Microsoft
@@ -35,6 +32,9 @@ system_metadata:
     - vision-language-chat
   platformCapabilities:
     enableMaap: false
+  reasoningStart: <think>
+  reasoningEnd: </think>
+  minFLVersion: 1.1.0
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/qwen3.5-4b/versions/1

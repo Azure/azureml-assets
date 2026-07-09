@@ -146,6 +146,9 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
 
     _validator: ValidatorInterface
 
+    _INPUT_ALIASES = {"actions": "response", "expected_actions": "ground_truth"}
+    """Canonical eval-input keys mapped to their accepted SDK-style aliases."""
+
     @override
     def __init__(
         self,
@@ -191,6 +194,17 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
 
         super().__init__(threshold=1.0)
 
+    def _normalize_input_aliases(self, eval_input: Dict[str, Any]) -> None:
+        """Map SDK-style input keys onto the canonical keys in place.
+
+        If a canonical key (``actions``/``expected_actions``) is absent but its alias
+        (``response``/``ground_truth``) is provided, copy the alias value to the canonical
+        key so the rest of the pipeline can rely on a single set of names.
+        """
+        for canonical, alias in self._INPUT_ALIASES.items():
+            if eval_input.get(canonical) is None and eval_input.get(alias) is not None:
+                eval_input[canonical] = eval_input[alias]
+
     @override
     async def _real_call(self, **kwargs):
         """Perform asynchronous call where real end-to-end evaluation logic is executed.
@@ -200,6 +214,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         :return: The evaluation result.
         :rtype: Dict[str, Union[float, str, Dict[str, float]]]
         """
+        self._normalize_input_aliases(kwargs)
         self._validator.validate_eval_input(kwargs)
         return await self._the_super_real_call(**kwargs)
 

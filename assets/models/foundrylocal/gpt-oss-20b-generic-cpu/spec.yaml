@@ -6,9 +6,6 @@ tags:
   contextLength: 131072
   capabilities: reasoning
   supportsReasoning: ''
-  reasoningStart: ''
-  reasoningEnd: ''
-  minFLVersion: 0.0.0
 system_metadata:
   alias: gpt-oss-20b
   publisher: Microsoft
@@ -26,6 +23,9 @@ system_metadata:
     - chat-completion
   platformCapabilities:
     enableMaap: false
+  reasoningStart: ''
+  reasoningEnd: ''
+  minFLVersion: 0.0.0
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml-openai-oss/models/gpt-oss-20b/versions/9

@@ -5,10 +5,7 @@ isArchived: true
 tags:
   capabilities: tool-calling
   supportsReasoning: ''
-  reasoningStart: ''
-  reasoningEnd: ''
   contextLength: 32768
-  minFLVersion: 0.0.0
 system_metadata:
   alias: qwen2.5-0.5b
   publisher: Microsoft
@@ -34,6 +31,9 @@ system_metadata:
     - chat-completion
   platformCapabilities:
     enableMaap: false
+  reasoningStart: ''
+  reasoningEnd: ''
+  minFLVersion: 0.0.0
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/qwen2.5-0.5b-instruct/versions/1

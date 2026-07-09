@@ -88,6 +88,56 @@ class BaseEvaluatorRunner(ABC):
 
         return self.evaluator_type(**kwargs)
 
+    def _build_evaluator_with_mocked_flows(
+        self, kwargs: Dict[str, Any], flow_side_effect: Any, flow_attrs: Tuple[str, ...]
+    ) -> Tuple[EvaluatorBase, Dict[str, Any], Optional[MagicMock]]:
+        """Build the evaluator, deep-copy its call kwargs, and mock the given flows.
+
+        Splits ``kwargs`` into constructor vs call args, instantiates the evaluator,
+        deep-copies the call kwargs (so evaluator preprocessing cannot mutate shared
+        test data), and replaces every present attribute in ``flow_attrs`` with a
+        ``MagicMock`` using ``flow_side_effect``. When any flow is mocked, prompty
+        reloading is disabled. Pass an empty ``flow_attrs`` to skip all mocking.
+
+        Args:
+            kwargs: Args in constructor_arg_names go to the constructor; the rest
+                    become the (deep-copied) evaluator call kwargs.
+            flow_side_effect: Side-effect callable assigned to each mocked flow.
+            flow_attrs: Names of the flow attributes to mock when present.
+
+        Returns:
+            Tuple of (evaluator, call_kwargs, flow_mock) where flow_mock is the mock
+            assigned to ``_flow`` (or None when ``_flow`` is not mocked).
+        """
+        # Split kwargs into constructor args vs call args
+        constructor_kwargs = {}
+        call_kwargs = {}
+        for key, value in kwargs.items():
+            if key in self.constructor_arg_names:
+                constructor_kwargs[key] = value
+            else:
+                call_kwargs[key] = value
+
+        evaluator = self._init_evaluator(**constructor_kwargs)
+
+        # Deep-copy call_kwargs to prevent evaluator preprocessing (e.g.,
+        # _normalize_function_call_types) from mutating shared test data.
+        call_kwargs = copy.deepcopy(call_kwargs)
+
+        flow_mock = None
+        for flow_attr in flow_attrs:
+            if hasattr(evaluator, flow_attr):
+                mock = MagicMock(side_effect=flow_side_effect)
+                setattr(evaluator, flow_attr, mock)
+                if flow_attr == "_flow":
+                    flow_mock = mock
+
+        # Disable flow reloading (e.g., groundedness query prompty) when mocking.
+        if flow_attrs and hasattr(evaluator, "_ensure_query_prompty_loaded"):
+            evaluator._ensure_query_prompty_loaded = MagicMock()
+
+        return evaluator, call_kwargs, flow_mock
+
     def _run_evaluation_and_return_mocked_flow(self, **kwargs) -> Tuple[Dict[str, Any], Optional[MagicMock]]:
         """Run evaluation and return both results and the mocked flow.
 
@@ -101,38 +151,12 @@ class BaseEvaluatorRunner(ABC):
         Returns:
             Tuple of (results dict, flow mock or None if not mocking).
         """
-        # Split kwargs into constructor args vs call args
-        constructor_kwargs = {}
-        call_kwargs = {}
-
-        for key, value in kwargs.items():
-            if key in self.constructor_arg_names:
-                constructor_kwargs[key] = value
-            else:
-                call_kwargs[key] = value
-
-        evaluator = self._init_evaluator(**constructor_kwargs)
-
-        # Deep-copy call_kwargs to prevent evaluator preprocessing (e.g.,
-        # _normalize_function_call_types) from mutating shared test data.
-        call_kwargs = copy.deepcopy(call_kwargs)
-
-        # Mock the flow only for behavioral tests
-        flow_mock = None
-        if self.use_mocking:
-            if hasattr(evaluator, "_flow"):
-                flow_mock = MagicMock(side_effect=get_flow_side_effect_for_evaluator(self.result_key))
-                evaluator._flow = flow_mock
-
-            # Mock secondary flows (e.g., quality grader's groundedness flow)
-            if hasattr(evaluator, "_groundedness_flow"):
-                evaluator._groundedness_flow = MagicMock(
-                    side_effect=get_flow_side_effect_for_evaluator(self.result_key)
-                )
-
-            # Special handling for groundedness evaluator to disable flow reloading
-            if hasattr(evaluator, "_ensure_query_prompty_loaded"):
-                evaluator._ensure_query_prompty_loaded = MagicMock()
+        # Mock the primary and groundedness flows only for behavioral tests.
+        flow_side_effect = get_flow_side_effect_for_evaluator(self.result_key) if self.use_mocking else None
+        flow_attrs = ("_flow", "_groundedness_flow") if self.use_mocking else ()
+        evaluator, call_kwargs, flow_mock = self._build_evaluator_with_mocked_flows(
+            kwargs, flow_side_effect, flow_attrs
+        )
 
         try:
             results = evaluator(**call_kwargs)
@@ -161,6 +185,58 @@ class BaseEvaluatorRunner(ABC):
         """
         results, _ = self._run_evaluation_and_return_mocked_flow(**kwargs)
         return results
+
+    def _run_evaluation_with_flow_side_effect(self, flow_side_effect, **kwargs) -> Dict[str, Any]:
+        """Run evaluation with a custom flow side-effect to simulate specific flow outputs.
+
+        Builds the evaluator like a behavioral test, but replaces the mocked flow's
+        side-effect with ``flow_side_effect`` (e.g., a skipped/None-score output). Useful
+        for regression tests of post-flow result handling. Exceptions are intentionally
+        not swallowed so that crashes surface as test failures.
+
+        Args:
+            flow_side_effect: Side-effect callable assigned to the mocked flow(s).
+            **kwargs: Args in constructor_arg_names are passed to the evaluator constructor,
+                      remaining kwargs are passed to the evaluator call.
+
+        Returns:
+            Dictionary containing evaluation results.
+        """
+        evaluator, call_kwargs, _ = self._build_evaluator_with_mocked_flows(
+            kwargs, flow_side_effect, ("_flow", "_multi_turn_flow", "_groundedness_flow")
+        )
+        return evaluator(**call_kwargs)
+
+    def _run_and_capture_flow_input(self, **kwargs) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+        """Run the evaluator end-to-end with mocked flows and capture what the flow received.
+
+        Mocks every flow (``_flow``/``_multi_turn_flow``/``_groundedness_flow``) with a
+        capturing side-effect that records the keyword arguments the evaluator passes to
+        the flow, then delegates to the evaluator's normal per-evaluator mock output so
+        the call completes. Lets end-to-end tests assert that a util's transformation
+        (message serialization, agent-response/history reformatting, tool-definition
+        extraction, MCP-approval dropping, ...) actually reaches the LLM flow.
+
+        Exceptions are not swallowed so that unexpected crashes surface as failures.
+
+        Args:
+            **kwargs: Args in constructor_arg_names are passed to the evaluator constructor,
+                      remaining kwargs are passed to the evaluator call.
+
+        Returns:
+            Tuple of (results dict, captured flow-input dict). The captured dict is empty
+            when the evaluator short-circuits (e.g. a not-applicable result) without
+            calling any flow.
+        """
+        captured: Dict[str, Any] = {}
+        base_side_effect = get_flow_side_effect_for_evaluator(self.result_key)
+
+        async def capturing_side_effect(timeout=None, **flow_kwargs):
+            captured.update(flow_kwargs)
+            return await base_side_effect(timeout, **flow_kwargs)
+
+        results = self._run_evaluation_with_flow_side_effect(capturing_side_effect, **kwargs)
+        return results, captured
 
     def _extract_and_print_result(self, results: Dict[str, Any], test_label: str) -> Dict[str, Any]:
         """Extract result fields and print them.
