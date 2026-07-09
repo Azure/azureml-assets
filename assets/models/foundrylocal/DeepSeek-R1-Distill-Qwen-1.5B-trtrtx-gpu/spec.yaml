@@ -5,10 +5,7 @@ isArchived: true
 tags:
   capabilities: reasoning
   supportsReasoning: 'true'
-  reasoningStart: <think>
-  reasoningEnd: </think>
   contextLength: 131072
-  minFLVersion: 0.0.0
 system_metadata:
   alias: deepseek-r1-1.5b
   publisher: Microsoft
@@ -27,6 +24,9 @@ system_metadata:
     - chat-completion
   platformCapabilities:
     enableMaap: false
+  reasoningStart: <think>
+  reasoningEnd: </think>
+  minFLVersion: 0.0.0
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/DeepSeek-R1-Distill-Qwen-1.5B/versions/1
