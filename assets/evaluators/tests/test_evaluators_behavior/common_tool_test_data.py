@@ -2341,30 +2341,43 @@ MCP_IR_EXPECTED_FLOW_QUERY = MCP_EXPECTED_FLOW_QUERY
 
 # ----- Shared expected flow response (TOU/TA/TC) -----
 LOCAL_CALLS_EXPECTED_FLOW_RESPONSE = (
-                                     "[TOOL_CALL] get_horoscope(sign=\"Aquarius\")\n[TOOL_RESULT] {'horoscope': "
-                                     "'Aquarius: Next Tuesday you will befriend a baby otter.'}\nYour horoscope for "
-                                     "Aquarius is: Next Tuesday you will befriend a baby otter."
+    "[TOOL_CALL] get_horoscope(sign=\"Aquarius\")\n"
+    "[TOOL_RESULT] {\"horoscope\": \"Aquarius: Next Tuesday you will befriend a baby otter.\"}\n"
+    "Your horoscope for Aquarius is: Next Tuesday you will befriend a baby otter."
 )
 
 CODE_INTERPRETER_EXPECTED_FLOW_RESPONSE = (
-                                          "Sure! Here’s a simple Python code to generate the Fibonacci series up to "
-                                          "the nth term (for example, `n = 5`). I’ll also run this code for `n = 5` "
-                                          "so you see the result.\n\n```python\ndef fibonacci_series(n):\n    "
-                                          "fib_series = [0, 1]\n    while len(fib_series) < n:\n        next_value = "
-                                          "fib_series[-1] + fib_series[-2]\n        fib_series.append(next_value)\n   "
-                                          " return fib_series[:n]\n\n# Try it out with value 5\nresult = "
-                                          "fibonacci_series(5)\nprint(result)\n```\n\nNow, I'll run this code for `n "
-                                          "= 5` and show you the output:\n[TOOL_CALL] "
-                                          "code_interpreter_call(input=\"def fibonacci_series(n):\n    fib_series = "
-                                          "[0, 1]\n    while len(fib_series) < n:\n        next_value = "
-                                          "fib_series[-1] + fib_series[-2]\n        fib_series.append(next_value)\n   "
-                                          " return fib_series[:n]\n\n# Try it out with value 5\nresult = "
-                                          "fibonacci_series(5)\nresult\")\n[TOOL_RESULT] [{'logs': 'The 15th number "
-                                          "in the Fibonacci sequence is 610.\\n', 'type': 'logs'}, {'logs': \"'The "
-                                          "15th number in the Fibonacci sequence is 610.'\", 'type': 'logs'}]\nThe "
-                                          "Fibonacci series for the value 5 is:  \n**[0, 1, 1, 2, 3]**\n\nLet me know "
-                                          "if you'd like to try it for another value or a different programming "
-                                          "language!"
+    "Sure! Here’s a simple Python code to generate the "
+    "Fibonacci series up to the nth term (for example, "
+    "`n = 5`). I’ll also run this code for `n = 5` so you see the result.\n\n"
+    "```python\ndef fibonacci_series(n):\n"
+    "    fib_series = [0, 1]\n"
+    "    while len(fib_series) < n:\n"
+    "        next_value = fib_series[-1] + fib_series[-2]\n"
+    "        fib_series.append(next_value)\n"
+    "    return fib_series[:n]\n\n"
+    "# Try it out with value 5\n"
+    "result = fibonacci_series(5)\n"
+    "print(result)\n"
+    "```\n\n"
+    "Now, I'll run this code for `n = 5` and show you the output:\n"
+    "[TOOL_CALL] code_interpreter_call("
+    "input=\"def fibonacci_series(n):\n"
+    "    fib_series = [0, 1]\n"
+    "    while len(fib_series) < n:\n"
+    "        next_value = fib_series[-1] + fib_series[-2]\n"
+    "        fib_series.append(next_value)\n"
+    "    return fib_series[:n]\n\n"
+    "# Try it out with value 5\n"
+    "result = fibonacci_series(5)\n"
+    "result\")\n"
+    "[TOOL_RESULT] [{\"logs\": \"The 15th number in the Fibonacci sequence is 610.\\n\", "
+    "\"type\": \"logs\"}, "
+    "{\"logs\": \"'The 15th number in the Fibonacci sequence is 610.'\", "
+    "\"type\": \"logs\"}]\n"
+    "The Fibonacci series for the value 5 is:  \n"
+    "**[0, 1, 1, 2, 3]**\n\n"
+    "Let me know if you'd like to try it for another value or a different programming language!"
 )
 
 BING_GROUNDING_EXPECTED_FLOW_RESPONSE = (
@@ -2392,18 +2405,26 @@ BING_CUSTOM_SEARCH_EXPECTED_FLOW_RESPONSE = (
 )
 
 FILE_SEARCH_EXPECTED_FLOW_RESPONSE = (
-    "[TOOL_CALL] file_search_call(queries=['good restaurant recommendation', 'best restaurant', 'top rated restaurant'"
-    ", 'recommended restaurants', \"what's a good restaurant\"])\n"
-    "[TOOL_RESULT] [{'attributes': {}, 'file_id': 'assistant-StE61XCSBRyLv11Ytyckea', 'filename': 'french_cafe_menu.md"
-    "', 'score': 0.0333, 'text': '# Le Jardin de Paris', 'vector_store_id': ''}, {'attributes': {}, 'file_id': 'assist"
-    "ant-Xpu5yP1AQZiB86Hz5iG4uv', 'filename': 'italian_diner_menu.md', 'score': 0.0328, 'text': '# Trattoria Bella Not"
-    "te', 'vector_store_id': ''}]\n"
-    "If you're looking for a good restaurant, here are two tasty options based on the menus provided:\n"
-    "\n"
-    "1. **Le Jardin de Paris** (French Caf\u00e9)\n"
-    "2. **Trattoria Bella Notte** (Italian Diner)\n"
-    "\n"
-    "Both are excellent choices\u2014pick based on whether you\u2019re in the mood for French or Italian!"
+    "[TOOL_CALL] file_search_call(queries=['good restaurant recommendation', "
+    "'best restaurant', 'top rated restaurant', 'recommended restaurants', "
+    "\"what's a good restaurant\"])\n"
+    "[TOOL_RESULT] [{\"attributes\": {}, "
+    "\"file_id\": \"assistant-StE61XCSBRyLv11Ytyckea\", "
+    "\"filename\": \"french_cafe_menu.md\", "
+    "\"score\": 0.0333, "
+    "\"text\": \"# Le Jardin de Paris\", "
+    "\"vector_store_id\": \"\"}, "
+    "{\"attributes\": {}, "
+    "\"file_id\": \"assistant-Xpu5yP1AQZiB86Hz5iG4uv\", "
+    "\"filename\": \"italian_diner_menu.md\", "
+    "\"score\": 0.0328, "
+    "\"text\": \"# Trattoria Bella Notte\", "
+    "\"vector_store_id\": \"\"}]\n"
+    "If you're looking for a good restaurant, "
+    "here are two tasty options based on the menus provided:\n\n"
+    "1. **Le Jardin de Paris** (French Café)\n"
+    "2. **Trattoria Bella Notte** (Italian Diner)\n\n"
+    "Both are excellent choices—pick based on whether you’re in the mood for French or Italian!"
 )
 
 AZURE_AI_SEARCH_EXPECTED_FLOW_RESPONSE = (
@@ -2427,25 +2448,34 @@ AZURE_AI_SEARCH_EXPECTED_FLOW_RESPONSE = (
 )
 
 SHAREPOINT_EXPECTED_FLOW_RESPONSE = (
-                                    '[TOOL_CALL] sharepoint_grounding(query="income details")\n[TOOL_RESULT] '
-                                    '{\'documents\': []}\nI searched using the term "income details" but couldn\'t '
-                                    'find any relevant information in your SharePoint data.'
+    "[TOOL_CALL] sharepoint_grounding(query=\"income details\")\n"
+    "[TOOL_RESULT] {\"documents\": []}\nI searched "
+    "using the term \"income details\" but couldn't find "
+    "any relevant information in your SharePoint data."
 )
 
 FABRIC_EXPECTED_FLOW_RESPONSE = (
-                                "[TOOL_CALL] azure_fabric(query=\"average income for the user\")\n[TOOL_RESULT] "
-                                "{'documents': [{'id': '416ae013-64ed-4356-b633-ce9e306a74ca', 'content': \"The "
-                                "user's average income is 7,071.43.\\n\", 'filepath': 'fabric://response', 'title': "
-                                "'Fabric Response for: average income for the user', 'url': "
-                                "'https://msit.fabric.microsoft.com/groups/944d4cb8-9517-4219-991c-da6c31f3c4e7/aiskil"
-                                "ls/830e03d6-4afd-484b-8328-ee9d85510307/stage/published/threads/thread_8gXP6muTIDVIlt"
-                                "jLPYkYGpcy/runs/run_fabg2zOsCZiNOi15DRtcaIgwrijm/question/msg_Fh2TVkvUgI0wwMvz9T3OzQl"
-                                "6/source/foundry', 'metadata': '{\"source\":\"azure_fabric\",\"query\":\"average "
-                                "income for the user\",\"data_agent_url\":\"https://msit.fabric.microsoft.com/groups/9"
-                                "44d4cb8-9517-4219-991c-da6c31f3c4e7/aiskills/830e03d6-4afd-484b-8328-ee9d85510307/sta"
-                                "ge/published/threads/thread_8gXP6muTIDVIltjLPYkYGpcy/runs/run_fabg2zOsCZiNOi15DRtcaIg"
-                                "wrijm/question/msg_Fh2TVkvUgI0wwMvz9T3OzQl6/source/foundry\"}', 'score': 1, "
-                                "'knowledgeSourceIndex': 0}]}\nYour average income is 7,071.43【4:0†source】."
+    "[TOOL_CALL] azure_fabric(query=\"average income for the user\")\n"
+    "[TOOL_RESULT] {\"documents\": [{\"id\": \"416ae013-64ed-4356-b633-ce9e306a74ca\", "
+    "\"content\": \"The user's average income is 7,071.43.\\n\", "
+    "\"filepath\": \"fabric://response\", "
+    "\"title\": \"Fabric Response for: average income for the user\", "
+    "\"url\": \"https://msit.fabric.microsoft.com/groups/944d4cb8-9517-"
+    "4219-991c-da6c31f3c4e7/aiskills/830e03d6-4afd-484b"
+    "-8328-ee9d85510307/stage/published/threads/thread_"
+    "8gXP6muTIDVIltjLPYkYGpcy/runs/run_fabg2zOsCZiNOi15"
+    "DRtcaIgwrijm/question/msg_Fh2TVkvUgI0wwMvz9T3OzQl6"
+    "/source/foundry\", "
+    "\"metadata\": \"{\\\"source\\\":\\\"azure_fabric\\\","
+    "\\\"query\\\":\\\"average income for the user\\\","
+    "\\\"data_agent_url\\\":\\\"https://msit.fabric.microso"
+    "ft.com/groups/944d4cb8-9517-4219-991c-da6c31f3c4e7"
+    "/aiskills/830e03d6-4afd-484b-8328-ee9d85510307/sta"
+    "ge/published/threads/thread_8gXP6muTIDVIltjLPYkYGp"
+    "cy/runs/run_fabg2zOsCZiNOi15DRtcaIgwrijm/question/"
+    "msg_Fh2TVkvUgI0wwMvz9T3OzQl6/source/foundry\\\"}\", "
+    "\"score\": 1, \"knowledgeSourceIndex\": 0}]}\n"
+    "Your average income is 7,071.43【4:0†source】."
 )
 
 OPENAPI_EXPECTED_FLOW_RESPONSE = (
@@ -2482,18 +2512,23 @@ IMAGE_GEN_EXPECTED_FLOW_RESPONSE = (
 )
 
 MEMORY_SEARCH_EXPECTED_FLOW_RESPONSE = (
-                                       "[TOOL_CALL] memory_search()\n[TOOL_RESULT] [{'content': 'User prefers dark "
-                                       "roast coffee.', 'kind': 'user_profile', 'memory_id': "
-                                       "'3a353f9202ca41bf95a4a9ef21d90d41', 'scope': 'user_123', 'updated_at': "
-                                       "1771323829}, {'content': 'User prefers dark roast coffee.', 'kind': "
-                                       "'user_profile', 'memory_id': '3a353f9202ca41bf95a4a9ef21d90d41', 'scope': "
-                                       "'user_123', 'updated_at': 1771323829}, {'content': 'The user stated a "
-                                       "preference for dark roast coffee. Dark roast coffee is characterized by a "
-                                       "bold flavor, rich aroma, and lower acidity compared to lighter roasts.', "
-                                       "'kind': 'chat_summary', 'memory_id': '9117c9f9d7424f0290c523d1cd3de45a', "
-                                       "'scope': 'user_123', 'updated_at': 1771323829}]\nSure! I'll order your "
-                                       "usual—one dark roast coffee. Would you like any specific size or extras "
-                                       "(milk, sugar, etc.) with that?"
+    "[TOOL_CALL] memory_search()\n"
+    '[TOOL_RESULT] [{"content": "User prefers dark roast coffee.", '
+    '"kind": "user_profile", '
+    '"memory_id": "3a353f9202ca41bf95a4a9ef21d90d41", '
+    '"scope": "user_123", "updated_at": 1771323829}, '
+    '{"content": "User prefers dark roast coffee.", '
+    '"kind": "user_profile", '
+    '"memory_id": "3a353f9202ca41bf95a4a9ef21d90d41", '
+    '"scope": "user_123", "updated_at": 1771323829}, '
+    '{"content": "The user stated a preference for dark roast coffee. '
+    'Dark roast coffee is characterized by a bold flavor, '
+    'rich aroma, and lower acidity compared to lighter roasts.", '
+    '"kind": "chat_summary", '
+    '"memory_id": "9117c9f9d7424f0290c523d1cd3de45a", '
+    '"scope": "user_123", "updated_at": 1771323829}]\n'
+    "Sure! I'll order your usual\u2014one dark roast coffee. "
+    "Would you like any specific size or extras (milk, sugar, etc.) with that?"
 )
 
 KB_MCP_EXPECTED_FLOW_RESPONSE = (
