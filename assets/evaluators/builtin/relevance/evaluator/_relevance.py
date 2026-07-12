@@ -34,7 +34,7 @@ from azure.ai.evaluation._evaluators._common._validators import (
 
 try:  # azure-ai-evaluation >= 1.18.1
     from azure.ai.evaluation._common.utils import _is_intermediate_response, _preprocess_messages
-except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
     from azure.ai.evaluation._evaluators._common._base_prompty_eval import (
         _is_intermediate_response,
         _preprocess_messages,
@@ -47,7 +47,7 @@ try:  # azure-ai-evaluation >= 1.18.1
         _drop_mcp_approval_messages,
         _normalize_function_call_types,
     )
-except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
     from azure.ai.evaluation._evaluators._common._base_prompty_eval import (  # noqa: F401
         _drop_mcp_approval_messages,
         _normalize_function_call_types,

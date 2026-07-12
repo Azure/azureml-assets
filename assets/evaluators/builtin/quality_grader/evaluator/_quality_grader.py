@@ -32,7 +32,7 @@ from azure.ai.evaluation._evaluators._common._validators import (
 
 try:  # azure-ai-evaluation >= 1.18.1
     from azure.ai.evaluation._common.utils import _is_intermediate_response, _preprocess_messages
-except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
     from azure.ai.evaluation._evaluators._common._base_prompty_eval import (
         _is_intermediate_response,
         _preprocess_messages,
@@ -45,7 +45,7 @@ try:  # azure-ai-evaluation >= 1.18.1
         _drop_mcp_approval_messages,
         _normalize_function_call_types,
     )
-except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
     from azure.ai.evaluation._evaluators._common._base_prompty_eval import (  # noqa: F401
         _drop_mcp_approval_messages,
         _normalize_function_call_types,
@@ -53,7 +53,7 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
 
 try:  # azure-ai-evaluation >= 1.18.1
     from azure.ai.evaluation._common.utils import _coerce_bool, _coerce_number, _log_safe_summary
-except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
     # Bodies below are copied from azure-ai-evaluation 1.18.1 (the earliest release
     # that ships these symbols).
     def _coerce_bool(value) -> Optional[bool]:
@@ -139,7 +139,7 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
 
 try:
     from azure.ai.evaluation._user_agent import UserAgentSingleton
-except ImportError:
+except ImportError:  # pragma: no cover
 
     class UserAgentSingleton:
         """Fallback singleton for user agent when import fails."""
@@ -152,7 +152,7 @@ except ImportError:
 
 try:
     from azure.ai.evaluation._common.utils import construct_prompty_model_config, validate_model_config
-except ImportError:
+except ImportError:  # pragma: no cover
     from ..._common.utils import construct_prompty_model_config, validate_model_config
 
 logger = logging.getLogger(__name__)

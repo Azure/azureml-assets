@@ -42,7 +42,7 @@ from azure.ai.evaluation._evaluators._common._validators import (  # noqa: F401
 
 try:  # azure-ai-evaluation >= 1.18.1
     from azure.ai.evaluation._common.utils import _is_intermediate_response, _preprocess_messages
-except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
     from azure.ai.evaluation._evaluators._common._base_prompty_eval import (
         _is_intermediate_response,
         _preprocess_messages,
@@ -55,7 +55,7 @@ try:  # azure-ai-evaluation >= 1.18.1
         _drop_mcp_approval_messages,
         _normalize_function_call_types,
     )
-except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
     from azure.ai.evaluation._evaluators._common._base_prompty_eval import (  # noqa: F401
         _drop_mcp_approval_messages,
         _normalize_function_call_types,
@@ -63,7 +63,7 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
 
 try:  # azure-ai-evaluation >= 1.18.1
     from azure.ai.evaluation._common.utils import _stringify_tool_result, _log_safe_summary
-except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
     # Bodies below are copied from azure-ai-evaluation 1.18.1 (the earliest release
     # that ships these symbols).
     def _stringify_tool_result(result):
