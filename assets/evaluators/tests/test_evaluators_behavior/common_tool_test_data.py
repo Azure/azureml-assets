@@ -2439,8 +2439,8 @@ AZURE_AI_SEARCH_EXPECTED_FLOW_RESPONSE = (
 )
 
 SHAREPOINT_EXPECTED_FLOW_RESPONSE = (
-    "[TOOL_CALL] sharepoint_grounding(query=\"income det"
-    "ails\")\n[TOOL_RESULT] {\"documents\": []}\nI searched "
+    "[TOOL_CALL] sharepoint_grounding(query=\"income details\")\n"
+    "[TOOL_RESULT] {\"documents\": []}\nI searched "
     "using the term \"income details\" but couldn't find "
     "any relevant information in your SharePoint data."
 )
