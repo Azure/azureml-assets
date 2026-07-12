@@ -2341,11 +2341,9 @@ MCP_IR_EXPECTED_FLOW_QUERY = MCP_EXPECTED_FLOW_QUERY
 
 # ----- Shared expected flow response (TOU/TA/TC) -----
 LOCAL_CALLS_EXPECTED_FLOW_RESPONSE = (
-    "[TOOL_CALL] get_horoscope(sign=\"Aquarius\")\n[TOOL_R"
-    "ESULT] {\"horoscope\": \"Aquarius: Next Tuesday you w"
-    "ill befriend a baby otter.\"}\nYour horoscope for Aq"
-    "uarius is: Next Tuesday you will befriend a baby o"
-    "tter."
+    "[TOOL_CALL] get_horoscope(sign=\"Aquarius\")\n"
+    "[TOOL_RESULT] {\"horoscope\": \"Aquarius: Next Tuesday you will befriend a baby otter.\"}\n"
+    "Your horoscope for Aquarius is: Next Tuesday you will befriend a baby otter."
 )
 
 CODE_INTERPRETER_EXPECTED_FLOW_RESPONSE = (
