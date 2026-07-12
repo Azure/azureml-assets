@@ -205,12 +205,12 @@ class _ValidatorUnitTestSupport:
             " _preprocess_messages _real_call _return_not_applicable_result _the_super_real_call"
         ),
         "customer_satisfaction": (
-            "ConversationValidator EvaluationLevel _build_result _convert_kwargs_to_eval_input _do_eval"
-            " _drop_mcp_approval_messages _get_token_metadata _is_intermediate_response"
-            " _merge_query_response_messages _normalize_function_call_types _parse_prompty_output"
-            " _preprocess_messages _real_call _resolve_evaluation_level _return_not_applicable_result"
-            " _should_use_conversation_level _split_messages_at_latest_user _the_super_real_call"
-            " _wrap_string_messages serialize_messages"
+            "ConversationValidator EvaluationLevel MessagesOrQueryResponseInputValidator _build_result"
+            " _convert_kwargs_to_eval_input _do_eval _drop_mcp_approval_messages _get_token_metadata"
+            " _is_intermediate_response _merge_query_response_messages _normalize_function_call_types"
+            " _parse_prompty_output _preprocess_messages _real_call _resolve_evaluation_level"
+            " _return_not_applicable_result _should_use_conversation_level _split_messages_at_latest_user"
+            " _the_super_real_call _wrap_string_messages serialize_messages"
         ),
         "task_adherence": (
             "ConversationValidator EvaluationLevel MessagesOrQueryResponseInputValidator _build_result"

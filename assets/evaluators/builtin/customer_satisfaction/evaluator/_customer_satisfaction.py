@@ -2,7 +2,8 @@
 # Licensed under the MIT License.
 import os
 import logging
-from typing import Any, Dict, Union, List, Optional
+from enum import Enum
+from typing import Any, Dict, Union, List, Optional, Tuple
 
 from typing_extensions import overload, override
 
@@ -10,26 +11,388 @@ from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, Err
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 from azure.ai.evaluation._model_configurations import Conversation
 from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
-from azure.ai.evaluation._common.constants import EvaluationLevel
+from azure.ai.evaluation._common._experimental import experimental
 from azure.ai.evaluation._common.utils import reformat_conversation_history, reformat_agent_response
 from azure.ai.evaluation._common.utils import (
     construct_prompty_model_config,
     validate_model_config,
-    _resolve_evaluation_level,
-    _is_intermediate_response,
-    _preprocess_messages,
-    _wrap_string_messages,
-    _merge_query_response_messages,
-    _split_messages_at_latest_user,
-    serialize_messages,
 )
-from azure.ai.evaluation._common._experimental import experimental
-
 from azure.ai.evaluation._evaluators._common._validators import (
     ValidatorInterface,
-    MessageRole,
-    MessagesOrQueryResponseInputValidator,
+    ConversationValidator,
+    ToolDefinitionsValidator,
 )
+
+# ---------------------------------------------------------------------------
+# Imports target azure-ai-evaluation >= 1.18.1. Each ``except ImportError``
+# branch below inlines the corresponding azure-ai-evaluation 1.18.1
+# implementation so the evaluator also runs on azure-ai-evaluation 1.17.x,
+# which predates these symbols. The 1.17.x compatibility branches are kept only
+# for backward compatibility and can be removed once 1.17.x is no longer
+# supported.
+# ---------------------------------------------------------------------------
+
+try:  # azure-ai-evaluation >= 1.18.1
+    from azure.ai.evaluation._common.utils import _is_intermediate_response, _preprocess_messages
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)
+    from azure.ai.evaluation._evaluators._common._base_prompty_eval import (
+        _is_intermediate_response,
+        _preprocess_messages,
+    )
+
+# Re-exported so the module keeps exposing the message-preprocessing helpers used
+# by the test suite; they are invoked indirectly through _preprocess_messages.
+try:  # azure-ai-evaluation >= 1.18.1
+    from azure.ai.evaluation._common.utils import (  # noqa: F401
+        _drop_mcp_approval_messages,
+        _normalize_function_call_types,
+    )
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)
+    from azure.ai.evaluation._evaluators._common._base_prompty_eval import (  # noqa: F401
+        _drop_mcp_approval_messages,
+        _normalize_function_call_types,
+    )
+
+try:  # azure-ai-evaluation >= 1.18.1
+    from azure.ai.evaluation._evaluators._common._validators import MessageRole
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)
+    # azure-ai-evaluation 1.18.1 MessageRole; the 1.17.x SDK enum omits DEVELOPER,
+    # which serialize_messages below relies on.
+    class MessageRole(str, Enum):
+        """Valid message roles in conversations."""
+
+        USER = "user"
+        ASSISTANT = "assistant"
+        SYSTEM = "system"
+        TOOL = "tool"
+        DEVELOPER = "developer"
+
+try:  # azure-ai-evaluation >= 1.18.1
+    from azure.ai.evaluation._common.constants import EvaluationLevel
+    from azure.ai.evaluation._common.utils import (
+        _resolve_evaluation_level,
+        _wrap_string_messages,
+        _merge_query_response_messages,
+        _split_messages_at_latest_user,
+        serialize_messages,
+    )
+    from azure.ai.evaluation._evaluators._common._validators import MessagesOrQueryResponseInputValidator
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)
+    # Bodies below are copied from azure-ai-evaluation 1.18.1 (the earliest release
+    # that ships these symbols). The only change is that serialize_messages uses the
+    # module-level MessageRole above so the DEVELOPER role stays available on 1.17.x.
+    from azure.ai.evaluation._common.utils import (
+        _extract_text_from_content,
+        _get_agent_response,
+        _pretty_format_conversation_history,
+    )
+
+    class EvaluationLevel(str, Enum):
+        """Supported evaluation levels for multi-turn evaluators.
+
+        - ``CONVERSATION``: Force conversation-level evaluation using the multi-turn path.
+        - ``TURN``: Force turn-level evaluation using the single-turn query/response path.
+        """
+
+        CONVERSATION = "conversation"
+        TURN = "turn"
+
+    def _merge_query_response_messages(query: List[dict], response: List[dict]) -> List[dict]:
+        """Merge query and response message lists into a single conversation.
+
+        :param query: The query messages.
+        :type query: List[dict]
+        :param response: The response messages.
+        :type response: List[dict]
+        :return: The merged conversation messages.
+        :rtype: List[dict]
+        """
+        return [*query, *response]
+
+    def _split_messages_at_latest_user(messages: List[dict]) -> Tuple[List[dict], List[dict]]:
+        """Split messages into query/response slices at the latest user turn.
+
+        :param messages: The conversation messages.
+        :type messages: List[dict]
+        :return: A tuple of (query_messages, response_messages).
+        :rtype: Tuple[List[dict], List[dict]]
+        """
+        latest_user_index = max(
+            (i for i, message in enumerate(messages) if message.get("role") == "user"),
+            default=-1,
+        )
+        if latest_user_index == -1:
+            raise ValueError("messages must contain at least one message with role 'user'.")
+        return messages[: latest_user_index + 1], messages[latest_user_index + 1:]
+
+    def _wrap_string_messages(query: str, response: str) -> Tuple[List[dict], List[dict]]:
+        """Wrap string query/response into separate message lists.
+
+        :param query: The query string.
+        :type query: str
+        :param response: The response string.
+        :type response: str
+        :return: A tuple of (query_messages, response_messages).
+        :rtype: Tuple[List[dict], List[dict]]
+        """
+        return (
+            [{"role": "user", "content": [{"type": "text", "text": query}]}],
+            [{"role": "assistant", "content": [{"type": "text", "text": response}]}],
+        )
+
+    def _resolve_evaluation_level(
+        evaluation_level: Optional[Union[EvaluationLevel, str]],
+        error_target: ErrorTarget,
+    ) -> Optional[EvaluationLevel]:
+        """Validate and normalize the evaluation_level parameter.
+
+        :param evaluation_level: The evaluation level to resolve.
+        :type evaluation_level: Optional[Union[EvaluationLevel, str]]
+        :param error_target: The error target for exceptions.
+        :type error_target: ErrorTarget
+        :return: The resolved EvaluationLevel or None for auto-detect.
+        :rtype: Optional[EvaluationLevel]
+        """
+        valid = [level.value for level in EvaluationLevel]
+        if evaluation_level is None or evaluation_level == "":
+            return None
+        if isinstance(evaluation_level, EvaluationLevel):
+            return evaluation_level
+        if isinstance(evaluation_level, str):
+            try:
+                return EvaluationLevel(evaluation_level)
+            except ValueError as exc:
+                raise EvaluationException(
+                    message=(f"Invalid evaluation_level '{evaluation_level}'. " f"Must be one of: {valid}."),
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=error_target,
+                ) from exc
+        raise EvaluationException(
+            message=(f"Invalid evaluation_level '{evaluation_level}'. " f"Must be one of: {valid}."),
+            blame=ErrorBlame.USER_ERROR,
+            category=ErrorCategory.INVALID_VALUE,
+            target=error_target,
+        )
+
+    def serialize_messages(messages):
+        """Serialize a list of chat messages into a labeled text transcript for multi-turn prompts.
+
+        **Input format:** List of message dicts, each with ``"role"`` (``user``, ``assistant``, ``tool``,
+        ``system``, ``developer``) and ``"content"`` (string or list of content-block dicts like
+        ``{"type": "text", "text": "..."}``). Tool messages may include ``tool_call_id`` and content
+        blocks of type ``tool_result``/``tool_call``.
+
+        **Output format:** Plain-text transcript with labeled turns::
+
+            User turn 1:
+              <user text>
+
+            Agent turn 1:
+              <assistant text>
+              [TOOL_CALL] func_name({"arg": "val"})
+              [TOOL_RESULT] <result>
+
+            User turn 2:
+              <user text>
+            ...
+
+        System/developer messages are included as a system preamble. Consecutive messages of the same
+        role are grouped into a single turn. Assistant string content is auto-normalized to content-block
+        format for consistent formatting.
+
+        :param messages: Chat messages with role and content.
+        :type messages: List[dict]
+        :return: Formatted text transcript.
+        :rtype: str
+        """
+        if not messages:
+            return ""
+
+        # Uses the module-level MessageRole above (the 1.17.x SDK enum omits DEVELOPER).
+        all_user_queries = []
+        all_agent_responses = []
+        cur_user_query = []
+        cur_agent_response = []
+        system_message = None
+
+        for msg in messages:
+            if not isinstance(msg, dict):
+                continue
+            role = msg.get("role")
+            if not role:
+                continue
+
+            # _get_agent_response expects content as list of dicts, not a plain string
+            normalized = msg
+            if role == MessageRole.ASSISTANT and isinstance(msg.get("content"), str):
+                normalized = {**msg, "content": [{"type": "text", "text": msg["content"]}]}
+
+            if role in (MessageRole.SYSTEM, MessageRole.DEVELOPER):
+                content = msg.get("content", "")
+                if isinstance(content, list):
+                    system_message = "\n".join(_extract_text_from_content(content))
+                else:
+                    system_message = content
+
+            elif role == MessageRole.USER and "content" in msg:
+                if cur_agent_response:
+                    formatted = _get_agent_response(cur_agent_response, include_tool_messages=True)
+                    all_agent_responses.append([formatted])
+                    cur_agent_response = []
+                content = msg["content"]
+                if isinstance(content, str):
+                    text_in_msg = [content]
+                else:
+                    text_in_msg = _extract_text_from_content(content)
+                if text_in_msg:
+                    cur_user_query.append(text_in_msg)
+
+            elif role in (MessageRole.ASSISTANT, MessageRole.TOOL):
+                if cur_user_query:
+                    all_user_queries.append(cur_user_query)
+                    cur_user_query = []
+                cur_agent_response.append(normalized)
+
+        # Flush any remaining buffered turn
+        if cur_user_query:
+            all_user_queries.append(cur_user_query)
+        if cur_agent_response:
+            formatted = _get_agent_response(cur_agent_response, include_tool_messages=True)
+            all_agent_responses.append([formatted])
+
+        conversation_history: Dict = {
+            "user_queries": all_user_queries,
+            "agent_responses": all_agent_responses[: len(all_user_queries) - 1] if len(all_user_queries) > 0 else [],
+        }
+        if system_message:
+            conversation_history["system_message"] = system_message
+
+        result = _pretty_format_conversation_history(conversation_history)
+
+        # Append any trailing agent turn (the final response after the last user query)
+        start = max(len(all_user_queries) - 1, 0)
+        for i, agent_response in enumerate(all_agent_responses[start:], start=start):
+            result += f"Agent turn {i + 1}:\n"
+            for msg_text in agent_response:
+                if isinstance(msg_text, list):
+                    for submsg in msg_text:
+                        result += "  " + "\n  ".join(submsg.split("\n")) + "\n"
+                else:
+                    result += "  " + "\n  ".join(msg_text.split("\n")) + "\n"
+            result += "\n"
+
+        return result.rstrip("\n")
+
+    class MessagesOrQueryResponseInputValidator(ToolDefinitionsValidator):
+        """Validator that supports both single-turn (query/response) and multi-turn (messages) inputs.
+
+        A single implementation serves all evaluators via a behavior flag:
+          - ``enforce_tool_definitions`` (default False): validate ``tool_definitions`` in both the
+            messages path and the query/response path. Set True for evaluators that require
+            tool definitions.
+        """
+
+        enforce_tool_definitions: bool = False
+
+        def __init__(
+            self,
+            error_target: ErrorTarget,
+            requires_query: bool = True,
+            optional_tool_definitions: bool = True,
+            check_for_unsupported_tools: bool = False,
+            *,
+            enforce_tool_definitions: bool = False,
+        ):
+            """Initialize MessagesOrQueryResponseInputValidator."""
+            super().__init__(error_target, requires_query, optional_tool_definitions, check_for_unsupported_tools)
+            self.enforce_tool_definitions = enforce_tool_definitions
+
+        @override
+        def validate_eval_input(self, eval_input: Dict[str, Any]) -> bool:
+            """Validate evaluation input, supporting messages as an alternative to query/response."""
+            # Multi-turn path (messages list)
+            messages = eval_input.get("messages")
+            if messages is not None:
+                if not isinstance(messages, list):
+                    raise EvaluationException(
+                        message="messages must be provided as a list of message dictionaries.",
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=self.error_target,
+                    )
+                if len(messages) == 0:
+                    raise EvaluationException(
+                        message="messages list must not be empty.",
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=self.error_target,
+                    )
+
+                # Per-message structural checks
+                valid_roles = {role.value for role in MessageRole}
+                roles_present: set = set()
+                for index, message in enumerate(messages):
+                    if not isinstance(message, dict):
+                        raise EvaluationException(
+                            message=(
+                                "Each item in 'messages' must be a dictionary, "
+                                f"but item at index {index} is {type(message).__name__}."
+                            ),
+                            blame=ErrorBlame.USER_ERROR,
+                            category=ErrorCategory.INVALID_VALUE,
+                            target=self.error_target,
+                        )
+                    role = message.get("role")
+                    if role is None:
+                        raise EvaluationException(
+                            message=(
+                                "Each message must contain a 'role' key, "
+                                f"but message at index {index} is missing it."
+                            ),
+                            blame=ErrorBlame.USER_ERROR,
+                            category=ErrorCategory.INVALID_VALUE,
+                            target=self.error_target,
+                        )
+                    if role not in valid_roles:
+                        raise EvaluationException(
+                            message=(
+                                f"Invalid role '{role}' at message index {index}. "
+                                f"Must be one of: {sorted(valid_roles)}."
+                            ),
+                            blame=ErrorBlame.USER_ERROR,
+                            category=ErrorCategory.INVALID_VALUE,
+                            target=self.error_target,
+                        )
+                    roles_present.add(role)
+
+                # Conversation-level checks
+                if MessageRole.USER.value not in roles_present:
+                    raise EvaluationException(
+                        message="messages must contain at least one message with role 'user'.",
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=self.error_target,
+                    )
+                if MessageRole.ASSISTANT.value not in roles_present:
+                    raise EvaluationException(
+                        message="messages must contain at least one message with role 'assistant'.",
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=self.error_target,
+                    )
+
+                if self.enforce_tool_definitions:
+                    tool_definitions = eval_input.get("tool_definitions")
+                    tool_definitions_validation_exception = self._validate_tool_definitions(tool_definitions)
+                    if tool_definitions_validation_exception:
+                        raise tool_definitions_validation_exception
+                return True
+
+            if self.enforce_tool_definitions:
+                return super().validate_eval_input(eval_input)
+            return ConversationValidator.validate_eval_input(self, eval_input)
+
 
 if os.getenv("AI_EVALS_USE_PF_PROMPTY", "false").lower() == "true":
     from promptflow.core._flow import AsyncPrompty
@@ -120,7 +483,6 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         self._validator = MessagesOrQueryResponseInputValidator(
             error_target=_ERROR_TARGET,
             requires_query=True,
-            enforce_tool_definitions=False,
         )
 
         super().__init__(

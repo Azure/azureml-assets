@@ -8,13 +8,28 @@ from typing_extensions import overload, override
 
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
-from azure.ai.evaluation._common.utils import reformat_agent_response, _is_intermediate_response
+
+# ---------------------------------------------------------------------------
+# Imports target azure-ai-evaluation >= 1.18.1. Each ``except ImportError``
+# branch below inlines the corresponding azure-ai-evaluation 1.18.1
+# implementation so the evaluator also runs on azure-ai-evaluation 1.17.x,
+# which predates these symbols. The 1.17.x compatibility branches are kept only
+# for backward compatibility and can be removed once 1.17.x is no longer
+# supported.
+# ---------------------------------------------------------------------------
+
+from azure.ai.evaluation._common.utils import reformat_agent_response
 from azure.ai.evaluation._common._experimental import experimental
 
 from azure.ai.evaluation._evaluators._common._validators import (
     ValidatorInterface,
     ConversationValidator,
 )
+
+try:  # azure-ai-evaluation >= 1.18.1
+    from azure.ai.evaluation._common.utils import _is_intermediate_response
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)
+    from azure.ai.evaluation._evaluators._common._base_prompty_eval import _is_intermediate_response
 
 
 logger = logging.getLogger(__name__)

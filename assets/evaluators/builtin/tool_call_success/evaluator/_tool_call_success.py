@@ -16,14 +16,257 @@ from azure.ai.evaluation._exceptions import (
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 from azure.ai.evaluation._common._experimental import experimental
 from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
-from azure.ai.evaluation._common.utils import (
-    _is_intermediate_response,
-    _preprocess_messages,
-)
-from azure.ai.evaluation._evaluators._common._validators import (
+
+# ---------------------------------------------------------------------------
+# Imports target azure-ai-evaluation >= 1.18.1. Each ``except ImportError``
+# branch below inlines the corresponding azure-ai-evaluation 1.18.1
+# implementation so the evaluator also runs on azure-ai-evaluation 1.17.x,
+# which predates these symbols. The 1.17.x compatibility branches are kept only
+# for backward compatibility and can be removed once 1.17.x is no longer
+# supported.
+# ---------------------------------------------------------------------------
+
+from azure.ai.evaluation._common.utils import _format_value
+# ConversationValidator is re-exported for the test suite / capability surface (unused here).
+from azure.ai.evaluation._evaluators._common._validators import (  # noqa: F401
     ValidatorInterface,
+    ConversationValidator,
     ToolDefinitionsValidator,
 )
+
+try:  # azure-ai-evaluation >= 1.18.1
+    from azure.ai.evaluation._common.utils import _is_intermediate_response, _preprocess_messages
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)
+    from azure.ai.evaluation._evaluators._common._base_prompty_eval import (
+        _is_intermediate_response,
+        _preprocess_messages,
+    )
+
+# Re-exported so the module keeps exposing the message-preprocessing helpers used
+# by the test suite; they are invoked indirectly through _preprocess_messages.
+try:  # azure-ai-evaluation >= 1.18.1
+    from azure.ai.evaluation._common.utils import (  # noqa: F401
+        _drop_mcp_approval_messages,
+        _normalize_function_call_types,
+    )
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)
+    from azure.ai.evaluation._evaluators._common._base_prompty_eval import (  # noqa: F401
+        _drop_mcp_approval_messages,
+        _normalize_function_call_types,
+    )
+
+try:  # azure-ai-evaluation >= 1.18.1
+    from azure.ai.evaluation._common.utils import (
+        _FAILED_RUNTIME_STATUSES,
+        _stringify_tool_result,
+        _log_safe_summary,
+        _collect_failed_tool_calls,
+        _get_tool_calls_results,
+        _reformat_tool_calls_results,
+    )
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)
+    # Bodies below are copied from azure-ai-evaluation 1.18.1 (the earliest release
+    # that ships these symbols).
+    _FAILED_RUNTIME_STATUSES = frozenset({"incomplete", "failed"})
+
+    def _stringify_tool_result(result):
+        """Render a tool_result value as a string the LLM judge can read.
+
+        Tool outputs arrive in mixed shapes depending on the producer: function/MCP tools usually
+        emit a plain ``str``, while built-in grounding tools (``azure_ai_search``, ``azure_fabric``,
+        ``sharepoint_grounding``) emit a list/dict. Falling back to ``f"{result}"`` for the latter
+        produced a Python ``repr`` (single quotes, trailing commas) that the LLM had to
+        reverse-engineer. Strings are passed through unchanged (zero behavior change for function/MCP
+        tools), anything else is serialized as JSON with ``default=str`` so non-JSON-native values do
+        not raise, and ``None`` renders as the empty string.
+
+        :param result: The raw tool_result value.
+        :type result: Any
+        :return: A string representation suitable for an LLM prompt.
+        :rtype: str
+        """
+        if result is None:
+            return ""
+        if isinstance(result, str):
+            return result
+        try:
+            return json.dumps(result, default=str, ensure_ascii=False)
+        except (TypeError, ValueError):
+            return str(result)
+
+    def _log_safe_summary(obj):
+        """Return a non-sensitive structural summary of a payload for safe logging.
+
+        The raw payload may contain customer-controlled data (tool arguments, tool results, assistant
+        text, database rows, file content, etc.) which can include credentials or PII. Logging the
+        payload itself risks leaking that data into telemetry sinks at any log level. This helper
+        returns shape-only metadata - type, length, top-level keys/roles - which is sufficient to
+        diagnose schema drift without exposing values.
+
+        :param obj: The payload to summarize.
+        :type obj: Any
+        :return: A shape-only, non-sensitive summary string.
+        :rtype: str
+        """
+        try:
+            type_name = type(obj).__name__
+            if isinstance(obj, list):
+                roles = []
+                for item in obj[:10]:
+                    if isinstance(item, dict):
+                        role = item.get("role")
+                        if isinstance(role, str):
+                            roles.append(role)
+                roles_summary = roles if roles else "n/a"
+                return f"type={type_name} len={len(obj)} roles={roles_summary}"
+            if isinstance(obj, dict):
+                keys = sorted(k for k in obj.keys() if isinstance(k, str))[:10]
+                return f"type={type_name} top_keys={keys}"
+            length = len(obj) if hasattr(obj, "__len__") else "n/a"
+            return f"type={type_name} len={length}"
+        except Exception:  # pylint: disable=broad-except
+            return f"type={type(obj).__name__} (summary unavailable)"
+
+    def _collect_failed_tool_calls(messages):
+        """Return ordered, unique tool names whose runtime status indicates failure.
+
+        A tool call is treated as a runtime failure when either its assistant ``tool_call`` content
+        block or its matched tool ``tool_result`` content block carries a ``status`` field in
+        ``{failed, incomplete}``. This lets callers short-circuit deterministically and skip the LLM
+        judge on the failure path. When the failing block carries no resolvable function name, the
+        tool ``tool_call_id`` is used as a stable identifier instead.
+
+        :param messages: The list of conversation messages to scan.
+        :type messages: Any
+        :return: Ordered, de-duplicated list of failed tool names (or ids).
+        :rtype: List
+        """
+        if not isinstance(messages, list):
+            return []
+
+        id_to_name = {}
+        failed_ids = []
+        failed_names_without_id = []
+
+        for msg in messages:
+            if not isinstance(msg, dict) or msg.get("role") != "assistant":
+                continue
+            for content in msg.get("content", []) or []:
+                if not isinstance(content, dict) or content.get("type") != "tool_call":
+                    continue
+                if "tool_call" in content and "function" in content.get("tool_call", {}):
+                    tc = content["tool_call"]
+                    name = tc.get("function", {}).get("name", "") or ""
+                    call_id = tc.get("id")
+                else:
+                    name = content.get("name", "") or ""
+                    call_id = content.get("tool_call_id")
+                if call_id is not None:
+                    id_to_name[call_id] = name
+                status = content.get("status")
+                if isinstance(status, str) and status in _FAILED_RUNTIME_STATUSES:
+                    if call_id is not None:
+                        failed_ids.append(call_id)
+                    elif name:
+                        failed_names_without_id.append(name)
+
+        for msg in messages:
+            if not isinstance(msg, dict) or msg.get("role") != "tool":
+                continue
+            call_id = msg.get("tool_call_id")
+            for content in msg.get("content", []) or []:
+                if not isinstance(content, dict) or content.get("type") != "tool_result":
+                    continue
+                status = content.get("status")
+                if isinstance(status, str) and status in _FAILED_RUNTIME_STATUSES and call_id is not None:
+                    failed_ids.append(call_id)
+
+        ordered = []
+        seen = set()
+        for call_id in failed_ids:
+            label = id_to_name.get(call_id) or call_id
+            if label and label not in seen:
+                seen.add(label)
+                ordered.append(label)
+        for name in failed_names_without_id:
+            if name and name not in seen:
+                seen.add(name)
+                ordered.append(name)
+        return ordered
+
+    def _get_tool_calls_results(agent_response_msgs):
+        """Extract formatted agent tool calls and results from a response.
+
+        The output uses the ``[TOOL_CALL]`` / ``[TOOL_RESULT]`` line format. Tool results are rendered
+        via :func:`_stringify_tool_result` so list/dict grounding outputs are readable JSON.
+
+        :param agent_response_msgs: The agent response messages to scan.
+        :type agent_response_msgs: List[dict]
+        :return: A list of formatted tool-call/result lines.
+        :rtype: List[str]
+        """
+        agent_response_text = []
+        tool_results = {}
+
+        for msg in agent_response_msgs:
+            if msg.get("role") == "tool" and "tool_call_id" in msg:
+                for content in msg.get("content", []):
+                    if content.get("type") == "tool_result":
+                        result = content.get("tool_result")
+                        tool_results[msg["tool_call_id"]] = f"[TOOL_RESULT] {_stringify_tool_result(result)}"
+
+        for msg in agent_response_msgs:
+            if "role" in msg and msg.get("role") == "assistant" and "content" in msg:
+                for content in msg.get("content", []):
+                    if content.get("type") == "tool_call":
+                        if "tool_call" in content and "function" in content.get("tool_call", {}):
+                            tc = content.get("tool_call", {})
+                            func_name = tc.get("function", {}).get("name", "")
+                            args = tc.get("function", {}).get("arguments", {})
+                            tool_call_id = tc.get("id")
+                        else:
+                            tool_call_id = content.get("tool_call_id")
+                            func_name = content.get("name", "")
+                            args = content.get("arguments", {})
+                        args_str = ", ".join(f"{k}={_format_value(v)}" for k, v in args.items())
+                        call_line = f"[TOOL_CALL] {func_name}({args_str})"
+                        agent_response_text.append(call_line)
+                        if tool_call_id in tool_results:
+                            agent_response_text.append(tool_results[tool_call_id])
+
+        return agent_response_text
+
+    def _reformat_tool_calls_results(response, logger=None):
+        """Reformat an agent response into tool-call/result lines, with a safe fallback.
+
+        :param response: The agent response to reformat.
+        :type response: Union[None, List[dict], str]
+        :param logger: Optional logger for warning messages.
+        :type logger: Optional[logging.Logger]
+        :return: The formatted string, or the original response if parsing fails.
+        :rtype: Union[str, List[dict]]
+        """
+        try:
+            if response is None or response == []:
+                return ""
+            agent_response = _get_tool_calls_results(response)
+            if agent_response == []:
+                if logger:
+                    logger.warning(
+                        "Empty agent response extracted, likely due to input schema change. "
+                        "Falling back to using the original response. %s",
+                        _log_safe_summary(response),
+                    )
+                return response
+            return "\n".join(agent_response)
+        except Exception as e:  # pylint: disable=broad-except
+            if logger:
+                logger.warning(
+                    "Agent response could not be parsed, falling back to original response. Error: %s. %s",
+                    e,
+                    _log_safe_summary(response),
+                )
+            return response
 
 
 logger = logging.getLogger(__name__)
@@ -487,230 +730,6 @@ def _filter_to_used_tools(tool_definitions, msgs_list, logger=None):
                 f"Failed to filter tool definitions, returning original list. Error: {e}"
             )
         return tool_definitions
-
-
-def _format_value(v):
-    if v is None:
-        return "None"
-    if isinstance(v, str):
-        return f'"{v}"'
-    return v
-
-
-_FAILED_RUNTIME_STATUSES = frozenset({"failed", "incomplete"})
-
-
-def _collect_failed_tool_calls(messages):
-    """Return ordered, unique tool names whose runtime status indicates failure.
-
-    A tool call is treated as a runtime failure when either its assistant
-    ``tool_call`` content block or its matched tool ``tool_result`` content
-    block carries a ``status`` field in ``{failed, incomplete}``. The check
-    runs in Python so the LLM judge is only invoked on the success path
-    (status ``completed`` or absent); failed/incomplete calls are short-
-    circuited deterministically.
-
-    When the failing block carries no resolvable function name, the tool
-    ``tool_call_id`` is used as a stable identifier instead so the caller can
-    still surface it in ``properties.failed_tools``.
-    """
-    if not isinstance(messages, list):
-        return []
-
-    id_to_name = {}
-    failed_ids = []
-    failed_names_without_id = []
-
-    for msg in messages:
-        if not isinstance(msg, dict) or msg.get("role") != "assistant":
-            continue
-        for content in msg.get("content", []) or []:
-            if not isinstance(content, dict) or content.get("type") != "tool_call":
-                continue
-            if "tool_call" in content and "function" in content.get("tool_call", {}):
-                tc = content["tool_call"]
-                name = tc.get("function", {}).get("name", "") or ""
-                call_id = tc.get("id")
-            else:
-                name = content.get("name", "") or ""
-                call_id = content.get("tool_call_id")
-            if call_id is not None:
-                id_to_name[call_id] = name
-            status = content.get("status")
-            if isinstance(status, str) and status in _FAILED_RUNTIME_STATUSES:
-                if call_id is not None:
-                    failed_ids.append(call_id)
-                elif name:
-                    failed_names_without_id.append(name)
-
-    for msg in messages:
-        if not isinstance(msg, dict) or msg.get("role") != "tool":
-            continue
-        call_id = msg.get("tool_call_id")
-        for content in msg.get("content", []) or []:
-            if not isinstance(content, dict) or content.get("type") != "tool_result":
-                continue
-            status = content.get("status")
-            if (
-                isinstance(status, str)
-                and status in _FAILED_RUNTIME_STATUSES
-                and call_id is not None
-            ):
-                failed_ids.append(call_id)
-
-    ordered = []
-    seen = set()
-    for call_id in failed_ids:
-        label = id_to_name.get(call_id) or call_id
-        if label and label not in seen:
-            seen.add(label)
-            ordered.append(label)
-    for name in failed_names_without_id:
-        if name and name not in seen:
-            seen.add(name)
-            ordered.append(name)
-    return ordered
-
-
-def _stringify_tool_result(result):
-    """Render a tool_result value as a string the LLM judge can read.
-
-    Tool outputs arrive in mixed shapes depending on the producer:
-    - Function / MCP tools usually emit a plain ``str``.
-    - Built-in grounding tools (``azure_ai_search``, ``azure_fabric``,
-      ``sharepoint_grounding``) emit a list/dict (documents, snippets,
-      titles, URLs). Falling back to ``f"{result}"`` here produced a
-      Python ``repr`` with single quotes and trailing commas that the
-      LLM had to reverse-engineer, which is the root cause of the
-      "validator didn't parse SharePoint output" problem these
-      evaluators surfaced.
-
-    Strategy: pass strings through unchanged (zero behavior change for
-    function/MCP tools), serialize anything else as JSON with
-    ``default=str`` so non-JSON-native values (dates, enums, etc.) do
-    not raise. ``None`` is rendered as the empty string so the LLM
-    sees an empty ``[TOOL_RESULT]`` block instead of the literal text
-    ``None``.
-    """
-    if result is None:
-        return ""
-    if isinstance(result, str):
-        return result
-    try:
-        return json.dumps(result, default=str, ensure_ascii=False)
-    except (TypeError, ValueError):
-        return str(result)
-
-
-def _get_tool_calls_results(agent_response_msgs):
-    """Extract formatted agent tool calls and results from response.
-
-    The output uses the original ``[TOOL_CALL]`` / ``[TOOL_RESULT]`` line
-    format only; runtime ``status`` is no longer forwarded to the LLM judge.
-    Failed/incomplete tool calls are short-circuited in Python by
-    :func:`_collect_failed_tool_calls` before this formatter runs, so by the
-    time the LLM sees the response every remaining call has either no status
-    or a ``completed`` status -- the rubric judges those by payload alone.
-    """
-    agent_response_text = []
-    tool_results = {}
-
-    # First pass: collect tool results
-
-    for msg in agent_response_msgs:
-        if msg.get("role") == "tool" and "tool_call_id" in msg:
-            for content in msg.get("content", []):
-                if content.get("type") == "tool_result":
-                    result = content.get("tool_result")
-                    tool_results[msg["tool_call_id"]] = f"[TOOL_RESULT] {_stringify_tool_result(result)}"
-
-    # Second pass: parse assistant messages and tool calls
-    for msg in agent_response_msgs:
-        if "role" in msg and msg.get("role") == "assistant" and "content" in msg:
-
-            for content in msg.get("content", []):
-
-                if content.get("type") == "tool_call":
-                    if "tool_call" in content and "function" in content.get(
-                        "tool_call", {}
-                    ):
-                        tc = content.get("tool_call", {})
-                        func_name = tc.get("function", {}).get("name", "")
-                        args = tc.get("function", {}).get("arguments", {})
-                        tool_call_id = tc.get("id")
-                    else:
-                        tool_call_id = content.get("tool_call_id")
-                        func_name = content.get("name", "")
-                        args = content.get("arguments", {})
-                    args_str = ", ".join(
-                        f"{k}={_format_value(v)}" for k, v in args.items()
-                    )
-                    call_line = f"[TOOL_CALL] {func_name}({args_str})"
-                    agent_response_text.append(call_line)
-                    if tool_call_id in tool_results:
-                        agent_response_text.append(tool_results[tool_call_id])
-
-    return agent_response_text
-
-
-def _log_safe_summary(obj):
-    """Return a non-sensitive structural summary of a payload for safe logging.
-
-    The raw payload may contain customer-controlled data (tool arguments,
-    tool results, assistant text, database rows, file content, etc.) which
-    can include credentials or PII. Logging the payload itself risks leaking
-    that data into telemetry sinks at any log level. This helper returns
-    shape-only metadata - type, length, top-level keys/roles - which is
-    sufficient to diagnose schema drift without exposing values.
-    """
-    try:
-        type_name = type(obj).__name__
-        if isinstance(obj, list):
-            roles = []
-            for item in obj[:10]:
-                if isinstance(item, dict):
-                    role = item.get("role")
-                    if isinstance(role, str):
-                        roles.append(role)
-            roles_summary = roles if roles else "n/a"
-            return f"type={type_name} len={len(obj)} roles={roles_summary}"
-        if isinstance(obj, dict):
-            keys = sorted(k for k in obj.keys() if isinstance(k, str))[:10]
-            return f"type={type_name} top_keys={keys}"
-        length = len(obj) if hasattr(obj, "__len__") else "n/a"
-        return f"type={type_name} len={length}"
-    except Exception:
-        return f"type={type(obj).__name__} (summary unavailable)"
-
-
-def _reformat_tool_calls_results(response, logger=None):
-    try:
-        if response is None or response == []:
-            return ""
-        agent_response = _get_tool_calls_results(response)
-        if agent_response == []:
-            # If no message could be extracted, likely the format changed,
-            # fallback to the original response in that case
-            if logger:
-                logger.warning(
-                    "Empty agent response extracted, likely due to input schema change. "
-                    "Falling back to using the original response. %s",
-                    _log_safe_summary(response),
-                )
-            return response
-        return "\n".join(agent_response)
-    except Exception as e:
-        # If the agent response cannot be parsed for whatever
-        # reason (e.g. the converter format changed), the original response is returned
-        # This is a fallback to ensure that the evaluation can still proceed.
-        # See comments on reformat_conversation_history for more details.
-        if logger:
-            logger.warning(
-                "Agent response could not be parsed, falling back to original response. Error: %s. %s",
-                e,
-                _log_safe_summary(response),
-            )
-        return response
 
 
 def _reformat_tool_definitions(tool_definitions, logger=None):

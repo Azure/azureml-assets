@@ -2539,16 +2539,6 @@ KB_MCP_EXPECTED_FLOW_RESPONSE = (
     "ur planet and humanity."
 )
 
-# tool_output_utilization keeps its own _get_agent_response (_stringify_tool_result), which
-# still quotes the tool-call arguments payload; the SDK path used by TA/TC dropped that
-# quoting in azure-ai-evaluation 1.18.0, so kb_mcp now needs a TOU-specific expected value.
-KB_MCP_TOU_EXPECTED_FLOW_RESPONSE = (
-    "[TOOL_CALL] knowledge_base_retrieve(request=\"{'knowledgeAgentIntents': ['Provide "
-    "general information about the Earth.']}\")\n[TOOL_RESULT] Retrieved 11 "
-    "documents.\nHere's an interesting overview about Earth from space, focusing on "
-    "nighttime images and what they tell us about our planet and humanity."
-)
-
 MCP_EXPECTED_FLOW_RESPONSE = (
                              '[TOOL_CALL] microsoft_docs_search(query="how Azure Functions work")\n[TOOL_RESULT] '
                              'Retrieved documentation about Azure Functions.\nAzure Functions is a serverless compute '
@@ -2569,9 +2559,9 @@ LOCAL_CALLS_TOU_EXPECTED_FLOW_RESPONSE = (
 )
 
 FILE_SEARCH_TOU_EXPECTED_FLOW_RESPONSE = (
-    '[TOOL_CALL] file_search_call(queries="[\'good restaurant recommendation\', '
+    '[TOOL_CALL] file_search_call(queries=[\'good restaurant recommendation\', '
     "'best restaurant', 'top rated restaurant', 'recommended restaurants', "
-    '"what\'s a good restaurant"]")\n'
+    '"what\'s a good restaurant"])\n'
     '[TOOL_RESULT] [{"attributes": {}, "file_id": "assistant-StE61XCSBRyLv11Ytyckea", '
     '"filename": "french_cafe_menu.md", "score": 0.0333, "text": "# Le Jardin de Paris", '
     '"vector_store_id": ""}, {"attributes": {}, "file_id": "assistant-Xpu5yP1AQZiB86Hz5iG4uv", '
@@ -2600,12 +2590,11 @@ MEMORY_SEARCH_TOU_EXPECTED_FLOW_RESPONSE = (
     "Would you like any specific size or extras (milk, sugar, etc.) with that?"
 )
 
-# kb_mcp has a dict-valued argument (request). TOU's _get_agent_response wraps dict/list
-# argument values in quotes, whereas the SDK helper used by TA/TC now renders them raw.
-# TA/TC therefore use the (unquoted) base KB_MCP_EXPECTED_FLOW_RESPONSE and TOU uses this.
+# kb_mcp has a dict-valued argument (request). As of azure-ai-evaluation 1.18.1 the
+# tool-call arguments payload is rendered raw (unquoted) rather than wrapped in quotes.
 KB_MCP_TOU_EXPECTED_FLOW_RESPONSE = (
-                                    "[TOOL_CALL] knowledge_base_retrieve(request=\"{'knowledgeAgentIntents': "
-                                    "['Provide general information about the Earth.']}\")\n[TOOL_RESULT] Retrieved "
+                                    "[TOOL_CALL] knowledge_base_retrieve(request={'knowledgeAgentIntents': "
+                                    "['Provide general information about the Earth.']})\n[TOOL_RESULT] Retrieved "
                                     "11 documents.\nHere's an interesting overview about Earth from space, focusing "
                                     "on nighttime images and what they tell us about our planet and humanity."
 )
@@ -2770,24 +2759,24 @@ MCP_IR_EXPECTED_FLOW_RESPONSE = "Azure Functions is a serverless compute service
 
 # ----- TIA-specific expected flow tool_calls -----
 LOCAL_CALLS_TIA_EXPECTED_FLOW_TOOL_CALLS = (
-                                           "[TOOL_CALL] get_horoscope(sign=\"Aquarius\")\n[TOOL_RESULT] {'horoscope': "
-                                           "'Aquarius: Next Tuesday you will befriend a baby otter.'}\nYour horoscope "
-                                           "for Aquarius is: Next Tuesday you will befriend a baby otter."
+    "[TOOL_CALL] get_horoscope(sign=\"Aquarius\")\n[TOOL_RESULT] {\"horoscope\": \"Aquarius: Next Tuesday"
+    " you will befriend a baby otter.\"}\nYour horoscope for Aquarius is: Next Tuesday you will befriend "
+    "a baby otter."
 )
 
 FILE_SEARCH_TIA_EXPECTED_FLOW_TOOL_CALLS = (
-                                           "[TOOL_CALL] file_search_call(queries=['good restaurant recommendation', "
-                                           "'best restaurant', 'top rated restaurant', 'recommended restaurants', "
-                                           "\"what's a good restaurant\"])\n[TOOL_RESULT] [{'attributes': {}, "
-                                           "'file_id': 'assistant-StE61XCSBRyLv11Ytyckea', 'filename': "
-                                           "'french_cafe_menu.md', 'score': 0.0333, 'text': '# Le Jardin de Paris', "
-                                           "'vector_store_id': ''}, {'attributes': {}, 'file_id': "
-                                           "'assistant-Xpu5yP1AQZiB86Hz5iG4uv', 'filename': 'italian_diner_menu.md', "
-                                           "'score': 0.0328, 'text': '# Trattoria Bella Notte', 'vector_store_id': "
-                                           "''}]\nIf you're looking for a good restaurant, here are two tasty options "
-                                           "based on the menus provided:\n\n1. **Le Jardin de Paris** (French "
-                                           "Café)\n2. **Trattoria Bella Notte** (Italian Diner)\n\nBoth are excellent "
-                                           "choices—pick based on whether you’re in the mood for French or Italian!"
+    "[TOOL_CALL] file_search_call(queries=['good restaurant recommendation', "
+    "'best restaurant', 'top rated restaurant', 'recommended restaurants', "
+    "\"what's a good restaurant\"])\n"
+    "[TOOL_RESULT] [{\"attributes\": {}, \"file_id\": \"assistant-StE61XCSBRyLv11Ytyckea\", "
+    "\"filename\": \"french_cafe_menu.md\", \"score\": 0.0333, \"text\": \"# Le Jardin de Paris\", "
+    "\"vector_store_id\": \"\"}, "
+    "{\"attributes\": {}, \"file_id\": \"assistant-Xpu5yP1AQZiB86Hz5iG4uv\", "
+    "\"filename\": \"italian_diner_menu.md\", \"score\": 0.0328, \"text\": \"# Trattoria Bella Notte\", "
+    "\"vector_store_id\": \"\"}]\n"
+    "If you're looking for a good restaurant, here are two tasty options based on the menus provided:\n\n"
+    "1. **Le Jardin de Paris** (French Café)\n2. **Trattoria Bella Notte** (Italian Diner)\n\n"
+    "Both are excellent choices—pick based on whether you’re in the mood for French or Italian!"
 )
 
 IMAGE_GEN_TIA_EXPECTED_FLOW_TOOL_CALLS = (
@@ -2798,18 +2787,20 @@ IMAGE_GEN_TIA_EXPECTED_FLOW_TOOL_CALLS = (
 )
 
 MEMORY_SEARCH_TIA_EXPECTED_FLOW_TOOL_CALLS = (
-                                             "[TOOL_CALL] memory_search()\n[TOOL_RESULT] [{'content': 'User prefers "
-                                             "dark roast coffee.', 'kind': 'user_profile', 'memory_id': "
-                                             "'3a353f9202ca41bf95a4a9ef21d90d41', 'scope': 'user_123', 'updated_at': "
-                                             "1771323829}, {'content': 'User prefers dark roast coffee.', 'kind': "
-                                             "'user_profile', 'memory_id': '3a353f9202ca41bf95a4a9ef21d90d41', "
-                                             "'scope': 'user_123', 'updated_at': 1771323829}, {'content': 'The user "
-                                             "stated a preference for dark roast coffee. Dark roast coffee is "
-                                             "characterized by a bold flavor, rich aroma, and lower acidity compared "
-                                             "to lighter roasts.', 'kind': 'chat_summary', 'memory_id': "
-                                             "'9117c9f9d7424f0290c523d1cd3de45a', 'scope': 'user_123', 'updated_at': "
-                                             "1771323829}]\nSure! I'll order your usual—one dark roast coffee. Would "
-                                             "you like any specific size or extras (milk, sugar, etc.) with that?"
+    "[TOOL_CALL] memory_search()\n"
+    "[TOOL_RESULT] [{\"content\": \"User prefers dark roast coffee.\", "
+    "\"kind\": \"user_profile\", \"memory_id\": \"3a353f9202ca41bf95a4a9ef21d90d41\", "
+    "\"scope\": \"user_123\", \"updated_at\": 1771323829}, "
+    "{\"content\": \"User prefers dark roast coffee.\", "
+    "\"kind\": \"user_profile\", \"memory_id\": \"3a353f9202ca41bf95a4a9ef21d90d41\", "
+    "\"scope\": \"user_123\", \"updated_at\": 1771323829}, "
+    "{\"content\": \"The user stated a preference for dark roast coffee. "
+    "Dark roast coffee is characterized by a bold flavor, rich aroma, "
+    "and lower acidity compared to lighter roasts.\", "
+    "\"kind\": \"chat_summary\", \"memory_id\": \"9117c9f9d7424f0290c523d1cd3de45a\", "
+    "\"scope\": \"user_123\", \"updated_at\": 1771323829}]\n"
+    "Sure! I'll order your usual—one dark roast coffee. Would you like "
+    "any specific size or extras (milk, sugar, etc.) with that?"
 )
 
 KB_MCP_TIA_EXPECTED_FLOW_TOOL_CALLS = (

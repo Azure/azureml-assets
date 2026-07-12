@@ -12,20 +12,48 @@ from azure.ai.evaluation._exceptions import (
     ErrorTarget,
     EvaluationException,
 )
-from azure.ai.evaluation._common.utils import (
-    check_score_is_valid,
-    _is_intermediate_response,
-    _preprocess_messages,
-)
+from azure.ai.evaluation._common.utils import check_score_is_valid
 from azure.ai.evaluation._common._experimental import experimental
 from azure.ai.evaluation._converters._models import (
     _BUILT_IN_DESCRIPTIONS,
     _BUILT_IN_PARAMS,
 )
-from azure.ai.evaluation._evaluators._common._validators import (
+# ConversationValidator is re-exported for the test suite / capability surface (unused here).
+from azure.ai.evaluation._evaluators._common._validators import (  # noqa: F401
     ValidatorInterface,
+    ConversationValidator,
     ToolCallsValidator,
 )
+
+# ---------------------------------------------------------------------------
+# Imports target azure-ai-evaluation >= 1.18.1. Each ``except ImportError``
+# branch below inlines the corresponding azure-ai-evaluation 1.18.1
+# implementation so the evaluator also runs on azure-ai-evaluation 1.17.x,
+# which predates these symbols. The 1.17.x compatibility branches are kept only
+# for backward compatibility and can be removed once 1.17.x is no longer
+# supported.
+# ---------------------------------------------------------------------------
+
+try:  # azure-ai-evaluation >= 1.18.1
+    from azure.ai.evaluation._common.utils import _is_intermediate_response, _preprocess_messages
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)
+    from azure.ai.evaluation._evaluators._common._base_prompty_eval import (
+        _is_intermediate_response,
+        _preprocess_messages,
+    )
+
+# Re-exported so the module keeps exposing the message-preprocessing helpers used
+# by the test suite; they are invoked indirectly through _preprocess_messages.
+try:  # azure-ai-evaluation >= 1.18.1
+    from azure.ai.evaluation._common.utils import (  # noqa: F401
+        _drop_mcp_approval_messages,
+        _normalize_function_call_types,
+    )
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)
+    from azure.ai.evaluation._evaluators._common._base_prompty_eval import (  # noqa: F401
+        _drop_mcp_approval_messages,
+        _normalize_function_call_types,
+    )
 
 
 logger = logging.getLogger(__name__)

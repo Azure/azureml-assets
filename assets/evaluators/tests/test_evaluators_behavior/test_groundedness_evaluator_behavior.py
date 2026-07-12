@@ -5,6 +5,7 @@
 
 import asyncio
 import os
+import sys
 import pytest
 from typing import Any, Dict, List
 from unittest.mock import MagicMock, patch
@@ -35,7 +36,6 @@ from ...builtin.groundedness.evaluator._groundedness import (
     serialize_messages,
     simplify_messages,
 )
-from ...builtin.groundedness.evaluator import _groundedness as _groundedness_module
 from ..common.evaluator_mock_config import (
     create_mocked_evaluator,
     create_multi_turn_mock_side_effect,
@@ -655,7 +655,10 @@ class TestGroundednessSerializeMessages:
             {"role": "user", "content": "Question?"},
             {"role": "assistant", "content": "replaced by patch"},
         ]
-        with patch.object(_groundedness_module, "_get_agent_response", return_value="line one\nline two"):
+        # serialize_messages resolves _get_agent_response from the module where it is
+        # defined: the SDK's _common.utils on 1.18.1, or this evaluator module on 1.17.x.
+        serialize_module = sys.modules[serialize_messages.__module__]
+        with patch.object(serialize_module, "_get_agent_response", return_value="line one\nline two"):
             result = serialize_messages(messages)
         assert "Agent turn 1:" in result
         assert "line one" in result

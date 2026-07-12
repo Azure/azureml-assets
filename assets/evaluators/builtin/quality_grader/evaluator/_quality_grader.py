@@ -16,11 +16,126 @@ else:
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 from azure.ai.evaluation._exceptions import ErrorTarget
 from azure.ai.evaluation._model_configurations import Conversation
-from azure.ai.evaluation._common.utils import _is_intermediate_response, _preprocess_messages
 from azure.ai.evaluation._evaluators._common._validators import (
     ValidatorInterface,
     ConversationValidator,
 )
+
+# ---------------------------------------------------------------------------
+# Imports target azure-ai-evaluation >= 1.18.1. Each ``except ImportError``
+# branch below inlines the corresponding azure-ai-evaluation 1.18.1
+# implementation so the evaluator also runs on azure-ai-evaluation 1.17.x,
+# which predates these symbols. The 1.17.x compatibility branches are kept only
+# for backward compatibility and can be removed once 1.17.x is no longer
+# supported.
+# ---------------------------------------------------------------------------
+
+try:  # azure-ai-evaluation >= 1.18.1
+    from azure.ai.evaluation._common.utils import _is_intermediate_response, _preprocess_messages
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)
+    from azure.ai.evaluation._evaluators._common._base_prompty_eval import (
+        _is_intermediate_response,
+        _preprocess_messages,
+    )
+
+# Re-exported so the module keeps exposing the message-preprocessing helpers used
+# by the test suite; they are invoked indirectly through _preprocess_messages.
+try:  # azure-ai-evaluation >= 1.18.1
+    from azure.ai.evaluation._common.utils import (  # noqa: F401
+        _drop_mcp_approval_messages,
+        _normalize_function_call_types,
+    )
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)
+    from azure.ai.evaluation._evaluators._common._base_prompty_eval import (  # noqa: F401
+        _drop_mcp_approval_messages,
+        _normalize_function_call_types,
+    )
+
+try:  # azure-ai-evaluation >= 1.18.1
+    from azure.ai.evaluation._common.utils import _coerce_bool, _coerce_number, _log_safe_summary
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)
+    # Bodies below are copied from azure-ai-evaluation 1.18.1 (the earliest release
+    # that ships these symbols).
+    def _coerce_bool(value) -> Optional[bool]:
+        """Coerce an LLM output value to bool or None.
+
+        Handles Python booleans and string variants like 'true', 'false'.
+
+        :param value: The value to coerce.
+        :type value: Any
+        :return: The coerced boolean, or None if it cannot be interpreted.
+        :rtype: Optional[bool]
+        """
+        if isinstance(value, bool):
+            return value
+        if value is None:
+            return None
+        if isinstance(value, str):
+            lower = value.strip().lower()
+            if lower == "true":
+                return True
+            if lower == "false":
+                return False
+        return None
+
+    def _coerce_number(value) -> Optional[float]:
+        """Coerce an LLM output value to a number or None.
+
+        Handles Python ints/floats and string variants like '3', '2.5', 'null'.
+
+        :param value: The value to coerce.
+        :type value: Any
+        :return: The coerced number, or None if it cannot be interpreted.
+        :rtype: Optional[float]
+        """
+        if isinstance(value, bool):
+            return None
+        if isinstance(value, (int, float)):
+            return value
+        if value is None:
+            return None
+        if isinstance(value, str):
+            stripped = value.strip()
+            if stripped.lower() in ("null", "none", ""):
+                return None
+            try:
+                return float(stripped)
+            except ValueError:
+                return None
+        return None
+
+    def _log_safe_summary(obj):
+        """Return a non-sensitive structural summary of a payload for safe logging.
+
+        The raw payload may contain customer-controlled data (tool arguments, tool results, assistant
+        text, database rows, file content, etc.) which can include credentials or PII. Logging the
+        payload itself risks leaking that data into telemetry sinks at any log level. This helper
+        returns shape-only metadata - type, length, top-level keys/roles - which is sufficient to
+        diagnose schema drift without exposing values.
+
+        :param obj: The payload to summarize.
+        :type obj: Any
+        :return: A shape-only, non-sensitive summary string.
+        :rtype: str
+        """
+        try:
+            type_name = type(obj).__name__
+            if isinstance(obj, list):
+                roles = []
+                for item in obj[:10]:
+                    if isinstance(item, dict):
+                        role = item.get("role")
+                        if isinstance(role, str):
+                            roles.append(role)
+                roles_summary = roles if roles else "n/a"
+                return f"type={type_name} len={len(obj)} roles={roles_summary}"
+            if isinstance(obj, dict):
+                keys = sorted(k for k in obj.keys() if isinstance(k, str))[:10]
+                return f"type={type_name} top_keys={keys}"
+            length = len(obj) if hasattr(obj, "__len__") else "n/a"
+            return f"type={type_name} len={length}"
+        except Exception:  # pylint: disable=broad-except
+            return f"type={type(obj).__name__} (summary unavailable)"
 
 try:
     from azure.ai.evaluation._user_agent import UserAgentSingleton
@@ -43,46 +158,6 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-def _coerce_bool(value) -> Optional[bool]:
-    """Coerce an LLM output value to bool or None.
-
-    Handles Python booleans, and string variants like 'true', 'false', 'null'.
-    """
-    if isinstance(value, bool):
-        return value
-    if value is None:
-        return None
-    if isinstance(value, str):
-        lower = value.strip().lower()
-        if lower == "true":
-            return True
-        if lower == "false":
-            return False
-    return None
-
-
-def _coerce_number(value) -> Optional[float]:
-    """Coerce an LLM output value to a number or None.
-
-    Handles Python ints/floats, and string variants like '3', '2.5', 'null'.
-    """
-    if isinstance(value, bool):
-        return None
-    if isinstance(value, (int, float)):
-        return value
-    if value is None:
-        return None
-    if isinstance(value, str):
-        stripped = value.strip()
-        if stripped.lower() in ("null", "none", ""):
-            return None
-        try:
-            return float(stripped)
-        except ValueError:
-            return None
-    return None
-
-
 # Use the SDK's ErrorTarget member when the installed version defines it; otherwise fall back to EVALUATE.
 _ERROR_TARGET = getattr(ErrorTarget, "QUALITY_GRADER_EVALUATOR", ErrorTarget.EVALUATE)
 
@@ -94,35 +169,6 @@ _ANSWER_COMPLETENESS_THRESHOLD = 1.5
 # Thresholds for groundedness checks (second prompt)
 _GROUNDEDNESS_THRESHOLD = 2.5
 _CONTEXT_COVERAGE_THRESHOLD = 1.5
-
-
-def _log_safe_summary(obj):
-    """Return a non-sensitive structural summary of a payload for safe logging.
-
-    The raw payload may contain customer-controlled data (LLM output text,
-    conversation history, tool arguments/results, etc.) which can include
-    credentials or PII. This helper returns shape-only metadata - type,
-    length, top-level keys/roles - sufficient to diagnose schema drift
-    without exposing values.
-    """
-    try:
-        type_name = type(obj).__name__
-        if isinstance(obj, list):
-            roles = []
-            for item in obj[:10]:
-                if isinstance(item, dict):
-                    role = item.get("role")
-                    if isinstance(role, str):
-                        roles.append(role)
-            roles_summary = roles if roles else "n/a"
-            return f"type={type_name} len={len(obj)} roles={roles_summary}"
-        if isinstance(obj, dict):
-            keys = sorted(k for k in obj.keys() if isinstance(k, str))[:10]
-            return f"type={type_name} top_keys={keys}"
-        length = len(obj) if hasattr(obj, "__len__") else "n/a"
-        return f"type={type_name} len={length}"
-    except Exception:
-        return f"type={type(obj).__name__} (summary unavailable)"
 
 
 class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):

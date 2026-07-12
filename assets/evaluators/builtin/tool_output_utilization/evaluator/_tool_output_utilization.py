@@ -21,15 +21,108 @@ from azure.ai.evaluation._common.utils import (
     reformat_agent_response,
     reformat_tool_definitions,
     _extract_text_from_content,
-    _is_intermediate_response,
-    _preprocess_messages,
 )
 from azure.ai.evaluation._common._experimental import experimental
 from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
-from azure.ai.evaluation._evaluators._common._validators import (
+# ConversationValidator is re-exported for the test suite / capability surface (unused here).
+from azure.ai.evaluation._evaluators._common._validators import (  # noqa: F401
     ValidatorInterface,
+    ConversationValidator,
     ToolDefinitionsValidator,
 )
+
+# ---------------------------------------------------------------------------
+# Imports target azure-ai-evaluation >= 1.18.1. Each ``except ImportError``
+# branch below inlines the corresponding azure-ai-evaluation 1.18.1
+# implementation so the evaluator also runs on azure-ai-evaluation 1.17.x,
+# which predates these symbols. The 1.17.x compatibility branches are kept only
+# for backward compatibility and can be removed once 1.17.x is no longer
+# supported.
+# ---------------------------------------------------------------------------
+
+try:  # azure-ai-evaluation >= 1.18.1
+    from azure.ai.evaluation._common.utils import _is_intermediate_response, _preprocess_messages
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)
+    from azure.ai.evaluation._evaluators._common._base_prompty_eval import (
+        _is_intermediate_response,
+        _preprocess_messages,
+    )
+
+# Re-exported so the module keeps exposing the message-preprocessing helpers used
+# by the test suite; they are invoked indirectly through _preprocess_messages.
+try:  # azure-ai-evaluation >= 1.18.1
+    from azure.ai.evaluation._common.utils import (  # noqa: F401
+        _drop_mcp_approval_messages,
+        _normalize_function_call_types,
+    )
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)
+    from azure.ai.evaluation._evaluators._common._base_prompty_eval import (  # noqa: F401
+        _drop_mcp_approval_messages,
+        _normalize_function_call_types,
+    )
+
+try:  # azure-ai-evaluation >= 1.18.1
+    from azure.ai.evaluation._common.utils import _stringify_tool_result, _log_safe_summary
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)
+    # Bodies below are copied from azure-ai-evaluation 1.18.1 (the earliest release
+    # that ships these symbols).
+    def _stringify_tool_result(result):
+        """Render a tool_result value as a string the LLM judge can read.
+
+        Tool outputs arrive in mixed shapes depending on the producer: function/MCP tools usually
+        emit a plain ``str``, while built-in grounding tools (``azure_ai_search``, ``azure_fabric``,
+        ``sharepoint_grounding``) emit a list/dict. Falling back to ``f"{result}"`` for the latter
+        produced a Python ``repr`` (single quotes, trailing commas) that the LLM had to
+        reverse-engineer. Strings are passed through unchanged (zero behavior change for function/MCP
+        tools), anything else is serialized as JSON with ``default=str`` so non-JSON-native values do
+        not raise, and ``None`` renders as the empty string.
+
+        :param result: The raw tool_result value.
+        :type result: Any
+        :return: A string representation suitable for an LLM prompt.
+        :rtype: str
+        """
+        if result is None:
+            return ""
+        if isinstance(result, str):
+            return result
+        try:
+            return json.dumps(result, default=str, ensure_ascii=False)
+        except (TypeError, ValueError):
+            return str(result)
+
+    def _log_safe_summary(obj):
+        """Return a non-sensitive structural summary of a payload for safe logging.
+
+        The raw payload may contain customer-controlled data (tool arguments, tool results, assistant
+        text, database rows, file content, etc.) which can include credentials or PII. Logging the
+        payload itself risks leaking that data into telemetry sinks at any log level. This helper
+        returns shape-only metadata - type, length, top-level keys/roles - which is sufficient to
+        diagnose schema drift without exposing values.
+
+        :param obj: The payload to summarize.
+        :type obj: Any
+        :return: A shape-only, non-sensitive summary string.
+        :rtype: str
+        """
+        try:
+            type_name = type(obj).__name__
+            if isinstance(obj, list):
+                roles = []
+                for item in obj[:10]:
+                    if isinstance(item, dict):
+                        role = item.get("role")
+                        if isinstance(role, str):
+                            roles.append(role)
+                roles_summary = roles if roles else "n/a"
+                return f"type={type_name} len={len(obj)} roles={roles_summary}"
+            if isinstance(obj, dict):
+                keys = sorted(k for k in obj.keys() if isinstance(k, str))[:10]
+                return f"type={type_name} top_keys={keys}"
+            length = len(obj) if hasattr(obj, "__len__") else "n/a"
+            return f"type={type_name} len={length}"
+        except Exception:  # pylint: disable=broad-except
+            return f"type={type(obj).__name__} (summary unavailable)"
 
 
 logger = logging.getLogger(__name__)
@@ -613,36 +706,6 @@ def reformat_conversation_history(query, logger=None, include_system_messages=Fa
         return query
 
 
-def _stringify_tool_result(result):
-    """Render a tool_result value as a string the LLM judge can read.
-
-    Tool outputs arrive in mixed shapes depending on the producer:
-    - Function / MCP tools usually emit a plain ``str``.
-    - Built-in grounding tools (``azure_ai_search``, ``azure_fabric``,
-      ``sharepoint_grounding``) emit a list/dict (documents, snippets,
-      titles, URLs). Falling back to ``f"{result}"`` here produced a
-      Python ``repr`` with single quotes and trailing commas that the
-      LLM had to reverse-engineer, which is the root cause of the
-      "validator didn't parse SharePoint output" problem these
-      evaluators surfaced.
-
-    Strategy: pass strings through unchanged (zero behavior change for
-    function/MCP tools), serialize anything else as JSON with
-    ``default=str`` so non-JSON-native values (dates, enums, etc.) do
-    not raise. ``None`` is rendered as the empty string so the LLM
-    sees an empty ``[TOOL_RESULT]`` block instead of the literal text
-    ``None``.
-    """
-    if result is None:
-        return ""
-    if isinstance(result, str):
-        return result
-    try:
-        return json.dumps(result, default=str, ensure_ascii=False)
-    except (TypeError, ValueError):
-        return str(result)
-
-
 def _get_agent_response(agent_response_msgs, include_tool_messages=False):
     """Extract formatted agent response including text, and optionally tool calls/results."""
     agent_response_text = []
@@ -683,32 +746,3 @@ def _get_agent_response(agent_response_msgs, include_tool_messages=False):
                             agent_response_text.append(tool_results[tool_call_id])
 
     return agent_response_text
-
-
-def _log_safe_summary(obj):
-    """Return a non-sensitive structural summary of a payload for safe logging.
-
-    The raw payload may contain customer-controlled data (conversation history,
-    tool definitions, tool arguments/results, file content, etc.) which can
-    include credentials or PII. This helper returns shape-only metadata - type,
-    length, top-level roles/keys - sufficient to diagnose schema drift without
-    exposing values.
-    """
-    try:
-        type_name = type(obj).__name__
-        if isinstance(obj, list):
-            roles = []
-            for item in obj[:10]:
-                if isinstance(item, dict):
-                    role = item.get("role")
-                    if isinstance(role, str):
-                        roles.append(role)
-            roles_summary = roles if roles else "n/a"
-            return f"type={type_name} len={len(obj)} roles={roles_summary}"
-        if isinstance(obj, dict):
-            keys = sorted(k for k in obj.keys() if isinstance(k, str))[:10]
-            return f"type={type_name} top_keys={keys}"
-        length = len(obj) if hasattr(obj, "__len__") else "n/a"
-        return f"type={type_name} len={length}"
-    except Exception:
-        return f"type={type(obj).__name__} (summary unavailable)"

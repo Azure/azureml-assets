@@ -313,12 +313,12 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior(BaseCodeEvaluatorRunner):
         self.assert_pass(result_data)
 
     def test_canonical_names_take_precedence_over_aliases(self):
-        """When both canonical and alias keys are present, the canonical key wins."""
+        """When both canonical and alias keys are present, the canonical key wins for scoring."""
         results = self._run_evaluation(
             actions=self.VALID_ACTIONS,
             expected_actions=self.VALID_EXPECTED_ACTIONS,
-            response=self.STRING_ACTIONS,  # invalid value; ignored because 'actions' present
-            ground_truth=["ignored"],  # ignored because 'expected_actions' present
+            response=self.ACTIONS_OUT_OF_ORDER,  # valid but not used for scoring ('actions' present)
+            ground_truth=["ignored"],  # not used for scoring ('expected_actions' present)
             matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
         )
         result_data = self._extract_and_print_result(results, "Alias - Canonical Precedence")
@@ -466,7 +466,7 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior(BaseCodeEvaluatorRunner):
             matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
         )
         result_data = self._extract_and_print_result(results, "Empty Expected Actions")
-        self.assert_error(result_data, ErrorCategory.MISSING_FIELD.name)
+        self.assert_error(result_data, ErrorCategory.INVALID_VALUE.name)
 
     def test_none_expected_actions(self):
         """Test with empty expected actions (should error)."""
@@ -476,7 +476,7 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior(BaseCodeEvaluatorRunner):
             matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
         )
         result_data = self._extract_and_print_result(results, "None Expected Actions")
-        self.assert_error(result_data, ErrorCategory.MISSING_FIELD.name)
+        self.assert_error(result_data, ErrorCategory.INVALID_VALUE.name)
 
     def test_invalid_expected_actions_type(self):
         """Test with invalid expected actions type (should error)."""
@@ -834,41 +834,41 @@ class TestTaskNavigationEfficiencyConstructor:
 class TestTaskNavigationEfficiencyValidatorBranches:
     """Direct tests for the TaskNavigationEfficiencyValidator error branches."""
 
-    def test_validate_actions_error_branches(self):
-        """Exercise every ``_validate_actions`` failure branch."""
+    def test_validate_response_error_branches(self):
+        """Exercise every ``_validate_response`` failure branch."""
         validator = _make_tne()._validator
-        assert isinstance(validator._validate_actions(None), EvaluationException)
-        assert isinstance(validator._validate_actions("notlist"), EvaluationException)
-        assert isinstance(validator._validate_actions([123]), EvaluationException)
-        assert isinstance(validator._validate_actions([{}]), EvaluationException)
-        assert isinstance(validator._validate_actions([{"role": 123}]), EvaluationException)
-        assert isinstance(validator._validate_actions([{"role": "assistant"}]), EvaluationException)
+        assert isinstance(validator._validate_response(None), EvaluationException)
+        assert isinstance(validator._validate_response("notlist"), EvaluationException)
+        assert isinstance(validator._validate_response([123]), EvaluationException)
+        assert isinstance(validator._validate_response([{}]), EvaluationException)
+        assert isinstance(validator._validate_response([{"role": 123}]), EvaluationException)
+        assert isinstance(validator._validate_response([{"role": "assistant"}]), EvaluationException)
         assert isinstance(
-            validator._validate_actions([{"role": "assistant", "content": "x"}]), EvaluationException
+            validator._validate_response([{"role": "assistant", "content": "x"}]), EvaluationException
         )
         assert isinstance(
-            validator._validate_actions([{"role": "assistant", "content": [123]}]), EvaluationException
+            validator._validate_response([{"role": "assistant", "content": [123]}]), EvaluationException
         )
         assert isinstance(
-            validator._validate_actions([{"role": "assistant", "content": [{"type": "tool_call"}]}]),
+            validator._validate_response([{"role": "assistant", "content": [{"type": "tool_call"}]}]),
             EvaluationException,
         )
-        assert validator._validate_actions([{"role": "user", "content": "q"}]) is None
+        assert validator._validate_response([{"role": "user", "content": "q"}]) is None
 
-    def test_validate_expected_actions_error_branches(self):
-        """Exercise every ``_validate_expected_actions`` failure branch."""
+    def test_validate_ground_truth_error_branches(self):
+        """Exercise every ``_validate_ground_truth`` failure branch."""
         validator = _make_tne()._validator
-        assert isinstance(validator._validate_expected_actions(None), EvaluationException)
-        assert isinstance(validator._validate_expected_actions((1, 2, 3)), EvaluationException)
-        assert isinstance(validator._validate_expected_actions(("notlist", {})), EvaluationException)
-        assert isinstance(validator._validate_expected_actions(([], {})), EvaluationException)
-        assert isinstance(validator._validate_expected_actions(([123], {})), EvaluationException)
-        assert isinstance(validator._validate_expected_actions((["a"], "notdict")), EvaluationException)
-        assert isinstance(validator._validate_expected_actions((["a"], {"a": "notdict"})), EvaluationException)
-        assert isinstance(validator._validate_expected_actions([123]), EvaluationException)
-        assert isinstance(validator._validate_expected_actions(123), EvaluationException)
-        assert validator._validate_expected_actions(["a"]) is None
-        assert validator._validate_expected_actions((["a"], {"a": {"x": "y"}})) is None
+        assert isinstance(validator._validate_ground_truth(None), EvaluationException)
+        assert isinstance(validator._validate_ground_truth((1, 2, 3)), EvaluationException)
+        assert isinstance(validator._validate_ground_truth(("notlist", {})), EvaluationException)
+        assert isinstance(validator._validate_ground_truth(([], {})), EvaluationException)
+        assert isinstance(validator._validate_ground_truth(([123], {})), EvaluationException)
+        assert isinstance(validator._validate_ground_truth((["a"], "notdict")), EvaluationException)
+        assert isinstance(validator._validate_ground_truth((["a"], {"a": "notdict"})), EvaluationException)
+        assert isinstance(validator._validate_ground_truth([123]), EvaluationException)
+        assert isinstance(validator._validate_ground_truth(123), EvaluationException)
+        assert validator._validate_ground_truth(["a"]) is None
+        assert validator._validate_ground_truth((["a"], {"a": {"x": "y"}})) is None
 
     def test_validate_eval_input_parses_json_strings(self):
         """String actions/expected_actions are parsed as JSON before validation."""
@@ -1064,9 +1064,9 @@ class TestTaskNavigationEfficiencyRealCall:
 class TestTaskNavigationEfficiencyCoverageGaps:
     """Direct tests for residual defensive branches to complete coverage."""
 
-    def test_validate_expected_actions_empty_list(self):
-        """An empty expected_actions list returns a validation error."""
-        result = _make_tne()._validator._validate_expected_actions([])
+    def test_validate_ground_truth_empty_list(self):
+        """An empty ground_truth list returns a validation error."""
+        result = _make_tne()._validator._validate_ground_truth([])
         assert isinstance(result, EvaluationException)
 
     def test_enum_matching_mode_is_accepted(self):
