@@ -36,6 +36,9 @@ from ..common.evaluator_mock_config import (
 
 
 def _replace_fragment_or_fail(value: str, old_fragment: str, new_fragment: str) -> str:
+    # TaskAdherence uses azure-ai-evaluation message reformatting that emits curly apostrophes
+    # for these specific phrases. Shared expected-flow fixtures stay ASCII because other evaluator
+    # behavior suites consume them unchanged.
     if old_fragment not in value:
         raise AssertionError(f"Expected fragment not found in fixture: {old_fragment}")
     return value.replace(old_fragment, new_fragment)
