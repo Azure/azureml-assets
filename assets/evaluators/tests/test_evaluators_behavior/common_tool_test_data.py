@@ -2349,7 +2349,7 @@ LOCAL_CALLS_EXPECTED_FLOW_RESPONSE = (
 CODE_INTERPRETER_EXPECTED_FLOW_RESPONSE = (
     "Sure! Here’s a simple Python code to generate the "
     "Fibonacci series up to the nth term (for example, "
-    "`n = 5`). I'll also run this code for `n = 5` so you see the result.\n\n"
+    "`n = 5`). I’ll also run this code for `n = 5` so you see the result.\n\n"
     "```python\ndef fibonacci_series(n):\n"
     "    fib_series = [0, 1]\n"
     "    while len(fib_series) < n:\n"
@@ -2424,7 +2424,7 @@ FILE_SEARCH_EXPECTED_FLOW_RESPONSE = (
     "here are two tasty options based on the menus provided:\n\n"
     "1. **Le Jardin de Paris** (French Café)\n"
     "2. **Trattoria Bella Notte** (Italian Diner)\n\n"
-    "Both are excellent choices—pick based on whether you're in the mood for French or Italian!"
+    "Both are excellent choices—pick based on whether you’re in the mood for French or Italian!"
 )
 
 AZURE_AI_SEARCH_EXPECTED_FLOW_RESPONSE = (
