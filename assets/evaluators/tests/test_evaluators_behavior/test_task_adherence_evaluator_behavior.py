@@ -34,16 +34,6 @@ from ..common.evaluator_mock_config import (
     run_none_score_not_applicable,
 )
 
-
-def _replace_fragment_or_fail(value: str, old_fragment: str, new_fragment: str) -> str:
-    # TaskAdherence uses azure-ai-evaluation message reformatting that emits curly apostrophes
-    # for these specific phrases. Shared expected-flow fixtures stay ASCII because other evaluator
-    # behavior suites consume them unchanged.
-    if old_fragment not in value:
-        raise AssertionError(f"Expected fragment not found in fixture: {old_fragment}")
-    return value.replace(old_fragment, new_fragment)
-
-
 @pytest.mark.unittest
 class TestTaskAdherenceEvaluatorBehavior(
     BaseToolsEvaluatorBehaviorTest, BaseToolEvaluationTest, _TurnLevelUtilE2ETests, _MessagesUtilE2ETests
@@ -65,9 +55,7 @@ class TestTaskAdherenceEvaluatorBehavior(
     test_code_interpreter_expected_flow_inputs = {
         "system_message": "",
         "query": data.CODE_INTERPRETER_EXPECTED_FLOW_QUERY,
-        "response": _replace_fragment_or_fail(
-            data.CODE_INTERPRETER_EXPECTED_FLOW_RESPONSE, "I'll also run", "I\u2019ll also run"
-        ),
+        "response": data.CODE_INTERPRETER_EXPECTED_FLOW_RESPONSE,
         "tool_calls": "",
     }
 
@@ -88,9 +76,7 @@ class TestTaskAdherenceEvaluatorBehavior(
     test_file_search_expected_flow_inputs = {
         "system_message": "",
         "query": data.FILE_SEARCH_EXPECTED_FLOW_QUERY,
-        "response": _replace_fragment_or_fail(
-            data.FILE_SEARCH_EXPECTED_FLOW_RESPONSE, "whether you're in the mood", "whether you\u2019re in the mood"
-        ),
+        "response": data.FILE_SEARCH_EXPECTED_FLOW_RESPONSE,
         "tool_calls": "",
     }
 
