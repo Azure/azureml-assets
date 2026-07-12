@@ -2501,23 +2501,23 @@ IMAGE_GEN_EXPECTED_FLOW_RESPONSE = (
 )
 
 MEMORY_SEARCH_EXPECTED_FLOW_RESPONSE = (
-    "[TOOL_CALL] memory_search()\n[TOOL_RESULT] [{\"conte"
-    "nt\": \"User prefers dark roast coffee.\", \"kind\": \"u"
-    "ser_profile\", \"memory_id\": \"3a353f9202ca41bf95a4a9"
-    "ef21d90d41\", \"scope\": \"user_123\", \"updated_at\": 17"
-    "71323829}, {\"content\": \"User prefers dark roast co"
-    "ffee.\", \"kind\": \"user_profile\", \"memory_id\": \"3a35"
-    "3f9202ca41bf95a4a9ef21d90d41\", \"scope\": \"user_123\""
-    ", \"updated_at\": 1771323829}, {\"content\": \"The user"
-    " stated a preference for dark roast coffee. Dark r"
-    "oast coffee is characterized by a bold flavor, ric"
-    "h aroma, and lower acidity compared to lighter roa"
-    "sts.\", \"kind\": \"chat_summary\", \"memory_id\": \"9117c"
-    "9f9d7424f0290c523d1cd3de45a\", \"scope\": \"user_123\","
-    " \"updated_at\": 1771323829}]\nSure! I'll order your "
-    "usual—one dark roast coffee. Would you like any sp"
-    "ecific size or extras (milk, sugar, etc.) with tha"
-    "t?"
+    "[TOOL_CALL] memory_search()\n"
+    '[TOOL_RESULT] [{"content": "User prefers dark roast coffee.", '
+    '"kind": "user_profile", '
+    '"memory_id": "3a353f9202ca41bf95a4a9ef21d90d41", '
+    '"scope": "user_123", "updated_at": 1771323829}, '
+    '{"content": "User prefers dark roast coffee.", '
+    '"kind": "user_profile", '
+    '"memory_id": "3a353f9202ca41bf95a4a9ef21d90d41", '
+    '"scope": "user_123", "updated_at": 1771323829}, '
+    '{"content": "The user stated a preference for dark roast coffee. '
+    'Dark roast coffee is characterized by a bold flavor, '
+    'rich aroma, and lower acidity compared to lighter roasts.", '
+    '"kind": "chat_summary", '
+    '"memory_id": "9117c9f9d7424f0290c523d1cd3de45a", '
+    '"scope": "user_123", "updated_at": 1771323829}]\n'
+    "Sure! I'll order your usual\u2014one dark roast coffee. "
+    "Would you like any specific size or extras (milk, sugar, etc.) with that?"
 )
 
 KB_MCP_EXPECTED_FLOW_RESPONSE = (
