@@ -34,6 +34,7 @@ from ..common.evaluator_mock_config import (
     run_none_score_not_applicable,
 )
 
+
 @pytest.mark.unittest
 class TestTaskAdherenceEvaluatorBehavior(
     BaseToolsEvaluatorBehaviorTest, BaseToolEvaluationTest, _TurnLevelUtilE2ETests, _MessagesUtilE2ETests
