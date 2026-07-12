@@ -56,7 +56,7 @@ class TestTaskAdherenceEvaluatorBehavior(
     test_code_interpreter_expected_flow_inputs = {
         "system_message": "",
         "query": data.CODE_INTERPRETER_EXPECTED_FLOW_QUERY,
-        "response": data.CODE_INTERPRETER_EXPECTED_FLOW_RESPONSE,
+        "response": data.CODE_INTERPRETER_EXPECTED_FLOW_RESPONSE.replace("I'll also run", "I\u2019ll also run"),
         "tool_calls": "",
     }
 
@@ -77,7 +77,7 @@ class TestTaskAdherenceEvaluatorBehavior(
     test_file_search_expected_flow_inputs = {
         "system_message": "",
         "query": data.FILE_SEARCH_EXPECTED_FLOW_QUERY,
-        "response": data.FILE_SEARCH_EXPECTED_FLOW_RESPONSE,
+        "response": data.FILE_SEARCH_EXPECTED_FLOW_RESPONSE.replace("whether you're in the mood", "whether you\u2019re in the mood"),
         "tool_calls": "",
     }
 
