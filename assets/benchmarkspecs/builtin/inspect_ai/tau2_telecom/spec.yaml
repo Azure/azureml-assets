@@ -1,6 +1,6 @@
 type: "benchmarkspec"
 name: "builtin.inspect_ai.tau2_telecom"
-version: 1
+version: 2
 display_name: "τ²-Bench Telecom Benchmark (inspect_ai)"
 description: "τ²-bench Telecom is a dual-control agent benchmark that evaluates AI agents on realistic telecom customer service tasks. Both the AI agent and a simulated user interact to resolve issues. Evaluated using the inspect_ai framework."
 benchmarkType: "builtin"
@@ -23,7 +23,7 @@ dataset:
     dataset_source: "https://github.com/sierra-research/tau2-bench"
   source:
     provider: "mlregistry"
-    sourceDatasetId: "azureml://registries/azureml/data/tau2_telecom/versions/1"
+    sourceDatasetId: "azureml://registries/azureml/data/tau2_telecom/versions/2"
     sourceFormat: "jsonl"
     properties:
       file_name: "tau2_telecom.jsonl"
