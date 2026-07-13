@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.ifeval"
-version: 1
+version: 2
 displayName: "IFEval-Evaluator"
 description: "Evaluates model responses for the Instruction-Following Eval (IFEval)
   benchmark. Checks whether model outputs comply with verifiable instructions such

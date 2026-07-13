@@ -1,6 +1,6 @@
 type: "benchmarkspec"
 name: "builtin.ifeval"
-version: 1
+version: 2
 display_name: "IFEval Benchmark"
 description: "Instruction-Following Eval (IFEval) is a benchmark for evaluating the
   instruction-following capabilities of large language models. It focuses on verifiable
@@ -19,12 +19,12 @@ inference:
     max_completion_tokens: 4096
 
 evaluator:
-  id: "azureml://registries/azureml/evaluators/builtin.ifeval/versions/1"
+  id: "azureml://registries/azureml/evaluators/builtin.ifeval/versions/2"
   testingCriteria:
     type: "azure_ai_evaluator"
     name: "IFEval"
     evaluator_name: "builtin.ifeval"
-    evaluator_version: "1"
+    evaluator_version: "2"
     initialization_parameters: {}
     data_mapping:
       instruction_id_list: "{{item.instruction_id_list}}"
