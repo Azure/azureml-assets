@@ -32,7 +32,7 @@ system_metadata:
   - vllm
   platformCapabilities:
     enableBatch: false
-version: 7
+version: 8
 description: |
   The Mixtral-8x22B Large Language Model (LLM) is a pretrained generative Sparse Mixture of Experts.
 
