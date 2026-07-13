@@ -348,6 +348,16 @@ class ToolCallSuccessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             requires_query=False,
             check_for_unsupported_tools=True,
         )
+        # azure_ai_search, azure_fabric and sharepoint_grounding are supported by this
+        # evaluator. They were removed from the SDK's UNSUPPORTED_TOOLS list in
+        # azure-ai-evaluation >= 1.18.1 but are still listed on 1.17.x, so we drop them
+        # from this validator instance to keep the behavior consistent across SDK
+        # versions. This override can be removed once 1.17.x is no longer supported.
+        self._validator.UNSUPPORTED_TOOLS = [
+            tool
+            for tool in self._validator.UNSUPPORTED_TOOLS
+            if tool not in ("azure_ai_search", "azure_fabric", "sharepoint_grounding")
+        ]
 
         super().__init__(
             model_config=model_config,
