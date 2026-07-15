@@ -3,5 +3,5 @@ name: qwen2.5-coder-3b-instruct
 path: ./
 isArchived: true
 system_metadata:
-  foundryLocal: hide
+  foundryLocal: ''
 version: 1
