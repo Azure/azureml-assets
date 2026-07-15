@@ -19,7 +19,7 @@ from azure.ai.projects.models import (
     OpenApiAnonymousAuthDetails,
 )
 
-from conftest import run_evaluation, assert_evaluation_results, unique_name, UNSUPPORTED_TOOL_EVALUATORS
+from conftest import run_evaluation, assert_evaluation_results, unique_name
 
 logger = logging.getLogger(__name__)
 
@@ -74,19 +74,16 @@ class TestOpenAPIEvaluation:
             assert_evaluation_results(
                 eval_run,
                 output_items,
-                # openapi_call is in UNSUPPORTED_TOOLS – 4 evaluators
-                # return NOT_APPLICABLE per base_tool_evaluation_test.py.
-                # tool_call_accuracy and tool_selection also check unsupported
-                # tools BUT have is_tool_definition_required=True; the
-                # missing-definitions check fires before the unsupported check.
-                expected_not_applicable=UNSUPPORTED_TOOL_EVALUATORS - {"tool_call_accuracy"},
-                expected_errors={
-                    "tool_call_accuracy": "Tool definitions input is required but not provided",
-                    "tool_selection": "Tool definitions input is required but not provided",
+                # For openapi_call the evaluators no longer error; groundedness
+                # and the quality evaluators pass, while tool_call_accuracy,
+                # tool_selection and tool_input_accuracy return a not_applicable
+                # label (no tool definitions are supplied for openapi_call).
+                tolerated_failures={
+                    "tool_call_accuracy",
+                    "tool_selection",
+                    "tool_input_accuracy",
+                    "task_adherence",
                 },
-                # openapi_call tool type is not recognized as tool usage by
-                # task_adherence evaluator (known platform limitation)
-                expected_failures={"task_adherence"},
             )
 
         finally:

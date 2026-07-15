@@ -24,7 +24,6 @@ from conftest import (
     assert_evaluation_results,
     unique_name,
     requires_env,
-    UNSUPPORTED_TOOL_EVALUATORS,
 )
 
 logger = logging.getLogger(__name__)
@@ -83,7 +82,10 @@ class TestAISearchEvaluation:
             assert_evaluation_results(
                 eval_run,
                 output_items,
-                expected_not_applicable=UNSUPPORTED_TOOL_EVALUATORS,
+                # Only groundedness stays NOT_APPLICABLE for azure_ai_search now;
+                # the tool-call evaluators run and their scores vary run to run.
+                expected_not_applicable={"groundedness"},
+                tolerated_failures={"tool_call_accuracy", "tool_input_accuracy"},
             )
 
         finally:

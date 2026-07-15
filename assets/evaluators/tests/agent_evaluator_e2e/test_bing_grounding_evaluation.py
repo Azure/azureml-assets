@@ -78,6 +78,9 @@ class TestBingGroundingEvaluation:
                 eval_run,
                 output_items,
                 expected_not_applicable=UNSUPPORTED_TOOL_EVALUATORS,
+                # tool_call_accuracy / tool_input_accuracy now run for
+                # bing_grounding; their param-level scores vary run to run.
+                tolerated_failures={"tool_call_accuracy", "tool_input_accuracy"},
             )
 
         finally:

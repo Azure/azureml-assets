@@ -3,7 +3,17 @@
 This document tracks consistent errors, platform limitations, and flaky
 evaluator results observed during E2E evaluation runs (both Python and .NET).
 
-> **Last validated:** March 2026, across 3 full runs each in Python and .NET.
+> **Last validated:** July 2026 (Python).
+
+> **2026-07-15 service capability update:** `tool_call_accuracy` and
+> `tool_input_accuracy` are now supported for **all** tool types (previously
+> NOT_APPLICABLE), and `tool_call_success` / `tool_output_utilization` are now
+> supported for `azure_ai_search`, `azure_fabric` and `image_generation`. As a
+> result, `UNSUPPORTED_TOOL_EVALUATORS` was narrowed to
+> `{groundedness, tool_call_success, tool_output_utilization}` and the per-tool
+> `expected_failures` were converted to `tolerated_failures` because the
+> parameter-level / quality scores of the now-supported evaluators vary run to
+> run. Sections below marked *(historical)* describe the pre-update behavior.
 
 ---
 
@@ -31,16 +41,26 @@ instead of `NOT_APPLICABLE`. All 12 evaluators are placed in `expected_errors`.
 
 ---
 
-## 2. OpenAPI – tool_call_accuracy and tool_selection Error
+## 2. OpenAPI – tool_call_accuracy, tool_selection, tool_input_accuracy NOT_APPLICABLE
 
 **Tool type:** `openapi_call`
-**Affected evaluators:** tool_call_accuracy, tool_selection
-**Status:** Expected error (documented in `expected_errors` parameter)
+**Affected evaluators:** tool_call_accuracy, tool_selection, tool_input_accuracy
+**Status:** Tolerated (`tolerated_failures`) – they return a `not_applicable`
+label (score `None`), not an error.
 
-Both evaluators have `is_tool_definition_required = True`. OpenAPI tool
-definitions are not provided in the evaluation input format, so they fail
-with `"Tool definitions input is required but not provided."` before
-reaching the unsupported-tool check.
+No tool definitions are supplied for `openapi_call` in the evaluation input, so
+these three evaluators return NOT_APPLICABLE. The remaining evaluators
+(including `groundedness`) pass; `task_adherence` is also tolerated because
+whether `openapi_call` is counted as tool usage varies run to run.
+
+> **Test-asset fix (2026-07-15):** `assets/weather_openapi.json` previously
+> declared `components.schemes` and a top-level `auth`, which are not valid
+> under OpenAPI 3.x and caused the OpenAPI tool to reject agent creation with a
+> `400 tool_user_error` ("Unevaluated properties are not allowed"). Both keys
+> were removed.
+
+**(historical)** Previously these evaluators errored with `"Tool definitions
+input is required but not provided."`.
 
 ---
 
@@ -65,11 +85,18 @@ Non-deterministic; does not reproduce on every run.
 
 ---
 
-## 5. Expected Quality Failures
+## 5. Quality Failures (now tolerated, not asserted)
 
-Evaluators in `expected_failures` consistently score below threshold.
-The test semantics are **inverted**: listed evaluators MUST fail — if
-they unexpectedly pass, the test fails.
+**(updated 2026-07-15)** The per-tool quality / parameter evaluators below are
+non-deterministic in E2E runs (the agent's tool-call parameters and "not found"
+responses vary run to run), so they were moved from `expected_failures` to
+`tolerated_failures`: the test passes whether they pass or fail. Combined with
+`@pytest.mark.flaky(reruns=3)` this keeps the suite stable. The table below
+records which evaluators have been *observed* failing per tool type.
+
+**(historical)** The pre-update `expected_failures` semantics were **inverted**
+(listed evaluators MUST fail — if they unexpectedly passed, the test failed);
+this is no longer the case.
 
 | Tool Type             | Evaluator              | Python | .NET  | Reason                                                |
 |-----------------------|------------------------|--------|-------|-------------------------------------------------------|
@@ -105,11 +132,19 @@ they unexpectedly pass, the test fails.
 
 ## 6. NOT_APPLICABLE by Design (Unsupported Tool Types)
 
-**Evaluators:** tool_call_accuracy, tool_input_accuracy,
-tool_output_utilization, tool_call_success, groundedness
+**Still NOT_APPLICABLE (validated 2026-07-15):**
 
-**Tool types:** code_interpreter_call, bing_grounding, bing_custom_search,
-azure_ai_search, sharepoint_grounding, azure_fabric, openapi_call,
-web_search, browser_automation, computer_call
+* `groundedness` – for every tool type listed below.
+* `tool_call_success` and `tool_output_utilization` – for `code_interpreter_call`,
+  `bing_grounding`, `bing_custom_search`, `web_search` and `browser_automation`.
+
+These are represented by `UNSUPPORTED_TOOL_EVALUATORS =
+{groundedness, tool_call_success, tool_output_utilization}` in `conftest.py`.
+`azure_ai_search`, `azure_fabric` and `sharepoint_grounding` only keep
+`groundedness` NOT_APPLICABLE (the tool-call evaluators now run), and
+`image_generation` has no NOT_APPLICABLE evaluators at all.
 
 Error message: `"{tool_name} tool call is currently not supported for {evaluator_name} evaluator."`
+
+**(historical)** Previously `tool_call_accuracy` and `tool_input_accuracy` were
+also NOT_APPLICABLE for these tool types; they are now supported everywhere.

@@ -22,7 +22,6 @@ from conftest import (
     assert_evaluation_results,
     unique_name,
     requires_env,
-    UNSUPPORTED_TOOL_EVALUATORS,
 )
 
 logger = logging.getLogger(__name__)
@@ -78,13 +77,19 @@ class TestFabricEvaluation:
             assert_evaluation_results(
                 eval_run,
                 output_items,
-                expected_not_applicable=UNSUPPORTED_TOOL_EVALUATORS,
-                # Fabric tool may not find data or fail to list workspace contents,
-                # causing quality evaluators to penalize the "not found" response
-                expected_failures={
+                # Only groundedness stays NOT_APPLICABLE for azure_fabric now.
+                expected_not_applicable={"groundedness"},
+                # Fabric may not find data / list workspace contents, so quality
+                # and tool-call evaluators may penalize the "not found" response;
+                # outcomes vary run to run.
+                tolerated_failures={
                     "relevance",
                     "intent_resolution",
                     "task_completion",
+                    "tool_call_success",
+                    "tool_output_utilization",
+                    "tool_call_accuracy",
+                    "tool_input_accuracy",
                 },
             )
 

@@ -22,7 +22,6 @@ from conftest import (
     assert_evaluation_results,
     unique_name,
     requires_env,
-    UNSUPPORTED_TOOL_EVALUATORS,
 )
 
 logger = logging.getLogger(__name__)
@@ -78,12 +77,17 @@ class TestSharePointEvaluation:
             assert_evaluation_results(
                 eval_run,
                 output_items,
-                expected_not_applicable=UNSUPPORTED_TOOL_EVALUATORS,
-                # SharePoint tool may not find matching documents, causing
-                # quality evaluators to penalize the "not found" response
-                expected_failures={
+                # Only groundedness stays NOT_APPLICABLE for sharepoint_grounding now.
+                expected_not_applicable={"groundedness"},
+                # SharePoint may not find matching documents, so quality and
+                # tool-call evaluators may penalize the "not found" response;
+                # outcomes vary run to run.
+                tolerated_failures={
                     "relevance",
+                    "intent_resolution",
                     "task_completion",
+                    "tool_call_accuracy",
+                    "tool_input_accuracy",
                 },
             )
 

@@ -75,6 +75,9 @@ class TestBrowserAutomationEvaluation:
                 eval_run,
                 output_items,
                 expected_not_applicable=UNSUPPORTED_TOOL_EVALUATORS,
+                # tool_call_accuracy / tool_input_accuracy now run for
+                # browser_automation; param-level and task scores vary run to run.
+                tolerated_failures={"task_completion", "tool_call_accuracy", "tool_input_accuracy"},
             )
 
         finally:

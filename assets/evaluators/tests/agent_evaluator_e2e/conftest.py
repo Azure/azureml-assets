@@ -34,15 +34,13 @@ EVALUATOR_NAMES = [
 ]
 
 # ---------------------------------------------------------------------------
-# Evaluators that set ``check_for_unsupported_tools = True`` and return
-# NOT_APPLICABLE for tool types listed in ConversationValidator.UNSUPPORTED_TOOLS.
+# Evaluators that still return NOT_APPLICABLE for the grounding / search /
+# browser_automation / code_interpreter / web_search tool families.
 # ---------------------------------------------------------------------------
 UNSUPPORTED_TOOL_EVALUATORS = frozenset({
-    "tool_call_accuracy",
-    "tool_input_accuracy",
-    "tool_output_utilization",
-    "tool_call_success",
     "groundedness",
+    "tool_call_success",
+    "tool_output_utilization",
 })
 
 
@@ -74,7 +72,9 @@ def requires_env(*env_vars):
     """Pytest marker that fails (not skips) when required env vars are missing."""
     missing = [v for v in env_vars if not os.environ.get(v)]
     if not missing:
-        return pytest.mark.usefixtures()
+        def _noop(cls_or_fn):
+            return cls_or_fn
+        return _noop
 
     msg = f"Missing environment variables: {', '.join(missing)}"
 

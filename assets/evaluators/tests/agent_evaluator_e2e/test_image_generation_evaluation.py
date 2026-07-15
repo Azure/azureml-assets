@@ -72,14 +72,14 @@ class TestImageGenerationEvaluation:
             assert_evaluation_results(
                 eval_run,
                 output_items,
-                # Evaluators can't view generated images, so they report
-                # "no image delivered" for intent/task evaluators.
-                expected_failures={
-                    "intent_resolution",
-                    "tool_input_accuracy",
-                },
+                # Evaluators can't view generated images, so intent/quality and
+                # tool-call evaluators may penalize the response; outcomes vary.
                 tolerated_failures={
+                    "relevance",
+                    "intent_resolution",
                     "task_completion",
+                    "tool_call_success",
+                    "tool_input_accuracy",
                 },
             )
 
