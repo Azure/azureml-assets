@@ -9,16 +9,10 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
-# Update package lists and upgrade all OS packages to pull latest security patches
-# (e.g. openssh USN-8222-1, curl USN-8227-1, kmod USN-8226-1, sed USN-8229-1,
-# nghttp2 USN-8233-1 currently outstanding in base image openmpi5.0-ubuntu24.04:latest).
-# Previously this step also did `apt-get install --reinstall -y openssl libssl-dev
-# openssh-server` but those reinstalls became redundant after `apt-get upgrade` was
-# added: verified 2026-05-12 against base openmpi5.0-ubuntu24.04:20260507.v1 that a
-# fresh build with `apt-get upgrade` alone brings openssh to 1:9.6p1-3ubuntu13.16,
-# curl/libcurl* to 8.5.0-2ubuntu10.9, libnghttp2-14 to 1.59.0-1ubuntu0.3, sed to
-# 4.9-2ubuntu0.24.04.1, and libkmod2 to 31+20240202-2ubuntu7.2 - all USN fixes.
-# Removed --reinstall to keep the layer minimal.
+# Upgrade OS packages to pull current Ubuntu security patches.
+# The current openmpi5.0-ubuntu24.04 base already contains the required fixes for
+# curl/libcurl* (USN-8487-1), libnghttp2-14 (USN-8495-1), libsqlite3-0
+# (USN-8480-1), and tar (USN-8477-1), so no package pins are needed here.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get clean && \
