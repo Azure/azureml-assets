@@ -8,10 +8,11 @@ import os
 import shutil
 from azure.ai.ml.exceptions import ErrorTarget, ErrorCategory, MlException
 from pathlib import Path
+from typing import List, Optional
 
 from utils.config import AppName
 from utils.logging_utils import custom_dimensions, get_logger
-from utils.common_utils import run_command
+from utils.common_utils import run_command, run_command_args
 from utils.exceptions import (
     swallow_all_exceptions,
     ModelImportErrorStrings,
@@ -26,7 +27,6 @@ LOCAL_VALIDATION_OUT_FILE = "output.log"
 CONDA_FILE_NAME = "conda.yaml"
 CREATE_CONDA_CMD = "conda env create -p {} -f {} -q"
 CONDA_LIST = "conda list -p {}"
-CONDA_EXEC_CMD = "conda run -p {} {}"
 SCRIPT_PATH = "scripts/validate_model.py"
 
 
@@ -35,8 +35,35 @@ def _get_parser():
     parser.add_argument("--model-path", type=Path, required=True, help="Model input path")
     parser.add_argument("--test-data-path", type=Path, required=False, help="Test dataset path")
     parser.add_argument("--column-rename-map", type=str, required=False, help="")
+    parser.add_argument("--task-name", type=str, required=False, help="Hugging Face task type")
     parser.add_argument("--output-model-path", type=Path, required=True, help="Output model path")
     return parser
+
+
+def _get_validation_command(
+    model_dir: Path,
+    test_data_path: Optional[Path],
+    col_rename_map_str: Optional[str],
+    task_name: Optional[str],
+) -> List[str]:
+    """Build local validation command arguments without shell-interpreted input."""
+    cmd = [
+        "conda",
+        "run",
+        "-p",
+        ENV_PREFIX,
+        "python",
+        SCRIPT_PATH,
+        "--model-path",
+        str(model_dir),
+    ]
+    if test_data_path:
+        cmd.extend(["--test-data-path", str(test_data_path)])
+    if col_rename_map_str:
+        cmd.extend(["--column-rename-map", col_rename_map_str])
+    if task_name:
+        cmd.extend(["--task-name", task_name])
+    return cmd
 
 
 @swallow_all_exceptions(logger)
@@ -48,6 +75,7 @@ def run():
     model_dir: Path = args.model_path
     test_data_path: Path = args.test_data_path
     col_rename_map_str: str = args.column_rename_map
+    task_name: str = args.task_name
     output_model_path: Path = args.output_model_path
 
     logger.info(f"col_rename_map_str {col_rename_map_str}")
@@ -87,24 +115,15 @@ def run():
         )
     logger.info(f"pip list: \n{stdout}")
 
-    cmd = f"python {SCRIPT_PATH} --model-path {model_dir}"
-    if test_data_path:
-        cmd += f" --test-data-path {test_data_path}"
-    if col_rename_map_str:
-        cmd += f" --column-rename-map '{col_rename_map_str}'"
-    cmd += f" > {LOCAL_VALIDATION_OUT_FILE} 2>&1"
+    run_script_cmd = _get_validation_command(model_dir, test_data_path, col_rename_map_str, task_name)
+    exit_code, stdout = run_command_args(run_script_cmd)
+    with open(LOCAL_VALIDATION_OUT_FILE, "w") as f:
+        f.write(stdout or "")
 
-    run_script_cmd = CONDA_EXEC_CMD.format(ENV_PREFIX, cmd)
-    logger.info(f"cmd string: {run_script_cmd}")
-
-    exit_code, stdout = run_command(run_script_cmd)
-    if os.path.exists(LOCAL_VALIDATION_OUT_FILE):
-        # read script logs and feed to logger handler here
-        with open(LOCAL_VALIDATION_OUT_FILE) as f:
-            for line in f:
-                logger.info(f"[SCRIPT_LOG] {line}")
-    else:
-        logger.warning("local validation script execution log was not captured")
+    # read script logs and feed to logger handler here
+    with open(LOCAL_VALIDATION_OUT_FILE) as f:
+        for line in f:
+            logger.info(f"[SCRIPT_LOG] {line}")
 
     if exit_code != 0:
         logger.warning(f"Local validation failed. Error {stdout}")
