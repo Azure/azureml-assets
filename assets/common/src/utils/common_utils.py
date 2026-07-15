@@ -5,6 +5,7 @@
 
 import os
 import re
+import shlex
 import sys
 from azure.ai.ml import MLClient
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
@@ -12,7 +13,7 @@ from azure.identity import ManagedIdentityCredential
 from azure.ai.ml.exceptions import ErrorTarget, ErrorCategory, MlException, ValidationException
 from pathlib import Path
 from subprocess import PIPE, run, STDOUT
-from typing import Tuple
+from typing import Sequence, Tuple
 
 from utils.logging_utils import get_logger
 from utils.exceptions import ModelImportErrorStrings
@@ -28,6 +29,21 @@ def run_command(cmd: str, cwd: Path = "./") -> Tuple[int, str]:
         cmd,
         cwd=cwd,
         shell=True,
+        stdout=PIPE,
+        stderr=STDOUT,
+        encoding=sys.stdout.encoding,
+        errors="ignore",
+    )
+    return result.returncode, result.stdout
+
+
+def run_command_args(cmd: Sequence[str], cwd: Path = "./") -> Tuple[int, str]:
+    """Run the command arguments without shell interpretation and return the result."""
+    logger.info(" ".join(shlex.quote(str(arg)) for arg in cmd))
+    result = run(
+        [str(arg) for arg in cmd],
+        cwd=cwd,
+        shell=False,
         stdout=PIPE,
         stderr=STDOUT,
         encoding=sys.stdout.encoding,
