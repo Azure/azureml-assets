@@ -1,7 +1,7 @@
 path:
   container_name: models
   container_path: foundrylocal/foundry-local/deepseek-r1-distill-llama-8b
-  storage_name: automlcesdkdataresources
+  storage_name: foundrylocalassetdata
   type: azureblob
 publish:
   description: description.md

@@ -1,0 +1,48 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: olmo-3-7b-instruct-cuda-gpu
+path: ./
+isArchived: true
+tags:
+  capabilities: tool-calling
+  supportsReasoning: ''
+  contextLength: 65536
+system_metadata:
+  alias: olmo-3-7b-instruct
+  publisher: Microsoft
+  directoryPath: v1
+  foundryLocal: ''
+  inputModalities:
+  - text
+  license: apache-2.0
+  licenseDescription: This model is provided under the License Terms available at <https://huggingface.co/allenai/Olmo-3-7B-Instruct/blob/main/LICENSE>.
+  maxOutputTokens: 2048
+  outputModalities:
+  - text
+  promptTemplate: '{"system": "<|im_start|>system\n{Content}<|im_end|>", "user": "<|im_start|>user\n{Content}<|im_end|>", "assistant": "<|im_start|>assistant\n{Content}<|im_end|>", "prompt": "<|im_start|>user\n{Content}<|im_end|>\n<|im_start|>assistant"}'
+  supportsToolCalling: true
+  toolCallEnd: </function_calls>
+  toolCallStart: <function_calls>
+  toolRegisterEnd: </functions>
+  toolRegisterStart: <functions>
+  toolResponseEnd: ''
+  toolResponseStart: ''
+  tasks:
+    inferenceTasks:
+    - chat-completion
+  platformCapabilities:
+    enableMaap: false
+  reasoningStart: ''
+  reasoningEnd: ''
+  minFLVersion: 0.0.0
+variantInfo:
+  parents:
+  - assetId: azureml://registries/azureml/models/olmo-3-7b-instruct/versions/1
+  variantMetadata:
+    modelType: ONNX
+    quantization:
+    - GPTQ
+    device: gpu
+    executionProvider: CUDAExecutionProvider
+    fileSizeBytes: 5445956474
+    vRamFootprintBytes: 5445956474
+version: 1

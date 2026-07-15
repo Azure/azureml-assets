@@ -1,15 +1,17 @@
 openai==1.28.0
 pandas==2.2.0
-azureml-mlflow==1.56.0
+azureml-mlflow=={{latest-pypi-version}}
 azure-mgmt-cognitiveservices==13.5.0
 azure-identity>=1.16.1
 jsonlines==4.0.0
-azureml-telemetry==1.56.0
+azureml-telemetry=={{latest-pypi-version}}
 pydantic==2.7.0
-idna>=3.7
 azure-keyvault-secrets==4.8.0
-requests==2.32.5
-urllib3==2.6.3
-pillow==12.1.1
-cryptography>=46.0.5
-wheel>=0.46.2
+requests==2.34.2
+# idna is brought in by requests (directly and via azure-core/msal) and by
+# httpx (via openai). Current parent releases still allow vulnerable idna
+# versions instead of requiring idna>=3.15, so keep this direct override.
+idna>=3.15
+# urllib3 is a transitive dependency; pin to patched version to resolve
+# GHSA-mf9v-mfxr-j63j (vuln 5012484).
+urllib3>=2.7.0

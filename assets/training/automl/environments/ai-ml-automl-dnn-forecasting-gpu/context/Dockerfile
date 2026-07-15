@@ -7,15 +7,41 @@ ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/ /var/mlflow_resources/
 
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
-# ENV AML_APP_ROOT="/var/mlflow_resources"
-# ENV AZUREML_ENTRY_SCRIPT="mlflow_score_script.py"
 
 ENV ENABLE_METADATA=true
 
-# Security: upgrade all OS packages to fix USN vulnerabilities (libssh, curl, etc.)
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+# Upgrade vulnerable OS packages installed by the Ubuntu 22.04 parent image.
+# Includes OpenSSL (USN-8414-1), systemd (USN-8402-1), nginx
+# (USN-8354-1/USN-8398-1), XZ Utils (USN-8362-1), and earlier base-image USNs.
+RUN set -eux; \
+    apt-get update; \
+    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade; \
+    for package in \
+        curl \
+        libcurl3-gnutls \
+        libcurl4 \
+        liblzma5 \
+        libnghttp2-14 \
+        libnginx-mod-http-echo \
+        libnginx-mod-http-geoip2 \
+        libssl3 \
+        libsystemd0 \
+        libudev1 \
+        nginx-common \
+        nginx-light \
+        openssh-client \
+        openssh-server \
+        openssh-sftp-server \
+        openssl \
+        sed \
+        xz-utils; \
+    do \
+        if dpkg-query -W -f='${db:Status-Abbrev}' "$package" 2>/dev/null | grep -q '^ii '; then \
+            DEBIAN_FRONTEND=noninteractive apt-get install --only-upgrade -y --no-install-recommends "$package"; \
+        fi; \
+    done; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -26,8 +52,14 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+# Upgrade pip in the base miniconda (/opt/miniconda) to fix CVE-2026-6357 / GHSA-jp4c-xjxw-mgf9.
+# The base miniconda ships with the parent image (mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04)
+# and is independent of the conda env created below at $AZUREML_CONDA_ENVIRONMENT_PATH.
+# Pinning 'pip>=26.1' inside the env (line below) does not patch /opt/miniconda's pip, which is
+# still flagged by SCA scanners. No parent-package upgrade is possible because pip is the package
+# itself; the only fix is upgrading pip directly to >= 26.1.
+RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'pip>=26.1'
 
-# begin conda create
 # Create conda environment (minimal — packages installed via pip to avoid solver OOM)
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
@@ -35,22 +67,20 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     conda clean -a -y
 
 # Install scientific packages + pip/setuptools/wheel via pip (avoids conda solver OOM)
+# Pin setuptools below 82 so pkg_resources remains available for AzureML packages.
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
     'numpy>=1.23.5,<1.24' \
     'scikit-learn==1.5.1' \
     'pandas>=1.5.3,<1.6' \
     'scipy==1.10.1' \
     'psutil>=5.2.2,<6.0.0' \
-    'pip>=26.0' \
-    'setuptools>=82.0.1' \
+    'pip>=26.1' \
+    'setuptools==81.0.0' \
     'wheel>=0.46.2'
-# end conda create
 
-# begin pip install
 # Install pip dependencies
 # GitPython>=3.1.41 is required for https://github.com/advisories/GHSA-2mqj-m65w-jghx and is not available in conda
 RUN pip install --no-cache-dir \
-                # begin pypi dependencies
                 azureml-core=={{latest-pypi-version}} \
                 azureml-mlflow=={{latest-pypi-version}} \
                 azureml-defaults=={{latest-pypi-version}} \
@@ -66,7 +96,6 @@ RUN pip install --no-cache-dir \
                 'GitPython>=3.1.41' \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz' \
                 'py-cpuinfo==5.0.0' 
-                # end pypi dependencies
 
 # Install packages with torch packages separately to reduce layer size
 RUN pip install --no-cache-dir \
@@ -75,19 +104,21 @@ RUN pip install --no-cache-dir \
                 azureml-train-automl-runtime=={{latest-pypi-version}} \
                 azureml-contrib-automl-dnn-forecasting=={{latest-pypi-version}}
 
-# end pip install
-
 # Fix vulnerabilities - overrides needed because parent packages cap vulnerable versions
 # distributed>=2026.1.0: CVE-2026-23528 (via azureml-train-automl-runtime -> dask[complete])
 # cryptography>=46.0.5: CVE-2026-26007 (via azureml-mlflow, azure-identity, azureml-core -> msal/pyopenssl)
-# setuptools>=82.0.1: CVE-2026-23949 (vendors patched jaraco.context 6.1.0; universal build tool)
 # mlflow-skinny>=2.16.0: security fixes (via azureml-mlflow, azureml-contrib-automl-dnn-forecasting)
 # protobuf>=5.29.6: CVE-2026-0994 (via mlflow-skinny, azureml-automl-runtime -> onnx/onnxruntime)
 # pillow>=12.1.1: CVE-2026-25990 (via matplotlib, bokeh, tensorboard)
 # bokeh>=3.8.2: GHSA-793v-589g-574v CSWSH (overrides azureml-train-automl-runtime's bokeh<3.0.0 cap)
-RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'mlflow-skinny>=2.16.0' \
+# onnx>=1.21.0: GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6, GHSA-538c-55jv-c5g9,
+#   GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m (via azureml-automl-runtime -> onnxconverter-common/skl2onnx)
+# pyarrow>=23.0.1: GHSA-rgxp-2hwp-jwgg / CVE-2026-25087 (via azureml-dataset-runtime)
+RUN pip install --no-cache-dir --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'mlflow-skinny>=2.16.0' \
                           'protobuf>=5.29.6' 'pillow>=12.1.1' \
-                          'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
+                          'bokeh>=3.8.2' \
+                          'onnx>=1.21.0' \
+                          'pyarrow>=23.0.1'  # pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg / CVE-2026-25087
 RUN pip install --no-cache-dir torch==2.8.0
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \

@@ -1,0 +1,5 @@
+AIME 2025 problems are from the American Invitational Mathematics Examination.
+
+Dataset sourced from https://huggingface.co/datasets/math-ai/aime25
+
+Licensed under Apache-2.0 License.

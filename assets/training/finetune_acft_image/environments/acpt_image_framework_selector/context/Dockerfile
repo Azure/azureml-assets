@@ -1,23 +1,103 @@
 # PTCA image
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
-RUN apt-get -y update && apt-get -y upgrade
-# Install required packages
+# Pull latest Ubuntu 22.04 security patches on each rebuild.
+# Explicit package list ensures USN-8298-1 (.NET), USN-8319-1 (libgcrypt20),
+# and USN-8362-1 (xz-utils/liblzma5) patches are applied even when apt-get
+# upgrade would otherwise hold them back.
+RUN apt-get -y update && apt-get -y upgrade && \
+    apt-get -y install --only-upgrade \
+        dotnet-hostfxr-8.0 \
+        dotnet-host-8.0 \
+        dotnet-runtime-8.0 \
+        libgcrypt20 \
+        liblzma5 \
+        xz-utils && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# pip in both conda envs (base py3.13 and ptca py3.10) ships as 26.0.1 in the
+# upstream ACPT base image, which is vulnerable to GHSA-jp4c-xjxw-mgf9 (fixed
+# in pip>=26.1). pip is a build/install tool with no Python parent package —
+# conda is its installer — so an upstream parent upgrade is not possible. The
+# ACPT base has not yet refreshed to pip 26.1+ as of 2026-05-19, so we override
+# here. We use `conda install` so the conda-meta JSON and /opt/conda/pkgs cache
+# are also updated, and remove stray pip-26.0* dist-info / conda-meta entries
+# from prior pip self-upgrades that conda does not track — otherwise the SBOM
+# scanner re-flags them. Done before the requirements install so requirements
+# are installed with the patched pip.
+RUN conda install -y --solver=classic -n base -c conda-forge pip==26.1.1 && \
+    conda install -y --solver=classic -n ptca -c conda-forge pip==26.1.1 && \
+    rm -rf /opt/conda/lib/python3.13/site-packages/pip-26.0*.dist-info && \
+    rm -f /opt/conda/conda-meta/pip-26.0*.json && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/pip-26.0*.dist-info && \
+    rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0*.json && \
+    conda clean -ay
+
+# Install required packages (ptca env). setuptools>=82.0.1 patches
+# GHSA-58pv-8j8x-9vj2 in the ptca env which ships setuptools 81.0.0.
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
-
-# upgrade pip, wheel, protobuf vulnerabilities in ptca env
-# NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
-# setuptools vendors jaraco.context internally; >=82.0.1 bundles the patched version (GHSA-58pv-8j8x-9vj2)
-# protobuf parent is mlflow (already latest) which accepts protobuf>=3.12.0, cannot force 6.33.5 via parent
-RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 cryptography==46.0.5 'setuptools>=82.0.1'
 
 # Flag needed to enable control flow which is in PrP.
 ENV AZURE_ML_CLI_PRIVATE_FEATURES_ENABLED=True
 
-# vulnerability in base conda env
-# PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 'setuptools>=82.0.1' cryptography==46.0.5 'PyJWT>=2.12.0'
-# pip install updates the binary but conda-meta still references old versions; conda install syncs both
-RUN conda install -y -n ptca pip>=26.0.1 wheel>=0.46.2
+# Vulnerability overrides in base conda env (python3.13). The base SBOM is
+# patched for several of these packages, but requirements.txt can re-resolve
+# loose AzureML/MLflow transitive dependencies back to vulnerable versions.
+# - setuptools: base ships 82.0.0; need >=82.0.1 for GHSA-58pv-8j8x-9vj2.
+# - python-dotenv>=1.2.2: transitive dep of pydantic-settings and
+#   anaconda-auth; fixes GHSA-mf9w-mj56-hr94.
+# - urllib3>=2.7.0: transitive dep of requests; fixes GHSA-qccp-gfcp-xxvc and
+#   GHSA-mf9v-mfxr-j63j.
+# - aiohttp>=3.14.0: fixes GHSA-jg22-mg44-37j8 and GHSA-hg6j-4rv6-33pg.
+# - click>=8.3.3: transitive dep of typer/mlflow-skinny; fixes
+#   GHSA-47fr-3ffg-hgmw.
+# - idna>=3.15: transitive dep of httpx and requests; fixes
+#   GHSA-65pc-fj4g-8rjx.
+# - PyJWT>=2.13.0: transitive dep from the base image; fixes
+#   GHSA-993g-76c3-p5m4 and GHSA-jq35-7prp-9v3f.
+# - py-rattler: pinned transitive dep of base conda/rattler tooling brought in
+#   by the base image; fixes GHSA-q53q-5r4j-5729.
+# - cryptography: pinned transitive dep brought in by the ACPT base image;
+#   fixes GHSA-537c-gmf6-5ccf.
+# - pydantic-settings: pinned transitive dep of azureml-defaults ->
+#   azureml-inference-server-http; brought in by requirements.txt, fixes
+#   GHSA-4xgf-cpjx-pc3j.
+# - msgpack: pinned transitive dep of azureml-mlflow -> mlflow-skinny; brought
+#   in by requirements.txt, fixes GHSA-6v7p-g79w-8964.
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
+        'setuptools>=82.0.1' 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' \
+        'aiohttp>=3.14.0' 'click>=8.3.3' 'idna>=3.15' 'PyJWT>=2.13.0' \
+        'py-rattler>=0.24.0' 'cryptography>=48.0.1' 'pydantic-settings>=2.14.2' \
+        'msgpack>=1.2.1'
+
+# Vulnerability overrides in ptca conda env (python3.10):
+# - urllib3: the ptca env ships urllib3 2.7.0 from the base image, but the
+#   `conda install pip==26.1.1` step above re-solves urllib3 back down to
+#   2.6.3 (vulnerable to GHSA-qccp-gfcp-xxvc / GHSA-mf9v-mfxr-j63j). Parents
+#   (requests 2.34.2, torchdata, fsspec) all use loose floors (>=1.25 / >=1.26)
+#   so they cannot force urllib3>=2.7.0; direct override is required.
+# - aiohttp: ptca env ships 3.13.5; need >=3.14.0 for GHSA-jg22-mg44-37j8 and
+#   GHSA-hg6j-4rv6-33pg. No parent pins aiohttp to a safe floor; direct
+#   override is required.
+# - starlette: ptca env ships 0.52.1; need >=1.0.1 for GHSA-86qp-5c8j-p5mr.
+#   No parent in the ptca env forces starlette>=1.0.1; direct override is
+#   required.
+# - click: ptca env ships 8.2.1; need >=8.3.3 for GHSA-47fr-3ffg-hgmw. No
+#   parent in the ptca env forces click>=8.3.3; direct override is required.
+# - pyarrow: ptca env ships 20.0.0; need >=23.0.1 for GHSA-rgxp-2hwp-jwgg.
+#   No parent in the ptca env forces pyarrow>=23.0.1; direct override is
+#   required.
+# - cryptography: pinned transitive dep brought in by the ACPT base image;
+#   fixes GHSA-537c-gmf6-5ccf.
+# - torch: inherited from the ACPT torch280 base image; fixes
+#   GHSA-vgrw-7cvw-pwgx and GHSA-qfhq-4f3w-5fph. torchvision and torchaudio are
+#   upgraded with torch to keep the CUDA PyTorch stack compatible.
+RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade \
+        'urllib3>=2.7.0' 'aiohttp>=3.14.0' 'starlette>=1.0.1' 'click>=8.3.3' \
+        'pyarrow>=23.0.1' 'cryptography>=48.0.1' && \
+    conda run -n ptca python -m pip install --no-cache-dir --upgrade \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.10.0' 'torchvision==0.25.0' 'torchaudio==2.10.0'
+
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/

@@ -1,0 +1,28 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+
+description: >-
+  Environment for LLM post-training and reinforcement learning workloads using
+  the slime framework with Megatron and SGLang.
+
+name: "{{asset.name}}"
+version: "{{asset.version}}"
+
+build:
+  path: "{{image.context.path}}"
+  dockerfile_path: "{{image.dockerfile.path}}"
+
+os_type: linux
+
+tags:
+  PyTorch: "2.9"
+  GPU: Cuda12
+  CUDA: "12.8"
+  OS: Ubuntu24.04
+  Training: ""
+  Preview: ""
+  Foundry: ""
+  Python: "3.10"
+  slime: "THUDM"
+  SGLang: "0.5.11"
+  FlashAttention: "4"
+  Megatron: "dev"

@@ -2,23 +2,35 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: snowflake-arctic-base
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
   SHA: 76fa59362cd95eb633a4e419c24364c90674966c
-  inference-min-sku-spec: 96|8|1900|1024
-  inference-recommended-sku:  Standard_ND96isr_H100_v5
-  languages: moe, fr, it, de, es, en
-tags:
-  Featured: ''
-  huggingface_model_id: Snowflake/snowflake-arctic-base
-  license: apache2.0
-  disable-batch: 'true'
-  task: text-generation
-  SharedComputeCapacityEnabled: ''
-  author: Snowflake
-  inference_compute_allow_list:
-   [ 
-    Standard_ND96isr_H100_v5
-   ]
-  inference_supported_envs:
+system_metadata:
+  languages:
+  - fr
+  - it
+  - de
+  - es
+  - en
+  sharedComputeCapacityEnabled: true
+  SKU:
+    inferenceRecommendedSkus:
+    - Standard_ND96isr_H100_v5
+    inferenceMinSkuSpec: 96|8|1900|1024
+  publisher: Snowflake
+  huggingFaceModelId: Snowflake/snowflake-arctic-base
+  inferenceSupportedEnvs:
   - vllm
+  license: apache-2.0
+  featured: true
+  tasks:
+    inferenceTasks:
+    - text-generation
+  platformCapabilities:
+    enableBatch: false
+  supportedComputes:
+    inferenceComputes:
+    - Standard_ND96isr_H100_v5
+  deprecation:
+    inferenceDeprecationDate: '2026-04-16T00:00:00.000000Z'
+    inferenceLegacyDate: '2026-03-16T00:00:00.000000Z'
+    inferenceRetirementDate: '2026-07-31T00:00:00.000000Z'
 version: 2

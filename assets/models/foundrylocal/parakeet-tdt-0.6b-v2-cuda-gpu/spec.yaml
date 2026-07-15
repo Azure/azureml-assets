@@ -1,0 +1,41 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: parakeet-tdt-0.6b-v2-cuda-gpu
+path: ./
+isArchived: true
+tags:
+  capabilities: ''
+  supportsReasoning: ''
+  contextLength: 0
+system_metadata:
+  alias: parakeet-tdt-0.6b-v2
+  publisher: Microsoft
+  directoryPath: v1
+  foundryLocal: ''
+  inputModalities:
+  - audio
+  license: MIT
+  licenseDescription: This model is provided under the License Terms available at <https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2#licenseterms-of-use>.
+  maxOutputTokens: 2048
+  outputModalities:
+  - text
+  promptTemplate: ''
+  tasks:
+    inferenceTasks:
+    - automatic-speech-recognition
+  platformCapabilities:
+    enableMaap: false
+  reasoningStart: ''
+  reasoningEnd: ''
+  minFLVersion: 1.2.0
+variantInfo:
+  parents:
+  - assetId: azureml://registries/azureml/models/parakeet-tdt-0.6b-v2/versions/1
+  variantMetadata:
+    modelType: ONNX
+    quantization:
+    - RTN
+    device: gpu
+    executionProvider: CUDAExecutionProvider
+    fileSizeBytes: 725652848
+    vRamFootprintBytes: 725652848
+version: 1

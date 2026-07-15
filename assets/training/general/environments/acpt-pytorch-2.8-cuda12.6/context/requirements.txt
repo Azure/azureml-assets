@@ -9,11 +9,7 @@ inference-schema
 MarkupSafe
 regex
 pybind11
-urllib3>=2.6.3
-requests
-pillow>=12.1.1
 transformers
-aiohttp>=3.13.3
 py-spy
 debugpy
 ipykernel
@@ -23,4 +19,20 @@ matplotlib
 tqdm
 py-cpuinfo
 torch-tb-profiler
-filelock>=3.20.1
+# starlette: transitive dep of azureml-inference-server-http -> fastapi -> starlette.
+#   fastapi 0.136.3 still uses a loose floor (starlette>=0.46.0), so keep a
+#   direct safe floor. >=1.0.1 fixes GHSA-86qp-5c8j-p5mr.
+starlette>=1.0.1
+# aiohttp: transitive dep in ptca env. 3.14.0 fixes GHSA-hg6j-4rv6-33pg and
+#   GHSA-jg22-mg44-37j8.
+aiohttp>=3.14.0
+# python-dotenv: transitive dep chain: azureml-defaults -> azureml-inference-server-http
+#   -> pydantic-settings -> python-dotenv>=0.21.0. pydantic-settings 2.14.1 and
+#   mlflow-skinny 3.12.0 still do not constrain to a CVE-safe version.
+#   Floor pin required to fix CVE-2026-28684 (GHSA-mf9w-mj56-hr94).
+python-dotenv>=1.2.2
+# GitPython: transitive dep chain: azureml-mlflow -> mlflow-skinny -> GitPython (>=3.1.9,<4).
+#   azureml-mlflow 1.62.0.post2 caps mlflow-skinny at <=3.9.0, and latest
+#   mlflow-skinny 3.12.0 still does not constrain to a CVE-safe floor.
+#   Floor pin required to fix GHSA-x2qx-6953-8485, GHSA-rpm5-65cw-6hj4.
+GitPython>=3.1.47

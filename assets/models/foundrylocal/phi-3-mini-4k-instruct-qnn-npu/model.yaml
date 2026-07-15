@@ -1,7 +1,7 @@
 path:
   container_name: models
-  container_path: foundrylocal/olive-qnn-models/phi-3-mini-4k
-  storage_name: foundrylocalmodels
+  container_path: foundrylocal/models/phi-3-mini-4k-instruct/onnx/qnn_npu/v4
+  storage_name: foundrylocalassetdata
   type: azureblob
 publish:
   description: description.md

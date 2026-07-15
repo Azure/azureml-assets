@@ -1,0 +1,48 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: smollm3-3b-cuda-gpu
+path: ./
+isArchived: true
+tags:
+  capabilities: reasoning,tool-calling
+  supportsReasoning: 'true'
+  contextLength: 65536
+system_metadata:
+  alias: smollm3-3b
+  publisher: Microsoft
+  directoryPath: v1
+  foundryLocal: ''
+  inputModalities:
+  - text
+  license: apache-2.0
+  licenseDescription: This model is provided under the License Terms available at <https://huggingface.co/HuggingFaceTB/SmolLM3-3B/blob/main/LICENSE>.
+  maxOutputTokens: 2048
+  outputModalities:
+  - text
+  promptTemplate: '{"system": "<|im_start|>system\n{Content}<|im_end|>", "user": "<|im_start|>user\n{Content}<|im_end|>", "assistant": "<|im_start|>assistant\n{Content}<|im_end|>", "prompt": "<|im_start|>user\n{Content}<|im_end|>\n<|im_start|>assistant"}'
+  supportsToolCalling: true
+  toolCallEnd: </tool_call>
+  toolCallStart: <tool_call>
+  toolRegisterEnd: </tools>
+  toolRegisterStart: <tools>
+  toolResponseEnd: ''
+  toolResponseStart: ''
+  tasks:
+    inferenceTasks:
+    - chat-completion
+  platformCapabilities:
+    enableMaap: false
+  reasoningStart: <think>
+  reasoningEnd: </think>
+  minFLVersion: 0.0.0
+variantInfo:
+  parents:
+  - assetId: azureml://registries/azureml/models/smollm3-3b/versions/1
+  variantMetadata:
+    modelType: ONNX
+    quantization:
+    - GPTQ
+    device: gpu
+    executionProvider: CUDAExecutionProvider
+    fileSizeBytes: 2169996108
+    vRamFootprintBytes: 2169996108
+version: 1

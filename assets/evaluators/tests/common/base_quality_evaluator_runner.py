@@ -23,6 +23,7 @@ class ExpectedResult(Enum):
     FAIL = "fail"
     PASS_OR_FAIL = "pass_or_fail"
     PASS_WITH_SCORE_3 = "pass_with_score_3"
+    SKIPPED = "skipped"
 
 
 class BaseQualityEvaluatorRunner(BasePromptyEvaluatorRunner):
@@ -113,4 +114,6 @@ class BaseQualityEvaluatorRunner(BasePromptyEvaluatorRunner):
             self.assert_pass_or_fail(result_data)
         elif expected == ExpectedResult.PASS_WITH_SCORE_3:
             self.assert_score_in_range(result_data, min_score=3, max_score=3)
+        elif expected == ExpectedResult.SKIPPED:
+            self.assert_not_applicable(result_data)
         return result_data

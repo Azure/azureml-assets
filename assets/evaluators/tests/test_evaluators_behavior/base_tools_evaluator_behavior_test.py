@@ -8,8 +8,11 @@ Tests various input scenarios: query, response, and tool_definitions.
 """
 
 import json
-from typing import List
 from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
+from ..common.evaluator_mock_config import (
+    create_none_score_flow_side_effect,
+    assert_none_score_result,
+)
 
 
 class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
@@ -24,28 +27,8 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
     - requires_query: bool - whether query is required
     - MINIMAL_RESPONSE: list - minimal valid response format for the evaluator
     - expected_result_fields: list - expected fields in the evaluation result
-    - _additional_expected_field_suffixes: list - additional expected result field suffixes specific to
       tools evaluators
     """
-
-    _additional_expected_field_suffixes = []
-
-    @property
-    def expected_result_fields(self) -> List[str]:
-        """Get the expected result fields for tools evaluators."""
-        return [
-            f"{self._result_prefix}",
-            f"{self._result_prefix}_reason",
-            f"{self._result_prefix}_threshold",
-            f"{self._result_prefix}_result",
-            f"{self._result_prefix}_prompt_tokens",
-            f"{self._result_prefix}_completion_tokens",
-            f"{self._result_prefix}_total_tokens",
-            f"{self._result_prefix}_finish_reason",
-            f"{self._result_prefix}_model",
-            f"{self._result_prefix}_sample_input",
-            f"{self._result_prefix}_sample_output",
-        ] + [f"{self._result_prefix}_{suffix}" for suffix in self._additional_expected_field_suffixes]
 
     # Test Configs
     requires_tool_definitions: bool = False
@@ -102,6 +85,50 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
 
     INVALID_TOOL_DEFINITIONS_AS_STRING: str = json.dumps(INVALID_TOOL_DEFINITIONS)
     # endregion
+
+    def run_skipped_llm_status_not_applicable_test(self):
+        """Run a skipped-status flow output and assert a not-applicable result.
+
+        Regression: when the LLM flow returns ``status='skipped'`` (score=None), the
+        evaluator must return a standardized not-applicable result without crashing.
+        """
+        self._run_none_score_not_applicable_test(self.VALID_RESPONSE)
+
+    def run_intermediate_response_not_applicable_test(self):
+        """Run an intermediate (function_call) response and assert a not-applicable result.
+
+        Regression: a response whose final assistant turn is an unresolved function_call
+        must be treated as not-applicable rather than evaluated.
+        """
+        self._run_none_score_not_applicable_test(self.FUNCTION_CALL_ONLY_RESPONSE)
+
+    def _run_none_score_not_applicable_test(self, response):
+        """Mock the flow to a None/skipped score, run with ``response``, assert not-applicable.
+
+        Shared by the skipped-status and intermediate-response regressions, which differ
+        only in the ``response`` payload passed to the evaluator.
+        """
+        result = self._run_evaluation_with_flow_side_effect(
+            create_none_score_flow_side_effect(),
+            query=self.VALID_QUERY,
+            response=response,
+            tool_calls=self.VALID_TOOL_CALLS,
+            tool_definitions=self.VALID_TOOL_DEFINITIONS,
+        )
+        assert_none_score_result(result, self.result_key)
+
+    def test_util_tool_definitions_reach_flow_e2e(self):
+        """End-to-end: needed tool definitions are extracted (built-in + provided) and reach the flow."""
+        _, captured = self._run_and_capture_flow_input(
+            query=self.VALID_QUERY,
+            response=self.VALID_RESPONSE,
+            tool_calls=self.VALID_TOOL_CALLS,
+            tool_definitions=self.VALID_TOOL_DEFINITIONS,
+        )
+        flow_input_json = json.dumps(captured, default=str)
+        assert (
+            "fetch_weather" in flow_input_json or "send_email" in flow_input_json
+        ), "tool definitions did not reach the flow"
 
     # ==================== TOOL DEFINITIONS TESTS ====================
 

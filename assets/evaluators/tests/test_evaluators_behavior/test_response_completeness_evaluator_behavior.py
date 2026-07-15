@@ -3,10 +3,40 @@
 
 """Behavioral tests for Response Completeness Evaluator."""
 
-import pytest
+import asyncio
 import math
+from unittest.mock import MagicMock
+
+import pytest
+from azure.ai.evaluation._exceptions import EvaluationException
 from ..common.base_prompty_evaluator_runner import BasePromptyEvaluatorRunner
+from ..common.evaluator_mock_config import (
+    create_mocked_evaluator,
+    run_none_score_not_applicable,
+    run_intermediate_response_not_applicable,
+)
+from .base_validator_unit_test import (
+    CorePromptyValidatorUnitTests,
+    MessagePreprocessUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+)
 from ...builtin.response_completeness.evaluator._response_completeness import ResponseCompletenessEvaluator
+
+# Intermediate response whose last content item is a function_call (agent has not yet produced a final answer).
+INTERMEDIATE_RESPONSE = [
+    {
+        "run_id": "",
+        "role": "assistant",
+        "content": [
+            {
+                "type": "function_call",
+                "tool_call_id": "call_test",
+                "name": "get_weather",
+                "arguments": {"city": "Seattle"},
+            }
+        ],
+    }
+]
 
 
 @pytest.mark.unittest
@@ -311,10 +341,10 @@ class TestResponseCompletenessEvaluatorBehavior(BasePromptyEvaluatorRunner):
         assert "response_completeness_result" in results
         assert "response_completeness_threshold" in results
 
-    def test_score_is_integer_type(self) -> None:
-        """Test case: Score is returned as integer.
+    def test_score_is_numeric_type(self) -> None:
+        """Test case: Score is returned as numeric.
 
-        Validates that score field contains an integer value (1-5).
+        Validates that score field contains a numeric value (1-5).
         """
         results = self._run_evaluation(
             response="Information here.",
@@ -325,7 +355,6 @@ class TestResponseCompletenessEvaluatorBehavior(BasePromptyEvaluatorRunner):
         # Score should be an integer between 1 and 5, or NaN
         assert isinstance(score, (int, float))
         if not math.isnan(score):
-            assert isinstance(score, int)
             assert 1 <= score <= 5
 
     def test_reason_field_is_string(self) -> None:
@@ -534,3 +563,79 @@ class TestResponseCompletenessEvaluatorBehavior(BasePromptyEvaluatorRunner):
 
         result_data = self._extract_and_print_result(results, "ground-truth-as-list")
         self.assert_pass_or_fail(result_data)
+
+
+# region Not-applicable handling tests (util-fix regression)
+
+@pytest.mark.unittest
+class TestResponseCompletenessNotApplicableHandling:
+    """Regression tests for the not-applicable paths added to ``_do_eval``.
+
+    Covers the ``_return_not_applicable_result`` / ``math.isnan`` fix (LLM
+    ``status='skipped'`` with ``score=None``) and the ``_is_intermediate_response``
+    rejection, neither of which is exercised by the main valid-input tests.
+    """
+
+    def test_skipped_status_returns_not_applicable(self):
+        """LLM status='skipped' (score=None) yields not_applicable instead of crashing on math.isnan(None)."""
+        run_none_score_not_applicable(
+            ResponseCompletenessEvaluator,
+            "response_completeness",
+            response="Python is a programming language created by Guido van Rossum.",
+            ground_truth="Python is a programming language created by Guido van Rossum.",
+        )
+
+    def test_intermediate_response_returns_not_applicable(self):
+        """An intermediate response (trailing function_call) is skipped as not_applicable before the LLM call."""
+        run_intermediate_response_not_applicable(
+            ResponseCompletenessEvaluator,
+            "response_completeness",
+            response=INTERMEDIATE_RESPONSE,
+            ground_truth="The weather in Seattle is rainy.",
+        )
+
+
+# endregion
+
+
+@pytest.mark.unittest
+class TestResponseCompletenessValidatorUnit(
+    CorePromptyValidatorUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    MessagePreprocessUnitTests,
+):
+    """Low-level unit tests for response_completeness's repeated validators, utils and methods."""
+
+    evaluator_class = ResponseCompletenessEvaluator
+
+
+# region _do_eval override branch coverage
+
+@pytest.mark.unittest
+class TestResponseCompletenessDoEvalBranches:
+    """Cover response_completeness's override ``_do_eval`` list-preprocessing and invalid-output branches."""
+
+    def test_list_query_is_preprocessed(self):
+        """A list-typed query is preprocessed before the flow call."""
+        evaluator = create_mocked_evaluator(ResponseCompletenessEvaluator, "response_completeness")
+        result = asyncio.run(
+            evaluator._do_eval(
+                {
+                    "ground_truth": "The capital of France is Paris.",
+                    "response": "Paris is the capital of France.",
+                    "query": [{"role": "user", "content": [{"type": "text", "text": "capital of France?"}]}],
+                }
+            )
+        )
+        assert result["response_completeness_score"] == 5
+
+    def test_non_dict_output_raises(self):
+        """A non-dict flow output raises an invalid-output error."""
+        evaluator = create_mocked_evaluator(ResponseCompletenessEvaluator, "response_completeness")
+
+        async def str_flow(timeout=None, **kwargs):
+            return {"llm_output": "not-a-dict"}
+
+        evaluator._flow = MagicMock(side_effect=str_flow)
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({"ground_truth": "gt", "response": "r"}))

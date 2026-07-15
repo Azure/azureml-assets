@@ -1,31 +1,41 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: openai-whisper-medium-generic-cpu
-version: 1
 path: ./
+isArchived: true
 tags:
-  foundryLocal: ""
-  license: apache-2.0
-  licenseDescription: "This model is provided under the License Terms available at https://www.apache.org/licenses/LICENSE-2.0.html."
-  author: Microsoft
-  inputModalities: audio
-  outputModalities: text
-  task: automatic-speech-recognition
-  maxOutputTokens: 2048
-  alias: whisper-medium
-  directoryPath: cpu-fp32
-  promptTemplate: "{\"prompt\": \"<|startoftranscript|> <|en|> <|transcribe|> <|notimestamps|>\"}"
   contextLength: 448
-  capabilities: ""
-  minFLVersion: "0.0.0"
-  disable-maap: true
-type: custom_model
+  capabilities: ''
+  supportsReasoning: ''
+system_metadata:
+  alias: whisper-medium
+  publisher: Microsoft
+  directoryPath: v4
+  foundryLocal: ''
+  inputModalities:
+  - audio
+  license: apache-2.0
+  licenseDescription: This model is provided under the License Terms available at https://www.apache.org/licenses/LICENSE-2.0.html.
+  maxOutputTokens: 2048
+  outputModalities:
+  - text
+  promptTemplate: '{"prompt": "<|startoftranscript|> <|en|> <|transcribe|> <|notimestamps|>"}'
+  tasks:
+    inferenceTasks:
+    - automatic-speech-recognition
+  platformCapabilities:
+    enableMaap: false
+  reasoningStart: ''
+  reasoningEnd: ''
+  minFLVersion: 0.0.0
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/openai-whisper-medium/versions/1
   variantMetadata:
-    modelType: 'ONNX'
-    quantization: ['RTN']
-    device: 'cpu'
-    executionProvider: 'CPUExecutionProvider'
-    fileSizeBytes: 3274421068
-    vRamFootprintBytes: 3274421068
+    modelType: ONNX
+    quantization:
+    - RTN
+    device: cpu
+    executionProvider: CPUExecutionProvider
+    fileSizeBytes: 982596829
+    vRamFootprintBytes: 982596829
+version: 4

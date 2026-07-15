@@ -6,7 +6,110 @@
 import pytest
 from typing import Any, Dict
 from ..common.base_code_evaluator_runner import BaseCodeEvaluatorRunner
-from ...builtin.bbeh.evaluator._bbeh import BBEHEvaluator
+from ...builtin.bbeh.evaluator._bbeh import (
+    BBEHEvaluator,
+    strip_latex,
+    extract_answer,
+    fuzzy_match,
+)
+
+
+@pytest.mark.unittest
+class TestStripLatex:
+    """Unit tests for the strip_latex helper."""
+
+    def test_strip_dollar_signs(self):
+        """Test stripping dollar sign wrappers."""
+        assert strip_latex("$4$") == "4"
+        assert strip_latex("$answer$") == "answer"
+
+    def test_strip_boxed(self):
+        r"""Test stripping \boxed{} wrapper."""
+        assert strip_latex("\\boxed{4}") == "4"
+        assert strip_latex("\\boxed{answer}") == "answer"
+
+    def test_strip_text(self):
+        r"""Test stripping \text{} wrapper."""
+        assert strip_latex("\\text{answer}") == "answer"
+
+    def test_strip_texttt(self):
+        r"""Test stripping \texttt{} wrapper."""
+        assert strip_latex("\\texttt{code}") == "code"
+
+    def test_no_latex(self):
+        """Test that plain text is unchanged."""
+        assert strip_latex("plain text") == "plain text"
+        assert strip_latex("42") == "42"
+
+
+@pytest.mark.unittest
+class TestExtractAnswer:
+    """Unit tests for the extract_answer helper."""
+
+    def test_extract_the_answer_is(self):
+        """Test extracting with 'The answer is:' prefix."""
+        result = extract_answer("After analysis, The answer is: 42.")
+        assert result == "42"
+
+    def test_extract_the_final_answer_is(self):
+        """Test extracting with 'The final answer is' prefix."""
+        result = extract_answer("Let me think... The final answer is 25")
+        assert result == "25"
+
+    def test_extract_with_latex(self):
+        """Test extracting answer with LaTeX formatting."""
+        result = extract_answer("The final answer is: \\boxed{4}.")
+        assert result == "4"
+
+    def test_no_answer_prefix(self):
+        """Test that response without prefix returns trimmed version."""
+        result = extract_answer("Just 42.")
+        assert result == "Just 42"
+
+
+@pytest.mark.unittest
+class TestFuzzyMatch:
+    """Unit tests for the fuzzy_match helper."""
+
+    def test_exact_match(self):
+        """Test exact string match."""
+        assert fuzzy_match("answer", "answer") is True
+        assert fuzzy_match("42", "42") is True
+
+    def test_parenthesized_prediction(self):
+        """Test (a) matches a."""
+        assert fuzzy_match("(a)", "a") is True
+        assert fuzzy_match("(b)", "b") is True
+
+    def test_parenthesized_reference(self):
+        """Test a matches (a)."""
+        assert fuzzy_match("a", "(a)") is True
+        assert fuzzy_match("b", "(b)") is True
+
+    def test_numeric_equality(self):
+        """Test numeric comparison (4.0 == 4)."""
+        assert fuzzy_match("4.0", "4") is True
+        assert fuzzy_match("4", "4.0") is True
+        assert fuzzy_match("25.0", "25") is True
+
+    def test_quote_normalization(self):
+        """Test that single quotes are ignored."""
+        assert fuzzy_match("it's", "its") is True
+        assert fuzzy_match("don't", "dont") is True
+
+    def test_bracket_variations(self):
+        """Test [answer] matches answer."""
+        assert fuzzy_match("[42]", "42") is True
+        assert fuzzy_match("42", "[42]") is True
+
+    def test_question_mark_ending(self):
+        """Test trailing question mark is ignored."""
+        assert fuzzy_match("answer?", "answer") is True
+
+    def test_no_match(self):
+        """Test that different values don't match."""
+        assert fuzzy_match("yes", "no") is False
+        assert fuzzy_match("42", "43") is False
 
 
 @pytest.mark.unittest
@@ -86,6 +189,22 @@ class TestBBEHEvaluatorBehavior(BaseCodeEvaluatorRunner):
 
     # Edge cases
     EMPTY_STRING = ""
+
+    # LaTeX dollar-sign wrapping ($...$)
+    DOLLAR_ANSWER = "42"
+    DOLLAR_RESPONSE = "The answer is: $42$"
+
+    # LaTeX texttt formatting
+    TEXTTT_ANSWER = "hello"
+    TEXTTT_RESPONSE = "The final answer is: \\texttt{hello}"
+
+    # Reference-side parenthesized MCQ (ground truth is "(b)")
+    REF_PAREN_ANSWER = "(b)"
+    REF_PAREN_RESPONSE = "The answer is: b"
+
+    # Trailing question-mark ending
+    QUESTION_ANSWER = "why"
+    QUESTION_RESPONSE = "The answer is: why?"
     # endregion
 
     # ==================== EXACT MATCH TESTS ====================
@@ -213,3 +332,41 @@ class TestBBEHEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "empty_ground_truth")
         self.assert_fail(result_data)
+
+    # ==================== ADDITIONAL LATEX / FUZZY-MATCH BRANCH TESTS ====================
+
+    def test_latex_dollar_sign(self):
+        """Test LaTeX $...$ wrapping is stripped."""
+        results = self._run_evaluation(
+            response=self.DOLLAR_RESPONSE,
+            ground_truth=self.DOLLAR_ANSWER,
+        )
+        result_data = self._extract_and_print_result(results, "latex_dollar_sign")
+        self.assert_pass(result_data)
+
+    def test_latex_texttt_answer(self):
+        r"""Test LaTeX \texttt{} answer extraction."""
+        results = self._run_evaluation(
+            response=self.TEXTTT_RESPONSE,
+            ground_truth=self.TEXTTT_ANSWER,
+        )
+        result_data = self._extract_and_print_result(results, "latex_texttt_answer")
+        self.assert_pass(result_data)
+
+    def test_reference_parenthesized_answer(self):
+        """Test reference-side (b) matches bare prediction b."""
+        results = self._run_evaluation(
+            response=self.REF_PAREN_RESPONSE,
+            ground_truth=self.REF_PAREN_ANSWER,
+        )
+        result_data = self._extract_and_print_result(results, "reference_parenthesized")
+        self.assert_pass(result_data)
+
+    def test_trailing_question_mark(self):
+        """Test trailing question mark is tolerated."""
+        results = self._run_evaluation(
+            response=self.QUESTION_RESPONSE,
+            ground_truth=self.QUESTION_ANSWER,
+        )
+        result_data = self._extract_and_print_result(results, "trailing_question_mark")
+        self.assert_pass(result_data)

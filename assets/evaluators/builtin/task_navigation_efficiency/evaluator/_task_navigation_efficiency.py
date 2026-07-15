@@ -1,12 +1,12 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-from abc import ABC, abstractmethod
 from enum import Enum
 from collections import Counter
 import json
 import copy
-from typing import Any, Dict, List, Optional, Union, Tuple
+import logging
+from typing import Any, Dict, List, Union, Tuple
 from typing_extensions import overload, override
 
 from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
@@ -18,299 +18,12 @@ from azure.ai.evaluation._exceptions import (
     ErrorTarget,
     EvaluationException,
 )
+from azure.ai.evaluation._evaluators._common._validators import (
+    ValidatorInterface,
+    TaskNavigationEfficiencyValidator,
+)
 
-
-# region Validators
-
-
-class ValidatorInterface(ABC):
-    """Abstract base class defining the interface that all validators must implement."""
-
-    @abstractmethod
-    def validate_eval_input(self, eval_input: Dict[str, Any]) -> bool:
-        """Validate the evaluation input dictionary."""
-        pass
-
-
-class MessageRole(str, Enum):
-    """Valid message roles in conversations."""
-
-    USER = "user"
-    ASSISTANT = "assistant"
-    SYSTEM = "system"
-    TOOL = "tool"
-
-
-class ContentType(str, Enum):
-    """Valid content types in messages."""
-
-    TEXT = "text"
-    INPUT_TEXT = "input_text"
-    OUTPUT_TEXT = "output_text"
-    TOOL_CALL = "tool_call"
-    TOOL_RESULT = "tool_result"
-    FUNCTION_CALL = "function_call"
-    FUNCTION_CALL_OUTPUT = "function_call_output"
-    MCP_APPROVAL_REQUEST = "mcp_approval_request"
-    MCP_APPROVAL_RESPONSE = "mcp_approval_response"
-    OPENAPI_CALL = "openapi_call"
-    OPENAPI_CALL_OUTPUT = "openapi_call_output"
-
-
-class TaskNavigationEfficiencyValidator(ValidatorInterface):
-    """
-    Validate task navigation efficiency inputs (actions and expected_actions).
-
-    Validates:
-    - actions: List of assistant messages containing tool calls
-    - expected_actions: Either a list of expected tool names, or a tuple of (tool names, parameters dict)
-    """
-
-    error_target: ErrorTarget
-
-    def __init__(self, error_target: ErrorTarget):
-        """Initialize with error target."""
-        self.error_target = error_target
-
-    def _validate_actions(self, actions: Any) -> Optional[EvaluationException]:
-        """Validate the actions parameter."""
-        if actions is None:
-            return EvaluationException(
-                message="'actions' parameter is required and cannot be None.",
-                blame=ErrorBlame.USER_ERROR,
-                category=ErrorCategory.MISSING_FIELD,
-                target=self.error_target,
-            )
-
-        if not isinstance(actions, list):
-            return EvaluationException(
-                message="'actions' must be a list of messages.",
-                blame=ErrorBlame.USER_ERROR,
-                category=ErrorCategory.INVALID_VALUE,
-                target=self.error_target,
-            )
-
-        # Validate each action message
-        for idx, action in enumerate(actions):
-            if not isinstance(action, dict):
-                return EvaluationException(
-                    message=f"Action at index {idx} must be a dictionary, got {type(action).__name__}.",
-                    blame=ErrorBlame.USER_ERROR,
-                    category=ErrorCategory.INVALID_VALUE,
-                    target=self.error_target,
-                )
-
-            # Check for required 'role' field
-            if "role" not in action:
-                return EvaluationException(
-                    message=f"Action at index {idx} must contain a 'role' field.",
-                    blame=ErrorBlame.USER_ERROR,
-                    category=ErrorCategory.MISSING_FIELD,
-                    target=self.error_target,
-                )
-
-            role = action.get("role")
-            if not isinstance(role, str):
-                return EvaluationException(
-                    message=f"'role' field in action at index {idx} must be a string, got {type(role).__name__}.",
-                    blame=ErrorBlame.USER_ERROR,
-                    category=ErrorCategory.INVALID_VALUE,
-                    target=self.error_target,
-                )
-
-            # For assistant messages, validate content structure
-            if role == MessageRole.ASSISTANT:
-                if "content" not in action:
-                    return EvaluationException(
-                        message=f"Assistant action at index {idx} must contain a 'content' field.",
-                        blame=ErrorBlame.USER_ERROR,
-                        category=ErrorCategory.MISSING_FIELD,
-                        target=self.error_target,
-                    )
-
-                content = action.get("content")
-                if not isinstance(content, list):
-                    return EvaluationException(
-                        message=(
-                            f"'content' field in assistant action at index {idx} must be a list, "
-                            f"got {type(content).__name__}."
-                        ),
-                        blame=ErrorBlame.USER_ERROR,
-                        category=ErrorCategory.INVALID_VALUE,
-                        target=self.error_target,
-                    )
-
-                # Validate content items contain tool calls
-                for content_idx, content_item in enumerate(content):
-                    if not isinstance(content_item, dict):
-                        return EvaluationException(
-                            message=f"Content item at index {content_idx} in action {idx} must be a dictionary.",
-                            blame=ErrorBlame.USER_ERROR,
-                            category=ErrorCategory.INVALID_VALUE,
-                            target=self.error_target,
-                        )
-
-                    # Check if it's a tool call
-                    if content_item.get("type") == ContentType.TOOL_CALL:
-                        # Validate required tool call fields
-                        if "name" not in content_item:
-                            return EvaluationException(
-                                message=(
-                                    f"Tool call in action {idx}, content {content_idx} must contain "
-                                    "a 'name' field."
-                                ),
-                                blame=ErrorBlame.USER_ERROR,
-                                category=ErrorCategory.MISSING_FIELD,
-                                target=self.error_target,
-                            )
-
-        return None
-
-    def _validate_expected_actions(self, expected_actions: Any) -> Optional[EvaluationException]:
-        """Validate the expected_actions parameter."""
-        if not expected_actions:
-            return EvaluationException(
-                message="'expected_actions' parameter is required and cannot be None or empty.",
-                blame=ErrorBlame.USER_ERROR,
-                category=ErrorCategory.MISSING_FIELD,
-                target=self.error_target,
-            )
-
-        # expected_actions can be either:
-        # 1. A list of tool names (strings)
-        # 2. A tuple of (list of tool names, dict of parameters)
-
-        if isinstance(expected_actions, tuple):
-            # Validate tuple format: (list, dict)
-            if len(expected_actions) != 2:
-                return EvaluationException(
-                    message=(
-                        "When 'expected_actions' is a tuple, it must contain exactly 2 elements: "
-                        "(tool_names_list, parameters_dict)."
-                    ),
-                    blame=ErrorBlame.USER_ERROR,
-                    category=ErrorCategory.INVALID_VALUE,
-                    target=self.error_target,
-                )
-
-            tool_names, parameters = expected_actions
-
-            # Validate tool names list
-            if not isinstance(tool_names, list):
-                return EvaluationException(
-                    message="First element of 'expected_actions' tuple must be a list of tool names.",
-                    blame=ErrorBlame.USER_ERROR,
-                    category=ErrorCategory.INVALID_VALUE,
-                    target=self.error_target,
-                )
-
-            if len(tool_names) == 0:
-                return EvaluationException(
-                    message="Tool names list in 'expected_actions' cannot be empty.",
-                    blame=ErrorBlame.USER_ERROR,
-                    category=ErrorCategory.INVALID_VALUE,
-                    target=self.error_target,
-                )
-
-            for idx, name in enumerate(tool_names):
-                if not isinstance(name, str):
-                    return EvaluationException(
-                        message=(
-                            f"Tool name at index {idx} in 'expected_actions' must be a string, "
-                            f"got {type(name).__name__}."
-                        ),
-                        blame=ErrorBlame.USER_ERROR,
-                        category=ErrorCategory.INVALID_VALUE,
-                        target=self.error_target,
-                    )
-
-            # Validate parameters dict
-            if not isinstance(parameters, dict):
-                return EvaluationException(
-                    message="Second element of 'expected_actions' tuple must be a dictionary of parameters.",
-                    blame=ErrorBlame.USER_ERROR,
-                    category=ErrorCategory.INVALID_VALUE,
-                    target=self.error_target,
-                )
-
-            # Validate parameter values are dicts
-            for tool_name, params in parameters.items():
-                if not isinstance(params, dict):
-                    return EvaluationException(
-                        message=(
-                            f"Parameters for tool '{tool_name}' in 'expected_actions' must be "
-                            f"a dictionary, got {type(params).__name__}."
-                        ),
-                        blame=ErrorBlame.USER_ERROR,
-                        category=ErrorCategory.INVALID_VALUE,
-                        target=self.error_target,
-                    )
-
-        elif isinstance(expected_actions, list):
-            # Validate list of tool names
-            if len(expected_actions) == 0:
-                return EvaluationException(
-                    message="'expected_actions' list cannot be empty.",
-                    blame=ErrorBlame.USER_ERROR,
-                    category=ErrorCategory.INVALID_VALUE,
-                    target=self.error_target,
-                )
-
-            for idx, name in enumerate(expected_actions):
-                if not isinstance(name, str):
-                    return EvaluationException(
-                        message=(
-                            f"Expected action at index {idx} must be a string (tool name), "
-                            f"got {type(name).__name__}."
-                        ),
-                        blame=ErrorBlame.USER_ERROR,
-                        category=ErrorCategory.INVALID_VALUE,
-                        target=self.error_target,
-                    )
-
-        else:
-            return EvaluationException(
-                message=(
-                    "'expected_actions' must be either a list of tool names or a tuple of "
-                    "(tool_names_list, parameters_dict)."
-                ),
-                blame=ErrorBlame.USER_ERROR,
-                category=ErrorCategory.INVALID_VALUE,
-                target=self.error_target,
-            )
-
-        return None
-
-    @override
-    def validate_eval_input(self, eval_input: Dict[str, Any]) -> bool:
-        """
-        Validate task navigation evaluation input.
-
-        Args:
-            eval_input: Dictionary containing 'actions' and 'expected_actions'.
-
-        Returns:
-            True if validation passes.
-
-        Raises:
-            EvaluationException: If validation fails.
-        """
-        # Validate actions
-        actions = eval_input.get("actions")
-        error = self._validate_actions(actions)
-        if error:
-            raise error
-
-        # Validate expected_actions
-        expected_actions = eval_input.get("expected_actions")
-        error = self._validate_expected_actions(expected_actions)
-        if error:
-            raise error
-
-        return True
-
-
-# endregion Validators
+logger = logging.getLogger(__name__)
 
 
 # Extend ErrorTarget enum if needed
@@ -433,6 +146,9 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
 
     _validator: ValidatorInterface
 
+    _INPUT_ALIASES = {"actions": "response", "expected_actions": "ground_truth"}
+    """Canonical eval-input keys mapped to their accepted SDK-style aliases."""
+
     @override
     def __init__(
         self,
@@ -451,9 +167,13 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
             try:
                 self.matching_mode = TaskNavigationEfficiencyMatchingMode(matching_mode)
             except ValueError:
-                raise ValueError(
+                raise EvaluationException(
                     f"matching_mode must be one of {[m.value for m in TaskNavigationEfficiencyMatchingMode]}, "
-                    f"got '{matching_mode}'"
+                    f"got '{matching_mode}'",
+                    internal_message=str(matching_mode),
+                    target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    blame=ErrorBlame.USER_ERROR,
                 )
         elif isinstance(matching_mode, TaskNavigationEfficiencyMatchingMode):
             self.matching_mode = matching_mode
@@ -464,6 +184,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
                 internal_message=str(matching_mode),
                 target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
                 category=ErrorCategory.INVALID_VALUE,
+                blame=ErrorBlame.USER_ERROR,
             )
 
         # Initialize input validator
@@ -471,7 +192,18 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
             error_target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR
         )
 
-        super().__init__()
+        super().__init__(threshold=1.0)
+
+    def _normalize_input_aliases(self, eval_input: Dict[str, Any]) -> None:
+        """Map SDK-style input keys onto the canonical keys in place.
+
+        If a canonical key (``actions``/``expected_actions``) is absent but its alias
+        (``response``/``ground_truth``) is provided, copy the alias value to the canonical
+        key so the rest of the pipeline can rely on a single set of names.
+        """
+        for canonical, alias in self._INPUT_ALIASES.items():
+            if eval_input.get(canonical) is None and eval_input.get(alias) is not None:
+                eval_input[canonical] = eval_input[alias]
 
     @override
     async def _real_call(self, **kwargs):
@@ -482,8 +214,92 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         :return: The evaluation result.
         :rtype: Dict[str, Union[float, str, Dict[str, float]]]
         """
+        self._normalize_input_aliases(kwargs)
         self._validator.validate_eval_input(kwargs)
-        return await super()._real_call(**kwargs)
+        return await self._the_super_real_call(**kwargs)
+
+    async def _the_super_real_call(self, **kwargs):
+        """Perform the asynchronous call where real end-to-end evaluation logic runs.
+
+        :keyword kwargs: The inputs to evaluate.
+        :type kwargs: Dict
+        :return: The evaluation result.
+        :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
+        """
+        # Convert inputs into list of evaluable inputs.
+        try:
+            eval_input_list = self._convert_kwargs_to_eval_input(**kwargs)
+        except Exception as e:
+            logger.error(f"Error converting kwargs to eval_input_list: {e}")
+            raise e
+        per_turn_results = []
+        # Evaluate all inputs.
+        for eval_input in eval_input_list:
+            result = await self._do_eval(eval_input)
+            # logic to determine threshold pass/fail
+            # if it wasn't computed in _do_eval
+            try:
+                keys = list(result.keys())
+                contains_result_key = any(key.endswith("_result") for key in keys)
+                contains_threshold_key = any(key.endswith("_threshold") for key in keys)
+                if not contains_result_key or not contains_threshold_key:
+                    for key in keys:
+                        if key.endswith("_score"):
+                            score_value = result[key]
+                            base_key = key[:-6]  # Remove "_score" suffix
+                            result_key = f"{base_key}_result"
+                            threshold_key = f"{base_key}_threshold"
+                            threshold_value = (
+                                self._threshold.get(base_key) if isinstance(self._threshold, dict) else self._threshold
+                            )
+                            if not isinstance(threshold_value, (int, float)):
+                                raise EvaluationException(
+                                    "Threshold value must be a number.",
+                                    internal_message=str(threshold_value),
+                                    target=ErrorTarget.EVALUATE,
+                                    category=ErrorCategory.INVALID_VALUE,
+                                    blame=ErrorBlame.USER_ERROR,
+                                )
+                            if not contains_threshold_key:
+                                result[threshold_key] = threshold_value
+                            if not contains_result_key:
+                                if self._higher_is_better:
+                                    if float(score_value) >= threshold_value:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[True]
+                                    else:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[False]
+                                else:
+                                    if float(score_value) <= threshold_value:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[True]
+                                    else:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[False]
+            except Exception as e:
+                logger.warning(f"Error calculating binary result: {e}")
+            per_turn_results.append(result)
+        # Return results as-is if only one result was produced.
+        if len(per_turn_results) == 1:
+            return per_turn_results[0]
+        if len(per_turn_results) == 0:
+            return {}  # TODO raise something?
+        # Otherwise, aggregate results.
+        return self._aggregate_results(per_turn_results=per_turn_results)
+
+    @staticmethod
+    def _normalize_param_value(value: Any) -> str:
+        """Normalize a parameter value to a string for consistent comparison.
+
+        Uses json.dumps for dicts and lists to produce canonical JSON strings,
+        and str() for other types. This ensures both agent and expected_actions
+        parameter values are compared in the same string format.
+        """
+        if isinstance(value, str):
+            return value
+        if isinstance(value, (dict, list)):
+            try:
+                return json.dumps(value, sort_keys=True)
+            except (TypeError, ValueError):
+                return str(value)
+        return str(value)
 
     def _prepare_steps_for_comparison(
         self,
@@ -499,10 +315,20 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         agent_steps: List[Union[str, Tuple[str, Tuple]]] = []
         expected_actions_steps: List[Union[str, Tuple[str, Tuple]]] = []
         if use_parameter_matching:
-            # When parameter matching is enabled, we need to match both tool name and parameters
-            agent_steps = [(pair[0], tuple(sorted(pair[1].items()))) for pair in agent_tool_pairs]
+            # When parameter matching is enabled, we need to match both tool name and parameters.
+            # Normalize all parameter values to strings on both sides for consistent comparison.
+            agent_steps = [
+                (pair[0], tuple(sorted(
+                    (k, self._normalize_param_value(v)) for k, v in pair[1].items()
+                )))
+                for pair in agent_tool_pairs
+            ]
             expected_actions_steps = [
-                (name, tuple(sorted(expected_actions_params.get(name, {}).items()))) for name in expected_actions
+                (name, tuple(sorted(
+                    (k, self._normalize_param_value(v))
+                    for k, v in expected_actions_params.get(name, {}).items()
+                )))
+                for name in expected_actions
             ]
         else:
             # When parameter matching is disabled, only compare tool names
@@ -648,7 +474,8 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
                     "Tool call must be a dictionary.",
                     internal_message=str(tool_call),
                     target=ErrorTarget.EVALUATE,
-                    category=ErrorCategory.UNKNOWN,
+                    category=ErrorCategory.INVALID_VALUE,
+                    blame=ErrorBlame.USER_ERROR,
                 )
             if tool_call.get("type") != "tool_call":
                 raise EvaluationException(
@@ -656,6 +483,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
                     internal_message=str(tool_call),
                     target=ErrorTarget.EVALUATE,
                     category=ErrorCategory.INVALID_VALUE,
+                    blame=ErrorBlame.USER_ERROR,
                 )
 
             if "name" not in tool_call:
@@ -664,6 +492,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
                     internal_message=str(tool_call),
                     target=ErrorTarget.EVALUATE,
                     category=ErrorCategory.MISSING_FIELD,
+                    blame=ErrorBlame.USER_ERROR,
                 )
 
             tool_name = str(tool_call["name"]).strip()
@@ -673,20 +502,20 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
             if "arguments" in tool_call:
                 args = tool_call["arguments"]
                 if isinstance(args, dict):
-                    # Convert all values to strings for consistent comparison
-                    parameters = {str(k): str(v) for k, v in args.items()}
+                    parameters = {str(k): v for k, v in args.items()}
                 elif isinstance(args, str):
                     # If arguments is a string, try to parse it as JSON
                     try:
                         parsed_args = json.loads(args)
                         if isinstance(parsed_args, dict):
-                            parameters = {str(k): str(v) for k, v in parsed_args.items()}
+                            parameters = {str(k): v for k, v in parsed_args.items()}
                     except json.JSONDecodeError:
                         raise EvaluationException(
                             "Failed to parse tool call arguments as JSON.",
                             internal_message=str(tool_call),
                             target=ErrorTarget.EVALUATE,
                             category=ErrorCategory.INVALID_VALUE,
+                            blame=ErrorBlame.USER_ERROR,
                         )
 
             tool_name_param_pairs.append((tool_name, parameters))
@@ -702,12 +531,26 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         :return: The evaluation result.
         :rtype: Dict[str, Union[float, str, Dict[str, float]]]
         """
+        # If actions or expected_actions is a string, try to parse it as a JSON list
+        for key in ("actions", "expected_actions"):
+            value = eval_input.get(key)
+            if isinstance(value, str):
+                try:
+                    eval_input[key] = json.loads(value)
+                except (ValueError, TypeError):
+                    pass
+
         actions = eval_input["actions"]
         expected_actions = eval_input["expected_actions"]
 
         # Value and type checking for expected actions steps
         if not expected_actions:
-            raise ValueError("expected_actions cannot be empty")
+            raise EvaluationException(
+                "expected_actions cannot be empty",
+                target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
+                category=ErrorCategory.INVALID_VALUE,
+                blame=ErrorBlame.USER_ERROR,
+            )
 
         # Check if expected_actions is a tuple (tool names + parameters) or list (tool names only)
         use_parameter_matching = False
@@ -725,36 +568,65 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
             tool_names_list, params_dict = expected_actions
 
             if not isinstance(tool_names_list, list) or not all(isinstance(name, str) for name in tool_names_list):
-                raise TypeError("expected_actions tuple first element must be a list of strings (tool names)")
+                raise EvaluationException(
+                    "expected_actions tuple first element must be a list of strings (tool names)",
+                    target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    blame=ErrorBlame.USER_ERROR,
+                )
 
             if not isinstance(params_dict, dict):
-                raise TypeError(
-                    "expected_actions tuple second element must be a dictionary mapping tool names to parameters"
+                raise EvaluationException(
+                    "expected_actions tuple second element must be a dictionary mapping tool names to parameters",
+                    target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    blame=ErrorBlame.USER_ERROR,
                 )
 
             # Validate that all values in params_dict are dictionaries with string keys and values
             for tool_name, params in params_dict.items():
                 if not isinstance(tool_name, str):
-                    raise TypeError("expected_actions parameters dictionary keys must be strings (tool names)")
+                    raise EvaluationException(
+                        "expected_actions parameters dictionary keys must be strings (tool names)",
+                        target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        blame=ErrorBlame.USER_ERROR,
+                    )
                 if not isinstance(params, dict):
-                    raise TypeError(f"expected_actions parameters for tool '{tool_name}' must be a dictionary")
+                    raise EvaluationException(
+                        f"expected_actions parameters for tool '{tool_name}' must be a dictionary",
+                        target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        blame=ErrorBlame.USER_ERROR,
+                    )
                 for k, v in params.items():
                     if not isinstance(k, str):
-                        raise TypeError(f"expected_actions parameters for tool '{tool_name}' must have string keys")
+                        raise EvaluationException(
+                            f"expected_actions parameters for tool '{tool_name}' must have string keys",
+                            target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
+                            category=ErrorCategory.INVALID_VALUE,
+                            blame=ErrorBlame.USER_ERROR,
+                        )
                     try:
                         json.dumps(v)
                     except (TypeError, ValueError):
-                        raise TypeError(
+                        raise EvaluationException(
                             f"expected_actions parameters for tool '{tool_name}' must have JSON-serializable values "
-                            f"(got type {type(v)} for key '{k}')"
+                            f"(got type {type(v)} for key '{k}')",
+                            target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
+                            category=ErrorCategory.INVALID_VALUE,
+                            blame=ErrorBlame.USER_ERROR,
                         )
 
             expected_actions_names = [name.strip() for name in tool_names_list]
             expected_actions_params_dict = params_dict
             use_parameter_matching = True
         else:
-            raise TypeError(
-                "expected_actions must be a list of strings or a tuple of (list[str], dict[str, dict[str, str]])"
+            raise EvaluationException(
+                "expected_actions must be a list of strings or a tuple of (list[str], dict[str, dict[str, str]])",
+                target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
+                category=ErrorCategory.INVALID_VALUE,
+                blame=ErrorBlame.USER_ERROR,
             )
 
         # Extract tool information from the actions
@@ -782,9 +654,14 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
             )
 
             return {
-                "task_navigation_efficiency_label": match_result,
+                "task_navigation_efficiency": float(match_result),
+                "task_navigation_efficiency_score": float(match_result),
                 "task_navigation_efficiency_result": EVALUATION_PASS_FAIL_MAPPING[match_result],
-                "task_navigation_efficiency_details": additional_properties_metrics,
+                "task_navigation_efficiency_passed": match_result,
+                "task_navigation_efficiency_reason": None,
+                "task_navigation_efficiency_status": "completed",
+                "task_navigation_efficiency_threshold": 1.0,
+                "task_navigation_efficiency_properties": additional_properties_metrics,
             }
         else:
             raise EvaluationException(
@@ -792,6 +669,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
                 internal_message=str(self.matching_mode),
                 target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
                 category=ErrorCategory.INVALID_VALUE,
+                blame=ErrorBlame.USER_ERROR,
             )
 
     @overload

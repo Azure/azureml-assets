@@ -12,20 +12,19 @@ timm==0.9.12
 numpy==1.22.2
 einops==0.8.1
 fvcore==0.1.5.post20221221
-transformers==4.53.0
+transformers==5.5.4
 sentencepiece==0.2.1
 ftfy==6.3.1
-regex==2024.11.6
+regex==2026.4.4
 vision-datasets==0.2.7
 tenacity==9.0.0
-requests==2.32.4
+requests>=2.33.0
 azure-storage-blob==12.13.0
 deepspeed==0.17.1
 GPUtil==1.4.0
 mup==1.0.0
-torch==2.8.0
-torchvision==0.23.0
 safetensors==0.5.2
 setuptools>=82.0.0
 mlflow==3.5.0
 filelock>=3.20.1
+SecretStorage>=3.3.0  # constrain transitive dep of azureml-core; avoids dbus-python sdist build during image build

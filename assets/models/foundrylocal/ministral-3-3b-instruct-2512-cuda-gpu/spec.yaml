@@ -1,0 +1,49 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: ministral-3-3b-instruct-2512-cuda-gpu
+path: ./
+isArchived: true
+tags:
+  capabilities: tool-calling
+  supportsReasoning: ''
+  contextLength: 262144
+system_metadata:
+  alias: ministral-3-3b-instruct-2512
+  publisher: Microsoft
+  directoryPath: v1
+  foundryLocal: ''
+  inputModalities:
+  - text
+  - image
+  license: apache-2.0
+  licenseDescription: This model is provided under the License Terms available at <https://www.apache.org/licenses/LICENSE-2.0.html>.
+  maxOutputTokens: 2048
+  outputModalities:
+  - text
+  promptTemplate: '{"system": "[SYSTEM_PROMPT]{Content}[/SYSTEM_PROMPT]", "user": "[INST]{Content}[/INST]", "assistant": "{Content}</s>", "prompt": "[INST]{Content}[/INST]"}'
+  supportsToolCalling: true
+  toolCallEnd: </s>
+  toolCallStart: '[TOOL_CALLS]'
+  toolRegisterEnd: '[/AVAILABLE_TOOLS]'
+  toolRegisterStart: '[AVAILABLE_TOOLS]'
+  toolResponseEnd: '[/TOOL_RESULTS]'
+  toolResponseStart: '[TOOL_RESULTS]'
+  tasks:
+    inferenceTasks:
+    - vision-language-chat
+  platformCapabilities:
+    enableMaap: false
+  reasoningStart: ''
+  reasoningEnd: ''
+  minFLVersion: 1.2.0
+variantInfo:
+  parents:
+  - assetId: azureml://registries/azureml/models/ministral-3-3b-instruct-2512/versions/1
+  variantMetadata:
+    modelType: ONNX
+    quantization:
+    - RTN
+    device: gpu
+    executionProvider: CUDAExecutionProvider
+    fileSizeBytes: 3857772715
+    vRamFootprintBytes: 3857772715
+version: 1

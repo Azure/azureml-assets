@@ -874,3 +874,126 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                 }
             ],
         )
+
+    # ==================== SKIPPED CASES ====================
+
+    def test_skipped_missing_tool_definition_for_called_tool(self) -> None:
+        """Test case: SKIPPED - Tool definitions don't cover the tools called.
+
+        Tool calls reference ``get_weather`` but only ``send_email`` is defined.
+        The evaluator returns a not-applicable result (pre-LLM skip) because
+        tool definitions are missing for the called tool.
+        """
+        self.run_quality_test(
+            test_label="SKIPPED-missing-tool-definition-for-called-tool",
+            expected=ExpectedResult.SKIPPED,
+            query=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "What's the weather in Seattle?",
+                        }
+                    ],
+                }
+            ],
+            response=[
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "get_weather",
+                            "arguments": {"location": "Seattle"},
+                        }
+                    ],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_1",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": "Temperature: 65F",
+                        }
+                    ],
+                },
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "The weather in Seattle is 65°F.",
+                        }
+                    ],
+                },
+            ],
+            tool_definitions=[
+                {
+                    "name": "send_email",
+                    "description": "Send an email to a recipient",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "to": {"type": "string", "description": "Recipient email"},
+                            "subject": {"type": "string", "description": "Email subject"},
+                        },
+                        "required": ["to", "subject"],
+                    },
+                }
+            ],
+        )
+
+    def test_skipped_intermediate_response(self) -> None:
+        """Test case: SKIPPED - Response is intermediate (ends with function_call).
+
+        The assistant response ends with a ``function_call`` content item with no
+        final textual answer, so the evaluator treats it as an intermediate
+        response and returns a not-applicable result.
+        """
+        self.run_quality_test(
+            test_label="SKIPPED-intermediate-response",
+            expected=ExpectedResult.SKIPPED,
+            query=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "What's the weather in Seattle?",
+                        }
+                    ],
+                }
+            ],
+            response=[
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "function_call",
+                            "tool_call_id": "call_1",
+                            "name": "get_weather",
+                            "arguments": {"location": "Seattle"},
+                        }
+                    ],
+                }
+            ],
+            tool_definitions=[
+                {
+                    "name": "get_weather",
+                    "description": "Get current weather for a location",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "location": {
+                                "type": "string",
+                                "description": "City name",
+                            }
+                        },
+                        "required": ["location"],
+                    },
+                }
+            ],
+        )

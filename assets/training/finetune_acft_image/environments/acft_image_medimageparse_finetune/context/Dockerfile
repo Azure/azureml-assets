@@ -7,19 +7,90 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-RUN pip install --no-build-isolation git+https://github.com/facebookresearch/detectron2.git@a1ce2f9
+# ptca env (python 3.10): pip is a preinstalled install tool, not pulled by a
+# Python parent package. conda defaults still resolves the vulnerable 26.0.1
+# build, so use conda-forge for the patched build and remove stale metadata.
+RUN conda install -y -n ptca -c conda-forge pip==26.1.1 && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/pip-26.0*.dist-info && \
+    rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0*.json && \
+    conda clean -ay
 
-# protobuf is a transitive dep of mlflow-skinny/onnx; parents require >=3.12.0, cannot force 6.33.5
-# NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
-# setuptools vendors jaraco.context internally; >=82.0.1 bundles the patched version (GHSA-58pv-8j8x-9vj2)
-# mlflow-skinny 2.13.2 has CVEs; upgrade after requirements install
-# azureml-mlflow pins mlflow-skinny<=3.5.0, so must be upgraded separately to avoid resolution conflict
-RUN pip install --no-cache-dir mlflow-skinny==3.10.1
-RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 setuptools>=82.0.1 protobuf==6.33.5 cryptography==46.0.5 pillow==12.1.1
-# pip install updates the binary but conda-meta still references old versions; conda install syncs both
-RUN conda install -n ptca -y pip>=26.0.1 wheel>=0.46.2
-# vulnerability in base conda env
-# PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade pip>=26.0.1 wheel>=0.46.2 setuptools>=82.0.1 cryptography==46.0.5 'PyJWT>=2.12.0'
+# ptca env (python 3.10) pip-managed overrides. Parent packages in this env
+# do not yet require the patched floors for these transitive dependencies:
+#   urllib3: requests<3,>=1.26 and similar consumers.
+#   idna: requests, anyio, httpx, yarl, etc.
+#   aiohttp: no parent currently pins >=3.14.0 (GHSA-jg22-mg44-37j8 / GHSA-hg6j-4rv6-33pg).
+#   starlette: no parent currently pins >=1.0.1 (GHSA-86qp-5c8j-p5mr).
+#   pydantic-settings: pinned transitive dep of the base image, fixes GHSA-4xgf-cpjx-pc3j.
+RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade --progress-bar off \
+        'urllib3>=2.7.0' \
+        'idna>=3.15' \
+        'aiohttp>=3.14.0' \
+        'starlette>=1.0.1' \
+        'pydantic-settings>=2.14.2' && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/urllib3-2.6*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.10/site-packages/idna-3.11.dist-info \
+           /opt/conda/envs/ptca/lib/python3.10/site-packages/aiohttp-3.13*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.10/site-packages/starlette-1.0.0.dist-info \
+           /opt/conda/envs/ptca/lib/python3.10/site-packages/pydantic_settings-2.14.1.dist-info
+
+# ptca env (python 3.10): torch is inherited from the torch280 base image;
+# pin the patched CUDA build for GHSA-vgrw-7cvw-pwgx and GHSA-qfhq-4f3w-5fph,
+# and keep torchvision/torchaudio aligned with the torch ABI.
+RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade \
+        --progress-bar off \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.10.0+cu126' \
+        'torchvision==0.25.0+cu126' \
+        'torchaudio==2.10.0+cu126' && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/torch-2.8*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.10/site-packages/torchvision-0.23*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.10/site-packages/torchaudio-2.8*.dist-info
+
+# Base conda env (python 3.13) leaf overrides. Programmatic metadata checks on
+# 2026-05-25 found no available parent package that tightens these vulnerable
+# transitive dependencies to the fixed floors:
+#   pip: preinstalled install tool; no Python parent package.
+#   python-dotenv: anaconda-auth (unversioned) and pydantic-settings>=0.21.0.
+#   urllib3: requests<3,>=1.26 and anaconda-client>=1.26.4.
+#   idna: requests<4,>=2.5, anyio>=2.8, httpx, and yarl>=2.0.
+#   click: anaconda-cli-base, typer>=8.2.1, and optional httpx/python-dotenv
+#   extras. Patch directly until those parents or the base env require fixed
+#   versions.
+#   py-rattler: pinned transitive dep of base conda/rattler tooling; brought in
+#   by the base image, fixes GHSA-q53q-5r4j-5729.
+#   aiohttp: no parent currently pins >=3.14.0 (GHSA-jg22-mg44-37j8 / GHSA-hg6j-4rv6-33pg).
+#   PyJWT: no parent currently pins >=2.13.0 (GHSA-jq35-7prp-9v3f / GHSA-993g-76c3-p5m4).
+#   pydantic-settings: pinned transitive dep of the base image, fixes GHSA-4xgf-cpjx-pc3j.
+#   msgpack: pinned transitive dep of mlflow-skinny/base image, fixes GHSA-6v7p-g79w-8964.
+#   cryptography: pinned transitive dep of the base Python stack; brought in by
+#   the base image, fixes GHSA-537c-gmf6-5ccf.
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade --progress-bar off --no-binary=cffi \
+        'cryptography==48.0.1' && \
+    rm -rf /opt/conda/lib/python3.13/site-packages/cryptography-46*.dist-info
+
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade --progress-bar off \
+        'pip==26.1.1' \
+        'py-rattler>=0.24.0' \
+        'python-dotenv>=1.2.2' \
+        'urllib3>=2.7.0' \
+        'idna>=3.15' \
+        'click>=8.3.3' \
+        'aiohttp>=3.14.0' \
+        'PyJWT>=2.13.0' \
+        'pydantic-settings>=2.14.2' \
+        'msgpack>=1.2.1' && \
+    rm -rf /opt/conda/lib/python3.13/site-packages/pip-26.0*.dist-info \
+           /opt/conda/lib/python3.13/site-packages/py__rattler-0.23*.dist-info \
+           /opt/conda/lib/python3.13/site-packages/python__dotenv-1.2.1.dist-info \
+           /opt/conda/lib/python3.13/site-packages/urllib3-2.6*.dist-info \
+           /opt/conda/lib/python3.13/site-packages/idna-3.11.dist-info \
+           /opt/conda/lib/python3.13/site-packages/click-8.2*.dist-info \
+           /opt/conda/lib/python3.13/site-packages/aiohttp-3.13*.dist-info \
+           /opt/conda/lib/python3.13/site-packages/PyJWT-2.12*.dist-info \
+           /opt/conda/lib/python3.13/site-packages/pydantic_settings-2.12*.dist-info \
+           /opt/conda/lib/python3.13/site-packages/msgpack-1.1*.dist-info
+
+COPY requirements.txt .
+RUN pip install --progress-bar off -r requirements.txt
+RUN pip install --progress-bar off --no-build-isolation git+https://github.com/facebookresearch/detectron2.git@a1ce2f9

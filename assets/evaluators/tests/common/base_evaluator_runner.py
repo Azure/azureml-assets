@@ -7,8 +7,9 @@ Base class for all evaluator tests.
 Provides common interfaces and assertion helpers shared by both prompty-based and code-based evaluators.
 """
 
+import copy
 from abc import ABC
-from typing import Any, Dict, List, Type
+from typing import Any, Dict, List, Optional, Tuple, Type
 from unittest.mock import MagicMock
 from azure.ai.evaluation._evaluators._common import EvaluatorBase
 from azure.ai.evaluation._exceptions import EvaluationException
@@ -48,7 +49,16 @@ class BaseEvaluatorRunner(ABC):
     @property
     def expected_result_fields(self) -> List[str]:
         """Get the expected result fields for the evaluator."""
-        return []
+        return [
+            self._result_prefix,
+            f"{self._result_prefix}_score",
+            f"{self._result_prefix}_passed",
+            f"{self._result_prefix}_result",
+            f"{self._result_prefix}_reason",
+            f"{self._result_prefix}_status",
+            f"{self._result_prefix}_threshold",
+            f"{self._result_prefix}_properties",
+            ]
 
     @property
     def _result_prefix(self) -> str:
@@ -57,9 +67,6 @@ class BaseEvaluatorRunner(ABC):
             return self.result_prefix
         if self.result_key is None:
             return None
-        # Auto-derive: "bleu_score" -> "bleu", "f1_score" -> "f1"
-        if self.result_key.endswith("_score"):
-            return self.result_key[:-6]  # Strip "_score"
         return self.result_key
 
     def _init_evaluator(self, **kwargs) -> EvaluatorBase:
@@ -81,6 +88,91 @@ class BaseEvaluatorRunner(ABC):
 
         return self.evaluator_type(**kwargs)
 
+    def _build_evaluator_with_mocked_flows(
+        self, kwargs: Dict[str, Any], flow_side_effect: Any, flow_attrs: Tuple[str, ...]
+    ) -> Tuple[EvaluatorBase, Dict[str, Any], Optional[MagicMock]]:
+        """Build the evaluator, deep-copy its call kwargs, and mock the given flows.
+
+        Splits ``kwargs`` into constructor vs call args, instantiates the evaluator,
+        deep-copies the call kwargs (so evaluator preprocessing cannot mutate shared
+        test data), and replaces every present attribute in ``flow_attrs`` with a
+        ``MagicMock`` using ``flow_side_effect``. When any flow is mocked, prompty
+        reloading is disabled. Pass an empty ``flow_attrs`` to skip all mocking.
+
+        Args:
+            kwargs: Args in constructor_arg_names go to the constructor; the rest
+                    become the (deep-copied) evaluator call kwargs.
+            flow_side_effect: Side-effect callable assigned to each mocked flow.
+            flow_attrs: Names of the flow attributes to mock when present.
+
+        Returns:
+            Tuple of (evaluator, call_kwargs, flow_mock) where flow_mock is the mock
+            assigned to ``_flow`` (or None when ``_flow`` is not mocked).
+        """
+        # Split kwargs into constructor args vs call args
+        constructor_kwargs = {}
+        call_kwargs = {}
+        for key, value in kwargs.items():
+            if key in self.constructor_arg_names:
+                constructor_kwargs[key] = value
+            else:
+                call_kwargs[key] = value
+
+        evaluator = self._init_evaluator(**constructor_kwargs)
+
+        # Deep-copy call_kwargs to prevent evaluator preprocessing (e.g.,
+        # _normalize_function_call_types) from mutating shared test data.
+        call_kwargs = copy.deepcopy(call_kwargs)
+
+        flow_mock = None
+        for flow_attr in flow_attrs:
+            if hasattr(evaluator, flow_attr):
+                mock = MagicMock(side_effect=flow_side_effect)
+                setattr(evaluator, flow_attr, mock)
+                if flow_attr == "_flow":
+                    flow_mock = mock
+
+        # Disable flow reloading (e.g., groundedness query prompty) when mocking.
+        if flow_attrs and hasattr(evaluator, "_ensure_query_prompty_loaded"):
+            evaluator._ensure_query_prompty_loaded = MagicMock()
+
+        return evaluator, call_kwargs, flow_mock
+
+    def _run_evaluation_and_return_mocked_flow(self, **kwargs) -> Tuple[Dict[str, Any], Optional[MagicMock]]:
+        """Run evaluation and return both results and the mocked flow.
+
+        Core implementation that creates the evaluator, sets up mocking,
+        runs the evaluation, and returns the flow mock for assertion.
+
+        Args:
+            **kwargs: Keyword arguments. Args in constructor_arg_names are passed to
+                      evaluator constructor, remaining kwargs are passed to the evaluator call.
+
+        Returns:
+            Tuple of (results dict, flow mock or None if not mocking).
+        """
+        # Mock the primary and groundedness flows only for behavioral tests.
+        flow_side_effect = get_flow_side_effect_for_evaluator(self.result_key) if self.use_mocking else None
+        flow_attrs = ("_flow", "_groundedness_flow") if self.use_mocking else ()
+        evaluator, call_kwargs, flow_mock = self._build_evaluator_with_mocked_flows(
+            kwargs, flow_side_effect, flow_attrs
+        )
+
+        try:
+            results = evaluator(**call_kwargs)
+            return results, flow_mock
+        except EvaluationException as e:
+            print(f"Error during evaluation: {e}")
+            return {
+                f"{self.result_key}_error_message": e.message,
+                f"{self.result_key}_error_code": e.category.name,
+            }, flow_mock
+        except Exception as e:
+            print(f"Unexpected error during evaluation: {e}")
+            return {
+                f"{self.result_key}_error_message": str(e),
+            }, flow_mock
+
     def _run_evaluation(self, **kwargs) -> Dict[str, Any]:
         """Run evaluation and return results.
 
@@ -91,41 +183,60 @@ class BaseEvaluatorRunner(ABC):
         Returns:
             Dictionary containing evaluation results.
         """
-        # Split kwargs into constructor args vs call args
-        constructor_kwargs = {}
-        call_kwargs = {}
+        results, _ = self._run_evaluation_and_return_mocked_flow(**kwargs)
+        return results
 
-        for key, value in kwargs.items():
-            if key in self.constructor_arg_names:
-                constructor_kwargs[key] = value
-            else:
-                call_kwargs[key] = value
+    def _run_evaluation_with_flow_side_effect(self, flow_side_effect, **kwargs) -> Dict[str, Any]:
+        """Run evaluation with a custom flow side-effect to simulate specific flow outputs.
 
-        evaluator = self._init_evaluator(**constructor_kwargs)
+        Builds the evaluator like a behavioral test, but replaces the mocked flow's
+        side-effect with ``flow_side_effect`` (e.g., a skipped/None-score output). Useful
+        for regression tests of post-flow result handling. Exceptions are intentionally
+        not swallowed so that crashes surface as test failures.
 
-        # Mock the flow only for behavioral tests
-        if self.use_mocking:
-            if hasattr(evaluator, "_flow"):
-                evaluator._flow = MagicMock(side_effect=get_flow_side_effect_for_evaluator(self.result_key))
+        Args:
+            flow_side_effect: Side-effect callable assigned to the mocked flow(s).
+            **kwargs: Args in constructor_arg_names are passed to the evaluator constructor,
+                      remaining kwargs are passed to the evaluator call.
 
-            # Special handling for groundedness evaluator to disable flow reloading
-            if hasattr(evaluator, "_ensure_query_prompty_loaded"):
-                evaluator._ensure_query_prompty_loaded = MagicMock()
+        Returns:
+            Dictionary containing evaluation results.
+        """
+        evaluator, call_kwargs, _ = self._build_evaluator_with_mocked_flows(
+            kwargs, flow_side_effect, ("_flow", "_multi_turn_flow", "_groundedness_flow")
+        )
+        return evaluator(**call_kwargs)
 
-        try:
-            results = evaluator(**call_kwargs)
-            return results
-        except EvaluationException as e:
-            print(f"Error during evaluation: {e}")
-            return {
-                f"{self.result_key}_error_message": e.message,
-                f"{self.result_key}_error_code": e.category.name,
-            }
-        except Exception as e:
-            print(f"Unexpected error during evaluation: {e}")
-            return {
-                f"{self.result_key}_error_message": str(e),
-            }
+    def _run_and_capture_flow_input(self, **kwargs) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+        """Run the evaluator end-to-end with mocked flows and capture what the flow received.
+
+        Mocks every flow (``_flow``/``_multi_turn_flow``/``_groundedness_flow``) with a
+        capturing side-effect that records the keyword arguments the evaluator passes to
+        the flow, then delegates to the evaluator's normal per-evaluator mock output so
+        the call completes. Lets end-to-end tests assert that a util's transformation
+        (message serialization, agent-response/history reformatting, tool-definition
+        extraction, MCP-approval dropping, ...) actually reaches the LLM flow.
+
+        Exceptions are not swallowed so that unexpected crashes surface as failures.
+
+        Args:
+            **kwargs: Args in constructor_arg_names are passed to the evaluator constructor,
+                      remaining kwargs are passed to the evaluator call.
+
+        Returns:
+            Tuple of (results dict, captured flow-input dict). The captured dict is empty
+            when the evaluator short-circuits (e.g. a not-applicable result) without
+            calling any flow.
+        """
+        captured: Dict[str, Any] = {}
+        base_side_effect = get_flow_side_effect_for_evaluator(self.result_key)
+
+        async def capturing_side_effect(timeout=None, **flow_kwargs):
+            captured.update(flow_kwargs)
+            return await base_side_effect(timeout, **flow_kwargs)
+
+        results = self._run_evaluation_with_flow_side_effect(capturing_side_effect, **kwargs)
+        return results, captured
 
     def _extract_and_print_result(self, results: Dict[str, Any], test_label: str) -> Dict[str, Any]:
         """Extract result fields and print them.
@@ -138,6 +249,8 @@ class BaseEvaluatorRunner(ABC):
             Dictionary with standardized result fields.
         """
         score = results.get(self.result_key)
+        if score is None:
+            score = results.get(f"{self.result_key}_score")
 
         if f"{self.result_key}_error_message" not in results and score != "not applicable":
             for field in self.expected_result_fields:
@@ -145,21 +258,22 @@ class BaseEvaluatorRunner(ABC):
                     raise ValueError(f"Expected result field '{field}' not found in results.")
 
         label = results.get(f"{self._result_prefix}_result")
+        passed = results.get(f"{self._result_prefix}_passed")
+        threshold = results.get(f"{self._result_prefix}_threshold")
+        reason = results.get(f"{self.result_key}_reason")
+        status = results.get(f"{self.result_key}_status")
+        properties = results.get(f"{self.result_key}_properties")
 
         error_message = results.get(f"{self.result_key}_error_message")
         error_code = results.get(f"{self.result_key}_error_code")
-
-        # Optional fields
-        reason = results.get(f"{self.result_key}_reason")
-        threshold = results.get(f"{self._result_prefix}_threshold")
-        precision = results.get(f"{self._result_prefix}_precision")
-        recall = results.get(f"{self._result_prefix}_recall")
-        f1_score = results.get(f"{self._result_prefix}_f1_score")
 
         result = {
             "evaluator": self.result_key,
             "score": score,
             "label": label,
+            "result": label,
+            "status": status,
+            "passed": passed,
         }
 
         print(f"\nEvaluation Result for {self.result_key}:")
@@ -171,15 +285,9 @@ class BaseEvaluatorRunner(ABC):
         if threshold is not None:
             print(f"  Threshold: {threshold}")
             result["threshold"] = threshold
-        if precision is not None:
-            print(f"  Precision: {precision}")
-            result["precision"] = precision
-        if recall is not None:
-            print(f"  Recall: {recall}")
-            result["recall"] = recall
-        if f1_score is not None:
-            print(f"  F1 Score: {f1_score}")
-            result["f1_score"] = f1_score
+        if properties is not None:
+            print(f"  Properties: {properties}")
+            result["properties"] = properties
         if error_message or error_code:
             print(f"  Error Message: {error_message}")
             print(f"  Error Code: {error_code}")
@@ -201,8 +309,13 @@ class BaseEvaluatorRunner(ABC):
         """
         score_key = "score"
         label_key = "label"
+        passed_key = "passed"
+        status_key = "status"
         threshold = self._get_threshold(result_data)
         assert result_data[label_key] == "pass", f"Expected 'pass' but got '{result_data[label_key]}'"
+        assert result_data[passed_key] is True, f"Expected passed=True but got {result_data[passed_key]}"
+        assert result_data[status_key] == "completed", \
+            f"Expected status 'completed' but got '{result_data[status_key]}'"
         assert result_data[score_key] is not None, "Score should not be None"
         score = result_data[score_key]
         score_type = type(score)
@@ -222,7 +335,11 @@ class BaseEvaluatorRunner(ABC):
         self._assert_pass_result(result_data)
 
     def assert_not_applicable(self, result_data: Dict[str, Any]):
-        """Assert a not-applicable result (intermediate response).
+        """Assert a not-applicable result (intermediate response or skipped evaluation).
+
+        Not-applicable results always have label='pass' and a reason starting with
+        'Not applicable'. The score is either None (e.g. ToolCallAccuracyEvaluator) or
+        equal to the evaluator's threshold (most other evaluators).
 
         Args:
             result_data: Dictionary containing evaluation result data.
@@ -230,9 +347,20 @@ class BaseEvaluatorRunner(ABC):
         Raises:
             AssertionError: If the result is not a valid not-applicable result.
         """
-        self._assert_pass_result(result_data)
-        assert "Not applicable" in result_data.get("reason", ""), \
-            f"Expected reason to contain 'Not applicable' but got '{result_data.get('reason')}'"
+        score_key = "score"
+        label_key = "label"
+        passed_key = "passed"
+        status_key = "status"
+        assert result_data[label_key] == "not_applicable", \
+            f"Expected 'not_applicable' but got '{result_data[label_key]}'"
+        assert result_data[passed_key] is None, f"Expected passed=None but got {result_data[passed_key]}"
+        assert result_data[status_key] == "skipped", \
+            f"Expected status 'skipped' but got '{result_data[status_key]}'"
+        score = result_data[score_key]
+        assert score is None, \
+            f"Expected score to be None for not-applicable result but got '{score}'"
+        assert "not applicable" in result_data.get("reason", "").lower(), \
+            f"Expected reason to contain 'not applicable' but got '{result_data.get('reason')}'"
 
     def assert_fail(self, result_data: Dict[str, Any]):
         """Assert a failing result.
@@ -245,14 +373,19 @@ class BaseEvaluatorRunner(ABC):
         """
         score_key = "score"
         label_key = "label"
+        passed_key = "passed"
+        status_key = "status"
         threshold = self._get_threshold(result_data)
         assert result_data[label_key] == "fail", f"Expected 'fail' but got '{result_data[label_key]}'"
+        assert result_data[passed_key] is False, f"Expected passed=False but got {result_data[passed_key]}"
+        assert result_data[status_key] == "completed", \
+            f"Expected status 'completed' but got '{result_data[status_key]}'"
         assert result_data[score_key] is not None, "Score should not be None"
         score = result_data[score_key]
         score_type = type(score)
         assert score_type in [int, float], f"Score should be numeric but got type {score_type}"
-        assert result_data[score_key] < threshold, \
-            f"Score {result_data[score_key]} should be < threshold {threshold}"
+        assert score < threshold or score == 0, \
+            f"Score {score} should be < threshold {threshold}"
 
     def assert_pass_or_fail(self, result_data: Dict[str, Any]):
         """Assert a valid pass or fail result.
@@ -265,8 +398,14 @@ class BaseEvaluatorRunner(ABC):
         """
         score_key = "score"
         label_key = "label"
+        passed_key = "passed"
+        status_key = "status"
         assert result_data[label_key] in ["pass", "fail"], \
             f"Expected 'pass' or 'fail' but got '{result_data[label_key]}'"
+        assert result_data[passed_key] in [True, False], \
+            f"Expected passed=True or False but got {result_data[passed_key]}"
+        assert result_data[status_key] == "completed", \
+            f"Expected status 'completed' but got '{result_data[status_key]}'"
         assert result_data[score_key] is not None, "Score should not be None"
         score = result_data[score_key]
         score_type = type(score)
@@ -302,6 +441,8 @@ class BaseEvaluatorRunner(ABC):
         Raises:
             AssertionError: If no error is present or error type doesn't match.
         """
+        assert result_data["passed"] is None
+        assert result_data["result"] is None
         assert result_data.get("error_message") is not None, "Expected an error message"
         if error_code is not None:
             assert result_data["error_code"] == error_code, \

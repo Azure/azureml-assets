@@ -4,3 +4,4 @@ accelerate
 scikit-learn
 apache_beam~=2.69.0
 evaluate
+cryptography>=46.0.7,<47.0.0

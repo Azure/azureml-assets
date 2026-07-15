@@ -1,29 +1,38 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch271:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
-# Upgrade base conda packages
-RUN conda install -n base -c conda-forge pip=26.0 -y
-# These are from base image adding till we get new base image tag
-# PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
-# aiohttp 3.12.14 (8 CVEs) and urllib3 2.5.0 (3 CVEs) are also in base env from base image
-RUN conda run -n base python -m pip install --upgrade 'wheel>=0.46.2' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'aiohttp>=3.13.3' 'urllib3>=2.6.3'
+# Base conda env (Python 3.13) security floors.
+# PyJWT>=2.13.0: pinned transitive dep brought in by the base image; fixes GHSA-jq35-7prp-9v3f and GHSA-993g-76c3-p5m4.
+# py-rattler>=0.24.0: pinned transitive dep of base conda tooling; brought in by base image, fixes GHSA-q53q-5r4j-5729.
+# cryptography>=48.0.1: pinned transitive dep brought in by the base image; fixes GHSA-537c-gmf6-5ccf.
+RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' && \
+    conda install -n base -c conda-forge -y 'pip>=26.1' 'conda=26.3.2' && \
+    conda run -n base python -m pip install --upgrade --no-cache-dir \
+        'python-dotenv>=1.2.2' \
+        'urllib3>=2.7.0' \
+        'idna>=3.15' \
+        'click>=8.3.3' \
+        'aiohttp>=3.14.0' \
+        'PyJWT>=2.13.0' \
+        'py-rattler>=0.24.0' \
+        'cryptography>=48.0.1' && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir \
+        'urllib3>=2.7.0' \
+        'idna>=3.15' \
+        'cryptography>=48.0.1' && \
+    conda clean -a -y && \
+    rm -rf /opt/conda/pkgs
 
-
-# Upgrade ptca environment conda packages
-RUN conda install -c conda-forge pip=26.0 -y && \
-    conda clean -a -y
-
-# Install pip dependencies
+# Install pip dependencies (runs in default PTCA conda env)
 COPY requirements.txt .
-RUN pip install -r requirements.txt --no-cache-dir
-
+# pyarrow>=23.0.1: pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg.
+RUN pip install -r requirements.txt --no-cache-dir && \
+    pip install --upgrade --no-cache-dir --no-deps 'pyarrow>=23.0.1'
 
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
-        libcurl4 \
-        liblttng-ust1 \
         libunwind8 \
         libxml++2.6-2v5 \
         nginx-light \
@@ -41,14 +50,5 @@ ENV SVDIR=/var/runit
 ENV WORKER_TIMEOUT=400
 EXPOSE 5001 8883 8888
 
-# support Deepspeed launcher requirement of passwordless ssh login
-RUN apt-get update
-RUN apt-get install -y openssh-server openssh-client
-
-# Fix Vulnerability 
-# TODO: latest version of azureml-mlflow ~ 1.62.0 depends on cryptography<46.0.0
-RUN pip install --upgrade --no-cache-dir 'cryptography>=46.0.5'
-# CVE-2026-23949 (jaraco.context) & CVE-2026-24049 (wheel) - upgrade setuptools in ptca and base envs
-# setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced
-RUN pip install --force-reinstall --no-deps 'setuptools>=82.0.1'
-RUN conda run -n base pip install --force-reinstall --no-deps 'setuptools>=82.0.1'
+# Deepspeed launcher requires passwordless ssh; server side not in base image
+RUN apt-get update && apt-get install -y openssh-server && rm -rf /var/lib/apt/lists/*

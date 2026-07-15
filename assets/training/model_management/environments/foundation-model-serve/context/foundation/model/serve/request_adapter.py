@@ -65,14 +65,13 @@ class BaseAdapter:
                     f"expected options are {ExtraParameters.OPTIONS}"
                 )
 
-            # default to be error
-            if (extra_params_setting_str is None or extra_params_setting_str == "error") \
+            # Default is pass-through; reject only on explicit 'error'.
+            if extra_params_setting_str == ExtraParameters.ERROR \
                     and self.req.model_extra and len(self.req.model_extra) > 0:
                 raise HTTPException(
                     status_code=400,
                     detail=f"Extra parameters {list(self.req.model_extra.keys())} are not allowed "
-                    f"when {ExtraParameters.KEY} is not set or set to be '{ExtraParameters.ERROR}'. "
-                    f"Set extra-parameters to '{ExtraParameters.PASS_THROUGH}' to pass to the model."
+                    f"when {ExtraParameters.KEY} is set to '{ExtraParameters.ERROR}'."
                 )
 
             self.req._extra_param_setting = extra_params_setting_str

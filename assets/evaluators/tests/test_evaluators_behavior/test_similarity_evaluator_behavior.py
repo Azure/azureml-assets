@@ -4,9 +4,14 @@
 """Behavioral tests for Similarity Evaluator."""
 
 import pytest
-from typing import List
+from .base_validator_unit_test import (
+    CorePromptyValidatorUnitTests,
+    MessagePreprocessUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+)
 from ...builtin.similarity.evaluator._similarity import SimilarityEvaluator
 from ..common import BasePromptyEvaluatorRunner
+from ..common.evaluator_mock_config import create_mocked_evaluator, run_none_score_not_applicable
 
 
 @pytest.mark.unittest
@@ -28,15 +33,6 @@ class TestSimilarityEvaluatorBehavior(BasePromptyEvaluatorRunner):
 
     evaluator_type = SimilarityEvaluator
     use_mocking = True
-
-    @property
-    def expected_result_fields(self) -> List[str]:
-        """Get the expected result fields for prompty evaluators."""
-        return [
-            f"{self._result_prefix}",
-            f"{self._result_prefix}_result",
-            f"{self._result_prefix}_threshold"
-        ]
 
     constructor_arg_names = ["threshold"]
 
@@ -552,3 +548,59 @@ class TestSimilarityEvaluatorBehavior(BasePromptyEvaluatorRunner):
         )
         assert results["similarity_result"] == "pass"
         assert results["similarity"] >= results["similarity_threshold"]
+
+
+# region None score handling tests
+
+@pytest.mark.unittest
+class TestSimilarityNoneScoreHandling:
+    """Tests for None score handling in _do_eval (math.isnan fix).
+
+    When _return_not_applicable_result returns score=None, _do_eval must not
+    crash on math.isnan(None).
+    """
+
+    def test_turn_level_none_score_does_not_crash(self):
+        """Turn-level eval with score=None from _flow should not raise TypeError."""
+        run_none_score_not_applicable(
+            SimilarityEvaluator,
+            "similarity",
+            query="What is the role of ribosomes?",
+            response="Ribosomes are responsible for protein synthesis.",
+            ground_truth="Ribosomes are cellular structures responsible for protein synthesis.",
+        )
+
+
+# endregion
+
+
+@pytest.mark.unittest
+class TestSimilarityValidatorUnit(
+    CorePromptyValidatorUnitTests,
+    SuperDoEvalNotApplicableUnitTests,
+    MessagePreprocessUnitTests,
+):
+    """Low-level unit tests for similarity's repeated validators, utils and methods."""
+
+    evaluator_class = SimilarityEvaluator
+
+
+# region conversation-branch coverage
+
+@pytest.mark.unittest
+class TestSimilarityConvertKwargs:
+    """Cover the conversation branch of ``_convert_kwargs_to_eval_input``."""
+
+    def test_conversation_delegates_to_super(self):
+        """A conversation input routes through the base conversion producing per-turn inputs."""
+        evaluator = create_mocked_evaluator(SimilarityEvaluator, "similarity")
+        result = evaluator._convert_kwargs_to_eval_input(
+            conversation={
+                "messages": [
+                    {"role": "user", "content": "What is the capital of France?"},
+                    {"role": "assistant", "content": "Paris."},
+                ]
+            }
+        )
+        assert isinstance(result, list)
+        assert result[0]["query"] == "What is the capital of France?"

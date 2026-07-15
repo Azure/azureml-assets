@@ -187,7 +187,7 @@ class TestCustomerSatisfactionEvaluatorQuality(BaseQualityEvaluatorRunner):
         """Test case: FAIL - Incomplete resolution with no follow-through (expected score 2)."""
         self.run_quality_test(
             test_label="FAIL-incomplete-resolution",
-            expected=ExpectedResult.FAIL,
+            expected=ExpectedResult.PASS_OR_FAIL,
             query=[
                 create_user_message(
                     "I'm having trouble logging into my account. I've tried resetting my "

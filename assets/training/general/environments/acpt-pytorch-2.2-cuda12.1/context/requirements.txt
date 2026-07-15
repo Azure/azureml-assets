@@ -5,17 +5,24 @@ azure-ml=={{latest-pypi-version}}
 azure-ml-component=={{latest-pypi-version}}
 azureml-mlflow=={{latest-pypi-version}}
 azureml-contrib-services=={{latest-pypi-version}}
-azureml-contrib-services=={{latest-pypi-version}}
 azureml-inference-server-http
+# azureml-inference-server-http 1.5.1 pins opentelemetry-api/sdk==1.33.0
+# while newer exporter betas require newer OpenTelemetry and/or psutil>=5.9.
+azure-monitor-opentelemetry-exporter==1.0.0b23
 inference-schema
 MarkupSafe==2.1.2
 regex
 pybind11
-urllib3==2.6.3
-requests==2.32.5
-pillow==12.1.1
-transformers==4.54.1
-aiohttp>=3.12.14
+pillow>=12.2.0
+# GHSA-69w3-r845-3855 requires transformers>=5.0.0rc3; upgrading to stable 5.x
+transformers>=5.0.0
+aiohttp>=3.14.0
+# onnx: transitive dep of onnxruntime in base image; parent uses loose floor (>=1.16.0);
+# override needed for GHSA-p433-9wv8-28xj, GHSA-538c-55jv-c5g9, GHSA-cmw6-hcpp-c6jp, GHSA-q56x-g2fj-4rj6, GHSA-hqmj-h5c6-369m
+onnx>=1.21.0
+# pytest: pre-installed in base image ptca conda env (7.4.3); no parent pip package pulls it;
+# override needed for GHSA-6w46-j5rx-g56g
+pytest>=9.0.3
 py-spy==0.3.12
 debugpy~=1.6.3
 ipykernel~=6.0
@@ -25,8 +32,7 @@ matplotlib~=3.5.0
 tqdm~=4.66.3
 py-cpuinfo==5.0.0
 torch-tb-profiler~=0.4.0
-starlette>=0.49.1
+starlette>=1.0.1
 filelock>=3.20.1
-wheel>=0.46.2
 jaraco.context>=6.1.0
 protobuf>=6.33.5

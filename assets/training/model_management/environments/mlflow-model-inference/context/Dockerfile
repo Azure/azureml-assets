@@ -1,49 +1,5 @@
-FROM mcr.microsoft.com/mirror/docker/library/ubuntu:22.04
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:{{latest-image-tag}}
 
-User root:root
-
-RUN apt-get update && \
-    apt-get install -y software-properties-common && \
-    add-apt-repository -y ppa:adiscon/v8-stable && \
-    apt-get purge -y software-properties-common && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends \
-        procps \ 
-        libgnutls30 \ 
-        libk5crypto3 \ 
-        libkrb5-3 \ 
-        libkrb5support0 \ 
-        libpam-modules \ 
-        nginx-light \
-        wget \
-        runit \
-        libtinfo6 \ 
-        libncurses6 \ 
-        ncurses-bin \ 
-        ncurses-base \ 
-        libncursesw6 \ 
-        libcap2 \ 
-        libc6 \    
-        libc-bin \
-        libtasn1-6 \
-        rsyslog \
-        build-essential \
-        psmisc \
-        unzip \
-        perl \
-        binutils-multiarch \
-        binutils \
-        libcurl4 \
-        libunwind8 \
-        systemd \
-        libssl3 && \
-    apt-get autoremove -y && \
-    apt-get clean -y && \
-    rm -rf /usr/share/man/* && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN mkdir -p /var/runit
-RUN mkdir -p /var/azureml-app
 RUN mkdir -p /opt/miniconda/
 RUN mkdir -p etc/nginx/sites-available
 
@@ -58,7 +14,7 @@ RUN chmod +x var/runit/*/*
 RUN chmod +x var/azureml-logger/start_logger.sh
 #RUN chmod +x /var/runit/nginx/run
 
-RUN ln -s /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
+RUN ln -sf /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
         rm -f /etc/nginx/sites-enabled/default
 COPY configs/rsyslog.conf    etc/rsyslog.conf
 
@@ -79,6 +35,8 @@ ENV SVDIR=/var/runit
 ENV WORKER_TIMEOUT=300
 ENV AZUREML_INFERENCE_SERVER_HTTP_ENABLED="True"
 
+ENV PIP_USE_PEP517=1
+
 EXPOSE 5001
 
 COPY grant_ownership.sh /tmp/
@@ -93,16 +51,12 @@ RUN chown -R dockeruser /run
 RUN chmod +x /var/azureml-logger/start_logger.sh
 RUN chown -R dockeruser /var/azureml-app
 RUN chown -R dockeruser:dockeruser /opt/miniconda
+
 USER dockeruser
+RUN /opt/miniconda/bin/conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main && \
+    /opt/miniconda/bin/conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
 
 ENV PATH=/opt/miniconda/bin:$PATH
-RUN wget -qO /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-py312_24.5.0-0-Linux-x86_64.sh && \
-    bash /tmp/miniconda.sh -bf -p /opt/miniconda && \
-    conda update --all -c conda-forge -y && \
-    conda clean -ay && \
-    rm -rf /opt/miniconda/pkgs && \
-    rm -f /tmp/miniconda.sh && \
-    find /opt/miniconda -type d -name __pycache__ | xargs rm -rf
 
 WORKDIR /
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/mlflow
@@ -127,8 +81,8 @@ RUN conda clean -afy && \
     conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
-    conda clean -a -y   
-    
+    conda clean -a -y  
+
 RUN pip install pipdeptree
 
 USER dockeruser
