@@ -19,6 +19,12 @@ matplotlib
 tqdm
 py-cpuinfo
 torch-tb-profiler
+# pydantic-settings: transitive dep of azureml-defaults -> azureml-inference-server-http;
+#   fixes GHSA-4xgf-cpjx-pc3j.
+pydantic-settings>=2.14.2
+# msgpack: transitive dep of azureml-mlflow -> mlflow-skinny; fixes
+#   GHSA-6v7p-g79w-8964.
+msgpack>=1.2.1
 # starlette: transitive dep of azureml-inference-server-http -> fastapi -> starlette.
 #   fastapi 0.136.3 still uses a loose floor (starlette>=0.46.0), so keep a
 #   direct safe floor. >=1.0.1 fixes GHSA-86qp-5c8j-p5mr.

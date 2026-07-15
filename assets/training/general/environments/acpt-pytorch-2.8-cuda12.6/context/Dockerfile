@@ -7,7 +7,6 @@ RUN pip install -r requirements.txt --no-cache-dir
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
 RUN apt-get update && \
-    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
         libcurl4 \
         liblttng-ust1 \
@@ -18,6 +17,18 @@ RUN apt-get update && \
         rsyslog \
         runit \
         unzip && \
+    apt-get install -y --only-upgrade \
+        curl \
+        gzip \
+        libcurl3-gnutls \
+        libcurl4 \
+        libnghttp2-14 \
+        libpython3.10-minimal \
+        libpython3.10-stdlib \
+        libsqlite3-0 \
+        python3.10 \
+        python3.10-minimal \
+        tar && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
     cp /var/configuration/nginx.conf /etc/nginx/sites-available/app && \
@@ -30,7 +41,6 @@ EXPOSE 5001 8883 8888
 # Deepspeed launcher requires passwordless ssh login
 RUN apt-get update && \
     apt-get install -y openssh-server openssh-client && \
-    apt-get upgrade -y && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Fix ptca conda env vulnerabilities (python 3.10, active).
