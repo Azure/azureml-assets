@@ -8,4 +8,4 @@ dependencies:
 - pip:
   - azure-ai-ml==1.34.1
   - azureml-mlflow==1.62.0.post5
-  - mldesigner==0.1.0b22
+  - mldesigner==0.1.0b23

@@ -6,4 +6,4 @@ dependencies:
 - pip=26.1
 - setuptools<82
 - pip:
-  - mldesigner==0.1.0b22
+  - mldesigner==0.1.0b23
