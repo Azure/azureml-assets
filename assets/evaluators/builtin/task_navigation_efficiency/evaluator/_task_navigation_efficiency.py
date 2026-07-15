@@ -215,6 +215,17 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         :rtype: Dict[str, Union[float, str, Dict[str, float]]]
         """
         self._normalize_input_aliases(kwargs)
+        # Backward compatibility with azure-ai-evaluation 1.17.x: that release's
+        # TaskNavigationEfficiencyValidator validates the canonical SDK keys
+        # ('response'/'ground_truth') but does not itself map the azureml-assets-style
+        # aliases ('actions'/'expected_actions') onto them. Newer SDKs (>= 1.18.0) expose
+        # ``_normalize_input_aliases`` on the validator and normalize internally, so we only
+        # backfill the canonical SDK keys here when that method is absent. Remove this shim
+        # once azure-ai-evaluation 1.17.x is no longer supported.
+        if not hasattr(self._validator, "_normalize_input_aliases"):
+            for assets_key, sdk_key in self._INPUT_ALIASES.items():
+                if kwargs.get(sdk_key) is None and kwargs.get(assets_key) is not None:
+                    kwargs[sdk_key] = kwargs[assets_key]
         self._validator.validate_eval_input(kwargs)
         return await self._the_super_real_call(**kwargs)
 
