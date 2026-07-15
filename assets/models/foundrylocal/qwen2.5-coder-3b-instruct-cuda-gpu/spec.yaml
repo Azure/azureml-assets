@@ -10,7 +10,7 @@ system_metadata:
   alias: qwen2.5-coder-3b
   publisher: Microsoft
   directoryPath: v2
-  foundryLocal: hide
+  foundryLocal: test
   inputModalities:
   - text
   license: apache-2.0
