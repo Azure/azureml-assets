@@ -146,41 +146,38 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /tmp/openssh-install.log /var/lib/apt/lists/*
 
-# Upgrade vulnerable OS packages installed by the Ubuntu/CUDA/inferencing base layers:
-# OpenSSL (USN-8414-1), systemd (USN-8402-1), xz-utils (USN-8362-1),
-# libgcrypt (USN-8319-1), libarchive (USN-8292-1), and GnuTLS (USN-8284-1).
+# Upgrade vulnerable OS packages installed by the Ubuntu/CUDA/inferencing layers.
 RUN apt-get update && \
     apt-get install --only-upgrade -y --no-install-recommends \
+        curl \
         libarchive13 \
+        libcurl3-gnutls \
+        libcurl4 \
         libgcrypt20 \
         libgnutls30 \
+        libnghttp2-14 \
+        libnginx-mod-http-echo \
+        libnginx-mod-http-geoip2 \
         liblzma5 \
         libnss-systemd \
         libpam-systemd \
+        libsqlite3-0 \
         libssl-dev \
         libssl3 \
         libsystemd0 \
         libudev1 \
+        libxml2 \
+        nginx-common \
+        nginx-light \
         openssl \
         systemd \
         systemd-sysv \
         systemd-timesyncd \
+        tar \
         udev \
         xz-utils > /tmp/os-security-upgrade.log 2>&1 || (cat /tmp/os-security-upgrade.log && false) && \
     apt-get clean && \
     rm -rf /tmp/os-security-upgrade.log /var/lib/apt/lists/*
-
-# USN-8354-1/USN-8398-1/USN-8398-3: nginx packages >= 1.18.0-6ubuntu14.15. nginx-light is installed in the
-# inferencing layer above (after the top apt-get upgrade), so the nginx packages are
-# re-upgraded here.
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        nginx-common=1.18.0-6ubuntu14.15 \
-        nginx-light=1.18.0-6ubuntu14.15 \
-        libnginx-mod-http-geoip2=1.18.0-6ubuntu14.15 \
-        libnginx-mod-http-echo=1.18.0-6ubuntu14.15 && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
 
 # Create conda environment
 COPY conda_dependencies.yaml .
