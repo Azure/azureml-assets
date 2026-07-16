@@ -61,7 +61,7 @@ RUN conda create -q -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     conda clean -q -a -y
 
 # Security overrides for packages installed in independent Python prefixes:
-# - pip>=26.1 fixes CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9). pip is its own parent,
+# - pip>=26.1.2 fixes GHSA-wf93-45jw-7689. pip is its own parent,
 #   so explicit upgrades are the only available remediation.
 # - PyJWT>=2.13.0 is pinned as a transitive dep brought in by the base image
 #   (mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04), fixing GHSA-993g-76c3-p5m4
@@ -78,7 +78,7 @@ RUN set -eux; \
         if [ -x "$base_python" ]; then \
             base_prefix_found=1; \
             "$base_python" -m pip install --no-cache-dir --progress-bar off --upgrade \
-                'pip>=26.1' \
+                'pip>=26.1.2' \
                 'PyJWT>=2.13.0' \
                 'idna>=3.15' \
                 'py-rattler>=0.24.0' \
@@ -86,7 +86,7 @@ RUN set -eux; \
         fi; \
     done; \
     test "$base_prefix_found" = "1"; \
-    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --progress-bar off --upgrade 'pip>=26.1'
+    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --progress-bar off --upgrade 'pip>=26.1.2'
 
 # Install packages via pip (avoids conda solver OOM)
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --progress-bar off \
