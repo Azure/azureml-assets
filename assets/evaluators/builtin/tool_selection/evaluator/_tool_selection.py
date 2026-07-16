@@ -39,10 +39,31 @@ from azure.ai.evaluation._evaluators._common._validators import (  # noqa: F401
 try:  # azure-ai-evaluation >= 1.18.1
     from azure.ai.evaluation._common.utils import _is_intermediate_response, _preprocess_messages
 except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
-    from azure.ai.evaluation._evaluators._common._base_prompty_eval import (
-        _is_intermediate_response,
-        _preprocess_messages,
-    )
+    # Bodies below are copied from azure-ai-evaluation 1.18.1. The 1.17.x
+    # _base_prompty_eval versions do not normalize openapi_call / openapi_call_output
+    # content types, so inlining the 1.18.1 bodies keeps OpenAPI tool handling
+    # consistent across SDK versions. _preprocess_messages resolves the two helpers
+    # defined in the block below at call time.
+    def _is_intermediate_response(response):
+        """Return True if the assistant's last content item is a function_call or mcp_approval_request."""
+        if isinstance(response, list) and len(response) > 0:
+            last_msg = response[-1]
+            if isinstance(last_msg, dict) and last_msg.get("role") == "assistant":
+                content = last_msg.get("content", [])
+                if isinstance(content, list) and len(content) > 0:
+                    last_content = content[-1]
+                    if isinstance(last_content, dict) and last_content.get("type") in (
+                        "function_call",
+                        "mcp_approval_request",
+                    ):
+                        return True
+        return False
+
+    def _preprocess_messages(messages):
+        """Drop MCP approval messages, then normalize function/openapi call types."""
+        messages = _drop_mcp_approval_messages(messages)
+        messages = _normalize_function_call_types(messages)
+        return messages
 
 # Re-exported so the module keeps exposing the message-preprocessing helpers used
 # by the test suite; they are invoked indirectly through _preprocess_messages.
@@ -52,10 +73,61 @@ try:  # azure-ai-evaluation >= 1.18.1
         _normalize_function_call_types,
     )
 except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
-    from azure.ai.evaluation._evaluators._common._base_prompty_eval import (  # noqa: F401
-        _drop_mcp_approval_messages,
-        _normalize_function_call_types,
-    )
+    # Bodies below are copied from azure-ai-evaluation 1.18.1; they add openapi_call /
+    # openapi_call_output normalization that the 1.17.x _base_prompty_eval versions lack.
+    def _drop_mcp_approval_messages(messages):
+        """Remove MCP approval request/response messages from a conversation."""
+        if not isinstance(messages, list):
+            return messages
+        return [
+            msg
+            for msg in messages
+            if not (
+                isinstance(msg, dict)
+                and isinstance(msg.get("content"), list)
+                and (
+                    (
+                        msg.get("role") == "assistant"
+                        and any(
+                            isinstance(c, dict) and c.get("type") == "mcp_approval_request"
+                            for c in msg["content"]
+                        )
+                    )
+                    or (
+                        msg.get("role") == "tool"
+                        and any(
+                            isinstance(c, dict) and c.get("type") == "mcp_approval_response"
+                            for c in msg["content"]
+                        )
+                    )
+                )
+            )
+        ]
+
+    def _normalize_function_call_types(messages):
+        """Normalize function_call/function_call_output/openapi_call/openapi_call_output to tool_call/tool_result."""
+        if not isinstance(messages, list):
+            return messages
+        for msg in messages:
+            if not isinstance(msg, dict) or not isinstance(msg.get("content"), list):
+                continue
+            for item in msg["content"]:
+                if not isinstance(item, dict):
+                    continue
+                t = item.get("type")
+                if t == "function_call":
+                    item["type"] = "tool_call"
+                elif t == "function_call_output":
+                    item["type"] = "tool_result"
+                    if "function_call_output" in item:
+                        item["tool_result"] = item.pop("function_call_output")
+                elif t == "openapi_call":
+                    item["type"] = "tool_call"
+                elif t == "openapi_call_output":
+                    item["type"] = "tool_result"
+                    if "openapi_call_output" in item:
+                        item["tool_result"] = item.pop("openapi_call_output")
+        return messages
 
 try:  # azure-ai-evaluation >= 1.18.1
     from azure.ai.evaluation._common.utils import _log_safe_summary
