@@ -1,11 +1,18 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
-# Base conda env (Python 3.13) security floors.
+ENV PIP_PROGRESS_BAR=off
+
+# Base conda env security floors.
 # PyJWT>=2.13.0: pinned transitive dep brought in by the base image; fixes GHSA-jq35-7prp-9v3f and GHSA-993g-76c3-p5m4.
 # py-rattler>=0.24.0: pinned transitive dep of base conda tooling; brought in by base image, fixes GHSA-q53q-5r4j-5729.
-# cryptography>=48.0.1: pinned transitive dep brought in by the base image; fixes GHSA-537c-gmf6-5ccf.
+# cryptography>=48.0.1: pinned transitive dep present in the base image; fixes GHSA-537c-gmf6-5ccf.
+# pydantic-settings>=2.14.2: pinned transitive dep present in the base image; fixes GHSA-4xgf-cpjx-pc3j.
+# msgpack>=1.2.1: pinned transitive dep present in the base image; fixes GHSA-6v7p-g79w-8964.
+# torch==2.10.0+cu126: inherited from the ACPT torch280 base image; fixes
+# GHSA-vgrw-7cvw-pwgx and GHSA-qfhq-4f3w-5fph. torchvision and torchaudio
+# are upgraded with torch for CUDA compatibility.
 RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' && \
-    conda install -n base -c conda-forge -y 'pip>=26.1' 'conda=26.3.2' && \
+    conda install -n base -c conda-forge -y 'pip>=26.1' && \
     conda run -n base python -m pip install --upgrade --no-cache-dir \
         'python-dotenv>=1.2.2' \
         'urllib3>=2.7.0' \
@@ -14,19 +21,28 @@ RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' && \
         'aiohttp>=3.14.0' \
         'PyJWT>=2.13.0' \
         'py-rattler>=0.24.0' \
-        'cryptography>=48.0.1' && \
+        'cryptography>=48.0.1' \
+        'pydantic-settings>=2.14.2' \
+        'msgpack>=1.2.1' && \
     conda run -n ptca python -m pip install --upgrade --no-cache-dir \
         'urllib3>=2.7.0' \
-        'idna>=3.15' \
-        'cryptography>=48.0.1' && \
+        'idna>=3.15' && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.10.0+cu126' \
+        'torchvision==0.25.0+cu126' \
+        'torchaudio==2.10.0+cu126' && \
     conda clean -a -y && \
     rm -rf /opt/conda/pkgs
 
 # Install pip dependencies (runs in default PTCA conda env)
 COPY requirements.txt .
 # pyarrow>=23.0.1: pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg.
+# cryptography>=48.0.1: pinned transitive dep of azureml-core in requirements.txt; fixes GHSA-537c-gmf6-5ccf.
 RUN pip install -r requirements.txt --no-cache-dir && \
-    pip install --upgrade --no-cache-dir --no-deps 'pyarrow>=23.0.1'
+    pip install --upgrade --no-cache-dir --no-deps \
+        'pyarrow>=23.0.1' \
+        'cryptography>=48.0.1'
 
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
