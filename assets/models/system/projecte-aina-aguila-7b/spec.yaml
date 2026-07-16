@@ -20,7 +20,7 @@ system_metadata:
     inferenceMinSkuSpec: 24|1|220|64
   hiddenLayerScanned: true
   InferenceDeprecationDate: '2026-07-15'
-  InferenceRetirementDate: '2026-07-15'
+  InferenceRetirementDate: '2026-09-15'
   huggingFaceModelId: projecte-aina/aguila-7b
   license: apache-2.0
   tasks:
