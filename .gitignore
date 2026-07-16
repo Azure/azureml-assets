@@ -140,6 +140,3 @@ mlruns/
 
 # ignore config files
 config.json
-
-# Vulnerability remediation run artifacts
-.vuln-remediation-runs/
