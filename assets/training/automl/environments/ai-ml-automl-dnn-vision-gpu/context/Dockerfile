@@ -9,12 +9,8 @@ COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:2025
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 # Inference requirements
-# Security: reinstall packages to pick up patched versions even when an older base layer
-# is cached (apt-get upgrade alone has been observed to leave held packages in place).
-# USN-8298-1: dotnet-host/hostfxr/runtime-8.0 8.0.26 -> 8.0.27
-# USN-8319-1: libgcrypt20 1.9.4-3ubuntu3 -> 1.9.4-3ubuntu3.2
-# USN-8354-1: nginx-common/light/libnginx-mod-* 1.18.0-6ubuntu14.11 -> 1.18.0-6ubuntu14.12
-# USN-8362-1: liblzma5/xz-utils 5.2.5-2ubuntu1 -> 5.2.5-2ubuntu1.1
+# Security: reinstall packages to pick up patched versions when older base
+# layers are cached or held by the parent image.
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 /artifacts /var/
 RUN apt-get update && \
     apt-get upgrade -y && \
@@ -31,13 +27,18 @@ RUN apt-get update && \
         dotnet-host-8.0 \
         dotnet-hostfxr-8.0 \
         dotnet-runtime-8.0 \
+        curl \
+        libcurl3-gnutls \
+        libcurl4 \
         libgcrypt20 \
+        libnghttp2-14 \
+        libsqlite3-0 \
         liblzma5 \
-        xz-utils \
         nginx-common \
         nginx-light \
         libnginx-mod-http-geoip2 \
-        libnginx-mod-http-echo && \
+        libnginx-mod-http-echo \
+        xz-utils && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
     cp /var/configuration/nginx.conf /etc/nginx/sites-available/app && \
@@ -71,7 +72,8 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     -c conda-forge -c cerebis && \
     conda clean -a -y
 
-# Install pip dependencies
+# Install pip dependencies. azureml-inference-server-http stays on the 1.4.x line
+# required by azureml-defaults to avoid resolving newer inference server extras.
 RUN pip install --no-cache-dir \
                 azureml-mlflow=={{latest-pypi-version}} \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
@@ -80,6 +82,7 @@ RUN pip install --no-cache-dir \
                 azureml-automl-core=={{latest-pypi-version}} \
                 azureml-automl-runtime=={{latest-pypi-version}} \
                 azureml-defaults=={{latest-pypi-version}} \
+                'azureml-inference-server-http==1.4.1' \
                 azureml-interpret=={{latest-pypi-version}} \
                 'azureml-dataprep>=2.24.4' \
                 'azure-identity>=1.25.1' \
@@ -105,6 +108,8 @@ RUN pip install --no-cache-dir \
 # NOTE: pyarrow>=23.0.1 (GHSA-rgxp-2hwp-jwgg / CVE-2026-25087): pyarrow 17.0.0
 #       is installed transitively via azureml-dataset-runtime in this conda env;
 #       explicit override required until the AzureML parent pins a patched floor.
+# NOTE: torch>=2.10.0 (GHSA-vgrw-7cvw-pwgx / GHSA-qfhq-4f3w-5fph): installed
+#       by azureml-automl-dnn-vision/base torch image; explicit override required.
 RUN pip install --no-cache-dir --upgrade \
                 'cryptography>=48.0.1' \
                 'distributed>=2026.1.0' \
@@ -117,7 +122,8 @@ RUN pip install --no-cache-dir --upgrade \
                 'pyOpenSSL>=26.0.0' \
                 'wheel>=0.46.2' \
                 'starlette>=1.0.1' \
-                'pyarrow>=23.0.1'
+                'pyarrow>=23.0.1' \
+                'torch>=2.10.0'
 
 # Vulnerability patches for ptca environment
 # pip>=26.1 (CVE-2026-6357 / GHSA-jp4c-xjxw-mgf9): pip < 26.1 deferred imports of
@@ -125,9 +131,12 @@ RUN pip install --no-cache-dir --upgrade \
 #   wheel to be imported during the self-update check. ptca env ships pip 26.0.1
 #   in biweekly.202605.2; pip is its own parent (no upstream package can pull in a
 #   fixed pip via dependency resolution), so explicit override is required.
+# torch>=2.10.0 (GHSA-vgrw-7cvw-pwgx / GHSA-qfhq-4f3w-5fph): ptca env in the
+#   ACPT base image ships torch 2.8.0+cu126; explicit override required.
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
                 'pip>=26.1' \
-                'aiohttp>=3.14.0'
+                'aiohttp>=3.14.0' \
+                'torch>=2.10.0'
 # setuptools resolver picks wrong version due to dep conflicts; force install to fix jaraco.context vuln (GHSA-58pv-8j8x-9vj2)
 # setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
