@@ -14,17 +14,7 @@ RUN apt-get -y update && apt-get -y upgrade \
  && apt-get -y install --no-install-recommends unzip \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# pip is installed directly as the Python installer in both conda envs, so keep
-# this direct override before requirements installation.
-RUN conda install -y -n base -c conda-forge pip==26.1.1 && \
-    conda install -y -n ptca -c conda-forge pip==26.1.1 && \
-    rm -rf /opt/conda/lib/python3.13/site-packages/pip-26.0*.dist-info && \
-    rm -f /opt/conda/conda-meta/pip-26.0*.json && \
-    rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/pip-26.0*.dist-info && \
-    rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0*.json && \
-    conda clean -ay
-
-# Install required packages from pypi
+# Install required PyPI packages.
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
@@ -32,7 +22,7 @@ RUN pip install -r requirements.txt --no-cache-dir
 # override vulnerable torch 2.8.0+cu126 from the ACPT base image (GHSA-vgrw-7cvw-pwgx,
 # GHSA-qfhq-4f3w-5fph). torchvision and torchaudio are upgraded with torch to
 # keep the CUDA PyTorch stack compatible.
-RUN pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 \
+RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 \
         'torch==2.10.0' \
         'torchvision==0.25.0' \
         'torchaudio==2.10.0'

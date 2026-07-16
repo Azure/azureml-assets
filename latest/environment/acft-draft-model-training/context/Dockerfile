@@ -1,7 +1,8 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202607.1
 USER root
+ENV PIP_PROGRESS_BAR=off
 
-# USN-8284-1/USN-8283-1: libgnutls30/rsync; USN-8298-1: dotnet 8.0.26->8.0.27;
+# USN-8284-1/USN-8283-1: libgnutls30/rsync; USN-8298-1: dotnet 8.0.26->8.0.27.
 # USN-8319-1: libgcrypt20; USN-8362-1: liblzma5/xz-utils.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libgnutls30 rsync \

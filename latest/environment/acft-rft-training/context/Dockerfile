@@ -66,15 +66,15 @@ RUN pip install --no-cache-dir 'flash-attn-4>=4.0.0b9'
 #   fastapi dependency cannot downgrade starlette to the vulnerable 0.x series.
 RUN pip install --upgrade 'cryptography>=48.0.1' 'pydantic-settings>=2.14.2' 'fastmcp>=3.2.0' 'Mako>=1.3.11' 'lxml>=6.1.0' 'transformers==5.6.0' 'GitPython>=3.1.47' 'pyOpenSSL>=26.0.0' 'starlette>=1.0.1'
 # Base env (py3.13) and ptca env (py3.10) overrides for packages where every parent pins a loose floor.
-# cryptography>=48.0.1 (base env, py3.13): GHSA-537c-gmf6-5ccf. The base image ships
-#   cryptography 46.0.7, so patch the inherited base env copy here.
+# cryptography>=48.0.1 (base env, py3.13): GHSA-537c-gmf6-5ccf; direct override
+#   keeps the base env patched if later package resolution leaves an older copy.
 # python-dotenv>=1.2.2: GHSA-mf9w-mj56-hr94; transitive dep of pydantic-settings, uvicorn,
 #   and fastmcp. All parents use loose floors, so no parent upgrade can force >=1.2.2.
-# pip>=26.1.1: GHSA-jp4c-xjxw-mgf9 / VCM 5011855 (CVE-2026-6357). pip is bootstrapped by
+# pip>=26.1.2: GHSA-wf93-45jw-7689 / VCM 5015223. pip is bootstrapped by
 #   conda/python and has no parent package that can be upgraded, so patch both conda envs.
 #   NOTE: `pip install --upgrade pip` replaces the on-disk pip files but does NOT update
 #   conda's metadata DB at conda-meta/pip-*.json. SBOM scanners that read conda-meta still
-#   report the old pip version, so we explicitly delete stale pip-26.0*.json files.
+#   report the old pip version, so we explicitly delete stale pip metadata files.
 # urllib3>=2.7.0 (base env, py3.13): GHSA-mf9v-mfxr-j63j / VCM 5012484 and
 #   GHSA-qccp-gfcp-xxvc / VCM 5012480. urllib3 is brought in transitively by
 #   requests/botocore/azureml-core/kubernetes/etc.; all of these only constrain urllib3<3
@@ -93,12 +93,14 @@ RUN pip install --upgrade 'cryptography>=48.0.1' 'pydantic-settings>=2.14.2' 'fa
 # PyJWT>=2.13.0 (base env, py3.13): GHSA-993g-76c3-p5m4, GHSA-jq35-7prp-9v3f / VCM 5013533,
 #   5013521. PyJWT is pulled transitively by various auth/azure packages; no parent pins
 #   >=2.13.0 in published releases. Direct override is the only remediation.
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'cryptography>=48.0.1' 'python-dotenv>=1.2.2' 'pip>=26.1.1' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'PyJWT>=2.13.0' && \
-    rm -f /opt/conda/conda-meta/pip-26.0*.json
+# msgpack>=1.2.1 (base env, py3.13): GHSA-6v7p-g79w-8964 / VCM 5014304.
+#   msgpack is pulled transitively by distributed runtime packages with loose floors.
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'cryptography>=48.0.1' 'python-dotenv>=1.2.2' 'pip>=26.1.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'PyJWT>=2.13.0' 'msgpack>=1.2.1' && \
+    rm -f /opt/conda/conda-meta/pip-26.0*.json /opt/conda/conda-meta/pip-26.1.1*.json
 # GHSA-65pc-fj4g-8rjx: idna>=3.15 for ptca env (base env covered above)
 # GHSA-993g-76c3-p5m4, GHSA-jq35-7prp-9v3f: PyJWT>=2.13.0 for ptca env (base env covered above)
-RUN pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.1.1' 'idna>=3.15' 'PyJWT>=2.13.0' && \
-    rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0*.json
+RUN pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.1.2' 'idna>=3.15' 'PyJWT>=2.13.0' && \
+    rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0*.json /opt/conda/envs/ptca/conda-meta/pip-26.1.1*.json
 # ray vendors its own copies of aiohttp and idna inside thirdparty_files/ for the runtime_env
 # agent; those vendored copies are not upgraded by the pip installs above. Patching all copies
 # in-place (aiohttp>=3.14.0 closes GHSA-hg6j-4rv6-33pg/GHSA-jg22-mg44-37j8; idna>=3.15 closes CVE-2026-45409 / VCM 5012909).
@@ -110,13 +112,17 @@ RUN find /opt/conda/envs/ptca/lib/python3.10/site-packages/ray -type d -name 'th
       rm -rf "$dir"/aiohttp* "$dir"/idna*; \
       pip install --no-cache-dir --target "$dir" 'aiohttp>=3.14.0' 'idna>=3.15'; \
     done
-# Ray's distribution jar shades jackson-databind 2.18.6. Patch the shaded entries to
-# 2.19.4 for GHSA-rmj7-2vxq-3g9f, GHSA-j3rv-43j4-c7qm, GHSA-5jmj-h7xm-6q6v,
-# and GHSA-hgj6-7826-r7m5.
+# Ray's distribution jar shades vulnerable Maven artifacts that pip cannot upgrade.
+# Patch jackson-databind for GHSA-rmj7-2vxq-3g9f, GHSA-j3rv-43j4-c7qm,
+# GHSA-5jmj-h7xm-6q6v, and GHSA-hgj6-7826-r7m5; patch log4j-core for
+# GHSA-445c-vh5m-36rj, GHSA-6hg6-v5c8-fphq, and GHSA-3pxv-7cmr-fjr4.
 COPY patch_ray_jackson_databind.py /tmp/patch_ray_jackson_databind.py
-RUN JACKSON_DATABIND_VERSION=2.19.4 \
-    JACKSON_DATABIND_JAR_SHA1=7a39bf9257b726b90b80f27fa3f5174bc75162a5 \
-    JACKSON_DATABIND_POM_SHA1=74fcb3f686a19c4dd71f6b45fc6d700672100569 \
+RUN JACKSON_DATABIND_VERSION=2.21.4 \
+    JACKSON_DATABIND_JAR_SHA1=09e495680be707d466527d734368ebf36e464da2 \
+    JACKSON_DATABIND_POM_SHA1=c90e7bd258532972e8b96c57d005deaa75ad4806 \
+    LOG4J_CORE_VERSION=2.25.4 \
+    LOG4J_CORE_JAR_SHA1=b963c3d6bfdf05c61ad47a74e9f9295131607df2 \
+    LOG4J_CORE_POM_SHA1=1362e4668f513608d467924a2698677869b524f6 \
     /opt/conda/envs/ptca/bin/python /tmp/patch_ray_jackson_databind.py && \
     rm -f /tmp/patch_ray_jackson_databind.py
 COPY vllm_rollout /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/workers/rollout/vllm_rollout/vllm_rollout.py

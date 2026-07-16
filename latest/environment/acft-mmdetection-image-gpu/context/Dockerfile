@@ -1,20 +1,6 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202607.1
 
 USER root
-# Pull latest Ubuntu 22.04 security patches.
-# Explicit --only-upgrade list ensures USN-8298-1 (.NET), USN-8319-1 (libgcrypt20),
-# and USN-8362-1 (xz-utils/liblzma5) patches are applied; || true skips packages
-# not present in this image without failing the build.
-RUN apt-get -y update && apt-get -y upgrade \
- && apt-get -y install --only-upgrade \
-        dotnet-hostfxr-8.0 \
-        dotnet-host-8.0 \
-        dotnet-runtime-8.0 \
-        libgcrypt20 \
-        liblzma5 \
-        xz-utils \
- || true \
- && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install required packages from pypi
 COPY requirements.txt .
@@ -30,40 +16,18 @@ RUN mim install mmcv==2.2.0 -f https://download.openmmlab.com/mmcv/dist/cu118/to
 RUN pip install --no-cache-dir --upgrade setuptools==82.0.0
 RUN sed -i 's/2.2.0/2.3.0/' /opt/conda/envs/ptca/lib/python3.10/site-packages/mmdet/__init__.py
 
-# azureml-acft-accelerator still pins onnx<=1.17.0, which keeps vulnerable onnx
-# in the image. Use onnx-weekly until that parent package allows a patched stable onnx.
+# onnx-weekly: pinned transitive dep of azureml-acft-accelerator; it caps
+# onnx<=1.17.0, fixes GHSA-3r9x-f23j-gc73 and GHSA-hqmj-h5c6-369m.
 RUN pip uninstall -y onnx && pip install --no-cache-dir 'onnx-weekly>=1.22.0.dev20260504'
 
-# pip has no parent package to upgrade. The current base still ships pip 26.0.1
-# in both Python envs, so install the patched conda-forge build without changing
-# the rest of the environment.
-RUN conda install -n ptca -y -c conda-forge --freeze-installed 'pip=26.1.1' \
- && conda install -n base -y -c conda-forge --freeze-installed 'pip=26.1.1'
-
-# Base env packages are outside requirements.txt. Metadata checks show their
-# parents allow patched versions but do not require them, so keep direct floors.
-# urllib3 is pulled by conda/requests-style tooling and must be >=2.7.0 for
-# GHSA-qccp-gfcp-xxvc and GHSA-mf9v-mfxr-j63j.
-# cryptography is brought in by the base image; fixes GHSA-537c-gmf6-5ccf.
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
-    'urllib3>=2.7.0,<3' \
-    'idna>=3.15' \
-    'click>=8.3.3' \
-    'python-dotenv>=1.2.2' \
-    'aiohttp>=3.14.0' \
-    'PyJWT>=2.13.0' \
-    'cryptography>=48.0.1'
-
-# aiohttp is also present in the ptca env (GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8).
-# pyarrow <23.0.1 is vulnerable (GHSA-rgxp-2hwp-jwgg).
-# cryptography is brought in by the base image; fixes GHSA-537c-gmf6-5ccf.
+# pyarrow: pinned transitive dep of datasets; image install downgrades the base, fixes CVE-2026-25087.
+# cryptography: pinned transitive dep of azureml-core; image install downgrades the base, fixes GHSA-537c-gmf6-5ccf.
 RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade \
-    'aiohttp>=3.14.0' \
     'pyarrow>=23.0.1' \
     'cryptography>=48.0.1'
 
-# torch is inherited from the ACPT ptca base image; upgrade the CUDA PyTorch
-# stack together to fix GHSA-vgrw-7cvw-pwgx and GHSA-qfhq-4f3w-5fph.
+# torch: pinned inherited dep from the ACPT ptca base image; fixes
+# CVE-2025-2999 and CVE-2025-3001. Upgrade the CUDA PyTorch stack together.
 RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade \
     --index-url https://download.pytorch.org/whl/cu126 \
     'torch==2.10.0' \

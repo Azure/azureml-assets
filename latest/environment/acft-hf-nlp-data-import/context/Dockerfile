@@ -1,25 +1,16 @@
-# openmpi image
 FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260715.v1
 
 USER root
 
-# The base image's miniconda shipped Python 3.10 through tag 20260409.v4, but tag
-# 20260507.v1 upgraded it to Python 3.12 (`MINICONDA_VERSION=py312_26.1.1-1` in the
-# base image history). The packages installed below — azureml-acft-common-components
-# and azureml-acft-contrib-hf-nlp — declare `Requires-Python >=3.8,<3.12` for every
-# released version (latest 0.0.89, checked against PyPI 2026-05-11), so the build
-# fails on the new base if we use the default base env directly. Until the upstream
-# packages add Python 3.12 support we provision a dedicated Python 3.10 conda env
-# at $AZUREML_CONDA_ENVIRONMENT_PATH and prepend it to PATH so subsequent `pip`
-# calls target it. Same pattern is used by
-# assets/training/automl/environments/ai-ml-automl-dnn-gpu/context/Dockerfile.
+# Keep this environment on Python 3.10 to preserve the existing component runtime
+# behavior while the base image's miniconda uses Python 3.12.
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-acft-hf-nlp-data-import
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
 # sudo is expected by Singularity inside the image
 # Security: upgrade all OS packages and install security-patched system libraries.
 # `apt-get -y upgrade` brings every base-image package to its latest noble-updates
-# / noble-security version, so we only explicitly install packages that are NOT
+# / noble-security version. The explicit installs below add packages that are NOT
 # present in the openmpi5.0-ubuntu24.04 base image:
 #   - sudo:        required by Singularity (see comment above)
 #   - locales:     downstream Python locale support
@@ -29,30 +20,24 @@ ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 # dpkg, dpkg-dev, libdpkg-perl, libssl3, openssl) were removed because they are
 # all already installed by the base image and `apt-get -y upgrade` covers their
 # security patches — re-listing them was redundant.
-# openssh USN-8222-1 (>= 1:9.6p1-3ubuntu13.16): no longer needs an explicit
-# `apt-get install --reinstall -y openssh-{client,server,sftp-server}` override.
-# Verified 2026-05-12 that base mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04
-# at the latest tag (20260507.v1) plus current noble-security state lets
-# `apt-get -y upgrade` alone bring openssh to 1:9.6p1-3ubuntu13.16 (test build
-# `:test-cleanup`, ACR run ca6n). openssh is shipped by the base image (no
-# upstream parent package in this context), so the apt upgrade is the only fix.
+# The final `--only-upgrade` list documents security-sensitive OS packages that
+# must remain at the current noble-security patch level even when inherited from
+# the base image.
 RUN apt-get update && ACCEPT_EULA=Y apt-get -y upgrade && \
-    apt-get install -y sudo locales libssl-dev sqlite3 && \
-    # Security: explicitly upgrade specific packages with known CVEs to ensure they reach
-    # the required patched versions regardless of base-image state:
-    #   libgnutls30t64 USN-8284-1: >=3.8.3-1.1ubuntu3.6
-    #   libgcrypt20    USN-8319-1: >=1.10.3-2ubuntu0.1
-    #   nginx/nginx-common/nginx-light USN-8354-1: >=1.24.0-2ubuntu7.9
-    #   liblzma5/xz-utils USN-8362-1: >=5.6.1+really5.4.5-1ubuntu0.3
-    apt-get install -y --only-upgrade \
-        libgnutls30t64 \
-        libgcrypt20 \
-        nginx \
+apt-get install -y sudo locales libssl-dev sqlite3 && \
+apt-get install -y --only-upgrade \
+    curl \
+    libcurl4t64 \
+    libcurl3t64-gnutls \
+    gzip \
+    libgnutls30t64 \
+    libgcrypt20 \
+    nginx \
         nginx-common \
         nginx-light \
         liblzma5 \
         xz-utils \
-    || true && \
+    && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Security: upgrade pip in BASE miniconda (/opt/miniconda) to fix CVE-2026-6357

@@ -4,8 +4,6 @@ azureml-acft-common-components[image]~=0.0.91
 azureml-acft-image-components==0.0.91
 azureml-core==1.61.0.post4
 requests>=2.34.0
-# azureml-core and requests allow urllib3<3 but do not force the patched 2.7.0 floor.
-urllib3>=2.7.0,<3
 datasets==2.15.0
 transformers==5.5.4
 accelerate==0.32.0

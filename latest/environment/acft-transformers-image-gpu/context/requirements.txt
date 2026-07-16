@@ -13,3 +13,5 @@ huggingface-hub>=1.3.0
 setuptools>=82.0.0
 mlflow==3.11.1
 filelock>=3.20.1
+# msgpack: transitive dep of mlflow -> mlflow-skinny; fixes GHSA-6v7p-g79w-8964.
+msgpack>=1.2.1
