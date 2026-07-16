@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260707.v1
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260715.v1
 
 # Pin OS packages inherited from the base image; fixes USN-8414-1 and USN-8398-3.
 RUN apt-get update \

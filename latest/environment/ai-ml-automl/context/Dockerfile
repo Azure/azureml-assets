@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260707.v1
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260715.v1
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
