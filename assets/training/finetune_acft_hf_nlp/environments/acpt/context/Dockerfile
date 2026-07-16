@@ -6,12 +6,17 @@ ENV PIP_PROGRESS_BAR=off
 
 RUN apt-get update && apt-get -y upgrade && \
     apt-get install -y --only-upgrade \
+      curl \
       dotnet-hostfxr-8.0 \
       dotnet-host-8.0 \
       dotnet-runtime-8.0 \
+      libcurl3-gnutls \
+      libcurl4 \
       libgcrypt20 \
+      libnghttp2-14 \
       liblzma5 \
-      xz-utils || true
+      libsqlite3-0 \
+      xz-utils
 
 COPY requirements.txt .
 # The below 2 files are required for baking the code into the environment
@@ -26,9 +31,9 @@ RUN pip install mlflow==3.11.1
 RUN python -m nltk.downloader punkt
 RUN python -m nltk.downloader punkt_tab
 RUN MAX_JOBS=$(nproc) pip install --no-cache-dir --upgrade flash-attn==2.8.3 --no-build-isolation
-RUN pip install nltk==3.9.4 # Pinning to fix the unsafe deserialization vulnerability
+RUN pip install nltk==3.9.4 # Fixes unsafe deserialization vulnerability.
 
-# vulnerabilities, cannot be added to requirements.txt as it causes pip dependency resolver to break
+# Security overrides that cannot be added to requirements.txt without breaking pip resolution.
 # fastmcp: GHSA-rww4-4w9c-7733, GHSA-m8x7-r2rg-vh5g, GHSA-vv7q-7jx5-f767; >=3.2.0 required
 RUN pip install --upgrade --no-cache-dir 'fastmcp>=3.2.0'
 
@@ -51,6 +56,10 @@ RUN pip install --upgrade --no-cache-dir pyasn1==0.6.3 'python-multipart>=0.0.26
 # patched pip package so conda-meta and site-packages both report the fixed version.
 RUN conda install -n base -c conda-forge --no-deps -y 'pip>=26.1.1' && \
     conda install -n ptca -c conda-forge --no-deps -y 'pip>=26.1.1'
+
+# msgpack is inherited from the ACPT base image in the base conda env; override to fix GHSA-6v7p-g79w-8964.
+RUN python -m pip install --upgrade --no-cache-dir 'msgpack>=1.2.1' && \
+    rm -rf /opt/conda/lib/python*/site-packages/msgpack-1.1*.dist-info
 
 # aiohttp and cryptography in ptca env (Python 3.10) are present in the base image; force upgrades here explicitly.
 # cryptography is pinned as a transitive/base image package to fix GHSA-537c-gmf6-5ccf.
