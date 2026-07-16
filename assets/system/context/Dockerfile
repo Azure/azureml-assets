@@ -1,6 +1,6 @@
 # Shared Go toolchain version used across builder stages; compiled from source so the
 # trivy and oras binaries link a patched Go stdlib. Bump to the latest patched Go.
-ARG GO_VERSION=1.26.4
+ARG GO_VERSION=1.26.5
 ARG TRIVY_VERSION=0.72.0
 ARG ORAS_VERSION=1.3.2
 
