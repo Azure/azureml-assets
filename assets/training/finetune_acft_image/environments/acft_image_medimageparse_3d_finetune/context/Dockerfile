@@ -36,12 +36,6 @@ RUN apt-get update && \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# idna and cryptography are brought in by the base Miniconda Python; fixes
-# GHSA-65pc-fj4g-8rjx and GHSA-537c-gmf6-5ccf.
-RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade \
-        "idna>=3.15" \
-        "cryptography==48.0.1"
-
 # Step 1: minimal conda env with python 3.10 (matches azureml-acft-image-components compat).
 # Keep this step pure conda-channel — the SAT solver OOMs on ACR Standard build
 # agents when conda + pip resolution run together. Sibling envs split for the
