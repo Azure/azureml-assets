@@ -41,6 +41,8 @@ system_metadata:
     finetuneMinSkuSpec: 40|8|672|2900
   publisher: tiiuae
   hiddenLayerScanned: true
+  InferenceDeprecationDate: '2026-07-15'
+  InferenceRetirementDate: '2026-09-15'
   huggingFaceModelId: tiiuae/falcon-40b
   inferenceSupportedEnvs:
   - vllm
