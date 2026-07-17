@@ -17,11 +17,6 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
     conda clean -a -y
 
-# Upgrade pip in base miniconda to remediate current pip advisories.
-RUN /opt/miniconda/bin/python -m pip install --upgrade --no-cache-dir 'pip>=26.1.2' && \
-    rm -rf /opt/miniconda/lib/python3.10/site-packages/pip-26.0.*.dist-info \
-           /opt/miniconda/lib/python3.10/site-packages/pip-26.1.1.dist-info
-
 # distributed/bokeh/onnx: parent packages cap these below patched versions.
 # GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6,
 # GHSA-538c-55jv-c5g9, GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m (onnx)
