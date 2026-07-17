@@ -8,34 +8,6 @@ COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:2025
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 ENV ENABLE_METADATA=true
-# Upgrade vulnerable Ubuntu packages inherited from the parent image.
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
-    apt-get install -y --only-upgrade \
-        curl \
-        libcurl3-gnutls \
-        libcurl4 \
-        libnghttp2-14 \
-        libsqlite3-0 \
-        systemd \
-        systemd-sysv \
-        libudev1 \
-        libpam-systemd \
-        systemd-timesyncd \
-        libsystemd0 \
-        libnss-systemd \
-        libpython3.10-stdlib \
-        python3.10 \
-        libpython3.10-minimal \
-        python3.10-minimal \
-        libpam0g \
-        libpam-modules-bin \
-        libpam-modules \
-        libpam-runtime \
-        libarchive13 \
-        libgnutls30 \
-        tar && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY conda_dependencies.yaml .
 RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \

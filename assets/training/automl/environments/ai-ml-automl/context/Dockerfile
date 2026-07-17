@@ -11,49 +11,6 @@ ENV PYTHONIOENCODING=utf-8
 ENV PIP_NO_COLOR=1
 ENV PIP_PROGRESS_BAR=off
 
-# Upgrade vulnerable OS packages installed by parent base image layers.
-RUN set -eux; \
-    apt-get update; \
-    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade; \
-    for package in \
-        curl \
-        gzip \
-        libcurl3-gnutls \
-        libcurl3t64-gnutls \
-        libcurl4 \
-        libcurl4t64 \
-        liblzma5 \
-        libgcrypt20 \
-        libnginx-mod-http-echo \
-        libnginx-mod-http-geoip2 \
-        libsqlite3-0 \
-        libssl3 \
-        libssl3t64 \
-        libsystemd-shared \
-        libsystemd0 \
-        libudev1 \
-        libxml2 \
-        nginx \
-        nginx-common \
-        nginx-light \
-        openssh-client \
-        openssh-server \
-        openssh-sftp-server \
-        openssl \
-        systemd \
-        systemd-dev \
-        systemd-resolved \
-        systemd-timesyncd \
-        tar \
-        xz-utils; \
-    do \
-        if dpkg-query -W -f='${db:Status-Abbrev}' "$package" 2>/dev/null | grep -q '^ii '; then \
-            DEBIAN_FRONTEND=noninteractive apt-get install --only-upgrade -y --no-install-recommends "$package"; \
-        fi; \
-    done; \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
 # Create conda environment (minimal -- packages installed via pip to avoid solver OOM)
 RUN conda create -q -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
