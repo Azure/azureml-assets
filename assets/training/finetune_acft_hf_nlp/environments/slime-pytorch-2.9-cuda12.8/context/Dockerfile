@@ -14,9 +14,11 @@ ARG SGLANG_VERSION=0.5.11
 ARG MEGATRON_COMMIT=1dcf0dafa884ad52ffb243625717a3471643e087
 ARG MBRIDGE_COMMIT=89eb10887887bc74853f89a4de258c0702932a1c
 ARG LOG4J_VERSION=2.25.4
+ARG JACKSON_DATABIND_VERSION=2.19.4
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PIP_NO_CACHE_DIR=1
+ENV PIP_PROGRESS_BAR=off
 ENV PYTHONUNBUFFERED=1
 ENV MAX_JOBS=1
 ENV PYTHONPATH=/opt/Megatron-LM:${PYTHONPATH}
@@ -29,16 +31,11 @@ RUN set -eux; \
             {} +; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
-        build-essential \
-        cmake \
         dnsutils \
-        git \
         git-lfs \
         libnuma-dev \
         ninja-build \
         nvtop \
-        openssh-client \
-        openssh-server \
         rsync; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
@@ -131,6 +128,17 @@ RUN LOG4J_VERSION=${LOG4J_VERSION} \
     python /tmp/patch_ray_log4j.py && \
     rm /tmp/patch_ray_log4j.py
 
+COPY patch_ray_jackson_databind.py /tmp/patch_ray_jackson_databind.py
+# Pinned transitive dep of Ray: ray_dist.jar vendors Jackson Databind 2.18.6.
+# Overlay the fixed Maven artifact until Ray publishes a wheel with the patched
+# dependency (GHSA-hgj6-7826-r7m5, GHSA-5jmj-h7xm-6q6v, GHSA-j3rv-43j4-c7qm,
+# GHSA-rmj7-2vxq-3g9f).
+RUN JACKSON_DATABIND_VERSION=${JACKSON_DATABIND_VERSION} \
+    JACKSON_DATABIND_JAR_SHA1=7a39bf9257b726b90b80f27fa3f5174bc75162a5 \
+    JACKSON_DATABIND_POM_SHA1=74fcb3f686a19c4dd71f6b45fc6d700672100569 \
+    python /tmp/patch_ray_jackson_databind.py && \
+    rm /tmp/patch_ray_jackson_databind.py
+
 RUN cd /opt/slime && \
     python -m pip install --no-cache-dir -e . --no-deps
 
@@ -143,6 +151,13 @@ RUN python /tmp/patch_slime_rft_fixes.py && \
 
 RUN cd /opt/slime/slime/backends/megatron_utils/kernels/int4_qat && \
     python -m pip install --no-cache-dir . --no-build-isolation
+
+# Security: upgrade torch after source-built extensions are installed. Building
+# Apex directly against torch 2.10 did not complete on the 2-CPU ACR builder.
+RUN python -m pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cu128 \
+        torch==2.10.0 \
+        torchvision==0.25.0 \
+        torchaudio==2.10.0
 
 # Security: upgrade system packages with known vulnerabilities
 # (rsync USN-8283-1, libgnutls30t64 USN-8284-1, bind9 USN-8293-1,

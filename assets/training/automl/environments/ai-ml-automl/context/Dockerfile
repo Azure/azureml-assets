@@ -8,75 +8,14 @@ COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:2025
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 ENV ENABLE_METADATA=true
 
-# Upgrade vulnerable OS packages installed by parent base image layers:
-# openssh (USN-8222-1), XZ Utils (USN-8362-1), OpenSSL (USN-8414-1),
-# nginx (USN-8354-1/USN-8398-1), systemd (USN-8402-1), and libgcrypt (USN-8319-1).
-RUN set -eux; \
-    apt-get update; \
-    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade; \
-    for package in \
-        liblzma5 \
-        libgcrypt20 \
-        libnginx-mod-http-echo \
-        libnginx-mod-http-geoip2 \
-        libssl3 \
-        libssl3t64 \
-        libsystemd-shared \
-        libsystemd0 \
-        libudev1 \
-        nginx \
-        nginx-common \
-        nginx-light \
-        openssh-client \
-        openssh-server \
-        openssh-sftp-server \
-        openssl \
-        systemd \
-        systemd-dev \
-        systemd-resolved \
-        systemd-timesyncd \
-        xz-utils; \
-    do \
-        if dpkg-query -W -f='${db:Status-Abbrev}' "$package" 2>/dev/null | grep -q '^ii '; then \
-            DEBIAN_FRONTEND=noninteractive apt-get install --only-upgrade -y --no-install-recommends "$package"; \
-        fi; \
-    done; \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
 # Create conda environment (minimal -- packages installed via pip to avoid solver OOM)
 RUN conda create -q -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
     -c conda-forge && \
     conda clean -q -a -y
 
-# Security overrides for packages installed in independent Python prefixes:
-# - pip>=26.1 fixes CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9). pip is its own parent,
-#   so explicit upgrades are the only available remediation.
-# - PyJWT>=2.13.0 is pinned as a transitive dep brought in by the base image
-#   (mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04), fixing GHSA-993g-76c3-p5m4
-#   and GHSA-jq35-7prp-9v3f.
-# - idna>=3.15 is pinned as a transitive dep brought in by the base image,
-#   fixing GHSA-65pc-fj4g-8rjx.
-# - py-rattler>=0.24.0 is pinned as a transitive dep brought in by the base image,
-#   fixing GHSA-q53q-5r4j-5729.
-# - cryptography>=48.0.1 is pinned as a transitive dep brought in by the base image
-#   and its ptca conda env, fixing GHSA-537c-gmf6-5ccf.
-RUN set -eux; \
-    base_prefix_found=0; \
-    for base_python in /opt/conda/bin/python /opt/miniconda/bin/python /opt/conda/envs/ptca/bin/python; do \
-        if [ -x "$base_python" ]; then \
-            base_prefix_found=1; \
-            "$base_python" -m pip install --no-cache-dir --upgrade \
-                'pip>=26.1' \
-                'PyJWT>=2.13.0' \
-                'idna>=3.15' \
-                'py-rattler>=0.24.0' \
-                'cryptography>=48.0.1'; \
-        fi; \
-    done; \
-    test "$base_prefix_found" = "1"; \
-    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --upgrade 'pip>=26.1'
+# pip>=26.1 fixes CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9) in the new AutoML env.
+RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --upgrade 'pip>=26.1'
 
 # Install packages via pip (avoids conda solver OOM)
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
@@ -85,7 +24,7 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
     'setuptools-git' \
     'setuptools==81.0.0' \
     'psutil>5.0.0,<6.0.0' \
-    'torch==2.8.0'
+    'torch==2.10.0'
 
 # Install pip dependencies
 RUN pip install \
