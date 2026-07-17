@@ -1,3 +1,7 @@
+## 1.17.7 (2026-07-16)
+### 🚀 New Features
+- [#5221](https://github.com/Azure/azureml-assets/pull/5221) Add `--duplicate-name-exceptions` option to `validate_assets` to allow listed models to have multiple versions in the repo
+
 ## 1.17.6 (2026-06-17)
 ### 🚀 New Features
 - [#5154](https://github.com/Azure/azureml-assets/pull/5154) Add isArchived to unsupported SDK fields list
