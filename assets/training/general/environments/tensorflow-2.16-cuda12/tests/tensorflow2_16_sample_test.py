@@ -61,7 +61,7 @@ def test_tensorflow_2_16():
         time.sleep(30)  # sleep 30 seconds
     else:
         # Timeout
-        ml_client.jobs.cancel(returned_job.name)
+        ml_client.jobs.begin_cancel(returned_job.name)
         raise Exception(f"Test aborted because the job took longer than {TIMEOUT_MINUTES} minutes. "
                         f"Last status was {status}.")
 
