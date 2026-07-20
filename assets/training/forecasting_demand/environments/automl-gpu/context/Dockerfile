@@ -8,47 +8,27 @@ COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:2025
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 ENV ENABLE_METADATA=true
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
-    apt-get install -y --only-upgrade \
-        systemd \
-        systemd-sysv \
-        libudev1 \
-        libpam-systemd \
-        systemd-timesyncd \
-        libsystemd0 \
-        libnss-systemd \
-        libpython3.10-stdlib \
-        python3.10 \
-        libpython3.10-minimal \
-        python3.10-minimal \
-        libpam0g \
-        libpam-modules-bin \
-        libpam-modules \
-        libpam-runtime \
-        libarchive13 \
-        libgnutls30 && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY conda_dependencies.yaml .
 RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
+    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH python -m pip install --upgrade --no-cache-dir 'pip>=26.1.2' && \
+    rm -rf $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pip-26.1.1.dist-info && \
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
     conda clean -a -y
-
-# CVE-2026-6357: upgrade pip in base miniconda (/opt/miniconda ships 26.0.1)
-RUN /opt/miniconda/bin/python -m pip install --upgrade --no-cache-dir 'pip>=26.1.1' && \
-    rm -rf /opt/miniconda/lib/python3.10/site-packages/pip-26.0.*.dist-info
 
 # distributed/bokeh/onnx: parent packages cap these below patched versions.
 # GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6,
 # GHSA-538c-55jv-c5g9, GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m (onnx)
 # cryptography is a pinned transitive dep of azureml-core; fixes GHSA-537c-gmf6-5ccf.
+# pyarrow is a pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg.
+# torch is a pinned transitive dep of azureml-contrib-automl-dnn-forecasting; fixes GHSA-qfhq-4f3w-5fph and GHSA-vgrw-7cvw-pwgx.
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --upgrade --no-cache-dir \
     'cryptography>=48.0.1' 'setuptools>=79.0.0' 'distributed>=2026.1.0' \
     'bokeh>=3.8.2' \
     'onnx>=1.21.0' \
-    'pyarrow==23.0.1'  # pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg.
+    'pyarrow==23.0.1' \
+    'torch==2.10.0'
 
 RUN rm -rf /opt/miniconda/pkgs/
 
