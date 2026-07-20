@@ -28,7 +28,7 @@ RUN apt-get update && \
         psmisc \
         rsyslog \
         runit \
-        tar=1.34+dfsg-1ubuntu0.1.22.04.4 \
+        tar \
         unzip && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
