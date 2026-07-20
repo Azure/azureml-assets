@@ -22,10 +22,10 @@ RUN apt-get update && \
 # conda and pip dependencies together. Splitting them avoids the memory spike.
 
 # Step 1: Create conda env with only conda-channel packages (small, fast solve)
-# pip=26.1.1: fixes CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9). Pip <26.1 ran self-update
-# check after wheel install which could import newly installed packages.
+# pip=26.1.2: fixes CVE-2026-8643 (GHSA-wf93-45jw-7689) and CVE-2026-6357
+# (GHSA-jp4c-xjxw-mgf9).
 COPY conda_dependencies.yaml .
-RUN conda create -p $CONDA_PREFIX -q -y python=3.10 pip=26.1.1 'pandas~=1.5.3' 'scipy~=1.10.0' 'numpy~=1.22.0' -c conda-forge -c anaconda && \
+RUN conda create -p $CONDA_PREFIX -q -y python=3.10 pip=26.1.2 'pandas~=1.5.3' 'scipy~=1.10.0' 'numpy~=1.22.0' -c conda-forge -c anaconda && \
     conda clean -a -y
 
 # Step 2: Install pip packages separately (pip resolver uses less memory than conda's SAT solver)

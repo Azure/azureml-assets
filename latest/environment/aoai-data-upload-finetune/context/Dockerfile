@@ -1,14 +1,12 @@
 FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260715.v1
 
-# Pin OS packages inherited from the base image; fixes USN-8414-1 and USN-8398-3.
+# Upgrade OS packages inherited vulnerable from the base image until the base image carries these Ubuntu security updates.
 RUN apt-get update \
     && apt-get install -y --only-upgrade --no-install-recommends \
-        libgnutls30t64 \
-        nginx=1.24.0-2ubuntu7.12 \
-        nginx-common=1.24.0-2ubuntu7.12 \
-        nginx-light=1.24.0-2ubuntu7.12 \
-        openssl=3.0.13-0ubuntu3.11 \
-        libssl3t64=3.0.13-0ubuntu3.11 \
+        curl \
+        gzip \
+        libcurl3t64-gnutls \
+        libcurl4t64 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
