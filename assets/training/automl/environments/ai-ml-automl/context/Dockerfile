@@ -11,6 +11,23 @@ ENV PYTHONIOENCODING=utf-8
 ENV PIP_NO_COLOR=1
 ENV PIP_PROGRESS_BAR=off
 
+# Upgrade vulnerable Ubuntu 22.04 packages when this image variant includes them;
+# clean Ubuntu 24.04 base layers skip packages that are not present.
+RUN set -eux; \
+    apt-get update; \
+    os_security_packages="curl gzip libasound2 libasound2-data libcurl3-gnutls libcurl4 libnghttp2-14 libpython3.10-minimal libpython3.10-stdlib libsqlite3-0 openssh-client python3.10 python3.10-minimal tar wget"; \
+    installed_os_packages=""; \
+    for package in $os_security_packages; do \
+        if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
+            installed_os_packages="$installed_os_packages $package"; \
+        fi; \
+    done; \
+    if [ -n "$installed_os_packages" ]; then \
+        apt-get install -y --only-upgrade $installed_os_packages; \
+    fi; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*
+
 # Create conda environment (minimal -- packages installed via pip to avoid solver OOM)
 RUN conda create -q -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
@@ -25,6 +42,10 @@ RUN conda create -q -p $AZUREML_CONDA_ENVIRONMENT_PATH \
 #   and GHSA-jq35-7prp-9v3f.
 # - idna>=3.15 is pinned as a transitive dep brought in by the base image,
 #   fixing GHSA-65pc-fj4g-8rjx.
+# - msgpack>=1.2.1 is pinned as a transitive dep brought in by AzureML/ACPT
+#   base layers, fixing GHSA-6v7p-g79w-8964.
+# - pydantic-settings>=2.14.2 is pinned as a transitive dep of AzureML/MLflow
+#   Python dependencies, fixing GHSA-4xgf-cpjx-pc3j.
 # - py-rattler>=0.24.0 is pinned as a transitive dep brought in by the base image,
 #   fixing GHSA-q53q-5r4j-5729.
 # - cryptography>=48.0.1 is pinned as a transitive dep brought in by the base image
@@ -38,12 +59,25 @@ RUN set -eux; \
                 'pip>=26.1.2' \
                 'PyJWT>=2.13.0' \
                 'idna>=3.15' \
+                'msgpack>=1.2.1' \
+                'pydantic-settings>=2.14.2' \
                 'py-rattler>=0.24.0' \
                 'cryptography>=48.0.1'; \
         fi; \
     done; \
     test "$base_prefix_found" = "1"; \
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --progress-bar off --upgrade 'pip>=26.1.2'
+
+# Patch the PTCA conda environment when present.
+# pip>=26.1.2 fixes GHSA-wf93-45jw-7689; VCM reads the conda-meta record, so
+#   conda must update it.
+# torch==2.10.0 fixes GHSA-vgrw-7cvw-pwgx and GHSA-qfhq-4f3w-5fph in inherited
+#   PTCA environments.
+RUN set -eux; \
+    if [ -d /opt/conda/envs/ptca ]; then \
+        conda install -p /opt/conda/envs/ptca -c conda-forge -y 'pip>=26.1.2'; \
+        conda run -p /opt/conda/envs/ptca python -m pip install --no-cache-dir --progress-bar off --upgrade 'torch==2.10.0'; \
+    fi
 
 # Install packages via pip (avoids conda solver OOM)
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --progress-bar off \
@@ -106,12 +140,18 @@ RUN pip install --progress-bar off \
 #   GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6,
 #   GHSA-538c-55jv-c5g9, GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m
 # pillow: upgraded from 12.1.1 for GHSA-whj4-6x5x-4v2j
+# msgpack>=1.2.1 (GHSA-6v7p-g79w-8964): pinned transitive dep of the
+#   distributed/dask stack used by AzureML AutoML runtime.
+# pydantic-settings>=2.14.2 (GHSA-4xgf-cpjx-pc3j): pinned transitive dep of
+#   AzureML/MLflow Python dependencies.
 RUN pip install --no-cache-dir --progress-bar off --upgrade \
     'distributed>=2026.1.0' \
     'bokeh>=3.8.2' \
     'cryptography>=48.0.1' \
+    'msgpack>=1.2.1' \
     'onnx>=1.21.0' \
     'pillow>=12.2.0' \
+    'pydantic-settings>=2.14.2' \
     'python-dotenv>=1.2.2' \
     'pyarrow>=23.0.1'  # pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg / CVE-2026-25087
 RUN pip install --no-deps --force-reinstall 'skl2onnx==1.19.1'
