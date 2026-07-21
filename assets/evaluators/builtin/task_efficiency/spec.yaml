@@ -1,0 +1,39 @@
+type: "evaluator"
+name: "builtin.task_efficiency"
+version: 1
+displayName: "Task-Efficiency-Evaluator-(Preview)"
+description: "Evaluates whether an AI agent (especially a coding agent) solved the user's task efficiently by analyzing its multi-turn trajectory of tool calls and tool results. Penalizes redundant work such as repeated reads of the same file, identical tool calls with identical arguments, retrying a failed command unchanged, oscillation between targets, and dead-end exploration after the answer was already in context. This evaluator is useful for assessing agent quality in tool-using and code-generating scenarios where minimizing unnecessary steps matters."
+evaluatorType: "builtin"
+evaluatorSubType: "code"
+categories: ["agents", "business"]
+tags:
+  is_continuous_scenario: "true"
+  provider: "Microsoft"
+supportedEvaluationLevels: ["conversation"]
+initParameterSchema:
+  type: "object"
+  properties:
+    deployment_name:
+      type: "string"
+  required: ["deployment_name"]
+dataMappingSchema:
+  type: "object"
+  properties:
+    messages:
+      type: "array"
+      items:
+        type: "object"
+    tool_definitions:
+      anyOf:
+        - type: "object"
+        - type: "array"
+          items:
+            type: "object"
+  required: ["messages"]
+outputSchema:
+  task_efficiency:
+    type: "integer"
+    desirable_direction: "increase"
+    min_value: 1
+    max_value: 5
+path: ./evaluator
