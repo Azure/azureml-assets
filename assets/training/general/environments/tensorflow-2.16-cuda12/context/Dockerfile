@@ -29,9 +29,9 @@ ENV HOROVOD_GPU_ALLREDUCE=NCCL
 # apt-get upgrade -y clears the base image's overdue Ubuntu OS-package CVEs (kerberos,
 # glibc, libtasn1, sqlite, perl, binutils, gnupg, dpkg, libcap2, pam, etc.). Run before the
 # UCX/Open-MPI/Horovod source builds so they compile against the patched toolchain.
-RUN apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y --no-install-recommends \
+RUN apt-get -o Acquire::Retries=5 update && \
+    apt-get -o Acquire::Retries=5 upgrade -y && \
+    apt-get -o Acquire::Retries=5 install -y --no-install-recommends \
     curl \
     git \
     wget \
