@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202607.1
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl-dnn-text-gpu
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
@@ -62,11 +62,11 @@ SHELL ["conda", "run", "-p", "$AZUREML_CONDA_ENVIRONMENT_PATH", "/bin/bash", "-c
 # and earlier versions of tokenizers cause log spam with transformers==4.16.0.
 RUN pip install --no-cache-dir \
                 # begin pypi dependencies
-                azureml-core=={{latest-pypi-version}} \
-                azureml-mlflow=={{latest-pypi-version}} \
-                azureml-automl-core=={{latest-pypi-version}} \
-                azureml-automl-runtime=={{latest-pypi-version}} \
-                azureml-defaults=={{latest-pypi-version}} \
+                azureml-core==1.61.0.post4 \
+                azureml-mlflow==1.62.0.post5 \
+                azureml-automl-core==1.62.0.post3 \
+                azureml-automl-runtime==1.62.0.post1 \
+                azureml-defaults==1.62.0 \
                 'azure-identity>=1.25.1' \
                 'sentencepiece==0.2.1' \
                 'filelock>=3.20.3'
@@ -74,9 +74,9 @@ RUN pip install --no-cache-dir \
 
 # Install packages with torch packages separately to reduce layer size
 RUN pip install --no-cache-dir \
-                azureml-train-automl-client=={{latest-pypi-version}} \
-                azureml-train-automl-runtime=={{latest-pypi-version}} \
-                azureml-automl-dnn-nlp=={{latest-pypi-version}}
+                azureml-train-automl-client==1.62.0 \
+                azureml-train-automl-runtime==1.62.0 \
+                azureml-automl-dnn-nlp==1.62.0
 
 # Separate updates for fixing vulnerabilities.
 # Doing it  separately from pip install above to avoid conflict with other packages

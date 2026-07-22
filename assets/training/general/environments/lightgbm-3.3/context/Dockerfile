@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260715.v1
 
 WORKDIR /
 
@@ -32,10 +32,10 @@ RUN conda create -p $CONDA_PREFIX -q -y python=3.10 pip=26.1.2 'pandas~=1.5.3' '
 
 # Step 2: Install pip packages separately (pip resolver uses less memory than conda's SAT solver)
 RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
-    azureml-core=={{latest-pypi-version}} \
-    azureml-defaults=={{latest-pypi-version}} \
-    azureml-mlflow=={{latest-pypi-version}} \
-    azureml-telemetry=={{latest-pypi-version}} \
+    azureml-core==1.61.0.post4 \
+    azureml-defaults==1.62.0 \
+    azureml-mlflow==1.62.0.post5 \
+    azureml-telemetry==1.62.0 \
     'scikit-learn~=1.5.1' \
     'xgboost~=1.7.6' \
     'lightgbm>=4.6.0' \

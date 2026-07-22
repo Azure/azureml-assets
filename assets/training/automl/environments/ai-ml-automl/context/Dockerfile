@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260715.v1
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
@@ -89,19 +89,19 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --pr
 
 # Install pip dependencies
 RUN pip install --progress-bar off \
-                azureml-core=={{latest-pypi-version}} \
-                azureml-mlflow=={{latest-pypi-version}} \
-                azureml-pipeline-core=={{latest-pypi-version}} \
-                azureml-telemetry=={{latest-pypi-version}} \
-                azureml-interpret=={{latest-pypi-version}} \
-                azureml-responsibleai=={{latest-pypi-version}} \
-                azureml-automl-core=={{latest-pypi-version}} \
-                azureml-automl-runtime=={{latest-pypi-version}} \
-                azureml-train-automl-client=={{latest-pypi-version}} \
-                azureml-train-automl-runtime=={{latest-pypi-version}} \
-                azureml-train-automl=={{latest-pypi-version}} \
-                azureml-dataset-runtime=={{latest-pypi-version}} \
-                azureml-defaults=={{latest-pypi-version}} \
+                azureml-core==1.61.0.post4 \
+                azureml-mlflow==1.62.0.post5 \
+                azureml-pipeline-core==1.62.0 \
+                azureml-telemetry==1.62.0 \
+                azureml-interpret==1.62.0 \
+                azureml-responsibleai==1.62.0 \
+                azureml-automl-core==1.62.0.post3 \
+                azureml-automl-runtime==1.62.0.post1 \
+                azureml-train-automl-client==1.62.0 \
+                azureml-train-automl-runtime==1.62.0 \
+                azureml-train-automl==1.62.0 \
+                azureml-dataset-runtime==1.62.0 \
+                azureml-defaults==1.62.0 \
                 'mlflow-skinny==2.16.0' \
                 'xgboost==1.5.2' \
                 'cmdstanpy==1.0.4' \
