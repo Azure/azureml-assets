@@ -113,11 +113,13 @@ RUN pip install --progress-bar off \
 # Install pip ad-hoc dependencies for security updates
 # distributed>=2026.1.0 (CVE-2026-23528): XSS leading to RCE via Dask dashboard
 #   Chain: azureml-train-automl-runtime -> dask[complete] -> distributed
-#   AzureML AutoML runtime still pins dask[complete]<=2023.2.0; override required.
+#   Parent (azureml-train-automl-runtime==1.62.0, latest) still pins dask[complete]<=2023.2.0;
+#   parent fix not available, override required.
 #
 # bokeh>=3.8.2 (GHSA-793v-589g-574v): conda env installs 2.4.3, pip can't auto-upgrade
 #   Chain: azureml-train-automl-runtime -> bokeh
-#   AzureML AutoML runtime still pins bokeh<3.0.0; override required.
+#   Parent (azureml-train-automl-runtime==1.62.0, latest) still pins bokeh<3.0.0;
+#   parent fix not available, override required.
 #
 # python-dotenv>=1.2.2 (GHSA-mf9w-mj56-hr94): set_key()/unset_key() follow symlinks
 #   on cross-device .env writes, allowing arbitrary file overwrite.
