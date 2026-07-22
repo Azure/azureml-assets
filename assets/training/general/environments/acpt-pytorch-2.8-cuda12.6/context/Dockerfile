@@ -1,5 +1,7 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
+ENV PIP_PROGRESS_BAR=off
+
 # Install pip dependencies
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
@@ -44,6 +46,9 @@ RUN apt-get update && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Fix ptca conda env vulnerabilities (python 3.10, active).
+# torch==2.10.0+cu126: inherited from the ACPT torch280 base image; fixes
+# GHSA-vgrw-7cvw-pwgx and GHSA-qfhq-4f3w-5fph. torchvision and torchaudio
+# are upgraded with torch for CUDA compatibility.
 # pip>=26.1.1: GHSA-jp4c-xjxw-mgf9. pip is a root tool with no parent package,
 # and VCM reads the ptca conda-meta record, so conda must update it.
 # setuptools>=82.0.1: GHSA-58pv-8j8x-9vj2, GHSA-8rrh-rw8j-w5fx.
@@ -56,12 +61,17 @@ RUN apt-get update && \
 #   azureml-dataset-runtime 1.62.0 caps pyarrow<21, so this post-install
 #   security override fixes GHSA-rgxp-2hwp-jwgg.
 RUN conda install -n ptca -c conda-forge -y 'pip>=26.1.1' 'setuptools>=82.0.1' && \
-    conda run -n ptca python -m pip install --upgrade \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir \
         'urllib3>=2.7.0' 'idna>=3.15' 'aiohttp>=3.14.0' \
-        'cryptography>=48.0.1' 'pyarrow>=23.0.1'
+        'cryptography>=48.0.1' 'pyarrow>=23.0.1' && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.10.0+cu126' \
+        'torchvision==0.25.0+cu126' \
+        'torchaudio==2.10.0+cu126'
 
 # Fix base conda env vulnerabilities (python 3.13). Parent packages still expose
-# loose floors as of 2026-05-25, so these direct floors are required:
+# loose vulnerable floors, so these direct floors are required:
 # setuptools>=82.0.1: conda 26.3.2 requires setuptools>=60.0.0 only.
 # python-dotenv>=1.2.2: pydantic-settings 2.14.1 requires >=0.21.0.
 # urllib3>=2.7.0: requests 2.34.2 requires <3,>=1.26.
