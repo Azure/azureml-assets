@@ -11,11 +11,10 @@ ENV PYTHONIOENCODING=utf-8
 ENV PIP_NO_COLOR=1
 ENV PIP_PROGRESS_BAR=off
 
-# Upgrade vulnerable Ubuntu 22.04 packages when this image variant includes them;
-# clean Ubuntu 24.04 base layers skip packages that are not present.
+# Upgrade vulnerable Ubuntu packages when this image variant includes them.
 RUN set -eux; \
     apt-get update; \
-    os_security_packages="curl gzip libasound2 libasound2-data libcurl3-gnutls libcurl4 libnghttp2-14 libpython3.10-minimal libpython3.10-stdlib libsqlite3-0 openssh-client python3.10 python3.10-minimal tar wget"; \
+    os_security_packages="curl gzip libasound2 libasound2-data libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libnghttp2-14 libpython3.10-minimal libpython3.10-stdlib libpython3.12-minimal libpython3.12-stdlib libsqlite3-0 libxml2 nginx nginx-common nginx-light openssh-client python3.10 python3.10-minimal python3.12 python3.12-minimal tar wget"; \
     installed_os_packages=""; \
     for package in $os_security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
@@ -114,13 +113,11 @@ RUN pip install --progress-bar off \
 # Install pip ad-hoc dependencies for security updates
 # distributed>=2026.1.0 (CVE-2026-23528): XSS leading to RCE via Dask dashboard
 #   Chain: azureml-train-automl-runtime -> dask[complete] -> distributed
-#   Parent (azureml-train-automl-runtime==1.62.0, latest) still pins dask[complete]<=2023.2.0;
-#   parent fix not available, override required.
+#   AzureML AutoML runtime still pins dask[complete]<=2023.2.0; override required.
 #
 # bokeh>=3.8.2 (GHSA-793v-589g-574v): conda env installs 2.4.3, pip can't auto-upgrade
 #   Chain: azureml-train-automl-runtime -> bokeh
-#   Parent (azureml-train-automl-runtime==1.62.0, latest) still pins bokeh<3.0.0;
-#   parent fix not available, override required.
+#   AzureML AutoML runtime still pins bokeh<3.0.0; override required.
 #
 # python-dotenv>=1.2.2 (GHSA-mf9w-mj56-hr94): set_key()/unset_key() follow symlinks
 #   on cross-device .env writes, allowing arbitrary file overwrite.
