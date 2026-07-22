@@ -170,15 +170,33 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /tmp/os-security-upgrade.log /var/lib/apt/lists/*
 
-# USN-8354-1/USN-8398-1/USN-8398-3: nginx packages >= 1.18.0-6ubuntu14.15. nginx-light is installed in the
+# USN-8458-1: nginx packages >= 1.18.0-6ubuntu14.16. nginx-light is installed in the
 # inferencing layer above (after the top apt-get upgrade), so the nginx packages are
 # re-upgraded here.
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        nginx-common=1.18.0-6ubuntu14.15 \
-        nginx-light=1.18.0-6ubuntu14.15 \
-        libnginx-mod-http-geoip2=1.18.0-6ubuntu14.15 \
-        libnginx-mod-http-echo=1.18.0-6ubuntu14.15 && \
+        nginx-common \
+        nginx-light \
+        libnginx-mod-http-geoip2 \
+        libnginx-mod-http-echo && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Upgrade current Ubuntu USN fixes for packages installed by the CUDA and inferencing layers.
+RUN apt-get update && \
+    apt-get install --only-upgrade -y --no-install-recommends \
+        curl \
+        gzip \
+        libcurl3-gnutls \
+        libcurl4 \
+        libnghttp2-14 \
+        libpython3.10-minimal \
+        libpython3.10-stdlib \
+        libsqlite3-0 \
+        libxml2 \
+        python3.10 \
+        python3.10-minimal \
+        tar && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
