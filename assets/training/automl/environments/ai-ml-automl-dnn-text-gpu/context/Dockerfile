@@ -107,8 +107,8 @@ RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.1'
 # torch is pinned by the ACPT base image in the ptca env and by
 # azureml-automl-dnn-nlp in this AzureML env; upgrade both for GHSA-vgrw-7cvw-pwgx
 # and GHSA-qfhq-4f3w-5fph while keeping CUDA 12.6 wheels.
-RUN pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 --extra-index-url https://pypi.org/simple 'torch==2.10.0+cu126'
-RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 --extra-index-url https://pypi.org/simple 'torch==2.10.0+cu126'
+RUN pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 'torch==2.10.0+cu126'
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 'torch==2.10.0+cu126'
 
 # Apply the same setuptools vendored-dependency fix in the AzureML conda env.
 RUN pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
