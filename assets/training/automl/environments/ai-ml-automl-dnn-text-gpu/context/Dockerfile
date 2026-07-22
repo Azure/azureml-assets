@@ -112,7 +112,8 @@ RUN pip install --no-cache-dir --upgrade 'pip>=26.1'
 # cryptography<47.0.0 but does not force the fixed floor; use >=46.0.5.
 # Override onnx to fix GHSA-cmw6-hcpp-c6jp, GHSA-538c-55jv-c5g9, GHSA-q56x-g2fj-4rj6, GHSA-p433-9wv8-28xj, GHSA-3r9x-f23j-gc73, GHSA-hqmj-h5c6-369m
 # Root cause: azureml-automl-runtime==1.62.0 (latest) pins onnx<=1.17.0; cannot upgrade parent
-RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'bokeh>=3.8.2' 'onnx>=1.21.0'
+# Override msgpack to fix CVE-2026-57585; distributed permits vulnerable msgpack versions
+RUN pip install --upgrade 'distributed>=2026.1.0' 'msgpack>=1.2.1' 'cryptography>=46.0.5' 'bokeh>=3.8.2' 'onnx>=1.21.0'
 
 # Fix vulnerable vendored dependencies in base and ptca setuptools.
 # setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced.
