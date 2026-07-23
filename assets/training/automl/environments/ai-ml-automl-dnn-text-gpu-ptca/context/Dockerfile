@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202607.1
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 USER root:root
 
@@ -8,8 +8,8 @@ RUN apt-get update && \
     apt-get autoremove -y
 
 RUN pip install --no-cache-dir --use-deprecated=legacy-resolver \
-    'azureml-automl-dnn-nlp==1.62.0' \
-    'azureml-defaults==1.62.0'
+    'azureml-automl-dnn-nlp=={{latest-pypi-version}}' \
+    'azureml-defaults=={{latest-pypi-version}}'
 
 # onnx and onnxruntime-training installation
 RUN pip uninstall -y onnxruntime

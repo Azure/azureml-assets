@@ -1,9 +1,9 @@
-azureml-core==1.61.0.post4
-azureml-dataset-runtime==1.62.0
-azureml-defaults==1.62.0
-azure-ml-component==0.9.18.post2
-azureml-mlflow==1.62.0.post5
-azureml-contrib-services==1.62.0
+azureml-core=={{latest-pypi-version}}
+azureml-dataset-runtime=={{latest-pypi-version}}
+azureml-defaults=={{latest-pypi-version}}
+azure-ml-component=={{latest-pypi-version}}
+azureml-mlflow=={{latest-pypi-version}}
+azureml-contrib-services=={{latest-pypi-version}}
 azureml-inference-server-http
 # azureml-inference-server-http 1.5.1 pins opentelemetry-api/sdk==1.33.0
 # while newer exporter betas require newer OpenTelemetry and/or psutil>=5.9.
