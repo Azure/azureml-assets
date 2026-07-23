@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202607.1
 
 ENV PIP_PROGRESS_BAR=off
 
@@ -8,7 +8,12 @@ RUN pip install -r requirements.txt --no-cache-dir
 
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
-RUN apt-get update && \
+RUN printf 'Acquire::Retries "5";\n' > /etc/apt/apt.conf.d/80-retries && \
+    sed -i \
+        -e 's|http://archive.ubuntu.com|https://archive.ubuntu.com|g' \
+        -e 's|http://security.ubuntu.com|https://security.ubuntu.com|g' \
+        /etc/apt/sources.list && \
+    apt-get update && \
     apt-get install -y --no-install-recommends \
         libcurl4 \
         liblttng-ust1 \
