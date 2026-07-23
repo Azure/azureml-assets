@@ -9,45 +9,6 @@ COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:2025
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 ENV ENABLE_METADATA=true
 
-# Upgrade vulnerable OS packages installed by parent base image layers:
-# OpenSSL (USN-8414-1), systemd (USN-8402-1), nginx (USN-8354-1/USN-8398-1),
-# XZ Utils (USN-8362-1), and libgcrypt (USN-8319-1).
-RUN set -eux; \
-    apt-get update; \
-    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade --fix-missing; \
-    for package in \
-        libgcrypt20 \
-        liblzma5 \
-        libssl3t64 \
-        libsystemd-shared \
-        libsystemd0 \
-        libudev1 \
-        nginx \
-        nginx-common \
-        nginx-light \
-        openssl \
-        systemd \
-        systemd-dev \
-        systemd-resolved \
-        systemd-timesyncd \
-        xz-utils; \
-    do \
-        if dpkg-query -W -f='${db:Status-Abbrev}' "$package" 2>/dev/null | grep -q '^ii '; then \
-            DEBIAN_FRONTEND=noninteractive apt-get install --only-upgrade -y --no-install-recommends "$package"; \
-        fi; \
-    done; \
-    apt-get clean; \
-    rm -rf /var/lib/apt/lists/*
-
-# idna>=3.16 is pinned as a transitive dep of the base miniconda prefix;
-# brought in by mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04, fixes GHSA-65pc-fj4g-8rjx.
-# PyJWT>=2.13.0 is pinned as a transitive dep of the base miniconda prefix;
-# brought in by mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04, fixes GHSA-993g-76c3-p5m4 and GHSA-jq35-7prp-9v3f.
-RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade \
-        'idna>=3.16' \
-        'PyJWT>=2.13.0' && \
-    /opt/miniconda/bin/python -c "import idna, jwt; idna_version=tuple(map(int, idna.__version__.split('.'))); jwt_version=tuple(map(int, jwt.__version__.split('.'))); assert idna_version >= (3, 16), idna.__version__; assert jwt_version >= (2, 13, 0), jwt.__version__"
-
 # Create conda environment (minimal; packages installed via pip to avoid solver OOM)
 RUN conda create -y -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
@@ -72,7 +33,7 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
     'setuptools-git' \
     'setuptools==82.0.1' \
     'wheel>=0.46.2' \
-    'torch==2.8.0' \
+    'torch==2.10.0' \
     'scipy==1.10.1' \
     'psutil>5.0.0,<6.0.0' \
     'pip>=26.1'
@@ -152,12 +113,17 @@ RUN pip install \
 # pyarrow>=23.0.1          GHSA-rgxp-2hwp-jwgg / CVE-2026-25087 use-after-free
 #                          in Apache Arrow C++. Chain (L1):
 #                          azureml-dataset-runtime -> pyarrow.
+# torch==2.10.0            GHSA-qfhq-4f3w-5fph, GHSA-vgrw-7cvw-pwgx.
+#                          azureml-train-automl-runtime resolves torch 2.8.0,
+#                          so the DNN environment direct pin must be re-applied
+#                          after AzureML package installation.
 RUN pip install --no-cache-dir --upgrade 'distributed>=2026.1.0' 'protobuf>=5.29.6' 'cryptography>=46.0.5' \
     'bokeh>=3.8.2' \
     'onnx>=1.21.0' \
     'urllib3>=2.7.0' \
     'ujson>=5.12.1' \
-    'pyarrow>=23.0.1'
+    'pyarrow>=23.0.1' \
+    'torch==2.10.0'
 RUN rm -rf /opt/miniconda/pkgs/
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH

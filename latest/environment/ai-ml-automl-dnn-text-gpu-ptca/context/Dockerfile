@@ -7,7 +7,7 @@ RUN apt-get update && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     apt-get autoremove -y
 
-RUN pip install --no-cache-dir \
+RUN pip install --no-cache-dir --use-deprecated=legacy-resolver \
     'azureml-automl-dnn-nlp==1.62.0' \
     'azureml-defaults==1.62.0'
 
@@ -32,11 +32,15 @@ RUN pip install \
 RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.5.4'
 
 # Vulnerability patches for ptca environment (python 3.10 at /opt/conda/envs/ptca)
-# pip 26.0.1 -> >=26.1.1 (GHSA-jp4c-xjxw-mgf9, CVE-2026-6357): no parent
+# pip -> >=26.1.2 (GHSA-jp4c-xjxw-mgf9, CVE-2026-6357,
+#   GHSA-wf93-45jw-7689 / CVE-2026-8643): no parent
 #   package controls pip here, so direct upgrade is required. The stale
-#   conda-meta JSON for pip-26.0.1 is removed so scanners do not re-flag it.
+#   conda-meta JSON files for older pip builds are removed so scanners do not
+#   re-flag them.
 # setuptools 81.0.0 -> >=82.0.1 (GHSA-58pv-8j8x-9vj2 in vendored jaraco.context):
 #   setuptools is a build dependency with no parent that pins it.
+# torch 2.8.0+cu126 -> >=2.10.0 (GHSA-vgrw-7cvw-pwgx, GHSA-qfhq-4f3w-5fph):
+#   inherited from the ACPT base image ptca conda environment.
 # Override onnx to fix GHSA-cmw6-hcpp-c6jp, GHSA-538c-55jv-c5g9, GHSA-q56x-g2fj-4rj6,
 #   GHSA-p433-9wv8-28xj, GHSA-3r9x-f23j-gc73, GHSA-hqmj-h5c6-369m.
 #   Root cause: azureml-automl-runtime==1.62.0 is the latest release as of
@@ -53,16 +57,18 @@ RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.5
 #   transitive dep of azureml-automl-dnn-nlp via AzureML dataset/runtime packages.
 # cryptography 46.0.7 -> >=48.0.1 (GHSA-537c-gmf6-5ccf): pinned transitive dep
 #   brought in by the ACPT base image ptca conda environment.
-RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
-    'pip>=26.1.1' \
+RUN conda install -p /opt/conda/envs/ptca -c conda-forge -y 'pip>=26.1.2' && \
+    /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
     'setuptools>=82.0.1' \
+    'torch>=2.10.0' \
     'onnx>=1.21.0' \
     'bokeh>=3.8.2' \
     'distributed>=2026.1.0' \
     'aiohttp>=3.14.0' \
     'pyarrow>=23.0.1' \
     'cryptography>=48.0.1' && \
-    rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0.1-*.json
+    rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0.1-*.json \
+          /opt/conda/envs/ptca/conda-meta/pip-26.1.1-*.json
 
 # Vulnerability patches for conda base env (python 3.13 at /opt/conda)
 # pip 26.0.1 -> >=26.1.1 (GHSA-jp4c-xjxw-mgf9, CVE-2026-6357): no parent
@@ -92,6 +98,10 @@ RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
 #   brought in by the ACPT base image conda tooling.
 # cryptography 46.0.7 -> >=48.0.1 (GHSA-537c-gmf6-5ccf): pinned transitive dep
 #   brought in by the ACPT base image conda environment.
+# pydantic-settings 2.12.0 -> >=2.14.2 (GHSA-4xgf-cpjx-pc3j): transitive dep
+#   brought in by the ACPT base image conda environment.
+# msgpack 1.1.1 -> >=1.2.1 (GHSA-6v7p-g79w-8964): transitive dep brought in by
+#   mlflow-skinny/AzureML dependencies in the base Python environment.
 # Stale conda pkgs-cache entries for click, idna, pip, and python-dotenv are removed
 #   so scanners do not re-flag the old versions from the package cache directories.
 RUN /opt/conda/bin/pip install --no-cache-dir --upgrade \
@@ -104,7 +114,9 @@ RUN /opt/conda/bin/pip install --no-cache-dir --upgrade \
     'aiohttp>=3.14.0' \
     'PyJWT>=2.13.0' \
     'py-rattler>=0.24.0' \
-    'cryptography>=48.0.1' && \
+    'cryptography>=48.0.1' \
+    'pydantic-settings>=2.14.2' \
+    'msgpack>=1.2.1' && \
     rm -rf /opt/conda/pkgs/click-8.2.1-* \
            /opt/conda/pkgs/idna-3.11-* \
            /opt/conda/pkgs/pip-26.0.1-* \

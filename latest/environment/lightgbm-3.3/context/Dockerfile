@@ -25,10 +25,9 @@ RUN apt-get update && \
 # conda and pip dependencies together. Splitting them avoids the memory spike.
 
 # Step 1: Create conda env with only conda-channel packages (small, fast solve)
-# pip=26.1.1: fixes CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9). Pip <26.1 ran self-update
-# check after wheel install which could import newly-installed packages.
+# pip=26.1.2: fixes GHSA-wf93-45jw-7689.
 COPY conda_dependencies.yaml .
-RUN conda create -p $CONDA_PREFIX -q -y python=3.10 pip=26.1.1 'pandas~=1.5.3' 'scipy~=1.10.0' 'numpy~=1.22.0' -c conda-forge -c anaconda && \
+RUN conda create -p $CONDA_PREFIX -q -y python=3.10 pip=26.1.2 'pandas~=1.5.3' 'scipy~=1.10.0' 'numpy~=1.22.0' -c conda-forge -c anaconda && \
     conda clean -a -y
 
 # Step 2: Install pip packages separately (pip resolver uses less memory than conda's SAT solver)
@@ -56,12 +55,6 @@ RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
 
 # Security vulnerability fixes
 # setuptools, urllib3, wheel already fixed in openmpi base (latest tag).
-# pip: /opt/miniconda pip override removed: base openmpi5.0-ubuntu24.04:20260507.v1
-#   now ships pip=26.1.1 in /opt/miniconda (verified 2026-05-12 via SBOM scan), so the
-#   explicit `/opt/miniconda/bin/pip install --upgrade pip==26.1.1` step that fixed
-#   CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9) on older base tags is now redundant. The
-#   azureml-envs/lightgbm-3.3 conda env still pins pip=26.1.1 via the conda create
-#   above to lock in the fix.
 # cryptography: pinned transitive dep of azureml-core/azureml-mlflow; fixes GHSA-537c-gmf6-5ccf.
 # aiohttp / protobuf / distributed / pyarrow: kept overrides to ensure latest patched versions;
 #   parent constraints (azureml-mlflow caps mlflow-skinny<=3.9.0 -> protobuf<7,
