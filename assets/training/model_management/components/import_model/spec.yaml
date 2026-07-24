@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: 0.0.42
+version: 0.0.43
 
 # Pipeline inputs
 inputs:
@@ -300,10 +300,12 @@ jobs:
         type: mlflow_model
 
   mlflow_model_local_validation:
-    component: azureml:mlflow_model_local_validation:0.0.17
+    component: azureml:mlflow_model_local_validation:0.0.19
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
+    identity:
+      type: user_identity
     inputs:
       model_path: ${{parent.jobs.convert_model_to_mlflow.outputs.mlflow_model_folder}}
       test_data_path: ${{parent.inputs.local_validation_test_data}}
