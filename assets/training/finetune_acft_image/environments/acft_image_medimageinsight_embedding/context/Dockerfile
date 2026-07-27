@@ -2,22 +2,62 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 
 USER root
 
-RUN apt-get -y update && apt-get -y install --no-install-recommends unzip && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get -y update && \
+    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
+    apt-get install -y --only-upgrade \
+        curl \
+        dotnet-host-8.0 \
+        dotnet-hostfxr-8.0 \
+        dotnet-runtime-8.0 \
+        gzip \
+        libasound2 \
+        libasound2-data \
+        libcurl3-gnutls \
+        libcurl4 \
+        libgssapi-krb5-2 \
+        libk5crypto3 \
+        libkrb5-3 \
+        libkrb5support0 \
+        libnghttp2-14 \
+        libpython3.10-minimal \
+        libpython3.10-stdlib \
+        libsqlite3-0 \
+        openssh-client \
+        python3.10 \
+        python3.10-minimal \
+        tar \
+        wget && \
+    apt-get install -y --no-install-recommends unzip && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# pip is a preinstalled build tool in both conda envs; no Python parent package
+# can raise it, so use the patched conda-forge build and remove stale metadata.
+RUN conda install -y -n ptca -c conda-forge --freeze-installed 'pip=26.1.2' && \
+    conda install -y -n base -c conda-forge --freeze-installed 'pip=26.1.2' && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/pip-26.1.1.dist-info \
+           /opt/conda/lib/python*/site-packages/pip-26.1.1.dist-info && \
+    rm -f /opt/conda/envs/ptca/conda-meta/pip-26.1.1*.json \
+          /opt/conda/conda-meta/pip-26.1.1*.json && \
+    conda clean -ay
 
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
 # ptca env torch is inherited from the ACPT torch280 base image; pin the patched CUDA build for
-# GHSA-qfhq-4f3w-5fph and GHSA-vgrw-7cvw-pwgx. Keep torchvision/torchaudio aligned with torch.
+# GHSA-qfhq-4f3w-5fph, GHSA-vgrw-7cvw-pwgx, and GHSA-rrmf-rvhw-rf47. Keep torchvision aligned
+# with torch; remove torchaudio because no compatible 2.13 CUDA wheel is available.
 RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade \
         --progress-bar off \
         --index-url https://download.pytorch.org/whl/cu126 \
-        'torch==2.10.0+cu126' \
-        'torchvision==0.25.0+cu126' \
-        'torchaudio==2.10.0+cu126' && \
+        'torch==2.13.0+cu126' \
+        'torchvision==0.28.0+cu126' && \
+    /opt/conda/envs/ptca/bin/python -m pip uninstall -y torchaudio && \
     rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/torch-2.8*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.10/site-packages/torch-2.10*.dist-info \
            /opt/conda/envs/ptca/lib/python3.10/site-packages/torchvision-0.23*.dist-info \
-           /opt/conda/envs/ptca/lib/python3.10/site-packages/torchaudio-2.8*.dist-info
+           /opt/conda/envs/ptca/lib/python3.10/site-packages/torchvision-0.25*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.10/site-packages/torchaudio \
+           /opt/conda/envs/ptca/lib/python3.10/site-packages/torchaudio-*.dist-info
 
 # mlflow 3.5.0 has CVEs (CVE-2025-14287, CVE-2026-2033, CVE-2026-2635, GHSA-fh64-r2vc-xvhr);
 # upgrade after requirements install. azureml-mlflow 1.62.0.post2 pins mlflow-skinny<=3.9.0,
@@ -31,15 +71,17 @@ RUN pip uninstall -y fastmcp mcp
 # Mako: transitive dep (mlflow -> alembic 1.18.4 -> Mako); alembic 1.18.4 declares "Mako" with no
 #   version pin at all, so pip resolves to 1.3.10 which has GHSA-v92g-xgxw-vvmm. No parent
 #   release floors Mako >= 1.3.11, so explicit override is the only fix.
-# GitPython: transitive dep (mlflow -> mlflow-skinny 3.11.1 requires gitpython<4,>=3.1.9); the
-#   loose floor lets pip resolve 3.1.46 which has GHSA-x2qx-6953-8485, GHSA-rpm5-65cw-6hj4.
-#   mlflow-skinny has no release that pins gitpython>=3.1.47, so explicit override is required.
+# GitPython: transitive dep (mlflow -> mlflow-skinny requires gitpython<4,>=3.1.9); the
+#   loose floor can resolve vulnerable builds; override to >=3.1.51 for GHSA-2f96-g7mh-g2hx,
+#   GHSA-956x-8gvw-wg5v, and GHSA-v396-v7q4-x2qj.
 # aiohttp: transitive dep; resolves to 3.13.5 which has GHSA-jg22-mg44-37j8, GHSA-hg6j-4rv6-33pg.
 #   No parent release floors aiohttp>=3.14.0, so explicit override is required.
 # pyarrow: resolves to 20.0.0 which has GHSA-rgxp-2hwp-jwgg; no parent release floors
 #   pyarrow>=23.0.1, so explicit override is required.
 # cryptography: transitive dep of ACPT base image and AzureML requirements; fixes GHSA-537c-gmf6-5ccf.
-RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.47' 'aiohttp>=3.14.0' 'pyarrow>=23.0.1' 'cryptography>=48.0.1'
+# pillow: transitive/base-image dep in ptca; fixes GHSA-8v84-f9pq-wr9x and related Pillow advisories.
+# pyasn1: transitive dep of mlflow -> databricks-sdk -> google-auth; fixes GHSA-hm4w-wwcw-mr6r and GHSA-8ppf-4f7h-5ppj.
+RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.51' 'aiohttp>=3.14.0' 'pyarrow>=23.0.1' 'cryptography>=48.0.1' 'pillow>=12.3.0' 'pyasn1>=0.6.4'
 
 # Upgrade vulnerable packages in the base conda Python
 # urllib3: transitive dep via requests; loose floor (urllib3<3,>=1.21.1) resolves to vulnerable 2.6.3
