@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202607.1
 
 ENV PIP_PROGRESS_BAR=off
 
@@ -8,9 +8,9 @@ ENV PIP_PROGRESS_BAR=off
 # cryptography>=48.0.1: pinned transitive dep present in the base image; fixes GHSA-537c-gmf6-5ccf.
 # pydantic-settings>=2.14.2: pinned transitive dep present in the base image; fixes GHSA-4xgf-cpjx-pc3j.
 # msgpack>=1.2.1: pinned transitive dep present in the base image; fixes GHSA-6v7p-g79w-8964.
-# torch==2.10.0+cu126: inherited from the ACPT torch280 base image; fixes
-# GHSA-vgrw-7cvw-pwgx and GHSA-qfhq-4f3w-5fph. torchvision and torchaudio
-# are upgraded with torch for CUDA compatibility.
+# torch==2.13.0+cu126: overrides the ACPT torch280 base image; fixes GHSA-rrmf-rvhw-rf47.
+# torchvision is upgraded with torch for CUDA compatibility; stale base torchaudio is removed
+# because no torch 2.13-compatible cp310+cu126 torchaudio wheel is currently available.
 RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' && \
     conda install -n base -c conda-forge -y 'pip>=26.1' && \
     conda run -n base python -m pip install --upgrade --no-cache-dir \
@@ -29,9 +29,9 @@ RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' && \
         'idna>=3.15' && \
     conda run -n ptca python -m pip install --upgrade --no-cache-dir \
         --index-url https://download.pytorch.org/whl/cu126 \
-        'torch==2.10.0+cu126' \
-        'torchvision==0.25.0+cu126' \
-        'torchaudio==2.10.0+cu126' && \
+        'torch==2.13.0+cu126' \
+        'torchvision==0.28.0+cu126' && \
+    conda run -n ptca python -m pip uninstall -y torchaudio && \
     conda clean -a -y && \
     rm -rf /opt/conda/pkgs
 
@@ -44,11 +44,20 @@ RUN pip install -r requirements.txt --no-cache-dir && \
         'pyarrow>=23.0.1' \
         'cryptography>=48.0.1'
 
-# Inference requirements
+# Inference requirements.
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
 RUN apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y --no-install-recommends \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade --no-install-recommends \
+        libgssapi-krb5-2 \
+        libk5crypto3 \
+        libkrb5-3 \
+        libkrb5support0 \
+        libsqlite3-0 \
+        tar \
+        wget && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        libnginx-mod-http-echo \
+        libnginx-mod-http-geoip2 \
         libunwind8 \
         libxml++2.6-2v5 \
         nginx-light \
@@ -67,4 +76,6 @@ ENV WORKER_TIMEOUT=400
 EXPOSE 5001 8883 8888
 
 # Deepspeed launcher requires passwordless ssh; server side not in base image
-RUN apt-get update && apt-get install -y openssh-server && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends openssh-server && \
+    rm -rf /var/lib/apt/lists/*
