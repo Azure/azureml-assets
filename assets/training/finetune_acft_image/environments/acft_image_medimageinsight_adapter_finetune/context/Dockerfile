@@ -7,10 +7,16 @@ RUN apt-get -y update && apt-get -y upgrade \
         dotnet-hostfxr-8.0 \
         dotnet-host-8.0 \
         dotnet-runtime-8.0 \
+        libgssapi-krb5-2 \
         libgcrypt20 \
+        libk5crypto3 \
+        libkrb5-3 \
+        libkrb5support0 \
         liblzma5 \
+        libsqlite3-0 \
+        tar \
+        wget \
         xz-utils \
- || true \
  && apt-get -y install --no-install-recommends unzip \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -19,13 +25,13 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
 # torch is a direct training dependency; install CUDA 12.6 PyTorch wheels to
-# override vulnerable torch 2.8.0+cu126 from the ACPT base image (GHSA-vgrw-7cvw-pwgx,
-# GHSA-qfhq-4f3w-5fph). torchvision and torchaudio are upgraded with torch to
-# keep the CUDA PyTorch stack compatible.
+# override vulnerable torch from the ACPT base image (GHSA-vgrw-7cvw-pwgx,
+# GHSA-qfhq-4f3w-5fph, GHSA-rrmf-rvhw-rf47). torchvision is upgraded with
+# torch; torchaudio is kept at the latest CUDA 12.6 wheel currently published.
 RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 \
-        'torch==2.10.0' \
-        'torchvision==0.25.0' \
-        'torchaudio==2.10.0'
+        'torch==2.13.0' \
+        'torchvision==0.28.0' \
+        'torchaudio==2.11.0'
 
 # Base-env transitive dependency overrides. The base image is patched for some
 # of these, but this image's dependency layer can resolve AzureML/MLflow

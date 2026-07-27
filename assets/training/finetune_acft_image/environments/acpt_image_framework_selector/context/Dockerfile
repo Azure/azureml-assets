@@ -13,9 +13,15 @@ RUN apt-get -y update && apt-get -y upgrade && \
         libcurl3-gnutls \
         libcurl4 \
         libgcrypt20 \
+        libgssapi-krb5-2 \
+        libk5crypto3 \
+        libkrb5-3 \
+        libkrb5support0 \
         liblzma5 \
         libnghttp2-14 \
         libsqlite3-0 \
+        tar \
+        wget \
         xz-utils && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -75,13 +81,13 @@ RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
 # - cryptography: pinned transitive dep brought in by the ACPT base image;
 #   fixes GHSA-537c-gmf6-5ccf.
 # - torch: inherited from the ACPT torch280 base image; fixes
-#   GHSA-vgrw-7cvw-pwgx and GHSA-qfhq-4f3w-5fph. torchvision and torchaudio are
-#   upgraded with torch to keep the CUDA PyTorch stack compatible.
+#   GHSA-rrmf-rvhw-rf47. torchvision is upgraded with torch to keep the CUDA
+#   PyTorch stack compatible.
 RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade \
         'urllib3>=2.7.0' 'aiohttp>=3.14.0' 'starlette>=1.0.1' 'click>=8.3.3' \
         'pyarrow>=23.0.1' 'cryptography>=48.0.1' && \
     conda run -n ptca python -m pip install --no-cache-dir --upgrade \
         --index-url https://download.pytorch.org/whl/cu126 \
-        'torch==2.10.0' 'torchvision==0.25.0' 'torchaudio==2.10.0'
+        'torch==2.13.0' 'torchvision==0.28.0'
 
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/

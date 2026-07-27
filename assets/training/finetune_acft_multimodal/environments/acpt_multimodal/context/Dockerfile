@@ -1,9 +1,20 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 USER root
-# Apply Ubuntu security updates and remove kernel development packages that are
-# not required at container runtime.
+# Apply Ubuntu security updates, including inherited base-image packages with
+# active USNs, and remove kernel development packages not required at runtime.
 RUN apt-get -y update && apt-get -y upgrade && \
+    apt-get -y install --only-upgrade \
+        dotnet-hostfxr-8.0=8.0.29-0ubuntu1~22.04.1 \
+        dotnet-runtime-8.0=8.0.29-0ubuntu1~22.04.1 \
+        dotnet-host-8.0=8.0.29-0ubuntu1~22.04.1 \
+        tar=1.34+dfsg-1ubuntu0.1.22.04.6 \
+        libsqlite3-0=3.37.2-2ubuntu0.7 \
+        wget=1.21.2-2ubuntu1.4 \
+        libkrb5support0=1.19.2-2ubuntu0.8 \
+        libgssapi-krb5-2=1.19.2-2ubuntu0.8 \
+        libk5crypto3=1.19.2-2ubuntu0.8 \
+        libkrb5-3=1.19.2-2ubuntu0.8 && \
     apt-get -y purge 'linux-headers-*' 'linux-libc-dev' && \
     apt-get -y autoremove && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -62,11 +73,11 @@ RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
 # - aiohttp>=3.14.0 patches GHSA-hg6j-4rv6-33pg and GHSA-jg22-mg44-37j8
 #   (request smuggling / header-injection vulnerabilities).
 # - PyJWT>=2.13.0 patches GHSA-993g-76c3-p5m4.
-# - torch==2.10.0+cu126 is inherited from the ACPT base image; fixes
-#   GHSA-qfhq-4f3w-5fph and GHSA-vgrw-7cvw-pwgx. torchvision and torchaudio are
-#   upgraded with torch to keep the CUDA PyTorch stack compatible.
+# - torch==2.13.0+cu126 overrides the ACPT base image's vulnerable PyTorch
+#   package; fixes GHSA-rrmf-rvhw-rf47. torchvision is upgraded with torch to
+#   keep the CUDA vision stack compatible.
 RUN conda run -n ptca pip install --no-cache-dir --upgrade \
     'idna>=3.15' 'aiohttp>=3.14.0' 'PyJWT>=2.13.0' && \
     conda run -n ptca pip install --no-cache-dir --upgrade \
     --index-url https://download.pytorch.org/whl/cu126 \
-    'torch==2.10.0+cu126' 'torchvision==0.25.0+cu126' 'torchaudio==2.10.0+cu126'
+    'torch==2.13.0+cu126' 'torchvision==0.28.0+cu126'

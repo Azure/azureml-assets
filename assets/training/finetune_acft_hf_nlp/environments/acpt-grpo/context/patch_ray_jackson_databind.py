@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Patch Ray's vendored Jackson Databind classes in its distribution jar."""
+"""Patch Ray's vendored Jackson classes in its distribution jar."""
 
 import hashlib
 import io
@@ -16,14 +16,17 @@ import ray
 
 
 RAY_DIST_NAMES = ("ray_dist.jar", "ray__dist.jar")
-ARTIFACT = "jackson-databind"
 GROUP_PATH = "com/fasterxml/jackson/core"
-MAVEN_METADATA_PREFIX = "META-INF/maven/com.fasterxml.jackson.core/jackson-databind/"
-JACKSON_DATABIND_PREFIXES = (
-    "com/fasterxml/jackson/databind/",
-    "META-INF/services/com.fasterxml.jackson.databind.",
-    MAVEN_METADATA_PREFIX,
-)
+ARTIFACT_PREFIXES = {
+    "jackson-core": (
+        "com/fasterxml/jackson/core/",
+        "META-INF/services/com.fasterxml.jackson.core.",
+    ),
+    "jackson-databind": (
+        "com/fasterxml/jackson/databind/",
+        "META-INF/services/com.fasterxml.jackson.databind.",
+    ),
+}
 
 
 def find_ray_dist() -> pathlib.Path:
@@ -39,16 +42,16 @@ def find_ray_dist() -> pathlib.Path:
     return matches[0]
 
 
-def download_maven_artifacts(version: str) -> tuple[bytes, bytes]:
-    """Download the Jackson Databind jar and pom artifacts."""
-    base_url = f"https://repo.maven.apache.org/maven2/{GROUP_PATH}/{ARTIFACT}/{version}"
+def download_maven_artifacts(artifact: str, version: str) -> tuple[bytes, bytes]:
+    """Download the Jackson jar and pom artifacts."""
+    base_url = f"https://repo.maven.apache.org/maven2/{GROUP_PATH}/{artifact}/{version}"
     jar = download_verified(
-        f"{base_url}/{ARTIFACT}-{version}.jar",
-        os.environ["JACKSON_DATABIND_JAR_SHA1"],
+        f"{base_url}/{artifact}-{version}.jar",
+        os.environ["JACKSON_JAR_SHA1"],
     )
     pom = download_verified(
-        f"{base_url}/{ARTIFACT}-{version}.pom",
-        os.environ["JACKSON_DATABIND_POM_SHA1"],
+        f"{base_url}/{artifact}-{version}.pom",
+        os.environ["JACKSON_POM_SHA1"],
     )
     return jar, pom
 
@@ -63,13 +66,19 @@ def download_verified(url: str, expected_sha1: str) -> bytes:
     return payload
 
 
-def is_jackson_databind_entry(filename: str) -> bool:
-    """Return whether a jar entry belongs to Jackson Databind."""
-    return filename.startswith(JACKSON_DATABIND_PREFIXES) or any(
+def maven_metadata_prefix(artifact: str) -> str:
+    """Return the Maven metadata prefix for a Jackson artifact."""
+    return f"META-INF/maven/com.fasterxml.jackson.core/{artifact}/"
+
+
+def is_jackson_entry(filename: str, artifact: str) -> bool:
+    """Return whether a jar entry belongs to the selected Jackson artifact."""
+    artifact_prefixes = ARTIFACT_PREFIXES[artifact] + (maven_metadata_prefix(artifact),)
+    return filename.startswith(artifact_prefixes) or any(
         fragment in filename
         for fragment in (
-            "/com/fasterxml/jackson/databind/",
-            "/META-INF/maven/com.fasterxml.jackson.core/jackson-databind/",
+            f"/{ARTIFACT_PREFIXES[artifact][0]}",
+            f"/{maven_metadata_prefix(artifact)}",
         )
     )
 
@@ -87,23 +96,24 @@ def copy_zip_info(source_info: zipfile.ZipInfo, filename: str) -> zipfile.ZipInf
 
 
 def build_replacement_entries(
+    artifact: str,
     jar_payload: bytes,
     pom_payload: bytes,
 ) -> dict[str, tuple[zipfile.ZipInfo, bytes]]:
-    """Build replacement Jackson Databind entries from downloaded artifacts."""
+    """Build replacement Jackson entries from downloaded artifacts."""
     replacements = {}
     with zipfile.ZipFile(io.BytesIO(jar_payload), "r") as jar:
         for source_info in jar.infolist():
             if source_info.filename.endswith("/"):
                 continue
-            if not is_jackson_databind_entry(source_info.filename):
+            if not is_jackson_entry(source_info.filename, artifact):
                 continue
             replacements[source_info.filename] = (
                 copy_zip_info(source_info, source_info.filename),
                 jar.read(source_info.filename),
             )
 
-    pom_name = f"{MAVEN_METADATA_PREFIX}pom.xml"
+    pom_name = f"{maven_metadata_prefix(artifact)}pom.xml"
     replacements[pom_name] = (
         replacements[pom_name][0] if pom_name in replacements else zipfile.ZipInfo(pom_name),
         pom_payload,
@@ -113,9 +123,10 @@ def build_replacement_entries(
 
 def patch_ray_dist(
     ray_dist: pathlib.Path,
+    artifact: str,
     replacements: dict[str, tuple[zipfile.ZipInfo, bytes]],
 ) -> None:
-    """Patch Ray's distribution jar with replacement Jackson Databind entries."""
+    """Patch Ray's distribution jar with replacement Jackson entries."""
     fd, patched_name = tempfile.mkstemp(suffix=".jar")
     os.close(fd)
     patched_path = pathlib.Path(patched_name)
@@ -132,7 +143,7 @@ def patch_ray_dist(
                     target_info, payload = replacements[source_info.filename]
                     target.writestr(target_info, payload)
                     written_replacements.add(source_info.filename)
-                elif is_jackson_databind_entry(source_info.filename):
+                elif is_jackson_entry(source_info.filename, artifact):
                     removed_old_entries.append(source_info.filename)
                 else:
                     target.writestr(source_info, source.read(source_info.filename))
@@ -143,21 +154,21 @@ def patch_ray_dist(
                     written_replacements.add(filename)
 
         if not written_replacements:
-            raise RuntimeError(f"No Jackson Databind replacement entries were written to {ray_dist}")
+            raise RuntimeError(f"No {artifact} replacement entries were written to {ray_dist}")
 
         shutil.move(str(patched_path), ray_dist)
     finally:
         patched_path.unlink(missing_ok=True)
 
     print(
-        f"Patched {ray_dist}; wrote {len(written_replacements)} Jackson Databind "
+        f"Patched {ray_dist}; wrote {len(written_replacements)} {artifact} "
         f"entries and removed {len(removed_old_entries)} old-only entries"
     )
 
 
-def validate_patch(ray_dist: pathlib.Path, version: str) -> None:
-    """Validate that the patched jar reports the expected Databind version."""
-    properties_name = f"{MAVEN_METADATA_PREFIX}pom.properties"
+def validate_patch(ray_dist: pathlib.Path, artifact: str, version: str) -> None:
+    """Validate that the patched jar reports the expected Jackson version."""
+    properties_name = f"{maven_metadata_prefix(artifact)}pom.properties"
     with zipfile.ZipFile(ray_dist, "r") as jar:
         properties = jar.read(properties_name).decode("utf-8")
     expected = f"version={version}"
@@ -166,14 +177,17 @@ def validate_patch(ray_dist: pathlib.Path, version: str) -> None:
 
 
 def main() -> None:
-    """Patch Ray's vendored Jackson Databind dependency."""
-    version = os.environ["JACKSON_DATABIND_VERSION"]
+    """Patch Ray's vendored Jackson dependency."""
+    artifact = os.environ["JACKSON_ARTIFACT"]
+    if artifact not in ARTIFACT_PREFIXES:
+        raise RuntimeError(f"Unsupported Jackson artifact: {artifact}")
+    version = os.environ["JACKSON_VERSION"]
     ray_dist = find_ray_dist()
-    jar_payload, pom_payload = download_maven_artifacts(version)
-    replacements = build_replacement_entries(jar_payload, pom_payload)
-    patch_ray_dist(ray_dist, replacements)
-    validate_patch(ray_dist, version)
-    print(f"Patched Ray dist jar with {ARTIFACT}-{version}.jar")
+    jar_payload, pom_payload = download_maven_artifacts(artifact, version)
+    replacements = build_replacement_entries(artifact, jar_payload, pom_payload)
+    patch_ray_dist(ray_dist, artifact, replacements)
+    validate_patch(ray_dist, artifact, version)
+    print(f"Patched Ray dist jar with {artifact}-{version}.jar")
 
 
 if __name__ == "__main__":
