@@ -35,6 +35,21 @@ ARTIFACTS = (
         "pom_sha1_env": "JACKSON_DATABIND_POM_SHA1",
     },
     {
+        "name": "jackson-core",
+        "group_path": "com/fasterxml/jackson/core",
+        "maven_prefix": "META-INF/maven/com.fasterxml.jackson.core/jackson-core/",
+        "entry_prefixes": (
+            "com/fasterxml/jackson/core/",
+        ),
+        "entry_fragments": (
+            "/com/fasterxml/jackson/core/",
+            "/META-INF/maven/com.fasterxml.jackson.core/jackson-core/",
+        ),
+        "version_env": "JACKSON_CORE_VERSION",
+        "jar_sha1_env": "JACKSON_CORE_JAR_SHA1",
+        "pom_sha1_env": "JACKSON_CORE_POM_SHA1",
+    },
+    {
         "name": "log4j-core",
         "group_path": "org/apache/logging/log4j",
         "maven_prefix": "META-INF/maven/org.apache.logging.log4j/log4j-core/",

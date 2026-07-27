@@ -6,12 +6,13 @@ RUN apt-get update && \
     apt-get autoremove -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/apt/archives/*.deb
-# USN-8298-1: dotnet 8.0.27; USN-8319-1: libgcrypt20 1.9.4-3ubuntu3.2
-# These packages are not always picked up by apt-get upgrade (held back), so install explicitly.
+# Security packages are not always picked up by apt-get upgrade, so install them explicitly.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade \
         dotnet-hostfxr-8.0 dotnet-host-8.0 dotnet-runtime-8.0 \
-        libgcrypt20 && \
+        libgcrypt20 \
+        tar libsqlite3-0 wget \
+        libkrb5support0 libgssapi-krb5-2 libk5crypto3 libkrb5-3 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 COPY requirements.txt .
@@ -34,15 +35,15 @@ RUN pip install --no-cache-dir --force-reinstall "mlflow>=3.2.0,<4.0.0"
 # Removing the binary forces wandb to use its Python backend (safe fallback).
 RUN pip install --no-cache-dir --upgrade "wandb>=0.26.0" && \
     find /opt/conda/envs/ptca -name 'wandb-core' -path '*/wandb/bin/*' -delete 2>/dev/null || true
-RUN pip install --no-cache-dir --upgrade torch==2.11.0 torchvision==0.26.0 torchaudio==2.11.0
 COPY vllm_async_server /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/workers/rollout/vllm_rollout/vllm_async_server.py
 COPY __init__ /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/reward_score/__init__.py
 COPY azure_grader /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/reward_score/azure_grader.py
 COPY azure_python_grader /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/reward_score/azure_python_grader.py
 COPY utils /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/vllm/utils.py
-# vllm is a direct top-level runtime dependency in this image; pin the patched release for
-# GHSA-3ww4-5jv9-j5gm, GHSA-94f4-hr76-p5j6, and GHSA-q8gq-377p-jq3r.
-RUN pip install --no-cache-dir vllm==0.22.0
+# vllm is a direct top-level runtime dependency in this image; pin the patched release.
+RUN pip install --no-cache-dir vllm==0.24.0
+# vllm 0.24.0 pins torch==2.11.0; override after vllm to fix GHSA-rrmf-rvhw-rf47 / VCM 5014621.
+RUN pip install --no-cache-dir --no-deps torch==2.13.0
 # vllm's resolver can upgrade numpy, but verl 0.7.1 requires numpy<2.
 RUN pip install --no-cache-dir numpy==1.26.4
 # Keep xgrammar at the patched floor even when pulled transitively by vllm.
@@ -113,13 +114,16 @@ RUN find /opt/conda/envs/ptca/lib/python3.10/site-packages/ray -type d -name 'th
       pip install --no-cache-dir --target "$dir" 'aiohttp>=3.14.0' 'idna>=3.15'; \
     done
 # Ray's distribution jar shades vulnerable Maven artifacts that pip cannot upgrade.
-# Patch jackson-databind for GHSA-rmj7-2vxq-3g9f, GHSA-j3rv-43j4-c7qm,
-# GHSA-5jmj-h7xm-6q6v, and GHSA-hgj6-7826-r7m5; patch log4j-core for
-# GHSA-445c-vh5m-36rj, GHSA-6hg6-v5c8-fphq, and GHSA-3pxv-7cmr-fjr4.
+# Patch jackson-databind/core, vendored by ray, for GHSA-5jmj-h7xm-6q6v,
+# GHSA-5gvw-p9qm-jgwh, GHSA-mhm7-754m-9p8w, and GHSA-r7wm-3cxj-wff9; patch
+# log4j-core for GHSA-445c-vh5m-36rj, GHSA-6hg6-v5c8-fphq, and GHSA-3pxv-7cmr-fjr4.
 COPY patch_ray_jackson_databind.py /tmp/patch_ray_jackson_databind.py
-RUN JACKSON_DATABIND_VERSION=2.21.4 \
-    JACKSON_DATABIND_JAR_SHA1=09e495680be707d466527d734368ebf36e464da2 \
-    JACKSON_DATABIND_POM_SHA1=c90e7bd258532972e8b96c57d005deaa75ad4806 \
+RUN JACKSON_DATABIND_VERSION=2.21.5 \
+    JACKSON_DATABIND_JAR_SHA1=84924990b468233a28214ae2c505a9ec24cd6ea6 \
+    JACKSON_DATABIND_POM_SHA1=f85e75bea42ea3f61307a3dd9ba27ca33962be68 \
+    JACKSON_CORE_VERSION=2.18.8 \
+    JACKSON_CORE_JAR_SHA1=459eb2c4bb30bd6898eb9bbe9d7a4c4140529b8b \
+    JACKSON_CORE_POM_SHA1=90813471a8fd344b176d7459ab2ee310dacb607f \
     LOG4J_CORE_VERSION=2.25.4 \
     LOG4J_CORE_JAR_SHA1=b963c3d6bfdf05c61ad47a74e9f9295131607df2 \
     LOG4J_CORE_POM_SHA1=1362e4668f513608d467924a2698677869b524f6 \
