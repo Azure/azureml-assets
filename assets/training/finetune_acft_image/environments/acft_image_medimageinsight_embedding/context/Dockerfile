@@ -30,16 +30,6 @@ RUN apt-get -y update && \
     apt-get install -y --no-install-recommends unzip && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# pip is a preinstalled build tool in both conda envs; no Python parent package
-# can raise it, so use the patched conda-forge build and remove stale metadata.
-RUN conda install -y -n ptca -c conda-forge --freeze-installed 'pip=26.1.2' && \
-    conda install -y -n base -c conda-forge --freeze-installed 'pip=26.1.2' && \
-    rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/pip-26.1.1.dist-info \
-           /opt/conda/lib/python*/site-packages/pip-26.1.1.dist-info && \
-    rm -f /opt/conda/envs/ptca/conda-meta/pip-26.1.1*.json \
-          /opt/conda/conda-meta/pip-26.1.1*.json && \
-    conda clean -ay
-
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
@@ -79,9 +69,8 @@ RUN pip uninstall -y fastmcp mcp
 # pyarrow: resolves to 20.0.0 which has GHSA-rgxp-2hwp-jwgg; no parent release floors
 #   pyarrow>=23.0.1, so explicit override is required.
 # cryptography: transitive dep of ACPT base image and AzureML requirements; fixes GHSA-537c-gmf6-5ccf.
-# pillow: transitive/base-image dep in ptca; fixes GHSA-8v84-f9pq-wr9x and related Pillow advisories.
 # pyasn1: transitive dep of mlflow -> databricks-sdk -> google-auth; fixes GHSA-hm4w-wwcw-mr6r and GHSA-8ppf-4f7h-5ppj.
-RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.51' 'aiohttp>=3.14.0' 'pyarrow>=23.0.1' 'cryptography>=48.0.1' 'pillow>=12.3.0' 'pyasn1>=0.6.4'
+RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.51' 'aiohttp>=3.14.0' 'pyarrow>=23.0.1' 'cryptography>=48.0.1' 'pyasn1>=0.6.4'
 
 # Upgrade vulnerable packages in the base conda Python
 # urllib3: transitive dep via requests; loose floor (urllib3<3,>=1.21.1) resolves to vulnerable 2.6.3
@@ -101,5 +90,4 @@ RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.51' 'aio
 # py-rattler: transitive dep of ACPT base image conda tooling; fixes GHSA-q53q-5r4j-5729.
 # cryptography: transitive dep of ACPT base image and AzureML requirements; fixes GHSA-537c-gmf6-5ccf.
 # pydantic-settings: transitive dep of AzureML requirements that can downgrade the patched base; fixes GHSA-4xgf-cpjx-pc3j.
-# msgpack: transitive dep of AzureML/MLflow requirements that can downgrade the patched base; fixes GHSA-6v7p-g79w-8964.
-RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'urllib3>=2.7.0' 'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.0' 'PyJWT>=2.13.0' 'py-rattler>=0.24.0' 'cryptography>=48.0.1' 'pydantic-settings>=2.14.2' 'msgpack>=1.2.1'
+RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'urllib3>=2.7.0' 'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.0' 'PyJWT>=2.13.0' 'py-rattler>=0.24.0' 'cryptography>=48.0.1' 'pydantic-settings>=2.14.2'
