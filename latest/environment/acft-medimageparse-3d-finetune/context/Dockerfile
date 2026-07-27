@@ -14,13 +14,10 @@ ENV PIP_PROGRESS_BAR=off
 # mpi needs to locate libpython from the conda env
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
 
-# OS deps + general housekeeping. Base is on a real cadence so apt upgrade should
-# usually be a no-op (vs ACPT where we had to manually patch openssl/curl/.NET).
-# NOTE: ffmpeg & its libav* / cjson / zvbi / mbedtls deps were responsible for
-# 11/12 findings on the v1 openmpi scan; MIP3D is NIFTI/DICOM (no video decode),
-# so we drop them entirely. libaio-dev was for deepspeed (also dropped). The
-# remaining libgl/libsm/libxext/libxrender/libfontconfig set is what opencv-headless
-# + matplotlib + pillow runtime need.
+# OS deps + security updates. ffmpeg and libaio-dev are intentionally omitted:
+# MIP3D uses NIFTI/DICOM inputs, and the active trainer does not use deepspeed.
+# The remaining libgl/libsm/libxext/libxrender/libfontconfig set is needed by
+# opencv-headless, matplotlib, and pillow at runtime.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get install -y --no-install-recommends \
@@ -48,7 +45,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH -q -y \
 # Step 2: PyTorch from the CUDA 12.6 index (split out so pip doesn't pull CPU-only wheels).
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
         --index-url https://download.pytorch.org/whl/cu126 \
-        torch==2.10.0 torchvision==0.25.0 torchaudio==2.10.0
+        torch==2.13.0 torchvision==0.28.0 torchaudio==2.11.0
 
 # Step 3: everything else from requirements.txt.
 WORKDIR /workspace

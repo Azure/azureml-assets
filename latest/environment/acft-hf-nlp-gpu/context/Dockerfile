@@ -10,13 +10,20 @@ RUN apt-get update && apt-get -y upgrade && \
       dotnet-hostfxr-8.0 \
       dotnet-host-8.0 \
       dotnet-runtime-8.0 \
+      libgssapi-krb5-2=1.19.2-2ubuntu0.8 \
+      libk5crypto3=1.19.2-2ubuntu0.8 \
+      libkrb5-3=1.19.2-2ubuntu0.8 \
+      libkrb5support0=1.19.2-2ubuntu0.8 \
       libcurl3-gnutls \
       libcurl4 \
       libgcrypt20 \
       libnghttp2-14 \
       liblzma5 \
-      libsqlite3-0 \
-      xz-utils
+      libsqlite3-0=3.37.2-2ubuntu0.7 \
+      tar=1.34+dfsg-1ubuntu0.1.22.04.6 \
+      wget=1.21.2-2ubuntu1.4 \
+      xz-utils && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 # The below 2 files are required for baking the code into the environment
@@ -28,17 +35,17 @@ RUN pip install mpi4py==4.1.1 --no-cache-dir
 RUN pip install -r requirements.txt --no-cache-dir
 
 RUN pip install mlflow==3.11.1
+RUN pip install nltk==3.10.0 --no-cache-dir
 RUN python -m nltk.downloader punkt
 RUN python -m nltk.downloader punkt_tab
 RUN MAX_JOBS=$(nproc) pip install --no-cache-dir --upgrade flash-attn==2.8.3 --no-build-isolation
-RUN pip install nltk==3.9.4 # Fixes unsafe deserialization vulnerability.
 
 # Security overrides that cannot be added to requirements.txt without breaking pip resolution.
 # fastmcp: GHSA-rww4-4w9c-7733, GHSA-m8x7-r2rg-vh5g, GHSA-vv7q-7jx5-f767; >=3.2.0 required
 RUN pip install --upgrade --no-cache-dir 'fastmcp>=3.2.0'
 
-# pyasn1 is a transitive dep (mlflow → databricks-sdk → google-auth → pyasn1-modules → pyasn1);
-# parent packages use loose floors so pip resolves to 0.6.2 which has CVE-2026-30922; override to >=0.6.3
+# pyasn1 is a transitive dep (mlflow -> databricks-sdk -> google-auth -> pyasn1-modules -> pyasn1);
+# parent packages use loose floors, so override to 0.6.4 for GHSA-8ppf-4f7h-5ppj/GHSA-hm4w-wwcw-mr6r.
 # python-multipart: transitive dep (fastmcp → fastapi → python-multipart); fastapi pins >=0.0.18; override needed (GHSA-mj87-hwqh-73pj)
 # Mako: transitive dep (mlflow → alembic → Mako); alembic has no version constraint; override needed (GHSA-v92g-xgxw-vvmm)
 # python-dotenv: transitive dep (fastmcp → python-dotenv); fastmcp 3.2.4 uses >=1.1.0; override needed (GHSA-mf9w-mj56-hr94)
@@ -49,7 +56,7 @@ RUN pip install --upgrade --no-cache-dir 'fastmcp>=3.2.0'
 # urllib3: transitive dep brought in by many parents (requests, botocore, kubernetes, etc.); the closest
 #          parent `requests` declares `urllib3>=1.26,<3` (loose floor) so upgrading requests does
 #          not pull urllib3>=2.7.0; direct override required for GHSA-mf9v-mfxr-j63j, GHSA-qccp-gfcp-xxvc
-RUN pip install --upgrade --no-cache-dir pyasn1==0.6.3 'python-multipart>=0.0.26' 'Mako>=1.3.11' 'python-dotenv>=1.2.2' 'onnx>=1.21.0' 'skops>=0.13.0' 'urllib3>=2.7.0'
+RUN pip install --upgrade --no-cache-dir pyasn1==0.6.4 'python-multipart>=0.0.26' 'Mako>=1.3.11' 'python-dotenv>=1.2.2' 'onnx>=1.21.0' 'skops>=0.13.0' 'urllib3>=2.7.0'
 
 # pip is the package manager in both base and ptca conda envs. defaults has no pip>=26.1.1 package,
 # while a normal conda-forge solve pulls unrelated conda updates and py-rattler. Install only the
@@ -65,13 +72,11 @@ RUN python -m pip install --upgrade --no-cache-dir 'msgpack>=1.2.1' && \
 # cryptography is pinned as a transitive/base image package to fix GHSA-537c-gmf6-5ccf.
 RUN conda run -n ptca python -m pip install --upgrade --no-cache-dir 'aiohttp>=3.14.0' 'cryptography>=48.0.1'
 
-# torch is inherited from the ACPT base image and required by torchvision/torchaudio;
-# upgrade the matching CUDA 12.6 PyTorch wheel set to fix GHSA-vgrw-7cvw-pwgx and GHSA-qfhq-4f3w-5fph.
+# torch is inherited from the ACPT base image and overridden here; keep CUDA 12.6 wheels to fix GHSA-rrmf-rvhw-rf47.
 RUN conda run -n ptca python -m pip install --upgrade --no-cache-dir \
     --index-url https://download.pytorch.org/whl/cu126 \
-    'torch==2.10.0+cu126' \
-    'torchvision==0.25.0+cu126' \
-    'torchaudio==2.10.0+cu126'
+    'torch==2.13.0+cu126' \
+    'torchvision==0.28.0+cu126'
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip

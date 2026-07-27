@@ -2,7 +2,25 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly
 
 USER root
 
-# Install required packages from pypi
+# OS packages: pinned inherited deps from the ACPT base image; fixes
+# USN-8533-1, USN-8538-1, USN-8543-1, USN-8553-1, USN-8477-3,
+# USN-8565-1, USN-8572-1, and USN-8585-1.
+RUN apt-get update && apt-get install -y --no-install-recommends --only-upgrade \
+    openssh-client=1:8.9p1-3ubuntu0.16 \
+    libasound2=1.2.6.1-1ubuntu1.2 \
+    libasound2-data=1.2.6.1-1ubuntu1.2 \
+    wget=1.21.2-2ubuntu1.4 \
+    dotnet-hostfxr-8.0=8.0.29-0ubuntu1~22.04.1 \
+    dotnet-runtime-8.0=8.0.29-0ubuntu1~22.04.1 \
+    dotnet-host-8.0=8.0.29-0ubuntu1~22.04.1 \
+    tar=1.34+dfsg-1ubuntu0.1.22.04.6 \
+    libsqlite3-0=3.37.2-2ubuntu0.7 \
+    libkrb5support0=1.19.2-2ubuntu0.8 \
+    libgssapi-krb5-2=1.19.2-2ubuntu0.8 \
+    libk5crypto3=1.19.2-2ubuntu0.8 \
+    libkrb5-3=1.19.2-2ubuntu0.8 \
+ && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 # openmim still imports pkg_resources, which is removed from setuptools>=82.
@@ -26,13 +44,13 @@ RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade \
     'pyarrow>=23.0.1' \
     'cryptography>=48.0.1'
 
-# torch: pinned inherited dep from the ACPT ptca base image; fixes
-# CVE-2025-2999 and CVE-2025-3001. Upgrade the CUDA PyTorch stack together.
-RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade \
+# torch: pinned transitive dep of the ACFT image stack; this image overrides
+# the ACPT base version, fixes GHSA-rrmf-rvhw-rf47.
+RUN conda run -n ptca python -m pip uninstall -y torchaudio \
+ && conda run -n ptca python -m pip install --no-cache-dir --upgrade \
     --index-url https://download.pytorch.org/whl/cu126 \
-    'torch==2.10.0' \
-    'torchvision==0.25.0' \
-    'torchaudio==2.10.0'
+    'torch==2.13.0' \
+    'torchvision==0.28.0'
 
 # The conda pip upgrade can reinstall the rattler solver. The base image does
 # not need it for runtime, and its compiled extension currently carries Rust CVEs.

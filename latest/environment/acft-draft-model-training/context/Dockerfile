@@ -2,13 +2,22 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly
 USER root
 ENV PIP_PROGRESS_BAR=off
 
-# USN-8284-1/USN-8283-1: libgnutls30/rsync; USN-8298-1: dotnet 8.0.26->8.0.27.
-# USN-8319-1: libgcrypt20; USN-8362-1: liblzma5/xz-utils.
+# Apply OS security updates inherited from the base image.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libgnutls30 rsync \
         dotnet-host-8.0 dotnet-hostfxr-8.0 dotnet-runtime-8.0 \
         libgcrypt20 \
         liblzma5 xz-utils \
+        wget=1.21.2-2ubuntu1.4 \
+        tar=1.34+dfsg-1ubuntu0.1.22.04.6 \
+        libkrb5support0=1.19.2-2ubuntu0.8 \
+        libgssapi-krb5-2=1.19.2-2ubuntu0.8 \
+        libk5crypto3=1.19.2-2ubuntu0.8 \
+        libkrb5-3=1.19.2-2ubuntu0.8 \
+        libsqlite3-0=3.37.2-2ubuntu0.7 \
+        libasound2=1.2.6.1-1ubuntu1.2 \
+        libasound2-data=1.2.6.1-1ubuntu1.2 \
+        openssh-client=1:8.9p1-3ubuntu0.16 \
  && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
@@ -22,10 +31,13 @@ RUN pip install numpy==2.2.5
 RUN pip install azureml-evaluate-mlflow==0.0.91
 
 RUN pip install --no-cache-dir --force-reinstall "mlflow>=3.2.0,<4.0.0"
-# wandb>=0.27.2: fixes Go stdlib (GO-2026-5037/5038/5039: stdlib v1.26.3->v1.26.4),
-# golang.org/x/crypto (GO-2026-5005 through 5023,5033: v0.51.0->v0.52.0), and
-# golang.org/x/net (GO-2026-5026/5027/5028/5029/5030: v0.54.0->v0.55.0) in wandb-core binary.
-RUN pip install --no-cache-dir --upgrade "wandb>=0.27.2"
+# Upgrade wandb and remove its bundled wandb-core Go binary; the binary carries
+# vulnerable Go modules (stdlib/grpc/x/text) and wandb falls back to its Python backend.
+RUN pip install --no-cache-dir --upgrade "wandb>=0.28.1" \
+ && find /opt/conda/envs/ptca -name 'wandb-core' -path '*/wandb/bin/*' -delete
+# torch is a transitive dep of SpecForge/sglang; this image's pip layers override the
+# base torch 2.8.0+cu126 and must stay above GHSA-rrmf-rvhw-rf47's patched floor.
+RUN pip install --no-cache-dir --upgrade "torch>=2.13.0"
 # GHSA-7rgv-gqhr-fxg3: xgrammar stack exhaustion DoS; patched in 0.1.32
 RUN pip install xgrammar==0.1.32
 # GHSA-69w3-r845-3855 (CVE-2026-1839): arbitrary code execution in Trainer class;

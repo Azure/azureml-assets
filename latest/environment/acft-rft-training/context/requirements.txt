@@ -20,11 +20,11 @@ pyarrow==21.0.0
 pybind11==3.0.0
 pylatexenc==2.10
 qwen-vl-utils==0.0.10
-# ray[default] from PyPI: >=2.53.0 resolves the aiohttp vulnerabilities and the wheel ships
+# ray[default] from PyPI: >=2.56.0 resolves GHSA-hhrp-gw25-jr43 and the wheel ships
 # the prebuilt dashboard frontend, so no separate dashboard build is needed.
-# NOTE: Ray 2.55.1 still bundles jackson-databind 2.18.6 inside ray/jars/ray_dist.jar, so
-# the jar is patched in place by context/patch_ray_jackson_databind.py in the Dockerfile.
-ray[default]==2.55.1
+# NOTE: Ray vendors Jackson artifacts inside ray/jars/ray_dist.jar, so the jar is patched in
+# place by context/patch_ray_jackson_databind.py in the Dockerfile.
+ray[default]==2.56.0
 tensorboard==2.20.0
 tensordict==0.9.1
 torchdata==0.11.0

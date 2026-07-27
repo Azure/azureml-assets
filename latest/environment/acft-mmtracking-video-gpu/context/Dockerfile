@@ -2,7 +2,8 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202607.1
 
 USER root
-RUN apt-get -y update && apt-get -y upgrade \
+RUN apt-get -y update \
+ && apt-get install -y --only-upgrade tar wget libsqlite3-0 libkrb5support0 libgssapi-krb5-2 libk5crypto3 libkrb5-3 \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install required packages from pypi
@@ -38,7 +39,7 @@ RUN pip install --no-cache-dir --no-deps 'diffusers==0.38.0'
 # pinned transitive dep of datasets; fixes GHSA-rgxp-2hwp-jwgg.
 RUN pip install --no-cache-dir 'pyarrow>=23.0.1'
 
-# torch==2.10.0: pinned dep from ACPT ptca env; fixes GHSA-qfhq-4f3w-5fph and GHSA-vgrw-7cvw-pwgx.
+# torch: pinned dep from ACPT ptca env; fixes GHSA-rrmf-rvhw-rf47, GHSA-qfhq-4f3w-5fph, and GHSA-vgrw-7cvw-pwgx.
 # torchvision and torchaudio are upgraded with torch to keep the CUDA PyTorch stack compatible.
 RUN pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 \
-    'torch==2.10.0' 'torchvision==0.25.0' 'torchaudio==2.10.0'
+    'torch==2.13.0' 'torchvision==0.28.0' 'torchaudio==2.11.0'

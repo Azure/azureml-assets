@@ -27,16 +27,24 @@ RUN apt-get update && ACCEPT_EULA=Y apt-get -y upgrade && \
 apt-get install -y sudo locales libssl-dev sqlite3 && \
 apt-get install -y --only-upgrade \
     curl \
-    libcurl4t64 \
-    libcurl3t64-gnutls \
     gzip \
-    libgnutls30t64 \
+    libcurl3t64-gnutls \
+    libcurl4t64 \
     libgcrypt20 \
+    libgnutls30t64 \
+    libgssapi-krb5-2 \
+    libk5crypto3 \
+    libkrb5-3 \
+    libkrb5support0 \
+    libsqlite3-0 \
     nginx \
-        nginx-common \
-        nginx-light \
-        liblzma5 \
-        xz-utils \
+    nginx-common \
+    nginx-light \
+    sqlite3 \
+    tar \
+    wget \
+    liblzma5 \
+    xz-utils \
     && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
