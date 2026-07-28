@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260715.v1
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260727.v1
 
 # Upgrade OS packages inherited vulnerable from the base image until the base image carries these Ubuntu security updates.
 RUN apt-get update \
