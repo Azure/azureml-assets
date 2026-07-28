@@ -4,3 +4,8 @@ pandas>=1.5.1
 opencensus-ext-azure>=1.1.7
 azureml-core>=1.48.0
 mltable>=1.2.0
+# Pulled transitively by mltable. Floor at 5.4.0 (first release requiring
+# azureml-dataprep-native>=42, which ships cp313 wheels) so pip does not
+# backtrack into legacy versions that depend on the unmaintained dotnetcore2
+# package (no Python 3.11+ support) and fail to resolve on the CI runner.
+azureml-dataprep>=5.4.0
