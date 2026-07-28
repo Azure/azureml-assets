@@ -138,7 +138,7 @@ class TestGroundednessEvaluatorBehavior(
         )
 
     def test_sharepoint_grounding(self):
-        """SharePoint grounding tool is supported for groundedness evaluation."""
+        """Validate that sharepoint grounding is supported for groundedness evaluation."""
         self._run_tool_type_test(
             test_label="SharePoint Grounding",
             evaluation_inputs={
@@ -164,7 +164,7 @@ class TestGroundednessEvaluatorBehavior(
         )
 
     def test_openapi(self):
-        """OpenAPI tool is supported for groundedness evaluation."""
+        """Validate that openapi tool calls are supported for groundedness evaluation."""
         self._run_tool_type_test(
             test_label="OpenAPI",
             evaluation_inputs={
