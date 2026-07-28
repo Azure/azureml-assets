@@ -8,9 +8,9 @@ ENV PIP_PROGRESS_BAR=off
 # cryptography>=48.0.1: pinned transitive dep present in the base image; fixes GHSA-537c-gmf6-5ccf.
 # pydantic-settings>=2.14.2: pinned transitive dep present in the base image; fixes GHSA-4xgf-cpjx-pc3j.
 # msgpack>=1.2.1: pinned transitive dep present in the base image; fixes GHSA-6v7p-g79w-8964.
-# torch==2.13.0+cu126: overrides the ACPT torch280 base image; fixes GHSA-rrmf-rvhw-rf47.
-# torchvision is upgraded with torch for CUDA compatibility; stale base torchaudio is removed
-# because no torch 2.13-compatible cp310+cu126 torchaudio wheel is currently available.
+# torch==2.10.0+cu126: inherited from the ACPT torch280 base image; fixes
+# GHSA-vgrw-7cvw-pwgx and GHSA-qfhq-4f3w-5fph. torchvision and torchaudio
+# are upgraded with torch for CUDA compatibility.
 RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' && \
     conda install -n base -c conda-forge -y 'pip>=26.1' && \
     conda run -n base python -m pip install --upgrade --no-cache-dir \
@@ -29,9 +29,9 @@ RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' && \
         'idna>=3.15' && \
     conda run -n ptca python -m pip install --upgrade --no-cache-dir \
         --index-url https://download.pytorch.org/whl/cu126 \
-        'torch==2.13.0+cu126' \
-        'torchvision==0.28.0+cu126' && \
-    conda run -n ptca python -m pip uninstall -y torchaudio && \
+        'torch==2.10.0+cu126' \
+        'torchvision==0.25.0+cu126' \
+        'torchaudio==2.10.0+cu126' && \
     conda clean -a -y && \
     rm -rf /opt/conda/pkgs
 
