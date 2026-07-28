@@ -60,9 +60,9 @@ RUN apt-get update && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Fix ptca conda env vulnerabilities (python 3.10, active).
-# torch==2.13.0+cu126: inherited from the ACPT torch280 base image and
-# previously upgraded in this layer; fixes GHSA-rrmf-rvhw-rf47. torchvision is
-# upgraded with torch for CUDA compatibility.
+# torch==2.10.0+cu126: inherited from the ACPT torch280 base image; fixes
+# GHSA-vgrw-7cvw-pwgx and GHSA-qfhq-4f3w-5fph. torchvision and torchaudio
+# are upgraded with torch for CUDA compatibility.
 # pip>=26.1.1: GHSA-jp4c-xjxw-mgf9. pip is a root tool with no parent package,
 # and VCM reads the ptca conda-meta record, so conda must update it.
 # setuptools>=82.0.1: GHSA-58pv-8j8x-9vj2, GHSA-8rrh-rw8j-w5fx.
@@ -80,9 +80,9 @@ RUN conda install -n ptca -c conda-forge -y 'pip>=26.1.1' 'setuptools>=82.0.1' &
         'cryptography>=48.0.1' 'pyarrow>=23.0.1' && \
     conda run -n ptca python -m pip install --upgrade --no-cache-dir \
         --index-url https://download.pytorch.org/whl/cu126 \
-        'torch==2.13.0+cu126' \
-        'torchvision==0.28.0+cu126' \
-        'torchaudio==2.11.0+cu126'
+        'torch==2.10.0+cu126' \
+        'torchvision==0.25.0+cu126' \
+        'torchaudio==2.10.0+cu126'
 
 # Fix base conda env vulnerabilities (python 3.13). Parent packages still expose
 # loose vulnerable floors, so these direct floors are required:
