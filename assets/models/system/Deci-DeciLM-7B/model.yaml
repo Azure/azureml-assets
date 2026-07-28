@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: huggingface/Deci-DeciLM-7B/1702510112/mlflow_model_folder
+  container_path: huggingface/Deci-DeciLM-7B/1728322144/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:

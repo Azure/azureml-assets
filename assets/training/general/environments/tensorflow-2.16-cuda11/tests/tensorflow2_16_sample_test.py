@@ -6,13 +6,13 @@ import os
 import time
 from pathlib import Path
 from azure.ai.ml import command, MLClient
-from azure.ai.ml._restclient.models import JobStatus
+from azure.ai.ml._restclient.v2022_10_01.models._azure_machine_learning_workspaces_enums import JobStatus
 from azure.ai.ml.entities import Environment, BuildContext
 from azure.identity import AzureCliCredential
 
 BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
-TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 60)
+TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 90)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 

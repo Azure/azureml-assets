@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: huggingface/Llama-2-13b-chat/1716795930/mlflow_model_folder
+  container_path: huggingface/Llama-2-13b-chat/1733139527/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:

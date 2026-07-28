@@ -67,14 +67,16 @@ class TestDatasetDownloaderComponent:
         )
         ml_client.jobs.stream(pipeline_job.name)
         print(pipeline_job)
-
+        kwargs = {}
+        if script is not None:
+            kwargs['trust_remote_code'] = True
         file_count = 1
         path = dataset_name if dataset_name else script
         if configuration == "all":
-            file_count = len(get_dataset_config_names(path))
+            file_count = len(get_dataset_config_names(path, **kwargs))
         elif split == "all":
             configs = configuration.split(",")
-            file_count = sum(len(get_dataset_split_names(path, config)) for config in configs)
+            file_count = sum(len(get_dataset_split_names(path, config, **kwargs)) for config in configs)
         self._verify_output(pipeline_job, temp_dir, file_count)
         assert_logged_params(
             pipeline_job.name,
@@ -175,7 +177,7 @@ class TestDatasetDownloaderScript:
         if dataset_name == "winogrande" and configuration is None:
             expected_exception_mssg = (
                 f"Multiple configurations available for dataset '{dataset_name}'. Please specify either one of "
-                f"the following: {get_dataset_config_names(dataset_name)} or 'all'."
+                f"the following: {get_dataset_config_names(dataset_name, trust_remote_code=True)} or 'all'."
             )
         elif dataset_name == "some_random_name":
             expected_exception_mssg = f"FileNotFoundError: Dataset '{dataset_name}' doesn't exist on the Hub"

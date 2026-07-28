@@ -1,0 +1,22 @@
+flavors:
+  hftransformersv2:
+    code: null
+    hf_config_class: AutoConfig
+    hf_pretrained_class: YakForCausalLM
+    hf_tokenizer_class: YakTokenizer
+    model_data: data
+    pytorch_version: 2.0.1+cu117
+    task_type: chat-completion
+    transformers_version: 4.40.0
+    model_hf_load_kwargs:
+      torch_dtype: torch.bfloat16
+      device_map: auto
+  python_function:
+    code: code
+    data: data
+    env: conda.yaml
+    loader_module: azureml.evaluate.mlflow.hftransformers
+    python_version: 3.10.13
+metadata:
+  azureml.base_image: mcr.microsoft.com/azureml/curated/foundation-model-inference:34
+mlflow_version: 2.3.1

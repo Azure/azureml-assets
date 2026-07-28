@@ -1,0 +1,31 @@
+flavors:
+  python_function:
+    artifacts:
+      model_dir:
+        path: artifacts/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224
+        uri: ../../BiomedCLIP-PubMedBERT_256-vit_base_patch16_224/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224
+    cloudpickle_version: 2.2.1
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.9.19
+    streamable: false
+metadata:
+  base_model_name: null
+  base_model_task: zero-shot-image-classification
+  is_acft_model: true
+  is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+mlflow_version: 2.15.1
+model_size_bytes: 789393877
+model_uuid: 87e0b5b21dc34fad8381248be8107f2b
+signature:
+  inputs: '[{"type": "binary", "name": "image", "required": true}, {"type": "string",
+    "name": "text", "required": true}]'
+  outputs: '[{"type": "string", "name": "probs", "required": true}, {"type": "string",
+    "name": "labels", "required": true}]'
+  params: null
+utc_time_created: '2024-09-19 19:59:15.785066'

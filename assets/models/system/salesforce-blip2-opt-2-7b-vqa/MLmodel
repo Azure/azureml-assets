@@ -1,0 +1,29 @@
+flavors:
+  python_function:
+    artifacts:
+      model_dir:
+        path: artifacts/INPUT_model_path
+        uri: /mnt/azureml/cr/j/5988b47da7f64b9ca8524253ad7b55a7/cap/data-capability/wd/INPUT_model_path
+    cloudpickle_version: 2.2.1
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.8.18
+metadata:
+  base_model_name: Salesforce/blip2-opt-2.7b
+  base_model_task: visual-question-answering
+  is_acft_model: true
+  is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+mlflow_version: 2.10.2
+model_size_bytes: 30991270416
+model_uuid: 6f2b106a5f5e4643a1ac890a6d80d976
+signature:
+  inputs: '[{"type": "binary", "name": "image", "required": true}, {"type": "string",
+    "name": "text", "required": true}]'
+  outputs: '[{"type": "string", "name": "text", "required": true}]'
+  params: null
+utc_time_created: '2024-04-25 12:28:17.836508'

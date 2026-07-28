@@ -5,12 +5,9 @@
 
 import platform
 import uuid
-import codecs
 import logging
 import sys
 
-from azureml.telemetry import get_telemetry_log_handler
-from azureml.telemetry._telemetry_formatter import ExceptionFormatter
 
 from utils.config import AppName, LoggerConfig
 from utils.run_utils import JobRunDetails
@@ -107,8 +104,8 @@ def get_logger(name=LoggerConfig.LOGGER_NAME, level=LoggerConfig.VERBOSITY_LEVEL
     logger.propagate = False
     logger.setLevel(numeric_log_level)
     handler_names = [handler.get_name() for handler in logger.handlers]
-    app_name = LoggerConfig.LOGGER_NAME
 
+    # Todo: Add telemetry handler
     if LoggerConfig.MODEL_IMPORT_HANDLER_NAME not in handler_names:
         format_str = "%(asctime)s [%(module)s] %(funcName)s: %(levelname)-8s %(message)s \n"
         formatter = logging.Formatter(format_str)
@@ -117,24 +114,6 @@ def get_logger(name=LoggerConfig.LOGGER_NAME, level=LoggerConfig.VERBOSITY_LEVEL
         stream_handler.setLevel(numeric_log_level)
         stream_handler.set_name(LoggerConfig.MODEL_IMPORT_HANDLER_NAME)
         logger.addHandler(stream_handler)
-
-    if LoggerConfig.APPINSIGHT_HANDLER_NAME not in handler_names:
-        instrumentation_key = codecs.decode(LoggerConfig.INSTRUMENTATION_KEY, LoggerConfig.CODEC).decode("utf-8")
-
-        appinsights_handler = get_telemetry_log_handler(
-            instrumentation_key=instrumentation_key,
-            component_name="automl",
-        )
-
-        formatter = ExceptionFormatter(
-            fmt="%(asctime)s [{}] [{}] [%(module)s] %(funcName)s: %(levelname)-8s %(message)s\n".format(
-                app_name, run_details.run_id
-            )
-        )
-        appinsights_handler.setFormatter(formatter)
-        appinsights_handler.setLevel(numeric_log_level)
-        appinsights_handler.set_name(LoggerConfig.APPINSIGHT_HANDLER_NAME)
-        logger.addHandler(appinsights_handler)
 
     return logger
 

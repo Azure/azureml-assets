@@ -1,0 +1,88 @@
+"""Patch log4j JARs inside ray's fat JAR (ray_dist.jar) with a newer version.
+
+Downloads log4j artifacts from Maven Central and replaces the bundled versions
+inside ray's distribution JAR, including classes, META-INF resources, and plugin metadata.
+"""
+import zipfile
+import os
+import sys
+import glob
+import urllib.request
+import tempfile
+
+LOG4J_VER = sys.argv[1] if len(sys.argv) > 1 else "2.25.4"
+RAY_JARS = "/opt/conda/envs/ptca/lib/python3.10/site-packages/ray/jars"
+MAVEN_BASE = "https://repo1.maven.org/maven2/org/apache/logging/log4j"
+ARTIFACTS = ["log4j-core", "log4j-api", "log4j-slf4j-impl"]
+
+patch_dir = tempfile.mkdtemp()
+
+# Download new log4j JARs
+for art in ARTIFACTS:
+    url = f"{MAVEN_BASE}/{art}/{LOG4J_VER}/{art}-{LOG4J_VER}.jar"
+    dest = os.path.join(patch_dir, f"{art}.jar")
+    print(f"Downloading {url}")
+    urllib.request.urlretrieve(url, dest)
+
+# Find ray fat JARs
+candidates = glob.glob(os.path.join(RAY_JARS, "ray?dist.jar"))
+candidates += glob.glob(os.path.join(RAY_JARS, "ray_dist.jar"))
+if not candidates:
+    all_jars = glob.glob(os.path.join(RAY_JARS, "*.jar"))
+    candidates = [c for c in all_jars if "ray" in os.path.basename(c).lower()]
+assert candidates, f"No ray fat JAR found in {RAY_JARS}: {os.listdir(RAY_JARS)}"
+
+def is_log4j_entry(name):
+    """Check if a zip entry belongs to log4j and should be replaced."""
+    return (name.startswith("org/apache/logging/log4j/") or
+            name.startswith("META-INF/org/apache/logging/log4j/") or
+            name.startswith("META-INF/maven/org.apache.logging.log4j/") or
+            name.startswith("META-INF/services/") or
+            name == "META-INF/log4j-provider.properties" or
+            "Log4j2Plugins.dat" in name)
+
+# Collect new log4j entries from downloaded JARs
+new_entries = {}
+for jf in glob.glob(os.path.join(patch_dir, "*.jar")):
+    with zipfile.ZipFile(jf, "r") as zf:
+        for info in zf.infolist():
+            name = info.filename
+            if is_log4j_entry(name):
+                new_entries[name] = (info, zf.read(name))
+
+print(f"Collected {len(new_entries)} entries from log4j {LOG4J_VER}")
+
+def is_old_log4j(name):
+    return (name.startswith("org/apache/logging/log4j/") or
+            name.startswith("META-INF/org/apache/logging/log4j/") or
+            name.startswith("META-INF/maven/org.apache.logging.log4j/") or
+            "Log4j2Plugins.dat" in name)
+
+for fat_jar in candidates:
+    print(f"Patching {fat_jar}")
+    tmp_jar = fat_jar + ".tmp"
+    kept = replaced = removed = 0
+
+    with zipfile.ZipFile(fat_jar, "r") as src, \
+         zipfile.ZipFile(tmp_jar, "w", zipfile.ZIP_DEFLATED) as dst:
+        for info in src.infolist():
+            name = info.filename
+            if name in new_entries:
+                replaced += 1
+                continue
+            if is_old_log4j(name):
+                removed += 1
+                continue
+            dst.writestr(info, src.read(name))
+            kept += 1
+        for name, (info, data) in new_entries.items():
+            dst.writestr(info, data)
+
+    os.replace(tmp_jar, fat_jar)
+    print(f"  kept={kept}, replaced={replaced}, removed={removed}, added={len(new_entries)}")
+    print(f"  Patched with log4j {LOG4J_VER}")
+
+# Cleanup
+import shutil
+shutil.rmtree(patch_dir)
+print("Done")

@@ -5,3 +5,5 @@ task:
   values:
   - question-answering
   - text-generation
+  - chat-completion
+  - text-to-image

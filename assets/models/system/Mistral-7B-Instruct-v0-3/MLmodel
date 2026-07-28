@@ -1,0 +1,31 @@
+flavors:
+  hftransformersv2:
+    code: null
+    config_hf_load_kwargs:
+      trust_remote_code: true
+    hf_config_class: AutoConfig
+    hf_pretrained_class: AutoModelForCausalLM
+    hf_tokenizer_class: AutoTokenizer
+    huggingface_id: mistralai/Mistral-7B-Instruct-v0.3
+    model_data: data
+    model_hf_load_args:
+      trust_remote_code: true
+    pytorch_version: 1.13.1
+    task_type: chat-completion
+    tokenizer_hf_load_kwargs:
+      trust_remote_code: true
+    transformers_version: 4.40.1
+  python_function:
+    data: data
+    env: conda.yaml
+    loader_module: azureml.evaluate.mlflow.hftransformers
+    python_version: 3.8.19
+metadata:
+  azureml.base_image: mcr.microsoft.com/azureml/curated/foundation-model-inference:45
+  base_model_name: mistralai/Mistral-7B-Instruct-v0.3
+  base_model_task: chat-completion
+  is_acft_model: true
+  is_finetuned_model: false
+mlflow_version: 2.10.2
+model_uuid: 2cddbcb8f35d41159270b212ffd95030
+utc_time_created: '2024-06-17 11:59:49.418562'

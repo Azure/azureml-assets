@@ -41,10 +41,10 @@ jobs:
         uses: Azure/azureml-assets/.github/actions/clone-repo@main
         with:
           forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
-      - name: Use Python 3.8
+      - name: Use Python 3.9
         uses: actions/setup-python@v4
         with:
-          python-version: '3.8'
+          python-version: '3.9'
 
       - name: Install fusepy
         run: sudo apt-get install -y fuse
@@ -87,7 +87,7 @@ jobs:
           RESOURCE_GROUP: ${{ env.resource_group }}
           WORKSPACE_NAME: ${{ env.workspace }}
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ${{ env.pytest_report_folder }}
@@ -107,7 +107,7 @@ jobs:
       steps:
         - name: Download test results
           id: download-artifact
-          uses: actions/download-artifact@v3
+          uses: actions/download-artifact@v4
           with:
             name: ${{ env.pytest_report_folder }}
             path: ${{ env.pytest_report_folder }}

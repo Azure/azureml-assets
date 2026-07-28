@@ -1,0 +1,11 @@
+name: acpt-pytorch-2.8-cuda12.6
+version: auto
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml
+test:
+  pytest:
+    enabled: true 
+    pip_requirements: tests/requirements.txt
+    tests_dir: tests
+categories: ["PyTorch", "Training"]

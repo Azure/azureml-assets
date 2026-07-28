@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: huggingface/MedVAE-8-4-2d/mlflow_model_folder
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: mlflow_model

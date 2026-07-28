@@ -8,7 +8,8 @@ import argparse
 import json
 import re
 import sys
-from collections import defaultdict
+import yaml
+from collections import Counter, defaultdict
 from pathlib import Path
 from ruamel.yaml import YAML
 from typing import List
@@ -33,6 +34,7 @@ WARNING_TEMPLATE = "Warning during validation of {file}: {warning}"
 NAMING_CONVENTION_URL = "https://github.com/Azure/azureml-assets/wiki/Asset-naming-convention"
 INVALID_STRINGS = [["azureml", "azure"], "aml"]  # Disallow these in any asset name
 NON_MODEL_INVALID_STRINGS = ["microsoft"]  # Allow these in model names and other assets related to models
+MODEL_NAMES_VALIDATION_OVERRIDE_PREFIX = ["Azure-"]  # Exception for Azure- models
 MODEL_RELATED_ASSETS = [assets.AssetType.MODEL, assets.AssetType.EVALUATIONRESULT]
 NON_MODEL_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_.-]{0,254}$")
 
@@ -292,7 +294,7 @@ def validate_build_context(environment_config: assets.EnvironmentConfig) -> int:
     error_count = 0
     # Iterate over all files in the build context
     for file_path in environment_config.release_paths:
-        with open(file_path) as f:
+        with open(file_path, encoding='utf-8') as f:
             # Read file into memory, normalize EOL characters
             contents = f.read()
             contents = contents.replace("\r\n", "\n")
@@ -387,6 +389,9 @@ def validate_name(asset_config: assets.AssetConfig) -> int:
 
         for invalid_string in string_group_list:
             if invalid_string in asset_name_lowercase:
+                if (asset_config.type == assets.AssetType.MODEL and
+                        any(asset_name.startswith(exception) for exception in MODEL_NAMES_VALIDATION_OVERRIDE_PREFIX)):
+                    continue
                 # Complain only about the first matching string
                 _log_error(asset_config.file_name_with_path,
                            f"Name '{asset_name}' contains invalid string '{invalid_string}'")
@@ -459,7 +464,7 @@ def validate_tags(asset_config: assets.AssetConfig, valid_tags_filename: str) ->
     """
     error_count = 0
 
-    with open(Path(__file__).parent / CONFIG_DIRECTORY / valid_tags_filename) as f:
+    with open(Path(__file__).parent / CONFIG_DIRECTORY / valid_tags_filename, encoding='utf-8') as f:
         valid_tags = YAML().load(f)
 
     asset_spec = asset_config._spec._yaml
@@ -616,7 +621,7 @@ def confirm_model_validation_results(
             error_count += 1
         else:
             overall_summary = {}
-            with open(validation_job_details_path) as f:
+            with open(validation_job_details_path, encoding='utf-8') as f:
                 overall_summary = json.load(f)
 
             validation_run_status = overall_summary.get(
@@ -695,7 +700,13 @@ def validate_model_scenario(
     """
     error_count = 0
     min_sku = model.properties.get(min_sku_prop_name, "").strip()
-    recommended_skus = model.properties.get(recommended_skus_prop_name, "").strip()
+    recommended_skus_value = model.properties.get(recommended_skus_prop_name, None)
+    if isinstance(recommended_skus_value, str):
+        recommended_skus = [sku.strip() for sku in recommended_skus_value.split(",") if sku.strip()]
+    elif isinstance(recommended_skus_value, list):
+        recommended_skus = [str(sku).strip() for sku in recommended_skus_value if str(sku).strip()]
+    else:
+        recommended_skus = []
     compute_allowlists = set(model.tags.get(compute_allowlist_tags_name, []))
 
     if not min_sku:
@@ -710,10 +721,10 @@ def validate_model_scenario(
         _log_error(asset_file_name_with_path, f"{compute_allowlist_tags_name} is missing in model tags")
         error_count += 1
 
-    recommended_skus = set([sku.strip() for sku in recommended_skus.split(",")])
-    if (recommended_skus != compute_allowlists):
-        a_minus_b = recommended_skus - compute_allowlists
-        b_minus_a = compute_allowlists - recommended_skus
+    recommended_skus_set = set(recommended_skus)
+    if (recommended_skus_set != compute_allowlists):
+        a_minus_b = recommended_skus_set - compute_allowlists
+        b_minus_a = compute_allowlists - recommended_skus_set
         _log_error(
             asset_file_name_with_path,
             f"{recommended_skus_prop_name} and {compute_allowlist_tags_name} does not match for model.\n"
@@ -807,6 +818,115 @@ def confirm_min_sku_spec(
     return 0
 
 
+def _is_empty_value(value) -> bool:
+    """Return True if the value should be treated as absent for backfill purposes."""
+    if value is None:
+        return True
+    if isinstance(value, str) and not value.strip():
+        return True
+    if isinstance(value, (list, dict)) and len(value) == 0:
+        return True
+    return False
+
+
+def _to_comma_separated_string(value):
+    """Convert a list to a trimmed comma-separated string, leaving other types unchanged."""
+    if isinstance(value, list):
+        return ",".join(str(item).strip() for item in value if str(item).strip())
+    return value
+
+
+def _normalize_sku_list(value):
+    """Normalize a list of SKUs to trimmed strings; pass through non-list values."""
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+    return value
+
+
+def _is_shared_compute_enabled(value) -> bool:
+    """Strictly interpret a sharedComputeCapacityEnabled value as enabled or not.
+
+    Accepts a real boolean True or a case-insensitive "true" string. Everything else
+    (False, "false", "", None, numbers, etc.) is treated as not enabled so that a model
+    with shared compute disabled still fails validation as it did before.
+    """
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() == "true"
+    return False
+
+
+def backfill_validation_fields_from_system_metadata(model: Model, system_metadata: dict) -> None:
+    """Apply system_metadata equivalents onto the validator-visible tags/properties.
+
+    The model spec validator reads required fields from tags/properties only, while the
+    Azure ML SDK ``Model`` loaded from the spec has no awareness of ``system_metadata``.
+    ``system_metadata`` is the source of truth for migrated models, so when it specifies a
+    field, its value overrides any legacy tag/property used during validation. When
+    ``system_metadata`` does not specify a field (missing or empty), the existing
+    tag/property is left untouched as a fallback.
+
+    Args:
+        model (Model): model loaded from spec, mutated in place.
+        system_metadata (dict): system_metadata section from the model spec.
+    """
+    if not system_metadata:
+        return
+
+    if model.tags is None:
+        model.tags = {}
+    if model.properties is None:
+        model.properties = {}
+
+    tasks = system_metadata.get("tasks") or {}
+    sku = system_metadata.get("SKU") or {}
+    supported_computes = system_metadata.get("supportedComputes") or {}
+
+    # tag name -> equivalent system_metadata value (converted to tags format)
+    tag_equivalents = {
+        MLFlowModelTags.TASK: _to_comma_separated_string(tasks.get("inferenceTasks")),
+        MLFlowModelTags.LICENSE: system_metadata.get("license"),
+        MLFlowModelTags.INFERENCE_COMPUTE_ALLOWLIST:
+            _normalize_sku_list(supported_computes.get("inferenceComputes")),
+        MLFlowModelTags.EVALUATION_COMPUTE_ALLOWLIST:
+            _normalize_sku_list(supported_computes.get("evaluationComputes")),
+        MLFlowModelTags.FINETUNE_COMPUTE_ALLOWLIST:
+            _normalize_sku_list(supported_computes.get("finetuneComputes")),
+    }
+    for tag_name, value in tag_equivalents.items():
+        if not _is_empty_value(value):
+            model.tags[tag_name] = value
+
+    # property name -> equivalent system_metadata value (converted to properties format)
+    property_equivalents = {
+        MLFlowModelProperties.INFERENCE_MIN_SKU_SPEC: sku.get("inferenceMinSkuSpec"),
+        MLFlowModelProperties.INFERENCE_RECOMMENDED_SKU: _normalize_sku_list(sku.get("inferenceRecommendedSkus")),
+        MLFlowModelProperties.EVALUATION_MIN_SKU_SPEC: sku.get("evaluationMinSkuSpec"),
+        MLFlowModelProperties.EVALUATION_RECOMMENDED_SKU: _normalize_sku_list(sku.get("evaluationRecommendedSkus")),
+        MLFlowModelProperties.FINETUNE_MIN_SKU_SPEC: sku.get("finetuneMinSkuSpec"),
+        MLFlowModelProperties.FINETUNE_RECOMMENDED_SKU: _normalize_sku_list(sku.get("finetuneRecommendedSkus")),
+        MLFlowModelProperties.FINETUNING_TASKS: _to_comma_separated_string(tasks.get("fineTuningTasks")),
+    }
+    for property_name, value in property_equivalents.items():
+        if isinstance(value, str):
+            value = value.strip()
+        if not _is_empty_value(value):
+            model.properties[property_name] = value
+
+    # sharedComputeCapacityEnabled maps to both a tag (presence) and a property (truthy value).
+    # When system_metadata specifies it, it is authoritative and overrides legacy tag/property.
+    if "sharedComputeCapacityEnabled" in system_metadata:
+        if _is_shared_compute_enabled(system_metadata.get("sharedComputeCapacityEnabled")):
+            model.tags[MLFlowModelTags.SHARED_COMPUTE_CAPACITY] = ""
+            model.properties[MLFlowModelProperties.SHARED_COMPUTE_CAPACITY] = "True"
+        else:
+            # system_metadata says shared compute is disabled; reflect that so validation
+            # (which requires it enabled) flags the model instead of trusting stale legacy values.
+            model.tags.pop(MLFlowModelTags.SHARED_COMPUTE_CAPACITY, None)
+            model.properties[MLFlowModelProperties.SHARED_COMPUTE_CAPACITY] = ""
+
+
 def validate_model_spec(asset_config: assets.AssetConfig) -> int:
     """Validate model spec.
 
@@ -836,6 +956,15 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
             f"Bypass validation for {asset_config.name} as model type is: {model_config.type.value}"
         )
         return 0
+
+    # The SDK Model object has no awareness of system_metadata. Apply system_metadata as the
+    # source of truth onto the validator-visible tags/properties for migrated models, so its
+    # values take precedence over any legacy tag/property.
+    try:
+        system_metadata = asset_config.spec_as_object().system_metadata
+    except Exception:
+        system_metadata = {}
+    backfill_validation_fields_from_system_metadata(model, system_metadata)
 
     # confirm must have
     if not model.tags.get(MLFlowModelTags.TASK):
@@ -895,7 +1024,7 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
     )
 
     # check valid computes for inference
-    with open(SUPPORTED_INFERENCE_SKU_FILE_PATH) as f:
+    with open(SUPPORTED_INFERENCE_SKU_FILE_PATH, encoding='utf-8') as f:
         supported_inference_skus = set(json.load(f))
         unsupported_skus_in_spec = [
             sku
@@ -935,6 +1064,32 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
     return error_count
 
 
+def validate_mlflow_model(asset_config: assets.AssetConfig) -> int:
+    """Validate if model is of type MLFlow.
+
+    Args:
+        asset_config (assets.AssetConfig): asset config for model spec
+    """
+    model_config = None
+
+    try:
+        load_model(asset_config.spec_with_path)
+        model_config: assets.ModelConfig = asset_config.extra_config_as_object()
+    except Exception:
+        logger.log_warning("Could not validate if model is of type MLFlow due to invalid spec or model config")
+        return
+
+    if model_config.type == assets.config.ModelType.MLFLOW:
+        logger.log_warning(f"{asset_config.name} is a model of type {model_config.type.value} "
+                           f"which is banned from the model catalog")
+
+        # Update mlflow_model_detected variable for Github Actions only
+        if "GITHUB_OUTPUT" in os.environ:
+            logger.print("Setting GITHUB_OUTPUT env variable for mlflow_model_detected=true")
+            with open(os.environ["GITHUB_OUTPUT"], "a", encoding='utf-8') as f:
+                print("mlflow_model_detected=true", file=f)
+
+
 def get_validated_models_assets_map(model_validation_results_dir: str):
     """Return model assets map."""
     try:
@@ -966,7 +1121,9 @@ def validate_assets(input_dirs: List[Path],
                     check_categories: bool = False,
                     check_build_context: bool = False,
                     check_tests: bool = False,
-                    check_environment_version: bool = False) -> bool:
+                    check_environment_version: bool = False,
+                    added_files: List[Path] = None,
+                    duplicate_name_exceptions: set = None) -> bool:
     """Validate assets.
 
     Args:
@@ -981,6 +1138,9 @@ def validate_assets(input_dirs: List[Path],
         check_build_context (bool, optional): Whether to check environment build context. Defaults to False.
         check_tests (bool, optional): Whether to check test references. Defaults to False.
         check_environment_version (bool, optional): Whether to check environment version. Defaults to False.
+        added_files (List[Path], optional): List of added files, used for validating new assets. Defaults to None.
+        duplicate_name_exceptions (set, optional): Model names allowed to appear in multiple asset YAMLs
+            (each must have a unique version). Applied to MODEL assets only. Defaults to None.
 
     Raises:
         ValidationException: If validation fails.
@@ -990,12 +1150,14 @@ def validate_assets(input_dirs: List[Path],
     """
     # Gather list of just changed assets, for later filtering
     changed_assets = util.find_asset_config_files(input_dirs, asset_config_filename, changed_files) if changed_files else None  # noqa: E501
+    added_assets = util.find_asset_config_files(input_dirs, asset_config_filename, added_files) if added_files else None  # noqa: E501
     validated_model_map = get_validated_models_assets_map(model_validation_results_dir)
 
     # Find assets under input dirs
     asset_count = 0
     error_count = 0
     asset_dirs = defaultdict(list)
+    asset_dir_versions = defaultdict(list)
     image_names = defaultdict(list)
     for asset_config_path in util.find_asset_config_files(input_dirs, asset_config_filename):
         asset_count += 1
@@ -1013,8 +1175,28 @@ def validate_assets(input_dirs: List[Path],
                 _log_warning(asset_config_path, e)
             continue
 
+        # Extract fields not supported in SDK from spec
+        unsupported_fields = ["variantInfo", "defaultDeploymentTemplate", "isArchived", "intellectualProperty"]
+        unsupported_fields_mapping = {}
+
+        if asset_config.type == assets.AssetType.MODEL:
+            with open(asset_config.spec_with_path, "r", encoding='utf-8') as f:
+                spec_config = yaml.safe_load(f)
+
+                for field in unsupported_fields:
+                    if field in spec_config:
+                        logger.print(f"Found unsupported SDK field '{field}' in spec for asset {asset_config.name}")
+                        unsupported_fields_mapping[field] = spec_config.pop(field)
+
+            if unsupported_fields_mapping:
+                logger.print(f"Found unsupported fields in spec, popping out info and rewriting spec. "
+                             f"unsupported fields: {unsupported_fields_mapping}")
+                with open(asset_config.spec_with_path, "w", encoding='utf-8') as f:
+                    yaml.dump(spec_config, f, allow_unicode=True, default_flow_style=False)
+
         # Populate dictionary of asset names to asset config paths
         asset_dirs[f"{asset_config.type.value} {asset_config.name}"].append(asset_config_path)
+        asset_dir_versions[f"{asset_config.type.value} {asset_config.name}"].append(str(asset_config.version))
 
         # validated_model_map would be empty for non-drop scenario
         if asset_config.type == assets.AssetType.MODEL:
@@ -1057,6 +1239,12 @@ def validate_assets(input_dirs: List[Path],
             if check_tests:
                 error_count += validate_tests(asset_config)
 
+            # Validate if MLFlow model if new asset
+            if asset_config.type == assets.AssetType.MODEL:
+                if added_assets and asset_config_path in added_assets:
+                    logger.print(f"Validating type of new model: {asset_config.name}")
+                    validate_mlflow_model(asset_config)
+
             if asset_config.type == assets.AssetType.ENVIRONMENT:
                 # Validate Dockerfile
                 error_count += validate_dockerfile(asset_config.extra_config_as_object())
@@ -1073,10 +1261,17 @@ def validate_assets(input_dirs: List[Path],
                 asset_spec = asset_config._spec._yaml
                 evaluation_type = asset_spec.get('tags', {}).get('evaluation_type', None)
 
-                if evaluation_type == 'text_generation':
-                    error_count += validate_tags(asset_config, 'evaluationresult/tag_values_text_generation.yaml')
-                elif evaluation_type == 'text_embeddings':
-                    error_count += validate_tags(asset_config, 'evaluationresult/tag_values_text_embeddings.yaml')
+                evaluation_tag_files = {
+                    'text_generation': 'evaluationresult/tag_values_text_generation.yaml',
+                    'text_embeddings': 'evaluationresult/tag_values_text_embeddings.yaml',
+                    'vision': 'evaluationresult/tag_values_vision.yaml',
+                    'text_quality': 'evaluationresult/tag_values_text_quality.yaml',
+                    'text_performance': 'evaluationresult/tag_values_text_performance.yaml',
+                    'text_cost': 'evaluationresult/tag_values_text_cost.yaml'
+                }
+
+                if evaluation_type in evaluation_tag_files:
+                    error_count += validate_tags(asset_config, evaluation_tag_files[evaluation_type])
                 else:
                     _log_error(
                         asset_config.file_name_with_path,
@@ -1111,10 +1306,33 @@ def validate_assets(input_dirs: List[Path],
                 _log_error(asset_config.spec_with_path, e)
                 error_count += 1
 
+        # Write unsupported fields back to spec
+        if unsupported_fields_mapping:
+            spec_config.update(unsupported_fields_mapping)
+            with open(asset_config.spec_with_path, "w", encoding='utf-8') as f:
+                yaml.dump(spec_config, f, allow_unicode=True, default_flow_style=False)
+
     # Ensure unique assets
     for type_and_name, dirs in asset_dirs.items():
         if len(dirs) > 1:
             dirs_str = [d.as_posix() for d in dirs]
+            # Duplicate-name exception (models only): a model on the exceptions list may live in
+            # multiple asset YAMLs (e.g. several versions kept in the repo at once), as long as each
+            # has a unique version. Non-exempt assets remain strictly unique by {type} {name}.
+            asset_type_value, _, asset_name = type_and_name.partition(" ")
+            if (duplicate_name_exceptions
+                    and asset_type_value == assets.AssetType.MODEL.value
+                    and asset_name in duplicate_name_exceptions):
+                versions = asset_dir_versions[type_and_name]
+                duplicate_versions = sorted(v for v, count in Counter(versions).items() if count > 1)
+                if duplicate_versions:
+                    logger.log_error(f"{type_and_name} has duplicate version(s) {duplicate_versions} "
+                                     f"across multiple asset YAMLs: {dirs_str}")
+                    error_count += 1
+                else:
+                    logger.print(f"{type_and_name} allowed in multiple asset YAMLs via duplicate-name "
+                                 f"exception; versions {sorted(versions)} are unique")
+                continue
             logger.log_error(f"{type_and_name} found in multiple asset YAMLs: {dirs_str}")
             error_count += 1
 
@@ -1154,11 +1372,26 @@ if __name__ == '__main__':
                         help="Check test references")
     parser.add_argument("-e", "--check-environment-version", action="store_true",
                         help="Check environment version")
+    parser.add_argument("-d", "--added-files",
+                        help="Comma-separated list of added files, used to validate new assets")
+    parser.add_argument("-x", "--duplicate-name-exceptions", type=Path, default=None,
+                        help="Path to a YAML file with a 'models' list of model names allowed to appear "
+                             "in multiple asset YAMLs (versions must still be unique)")
     args = parser.parse_args()
 
     # Convert comma-separated values to lists
     input_dirs = [Path(d) for d in args.input_dirs.split(",")]
     changed_files = [Path(f) for f in args.changed_files.split(",")] if args.changed_files else []
+    added_files = [Path(f) for f in args.added_files.split(",")] if args.added_files else []
+
+    # Load duplicate-name exceptions (model names allowed to appear in multiple asset YAMLs)
+    duplicate_name_exceptions = None
+    if args.duplicate_name_exceptions:
+        with open(args.duplicate_name_exceptions, encoding="utf-8") as f:
+            exceptions_config = yaml.safe_load(f) or {}
+        duplicate_name_exceptions = set(exceptions_config.get("models", []) or [])
+        logger.print(f"Loaded {len(duplicate_name_exceptions)} duplicate-name exception(s): "
+                     f"{sorted(duplicate_name_exceptions)}")
 
     # Share asset naming convention URL
     if args.check_names:
@@ -1179,6 +1412,8 @@ if __name__ == '__main__':
                               check_build_context=args.check_build_context,
                               model_validation_results_dir=args.model_validation_results_dir,
                               check_tests=args.check_tests,
-                              check_environment_version=args.check_environment_version)
+                              check_environment_version=args.check_environment_version,
+                              added_files=added_files,
+                              duplicate_name_exceptions=duplicate_name_exceptions)
     if not success:
         sys.exit(1)

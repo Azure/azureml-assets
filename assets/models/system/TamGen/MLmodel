@@ -1,0 +1,28 @@
+flavors:
+  python_function:
+    artifacts:
+      checkpoint:
+        path: artifacts/checkpoint_best.pt
+        uri: checkpoints/crossdock_pdb_A10/checkpoint_best.pt
+      gpt_dir:
+        path: artifacts/gpt_model
+        uri: gpt_model
+    cloudpickle_version: 3.1.0
+    code: null
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.9.21
+    streamable: false
+metadata:
+  base_model_name: TamGen
+  base_model_task: protein-design
+  is_acft_model: true
+  is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+mlflow_version: 2.19.0
+model_size_bytes: 2369527609
+model_uuid: 4d8c93488e5448c1a194803ee07e2b7f
+utc_time_created: '2025-01-10 11:15:29.937290'

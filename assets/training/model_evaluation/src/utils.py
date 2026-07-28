@@ -250,13 +250,26 @@ def _log_metrics(metrics, artifacts):
                     if not isinstance(v, np.ndarray) and not isinstance(v, list):
                         continue
                     x, y = np.histogram(v, bins=10)
-                    run.log_table("Bert F1 Score", value={"_score": list(y)[1:], "count": list(x)})
+                    # TODO: check if we need to look in different keys for precision, recall and f1
+                    x = np.array(x).tolist()
+                    y = np.array(y).tolist()
+
+                    run.log_table("Bert F1 Score", value={"_score": json.dumps(list(y)[1:]),
+                                                          "count": json.dumps(list(x))})
 
                     x, y = np.histogram(v, bins=10)
-                    run.log_table("Bert Precision", value={"_score": list(y)[1:], "count": list(x)})
+                    x = np.array(x).tolist()
+                    y = np.array(y).tolist()
+
+                    run.log_table("Bert Precision", value={"_score": json.dumps(list(y)[1:]),
+                                                           "count": json.dumps(list(x))})
 
                     x, y = np.histogram(v, bins=10)
-                    run.log_table("Bert Recall", value={"_score": list(y)[1:], "count": list(x)})
+                    x = np.array(x).tolist()
+                    y = np.array(y).tolist()
+
+                    run.log_table("Bert Recall", value={"_score": json.dumps(list(y)[1:]),
+                                                        "count": json.dumps(list(x))})
             elif name in metrics_constants.Metric.QA_GPT_METRICS_SET:
                 try:
                     if not isinstance(score, list) and not isinstance(score, np.ndarray):
@@ -1003,14 +1016,25 @@ def prepare_data(data, task, all_cols, label_column_name=None,
             log_traceback(exception, logger, message)
             raise exception
 
-    if task == constants.TASK.CHAT_COMPLETION and file_ext == SupportedFileExtensions.CSV:
-        try:
-            X_test = X_test.applymap(json.loads)
-        except Exception as e:
-            message = "Incorrectly formatted JSON in CSV file."
-            exception = get_azureml_exception(DataLoaderException, BadInputData, e, error=message)
-            log_traceback(exception, logger, message)
-            raise exception
+    if task == constants.TASK.CHAT_COMPLETION:
+        if file_ext == SupportedFileExtensions.CSV:
+            try:
+                X_test = X_test.applymap(json.loads)
+            except Exception as e:
+                message = "Incorrectly formatted JSON in CSV file."
+                exception = get_azureml_exception(DataLoaderException, BadInputData, e, error=message)
+                log_traceback(exception, logger, message)
+                raise exception
+        if y_test is None:
+            col_name = all_cols[0]
+            ground_truth = []
+            for xt in X_test[col_name].tolist():
+                if isinstance(xt, list) and isinstance(xt[0], dict):
+                    if xt[-1].get("role", "assistant") == "user":
+                        ground_truth.append(xt[-1]["content"])
+            if len(ground_truth) == X_test.shape[0]:
+                y_test = pd.Series(ground_truth)
+                X_test[col_name] = X_test[col_name].apply(lambda x: x[:-1])
 
     if y_test is not None:
         y_test = y_test.values

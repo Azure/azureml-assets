@@ -1,0 +1,31 @@
+flavors:
+  python_function:
+    artifacts:
+      model_dir:
+        path: artifacts/llava-med-v1.5-mistral-7b
+        uri: ../../llava-med-v1.5-mistral-7b/llava-med-v1.5-mistral-7b/../../llava-med-v1.5-mistral-7b/llava-med-v1.5-mistral-7b
+    cloudpickle_version: 2.2.1
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.9.19
+    streamable: false
+metadata:
+  base_model_name: null
+  base_model_task: image-text-to-text
+  is_acft_model: true
+  is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+mlflow_version: 2.16.2
+model_size_bytes: 15133110292
+model_uuid: 7404c3512a654116a76b9c1855266d5f
+signature:
+  inputs: '[{"type": "string", "name": "image", "required": true}, {"type": "string",
+    "name": "prompt", "required": true}, {"type": "string", "name": "direct_question",
+    "required": true}]'
+  outputs: '[{"type": "string", "name": "response", "required": true}]'
+  params: null
+utc_time_created: '2024-10-07 17:42:14.494661'

@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: huggingface/phi-3-small-128k-instruct/mlflow_model_folder 
+  container_path: huggingface/phi-3-small-128k-instruct/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:

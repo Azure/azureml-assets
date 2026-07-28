@@ -7,8 +7,12 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - assets/**
+    types:
+      - opened
+      - labeled
+      - unlabeled
+      - synchronize
+      - reopened
   workflow_dispatch:
     inputs:
       asset_dirs:
@@ -30,10 +34,20 @@ defaults:
 permissions:
   # Required for OIDC login to Azure
   id-token: write
+  # Required to clone repo
+  contents: read
 
 jobs:
+  check-directory-file-changes:
+    uses: Azure/azureml-assets/.github/workflows/check-changed-files.yaml@main
+    with:
+      folder_path: "assets/**"
+      forked_pr_input: false
+
   validate:
     name: Validate
+    needs: check-directory-file-changes
+    if: needs.check-directory-file-changes.outputs.files-changed != ''
     runs-on: ubuntu-latest
     environment: Testing
 
@@ -41,17 +55,10 @@ jobs:
       - name: Clone branch
         uses: actions/checkout@v3
       
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v35
-        with:
-          files_separator: ','
-          separator: ','
-      
       - name: Use Python 3.10 or newer
         uses: actions/setup-python@v4
         with:
-          python-version: '>=3.10'
+          python-version: '3.12'
 
       - name: Log in to Azure
         env:
@@ -67,12 +74,30 @@ jobs:
           subscription-id: ${{ env.subscription_id }}
 
       - name: Install dependencies
-        run: pip install -e $scripts_azureml_assets_dir
+        run: pip install -e $scripts_azureml_assets_dir azureml-registry-tools
 
       - name: Validate assets
-        run: python -u $scripts_assets_dir/validate_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -c "${{ steps.changed-files.outputs.all_modified_files }}" -n -I -C -b -t -e
+        id: validate_assets
+        run: |
+          echo "Changed files: ${{ needs.check-directory-file-changes.outputs.files-changed }}"
+          echo "Added files: ${{ needs.check-directory-file-changes.outputs.files-added }}"
+          python -u $scripts_assets_dir/validate_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -c "${{ needs.check-directory-file-changes.outputs.files-changed }}" -d "${{ needs.check-directory-file-changes.outputs.files-added }}" -n -I -C -b -t -e
         env:
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Validate models with model schema
+        id: validate-models
+        run: |
+          python -u -m azureml.registry.data.validate_model_schema -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" --enforce-migration || {
+            echo "::error::Model specs are not compliant with the model schema. Please update your model spec or request a change to the model schema. See https://aka.ms/azureml/model-system-metadata for more details. Reach out to System Registry Content team if you have any questions."
+            exit 1
+          }
+
+      - name: Check PR labels for "mlflow noncompliant exception" label if new MLFlow model was detected
+        if: fromJSON(steps.validate_assets.outputs.mlflow_model_detected || 'false') && !contains(github.event.pull_request.labels.*.name, 'mlflow noncompliant exception')
+        run: |
+          echo "::error::This PR contains an MLFlow model which is banned from the model catalog. Please reach out to System Registry Content team if you have any questions."
+          exit 1
 
       - name: Validate source tree
         run: python -u $scripts_assets_dir/validate_tree.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}"

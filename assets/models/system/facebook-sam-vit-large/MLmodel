@@ -1,0 +1,31 @@
+flavors:
+  python_function:
+    artifacts:
+      model_dir:
+        path: artifacts/INPUT_model_path
+        uri: /mnt/azureml/cr/j/05e10f0d49ae42cf8ae3d60b33a76f7b/cap/data-capability/wd/INPUT_model_path
+    cloudpickle_version: 2.2.1
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.8.18
+metadata:
+  base_model_name: facebook/sam-vit-large
+  base_model_task: mask-generation
+  is_acft_model: true
+  is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+mlflow_version: 2.10.2
+model_size_bytes: 3748896354
+model_uuid: c02ca1a067d146c3a12b45f8ccb31861
+signature:
+  inputs: '[{"type": "string", "name": "image", "required": true}, {"type": "string",
+    "name": "input_points", "required": true}, {"type": "string", "name": "input_boxes",
+    "required": true}, {"type": "string", "name": "input_labels", "required": true},
+    {"type": "boolean", "name": "multimask_output", "required": true}]'
+  outputs: '[{"type": "string", "name": "response", "required": true}]'
+  params: null
+utc_time_created: '2024-04-30 07:03:28.797225'

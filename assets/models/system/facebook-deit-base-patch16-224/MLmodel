@@ -1,0 +1,36 @@
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.transformers
+    model_binary: model
+    python_version: 3.8.19
+  transformers:
+    code: null
+    components:
+    - image_processor
+    framework: pt
+    image_processor_type: ViTImageProcessor
+    instance_type: ImageClassificationPipeline
+    model_binary: model
+    pipeline_model_type: ViTForImageClassification
+    source_model_name: /mnt/azureml/cr/j/6dc4585417fc46c5a6e3b889478e447f/cap/data-capability/wd/INPUT_model_path
+    task: image-classification
+    torch_dtype: torch.float32
+    transformers_version: 4.40.1
+metadata:
+  base_model_name: facebook/deit-base-patch16-224
+  base_model_task: image-classification
+  is_acft_model: true
+  is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+mlflow_version: 2.10.2
+model_size_bytes: 346364593
+model_uuid: 0ce4e5f0104e42debf0b31e2347aa3a1
+signature:
+  inputs: '[{"type": "string", "required": true}]'
+  outputs: '[{"type": "string", "name": "label", "required": true}, {"type": "double",
+    "name": "score", "required": true}]'
+  params: null
+utc_time_created: '2024-05-20 05:21:05.857905'

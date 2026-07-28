@@ -1,9 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""
-Creates random images.
-"""
+"""Creates random images."""
+
+
 import os
 
 import numpy as np
@@ -12,6 +12,7 @@ import argparse
 
 
 def generate(path, samples, classes, width, height):
+    """Generate and save random images."""
     os.makedirs(path, exist_ok=True)
 
     for i in range(samples):
@@ -30,6 +31,7 @@ def generate(path, samples, classes, width, height):
 
 
 def main(cli_args: list = None) -> None:
+    """Parse args and generate random images for training and validation sets."""
     parser = argparse.ArgumentParser(__doc__)
     parser.add_argument(
         "--output_train",

@@ -41,6 +41,10 @@ from azureml.model.mgmt.processors.pyfunc.segment_anything.config import \
     MLflowSchemaLiterals as SegmentAnythingMLFlowSchemaLiterals, MLflowLiterals as SegmentAnythingMLflowLiterals
 from azureml.model.mgmt.processors.pyfunc.vision.config import \
     MLflowSchemaLiterals as VisionMLFlowSchemaLiterals, MMDetLiterals
+from azureml.model.mgmt.processors.pyfunc.virchow.config import \
+    MLflowSchemaLiterals as VirchowMLFlowSchemaLiterals, MLflowLiterals as VirchowMLflowLiterals
+from azureml.model.mgmt.processors.pyfunc.hibou_b.config import \
+    MLflowSchemaLiterals as HibouBMLFlowSchemaLiterals, MLflowLiterals as HibouBMLflowLiterals
 
 
 logger = get_logger(__name__)
@@ -1136,3 +1140,171 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
             conda_env=conda_env_file,
             code_path=None,
         )
+
+
+class VirchowMLFlowConvertor(PyFuncMLFLowConvertor):
+    """PyFunc MLfLow convertor for Virchow models."""
+
+    MODEL_DIR = os.path.join(os.path.dirname(__file__), "virchow")
+    COMMON_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "common")
+
+    def __init__(self, **kwargs):
+        """Initialize MLflow convertor for Virchow models."""
+        super().__init__(**kwargs)
+        if self._task not in \
+                [SupportedTasks.IMAGE_FEATURE_EXTRACTION.value]:
+            raise Exception("Unsupported task")
+
+    def get_model_signature(self) -> ModelSignature:
+        """Return MLflow model signature with input and output schema for the given input task.
+
+        :return: MLflow model signature.
+        :rtype: mlflow.models.signature.ModelSignature
+        """
+        input_schema = Schema(
+            [
+                ColSpec(VirchowMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE_DATA_TYPE,
+                        VirchowMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE),
+                ColSpec(VirchowMLFlowSchemaLiterals.INPUT_COLUMN_TEXT_DATA_TYPE,
+                        VirchowMLFlowSchemaLiterals.INPUT_COLUMN_TEXT),
+            ]
+        )
+        params = ParamSchema(
+                [
+                    ParamSpec(VirchowMLflowLiterals.DEVICE_TYPE,
+                              DataType.string, "cuda"),
+                    ParamSpec(VirchowMLflowLiterals.TO_HALF_PRECISION,
+                              DataType.boolean, False),
+                ]
+            )
+        if self._task == SupportedTasks.IMAGE_FEATURE_EXTRACTION.value:
+            output_schema = Schema(
+                [
+                    ColSpec(VirchowMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE,
+                            VirchowMLFlowSchemaLiterals.OUTPUT_COLUMN_PROBS),
+                    ColSpec(VirchowMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE,
+                            VirchowMLFlowSchemaLiterals.OUTPUT_COLUMN_LABELS),
+                    ColSpec(VirchowMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE,
+                            VirchowMLFlowSchemaLiterals.OUTPUT_COLUMN_IMAGE_FEATURES),
+                    ColSpec(VirchowMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE,
+                            VirchowMLFlowSchemaLiterals.OUTPUT_COLUMN_TEXT_FEATURES),
+                ]
+            )
+        else:
+            raise Exception("Unsupported task")
+
+        return ModelSignature(inputs=input_schema, outputs=output_schema, params=params)
+
+    def save_as_mlflow(self):
+        """Prepare model for save to MLflow."""
+        sys.path.append(self.MODEL_DIR)
+
+        from virchow_mlflow_model_wrapper import VirchowModelWrapper
+        mlflow_model_wrapper = VirchowModelWrapper()
+
+        artifacts_dict = self._prepare_artifacts_dict()
+        conda_env_file = os.path.join(self.MODEL_DIR, "conda.yaml")
+        code_path = self._get_code_path()
+
+        super()._save(
+            mlflow_model_wrapper=mlflow_model_wrapper,
+            artifacts_dict=artifacts_dict,
+            conda_env=conda_env_file,
+            code_path=code_path,
+        )
+
+    def _get_code_path(self):
+        """Return code path for saving mlflow model depending on task type.
+
+        :return: code path
+        :rtype: List[str]
+        """
+        code_path = [
+            os.path.join(self.MODEL_DIR, "virchow_mlflow_model_wrapper.py"),
+            os.path.join(self.MODEL_DIR, "config.py"),
+            os.path.join(self.COMMON_DIR, "vision_utils.py")
+        ]
+
+        return code_path
+
+    def _prepare_artifacts_dict(self) -> Dict:
+        """Prepare artifacts dict for MLflow model.
+
+        :return: artifacts dict
+        :rtype: Dict
+        """
+        artifacts_dict = {
+            VirchowMLflowLiterals.CHECKPOINT_PATH: self._model_dir+"/pytorch_model.bin",
+            VirchowMLflowLiterals.CONFIG_PATH: self._model_dir+"/config.json"
+        }
+        return artifacts_dict
+
+
+class HibouBMLFlowConvertor(PyFuncMLFLowConvertor):
+    """PyFunc MLflow convertor for Hibou-B vision model."""
+
+    MODEL_DIR = os.path.join(os.path.dirname(__file__), "hibou_b")
+    COMMON_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "common")
+
+    def __init__(self, **kwargs):
+        """Initialize MLflow convertor for Hibou-B model."""
+        super().__init__(**kwargs)
+        if self._task not in [SupportedTasks.IMAGE_FEATURE_EXTRACTION.value, SupportedTasks.FEATURE_EXTRACTION.value]:
+            raise Exception("Unsupported task for Hibou-B convertor.")
+
+    def get_model_signature(self) -> ModelSignature:
+        """Return MLflow model signature with input and output schema for the Hibou-B model."""
+        input_schema = Schema([
+            ColSpec(DataType.string, HibouBMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE)
+        ])
+        params = ParamSchema([
+            ParamSpec(HibouBMLflowLiterals.DEVICE_TYPE, DataType.string, "cuda"),
+            ParamSpec(HibouBMLflowLiterals.TO_HALF_PRECISION, DataType.boolean, False)
+        ])
+        output_schema = Schema([
+            ColSpec(DataType.string, HibouBMLFlowSchemaLiterals.OUTPUT_COLUMN_IMAGE_FEATURES)
+        ])
+        return ModelSignature(inputs=input_schema, outputs=output_schema, params=params)
+
+    def save_as_mlflow(self):
+        """Prepare the Hibou-B model for saving to MLflow."""
+        import sys
+
+        sys.path.append(self.MODEL_DIR)
+        from hiboub_mlflow_wrapper import HibouBPoolerMLFlowModelWrapper
+
+        mlflow_model_wrapper = HibouBPoolerMLFlowModelWrapper(task_type=self._task)
+
+        artifacts_dict = self._prepare_artifacts_dict()
+        conda_env_file = os.path.join(self.MODEL_DIR, "conda.yaml")
+        code_path = self._get_code_path()
+
+        super()._save(
+            mlflow_model_wrapper=mlflow_model_wrapper,
+            artifacts_dict=artifacts_dict,
+            conda_env=conda_env_file,
+            code_path=code_path,
+        )
+
+    def _get_code_path(self):
+        """Return a list of code file paths required to run the MLflow model."""
+        code_path = [
+            os.path.join(self.MODEL_DIR, "hiboub_mlflow_wrapper.py"),
+            os.path.join(self.MODEL_DIR, "config.py"),
+        ]
+        return code_path
+
+    def _prepare_artifacts_dict(self) -> Dict:
+        """Prepare artifacts dictionary for the MLflow model.
+
+        Assumes that the Hibou-B model directory contains:
+          - pytorch_model.bin
+          - config.json
+        """
+        import os
+        print(os.listdir(self._model_dir))
+
+        artifacts_dict = {
+            HibouBMLflowLiterals.MODEL_DIR: self._model_dir
+        }
+        return artifacts_dict

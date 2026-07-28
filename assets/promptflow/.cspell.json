@@ -149,7 +149,15 @@
       "Featur",
       "showno",
       "amlraipfmodels",
-      "zhizho"
+      "zhizho",
+      "rerank",
+      "Rerank",
+      "bleu",
+      "gleu",
+      "meteor",
+      "rouge",
+      "xpia",
+      "XPIA"
     ],
     "flagWords": [
       "Prompt Flow"

@@ -31,7 +31,7 @@ jobs:
       - name: Check PR labels if forked
         if: fromJSON(env.continue) && github.event.pull_request.head.repo.fork == true && !contains(github.event.pull_request.labels.*.name, 'safe to test')
         run: |
-          echo "::error::This PR was created from a fork and requires the 'safe to test' label to run this check."
+          echo "::error::No PRs from a fork are allowed. Please create a PR from a branch. Join a group with write permissions if needed."
           exit 1
 
       # - name: Remove label

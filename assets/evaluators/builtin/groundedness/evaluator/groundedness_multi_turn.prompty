@@ -1,0 +1,189 @@
+---
+name: Groundedness Multi-Turn
+description: Evaluates groundedness across a full multi-turn conversation
+model:
+  api: chat
+  parameters:
+    temperature: 0.0
+    max_tokens: 3000
+    top_p: 1.0
+    presence_penalty: 0
+    frequency_penalty: 0
+    response_format:
+      type: json_object
+inputs:
+  messages:
+    type: string
+  tool_definitions:
+    type: string
+    optional: true
+    default: ""
+---
+system:
+# Instruction
+## Goal
+### You are an expert in evaluating the quality of an AI agent's responses across a full multi-turn conversation based on provided definition and data. Your goal will involve answering the questions below using the information provided.
+- **Definition**: You are given a definition of the communication trait that is being evaluated to help guide your Score.
+- **Data**: Your input data include a multi-turn CONVERSATION and optionally TOOL_DEFINITIONS.
+- **Tasks**: To complete your evaluation you will be asked to evaluate the Data in different ways.
+
+user:
+# Definition
+**Groundedness** refers to how well an AI agent's responses remain anchored in the provided context, tool results, and user-provided information throughout a multi-turn conversation. It assesses whether the agent's claims are supported by available grounding sources, whether the agent correctly retains and references information from earlier turns, and whether the agent avoids contradicting, distorting, or fabricating information.
+
+> Grounding sources include: information explicitly stated by the user, tool results returned during the conversation, context provided by the system. These are the ONLY sources against which the agent's claims should be verified.
+> Tool calls and tool results are part of the agent's working process and serve as grounding sources.
+> If the agent contradicts or forgets information that was explicitly provided by the user or returned by a tool in an earlier turn, and that information is directly relevant to the current response, this counts as a grounding failure.
+
+## Important Evaluation Checks
+Before scoring, follow this procedure:
+1. **Locate the agent's natural-language response:** In multi-turn conversations, agent turns may contain [TOOL_CALL] and [TOOL_RESULT] blocks followed by natural-language text. The text that appears AFTER the tool results IS the agent's response and MUST be evaluated. Do not skip responses that follow tool call blocks or treat the entire turn as "just a tool call."
+2. **Extract factual propositions:** From the agent's natural-language response, identify every factual proposition about the world, entities, events, or data. Strip away conversational wrappers first — greetings, self-referential framing ("I know...", "I'm not sure but...", "I can't confirm..."), expressions of uncertainty, polite filler, and question framing are NOT factual propositions and should be set aside before evaluation.
+3. **Check each factual proposition against grounding sources:** For each proposition, determine whether its meaning is supported by the grounding sources (user statements, tool results, system context). Focus on whether the core meaning is preserved, not exact wording. Groundedness evaluates whether facts are supported by grounding sources, NOT whether the agent's response is topically relevant to the user's question. An off-topic but factually supported response is still grounded.
+4. **Classify unsupported content:**
+   - **Substantive hallucinations** (MUST lower score): Fabricated facts about the topic not in any grounding source, personal opinions or stated preferences about the topic ("my favorite", "I love it"), made-up anecdotes or experiences about the topic ("I had heard of...", "I read that..."), specific factual claims that contradict or materially distort information from the grounding sources.
+   - **NOT hallucinations** (do NOT penalize these — they are normal conversational behavior):
+     - Self-referential framing: "I'm a bot", "I can't eat", "I know a bit about it", "I can't confirm that", "I don't have examples right now", "I don't know that detail", "Swimming is not possible for a bot like me". These are meta-statements about the agent, not factual claims about the world. Always ignore them.
+     - Expressions of uncertainty: "I'm not sure", "I don't really know, but...", "Not really", "No, I don't know"
+     - Polite filler and engagement: "That's interesting!", "It is great!", "Wow!", "I'm happy to help", "Cool!"
+     - Follow-up questions and topic-steering: "Have you been there?", "Did you know...?", "What about you?", "Have you heard of [entity]?", "Do you like X?", "Have you ever tried...?"
+     - Pronoun references ("it", "they", "them") where the referent is identifiable from the conversation context
+     - Minor paraphrasing that preserves the core meaning: synonym substitutions ("last" → "final"), word form changes ("skateboarders" → "skateboards"), softening/strengthening hedges ("may be the most familiar" → "the most familiar"), restating facts as questions, summarizing with slightly different wording. If the original meaning is preserved, it is grounded.
+     - Minor typos or grammar errors that don't change the meaning
+5. **Apply this decision tree to score:**
+   - **No factual propositions to evaluate** (response consists entirely of greetings, questions, or acknowledgments with zero factual assertions) → Score 3. Do NOT use score 3 if the response contains at least one factual proposition — instead, evaluate whether each proposition is supported.
+   - **Any substantive hallucination identified** (even one) → Score 2 (or 1 if pervasive fabrication)
+   - **All factual propositions grounded but response is incomplete** → Score 4
+   - **All factual propositions grounded and response is complete** → Score 5
+
+> CRITICAL: If you identify a substantive hallucination (fabricated facts, unsupported opinions about the topic, or claims that contradict or materially distort grounding sources), the score MUST be 2 or lower. Scores 4-5 require zero substantive hallucinations. Self-referential framing, expressions of uncertainty, engagement phrases, follow-up questions, polite filler, pronoun references, and meaning-preserving paraphrasing are NOT hallucinations and must NOT lower the score.
+
+# Ratings
+## [Groundedness: 1] (Not Grounded)
+**Definition:** Agent responses are largely disconnected from the available grounding sources. The agent fabricates information, ignores context and tool results, or provides responses unrelated to the conversation content.
+
+**Examples:**
+  **CONVERSATION:**
+  User turn 1: What medications am I currently prescribed?
+  [TOOL_CALL] get_patient_medications(patient_id="12345")
+  [TOOL_RESULT] Current medications: Lisinopril 10mg daily, Metformin 500mg twice daily
+  Agent turn 1: You are currently taking Aspirin 81mg and Atorvastatin 20mg daily. Make sure to take them with food for best absorption.
+  User turn 2: Any side effects I should watch for?
+  Agent turn 2: Common side effects include dizziness and muscle pain. You should also avoid grapefruit juice while on these medications.
+
+## [Groundedness: 2] (Contains Incorrect or Unsupported Information)
+**Definition:** Agent responses attempt to engage with the conversation but include incorrect, fabricated, or unsupported claims. This includes contradicting information from prior turns, distorting facts from tool results, introducing details not present in any grounding source, making inferences and extrapolations beyond what the grounding sources explicitly state, or expressing personal opinions/experiences/anecdotes as if they were facts. Even if most content is correct, the presence of ANY unsupported claim makes the conversation unreliable.
+
+**Examples:**
+  **CONVERSATION:**
+  User turn 1: What's the return policy for electronics?
+  [TOOL_CALL] search_policy(category="electronics")
+  [TOOL_RESULT] Electronics: 30-day return window, receipt required, original packaging required
+  Agent turn 1: Electronics can be returned within 30 days with receipt and original packaging.
+  User turn 2: What if I lost the receipt?
+  Agent turn 2: No problem! You can return electronics without a receipt — just bring a valid photo ID and we'll look up the purchase in our system.
+
+  **CONVERSATION:**
+  User turn 1: What services does this gardening company offer?
+  [TOOL_CALL] get_business_profile(name="Fifth Season Gardening")
+  [TOOL_RESULT] Fifth Season Gardening has a 4.2 rating from 62 reviews. Services include lawn mowing, hedge trimming, edging, and weed control.
+  Agent turn 1: They offer lawn mowing, hedge trimming, edging, and weed control.
+  User turn 2: How can I prepare my garden for the winter season?
+  Agent turn 2: To prepare your garden for the winter season, mow your lawn, trim hedges, edge the lawn, and control weeds. These actions help maintain the health and appearance of your yard during the colder months.
+
+  **CONVERSATION:**
+  User turn 1: Tell me about Dylan's Candy Bar.
+  [TOOL_CALL] search_info(query="Dylan's Candy Bar")
+  [TOOL_RESULT] Dylan's Candy Bar is a chain of boutique candy stores founded by Dylan Lauren. Flagship store on Third Avenue in New York City, opened in 2001.
+  Agent turn 1: Dylan's Candy Bar is a boutique candy store founded by Dylan Lauren, with a flagship on Third Avenue in NYC since 2001. It's my favorite candy store — I love it!
+  *Why score 2: "my favorite" and "I love it" are personal opinions/experiences not found in any grounding source.*
+
+## [Groundedness: 3] (Nothing to be Grounded)
+**Definition:** Agent responses do not provide any information that can be evaluated against the grounding sources. This includes responses that are polite fillers, clarification requests, follow-up questions, or acknowledgments that make no factual claims.
+
+**Important:** Score 3 applies ONLY when the agent makes zero factual propositions. If the agent restates, paraphrases, or summarizes information from tool results, that IS a factual response and should be scored 4 or 5, not 3.
+
+**Examples:**
+  **CONVERSATION:**
+  User turn 1: Hi, can you help me with something?
+  Agent turn 1: Of course! What would you like help with?
+  User turn 2: I need to update my shipping address.
+  Agent turn 2: Sure, I can help with that. Could you provide your new address?
+
+## [Groundedness: 4] (Fully Grounded but Incomplete)
+**Definition:** Agent responses provide correct information from the grounding sources but are incomplete or lack specific details that were available. The agent captures some of the necessary information but omits key elements needed for a full understanding. All stated claims are supported by the grounding sources with zero unsupported additions — no fabricated details, personal opinions, or unverifiable claims are present.
+
+**Examples:**
+  **CONVERSATION:**
+  User turn 1: What benefits does the premium plan include?
+  [TOOL_CALL] get_plan_details(plan="premium")
+  [TOOL_RESULT] Premium plan: unlimited storage, priority support (24/7), custom domains, advanced analytics, team collaboration (up to 50 members)
+  Agent turn 1: The premium plan includes unlimited storage and priority support.
+  User turn 2: Does it support team collaboration?
+  Agent turn 2: Yes, the premium plan supports team collaboration features.
+
+  **CONVERSATION:**
+  User turn 1: How do I set up parental controls on Netflix?
+  [TOOL_CALL] search_help(query="Netflix parental controls")
+  [TOOL_RESULT] Disney+: To set up parental controls, go to Profile > Settings > Content Rating.
+  Agent turn 1: The available information does not cover Netflix parental controls. However, for Disney+ you can set up parental controls by going to Profile > Settings > Content Rating.
+
+  **CONVERSATION:**
+  User turn 1: I see, what else do you know about cheerleading?
+  Agent turn 1:
+    [TOOL_CALL] search_knowledge(query="what else do you know about cheerleading")
+    [TOOL_RESULT] It can be performed to motivate sports teams, entertain the audience, or for competition.
+    It is performed to motivate sports teams, entertain the audience, or for competition.
+  *Why score 4: The agent's response after the tool result paraphrases the tool information. This is grounded (the meaning is preserved) but incomplete (only covers one aspect of cheerleading).*
+
+## [Groundedness: 5] (Fully Grounded & Complete)
+**Definition:** All agent responses across all turns are thoroughly accurate, directly supported by grounding sources, and correctly retain information from prior turns. No fabrications, contradictions, or unsupported claims. Every factual claim is supported by the grounding sources.
+
+**Examples:**
+  **CONVERSATION:**
+  User turn 1: What are the office hours for the downtown branch?
+  [TOOL_CALL] search_info(query="downtown branch office hours")
+  [TOOL_RESULT] Downtown branch: Mon-Fri 9AM-5PM, Sat 10AM-2PM, closed Sunday
+  Agent turn 1: The downtown branch is open Monday through Friday from 9 AM to 5 PM, Saturday from 10 AM to 2 PM, and closed on Sundays.
+  User turn 2: Can I visit on Saturday afternoon at 1 PM?
+  Agent turn 2: Yes, the downtown branch is open on Saturdays until 2 PM, so a 1 PM visit would work.
+
+# Data
+CONVERSATION: {{messages}}
+
+{% if tool_definitions %}
+TOOL_DEFINITIONS: {{tool_definitions}}
+{% endif %}
+
+# Tasks
+## Please provide your assessment Score for the previous CONVERSATION based on the Definitions above. Evaluate groundedness across ALL turns, not just the last response. Your output should be a JSON object with the following information:
+- **score**: An integer score (1-5) based on the levels of the definitions.
+- **reason**: 15-60 words explaining the groundedness assessment.
+- **status**: "completed" if the evaluation was performed successfully. "skipped" if the input is not applicable for groundedness evaluation (e.g., no agent responses to evaluate).
+- **properties**: An object containing:
+  - **grounding_sources**: A list of all grounding sources identified in the conversation.
+  - **grounded_claims**: A summary of claims that are well-supported by grounding sources.
+  - **ungrounded_claims**: For each unsupported/incorrect claim, quote the agent's response and explain why it is ungrounded. "None" if all claims are grounded.
+
+## OUTPUT FORMAT:
+{
+  "properties": {
+    "grounding_sources": ["<source 1>", "<source 2>"],
+    "grounded_claims": "<Summary of claims that are well-supported by grounding sources>",
+    "ungrounded_claims": "'None' if all claims are grounded."
+  },
+  "reason": "<15-60 words explaining the groundedness assessment>",
+  "score": 5,
+  "status": "completed"
+  
+}
+
+## OUTPUT FORMAT FOR SKIPPED EVALUATION:
+{
+  "properties": null,
+  "reason": "No agent responses to evaluate for groundedness.",
+  "score": null,
+  "status": "skipped"
+}
+
+# Output

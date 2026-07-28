@@ -16,7 +16,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-asr" target="_blank">asr-
 ```json
 {
    "input_data": {
-       "audio": ["https://www2.cs.uic.edu/~i101/SoundFiles/gettysburg.wav", "https://www2.cs.uic.edu/~i101/SoundFiles/preamble.wav"],
+       "audio": ["https://www.cs.uic.edu/~troy/spring09/cs101/SoundFiles/gettysburg.wav", "https://www.cs.uic.edu/~troy/spring09/cs101/SoundFiles/preamble.wav"],
        "language": ["en", "en"]
    }
 }

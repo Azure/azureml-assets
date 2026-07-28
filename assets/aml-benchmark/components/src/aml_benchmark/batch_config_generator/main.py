@@ -13,7 +13,7 @@ from aml_benchmark.utils.logging import get_logger
 from aml_benchmark.utils.exceptions import swallow_all_exceptions
 from aml_benchmark.utils.aml_run_utils import str2bool
 from aml_benchmark.utils.exceptions import BenchmarkUserException
-from aml_benchmark.utils.constants import AuthenticationType, get_endpoint_type
+from aml_benchmark.utils.constants import AuthenticationType, ApiType, get_api_type, get_endpoint_type
 from aml_benchmark.utils.error_definitions import BenchmarkUserError
 from azureml._common._error_definition.azureml_error import AzureMLError
 
@@ -35,7 +35,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--scoring_url",
         type=str,
-        help="The URL of the endpoint."
+        help="The URL of the endpoint.",
+        default=None,
     )
     parser.add_argument(
         "--connection_name",
@@ -248,7 +249,7 @@ def _get_overriding_configs(configuration_file: Optional[str]) -> Dict[Any, Any]
 
 @swallow_all_exceptions(logger)
 def main(
-    scoring_url: str,
+    scoring_url: Optional[str],
     connection_name: str,
     authentication_type: AuthenticationType,
     debug_mode: bool,
@@ -305,11 +306,13 @@ def main(
     )
     request_settings_dict = _get_request_settings(additional_headers_dict, max_retry_time_interval)
 
+    api_type = get_api_type(merged_scoring_url)
+    api_dict = {"type": api_type}
+    if api_type == ApiType.Completion:
+        api_dict["response_segment_size"] = response_segment_size
+
     config_dict = {
-        "api": {
-            "type": "completion",
-            "response_segment_size": response_segment_size
-        },
+        "api": api_dict,
         "authentication": authentication_dict,
         "concurrency_settings": {
             "initial_worker_count": initial_worker_count,

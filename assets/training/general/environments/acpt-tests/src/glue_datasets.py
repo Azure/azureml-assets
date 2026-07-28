@@ -28,8 +28,9 @@ import argparse
 import os
 import logging as logger
 from typing import Any, Union, Dict, Callable
-from datasets import load_dataset, load_metric
-from datasets import DatasetDict, Metric  # used for typing
+from datasets import load_dataset
+from evaluate import load, Metric
+from datasets import DatasetDict  # used for typing
 from torch.utils.data.dataset import Dataset
 from transformers import PreTrainedTokenizerBase, AutoTokenizer
 
@@ -70,7 +71,7 @@ def num_labels_from_task(task: str) -> int:
 
 def load_metric_from_task(task: str) -> Metric:
     """Load the metric for the corresponding GLUE task."""
-    metric = load_metric("glue", actual_task(task))
+    metric = load("glue", actual_task(task))
     return metric
 
 
@@ -128,7 +129,7 @@ def construct_tokenizer_function(
 
 def load_raw_glue_dataset(task: str) -> Union[DatasetDict, Dataset]:
     """Load the raw GLUE dataset."""
-    dataset = load_dataset("glue", actual_task(task))
+    dataset = load_dataset("nyu-mll/glue", actual_task(task))
     return dataset
 
 

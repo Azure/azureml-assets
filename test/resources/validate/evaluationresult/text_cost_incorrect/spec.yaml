@@ -1,0 +1,37 @@
+type: evaluationresult
+name: model1-16k_cost
+version: 21.10.24
+display_name: model1
+description: Cost benchmark results for model1
+model_name: model1
+model_version: '1'
+model_asset_id: azureml://registries/azureml/models/model1/versions/1
+
+dataset_family: synthetic
+dataset_name: synthetic
+relationships:
+    - relationshipType: Source
+      assetId: azureml://registries/azureml/models/model1/versions/1
+tags:
+  evaluation_type: text_cost
+  index_metric_key: random_key
+
+metrics:
+  input_token_cost_per_1M_tokens: 3.0
+  output_token_cost_per_1M_tokens: 4.0
+  total_cost_per_1M_tokens: 3.25
+
+properties:
+  deployment_category: azureml
+  disclaimer: Cost Calculation is indicative and may vary based on the actual usage
+    and configuration.
+  additional_info: https://azure.microsoft.com/en-us/pricing/details/cognitive-services/openai-service/
+  currency: USD
+  input_output_token_ratio: '3:1'
+  input_token_weightage_per_million: 750000
+  output_token_weightage_per_million: 250000
+  deployment_type: global
+  region: eastus
+  input_meter_id: input_meter_id
+  output_meter_id: output_meter_id
+

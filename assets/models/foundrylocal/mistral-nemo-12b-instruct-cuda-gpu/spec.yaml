@@ -1,0 +1,48 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: mistral-nemo-12b-instruct-cuda-gpu
+path: ./
+isArchived: true
+tags:
+  capabilities: tool-calling
+  supportsReasoning: ''
+  contextLength: 131072
+system_metadata:
+  alias: mistral-nemo-12b-instruct
+  publisher: Microsoft
+  directoryPath: v1
+  foundryLocal: ''
+  inputModalities:
+  - text
+  license: apache-2.0
+  licenseDescription: This model is provided under the License Terms available at <https://www.apache.org/licenses/LICENSE-2.0.html>.
+  maxOutputTokens: 2048
+  outputModalities:
+  - text
+  promptTemplate: '{"system": "<s>", "user": "[INST]\n{Content}\n[/INST]", "assistant": "{Content}</s>", "prompt": "[INST]\n{Content}\n[/INST]"}'
+  supportsToolCalling: true
+  toolCallEnd: </s>
+  toolCallStart: '[TOOL_CALLS]'
+  toolRegisterEnd: '[/AVAILABLE_TOOLS]'
+  toolRegisterStart: '[AVAILABLE_TOOLS]'
+  toolResponseEnd: '[/TOOL_RESULTS]'
+  toolResponseStart: '[TOOL_RESULTS]'
+  tasks:
+    inferenceTasks:
+    - chat-completion
+  platformCapabilities:
+    enableMaap: false
+  reasoningStart: ''
+  reasoningEnd: ''
+  minFLVersion: 0.0.0
+variantInfo:
+  parents:
+  - assetId: azureml://registries/azureml/models/mistral-nemo-12b-instruct/versions/1
+  variantMetadata:
+    modelType: ONNX
+    quantization:
+    - GPTQ
+    device: gpu
+    executionProvider: CUDAExecutionProvider
+    fileSizeBytes: 7095179287
+    vRamFootprintBytes: 7095179287
+version: 1

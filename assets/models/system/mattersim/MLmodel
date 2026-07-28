@@ -1,0 +1,28 @@
+flavors:
+  python_function:
+    artifacts:
+      checkpoint-1M:
+        path: artifacts/mattersim-v1.0.0-1M.pth
+        uri: pretrained_models/mattersim-v1.0.0-1M.pth
+      checkpoint-5M:
+        path: artifacts/mattersim-v1.0.0-5M.pth
+        uri: pretrained_models/mattersim-v1.0.0-5M.pth
+    cloudpickle_version: 3.1.0
+    code: null
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.9.21
+    streamable: false
+metadata:
+  base_model_name: Mattersim
+  base_model_task: materials-design
+  is_acft_model: true
+  is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+mlflow_version: 2.19.0
+model_size_bytes: 109113226
+model_uuid: 509886a1ecbd426ba4a45ce91a63062d
+utc_time_created: '2025-04-11 09:47:23.122601'

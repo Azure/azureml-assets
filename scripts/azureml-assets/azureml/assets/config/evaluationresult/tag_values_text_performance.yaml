@@ -1,0 +1,6 @@
+# Valid tag values that can be applied to evaluation results whose evaluation_type is `text_performance`.
+index_metric_key:
+  required: True
+  allow_multiple: False
+  values:
+  - throughput_gtps_token_count

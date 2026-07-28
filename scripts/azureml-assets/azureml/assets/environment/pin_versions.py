@@ -1,6 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Pin images and packages and write results."""
+
+
 import argparse
 from pathlib import Path
 
@@ -9,8 +12,9 @@ from azureml.assets.util import logger
 
 
 def transform_file(input_file: Path, output_file: Path = None):
+    """Transform file."""
     # Read file
-    with open(input_file) as f:
+    with open(input_file, encoding='utf-8') as f:
         contents = f.read()
 
     # Pin images and packages
@@ -23,7 +27,7 @@ def transform_file(input_file: Path, output_file: Path = None):
     else:
         if output_file is None:
             output_file = input_file
-        with open(output_file, "w") as f:
+        with open(output_file, "w", encoding='utf-8') as f:
             f.write(contents)
 
 

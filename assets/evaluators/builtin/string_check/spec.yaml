@@ -1,0 +1,30 @@
+type: "evaluator"
+name: "builtin.string_check"
+version: 2
+displayName: "String-Check-Evaluator"
+description: "Compares exact text strings to verify presence or match. Useful for confirming fixed outputs or keywords. Use this metric in form validation, structured output generation, and data extraction."
+evaluatorType: "builtin"
+evaluatorSubType: "openai_graders"
+categories: ["quality"]
+tags:
+  provider: "Microsoft"
+initParameterSchema:
+  type: "object"
+  properties:
+    input:
+      type: "string"
+    reference:
+      type: "string"
+    name:
+      type: "string"
+    type:
+      type: "string"
+    operation:
+      type: "string"
+      enum: ["eq", "ne", "like", "ilike"]
+  required: ["name", "input", "reference", "type", "operation"]
+dataMappingSchema: {}
+outputSchema:
+  string_check:
+    type: "boolean"
+    desirable_direction: "increase"

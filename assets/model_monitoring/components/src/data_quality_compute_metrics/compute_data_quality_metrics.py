@@ -394,7 +394,8 @@ def impute_categorical_with_mode(df: pyspark.sql.DataFrame, categorical_columns:
         )
 
         # Impute the missing values with the most frequent value
-        df = df.fillna({i: most_frequent})
+        if most_frequent is not None:
+            df = df.fillna({i: most_frequent})
 
     return df
 

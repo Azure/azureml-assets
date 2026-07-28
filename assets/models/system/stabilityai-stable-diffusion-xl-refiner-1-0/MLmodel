@@ -1,0 +1,31 @@
+flavors:
+  python_function:
+    artifacts:
+      model_dir:
+        path: artifacts/INPUT_model_path
+        uri: /mnt/azureml/cr/j/56b90b081c0f47a3a762d91e87421b18/cap/data-capability/wd/INPUT_model_path
+    cloudpickle_version: 2.2.1
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.9.20
+    streamable: false
+metadata:
+  base_model_name: stabilityai/stable-diffusion-xl-refiner-1.0
+  base_model_task: image-to-image
+  is_acft_model: true
+  is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+mlflow_version: 2.15.1
+model_size_bytes: 30888652342
+model_uuid: 67cda94ee3814b68baa4b58c399e3694
+signature:
+  inputs: '[{"type": "string", "name": "prompt", "required": true}, {"type": "binary",
+    "name": "image", "required": true}]'
+  outputs: '[{"type": "binary", "name": "generated_image", "required": true}, {"type":
+    "boolean", "name": "nsfw_content_detected", "required": true}]'
+  params: null
+utc_time_created: '2025-02-03 16:23:47.964278'

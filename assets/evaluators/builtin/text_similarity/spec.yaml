@@ -1,0 +1,37 @@
+type: "evaluator"
+name: "builtin.text_similarity"
+version: 2
+displayName: "Text-Similarity-Evaluator"
+description: "Assesses how similar two texts are in content and structure. Higher scores indicate better alignment with the reference. Use this metric in paraphrase detection, translation evaluation, and response comparison."
+evaluatorType: "builtin"
+evaluatorSubType: "openai_graders"
+categories: ["quality"]
+tags:
+  provider: "Microsoft"
+initParameterSchema:
+  type: "object"
+  properties:
+    input:
+      type: "string"
+    reference:
+      type: "string"
+    name:
+      type: "string"
+    type:
+      type: "string"
+    evaluation_metric:
+      type: "string"
+      enum: ["fuzzy_match", "cosine"]
+    pass_threshold:
+      type: "number"
+      minimum: 0
+      maximum: 1
+      multipleOf: 0.1
+  required: ["name", "input", "reference", "type", "evaluation_metric", "pass_threshold"]
+dataMappingSchema: {}
+outputSchema:
+  similarity:
+    type: "continuous"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1

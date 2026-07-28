@@ -7,35 +7,37 @@ import logging
 import os
 import shutil
 
+import mlflow
 from arg_helpers import boolean_parser, json_empty_is_none_parser
-from azureml.core import Run
-from azureml.rai.utils.telemetry import LoggerFactory, track
-from constants import COMPONENT_NAME, DashboardInfo, PropertyKeyValues
-from rai_component_utilities import (default_json_handler, fetch_model_id,
-                                     get_arg, get_test_dataset_id,
-                                     get_train_dataset_id, load_dataset,
-                                     load_mlflow_model)
-from raiutils.exceptions import UserConfigValidationException
-from responsibleai.feature_metadata import FeatureMetadata
+from rai_component_utilities import ensure_shim
 
-from responsibleai import RAIInsights
+ensure_shim()
+from azureml.rai.utils.telemetry import LoggerFactory, track  # noqa: E402
+from constants import (COMPONENT_NAME, DashboardInfo,  # noqa: E402
+                       PropertyKeyValues)
+from rai_component_utilities import default_json_handler  # noqa: E402
+from rai_component_utilities import (fetch_model_id, get_arg,  # noqa: E402
+                                     load_dataset, load_mlflow_model)
+from raiutils.exceptions import UserConfigValidationException  # noqa: E402
+from responsibleai.feature_metadata import FeatureMetadata  # noqa: E402
+
+from responsibleai import RAIInsights  # noqa: E402
+
+DEFAULT_MODULE_NAME = "rai_create_insights"
+DEFAULT_MODULE_VERSION = "0.0.0"
 
 _logger = logging.getLogger(__file__)
 _ai_logger = None
+_module_name = DEFAULT_MODULE_NAME
+_module_version = DEFAULT_MODULE_VERSION
 
 
 def _get_logger():
     global _ai_logger
     if _ai_logger is None:
-        run = Run.get_context()
-        module_name = run.properties["azureml.moduleName"]
-        module_version = run.properties["azureml.moduleid"]
         _ai_logger = LoggerFactory.get_logger(
-            __file__, module_name, module_version, COMPONENT_NAME)
+            __file__, _module_name, _module_version, COMPONENT_NAME)
     return _ai_logger
-
-
-_get_logger()
 
 
 def parse_args():
@@ -81,6 +83,10 @@ def parse_args():
     )
 
     parser.add_argument("--output_path", type=str, help="Path to output JSON")
+
+    # Component info
+    parser.add_argument("--component_name", type=str, required=True)
+    parser.add_argument("--component_version", type=str, required=True)
 
     # parse args
     args = parser.parse_args()
@@ -151,7 +157,14 @@ def copy_input_data(component_input_path: str, output_path: str):
 
 @track(_get_logger)
 def main(args):
-    my_run = Run.get_context()
+    # Get MLflow run ID
+    current_run = mlflow.active_run()
+    if current_run is not None:
+        run_id = current_run.info.run_id
+    else:
+        # Fallback to starting a new run if no active run
+        with mlflow.start_run() as run:
+            run_id = run.info.run_id
 
     _logger.info("Dealing with initialization dataset")
     train_df = load_dataset(args.train_dataset)
@@ -171,18 +184,16 @@ def main(args):
     use_separate_conda_env = args.task_type == "forecasting"
     if args.model_info_path:
         model_id = fetch_model_id(args.model_info_path)
-        _logger.info("Loading model: {0}".format(model_id))
+        _logger.info("Loading model from model_info_path: {0}".format(model_id))
         model_estimator = load_mlflow_model(
-            workspace=my_run.experiment.workspace,
             use_model_dependency=args.use_model_dependency,
             use_separate_conda_env=use_separate_conda_env,
             model_id=model_id,
         )
     elif args.model_input and args.model_info:
         model_id = args.model_info
-        _logger.info("Loading model: {0}".format(model_id))
+        _logger.info("Loading model from model_info: {0}".format(model_id))
         model_estimator = load_mlflow_model(
-            workspace=my_run.experiment.workspace,
             use_model_dependency=args.use_model_dependency,
             use_separate_conda_env=use_separate_conda_env,
             model_path=args.model_input,
@@ -202,11 +213,11 @@ def main(args):
 
     _logger.info("Saving JSON for tool components")
     output_dict = {
-        DashboardInfo.RAI_INSIGHTS_RUN_ID_KEY: str(my_run.id),
+        DashboardInfo.RAI_INSIGHTS_RUN_ID_KEY: run_id,
         DashboardInfo.RAI_INSIGHTS_MODEL_ID_KEY: model_id,
         DashboardInfo.RAI_INSIGHTS_CONSTRUCTOR_ARGS_KEY: constructor_args,
-        DashboardInfo.RAI_INSIGHTS_TRAIN_DATASET_ID_KEY: get_train_dataset_id(my_run),
-        DashboardInfo.RAI_INSIGHTS_TEST_DATASET_ID_KEY: get_test_dataset_id(my_run),
+        DashboardInfo.RAI_INSIGHTS_TRAIN_DATASET_ID_KEY: os.path.basename(args.train_dataset),
+        DashboardInfo.RAI_INSIGHTS_TEST_DATASET_ID_KEY: os.path.basename(args.test_dataset),
         DashboardInfo.RAI_INSIGHTS_DASHBOARD_TITLE_KEY: args.title,
         DashboardInfo.RAI_INSIGHTS_INPUT_ARGS_KEY: vars(args),
     }
@@ -235,6 +246,11 @@ if __name__ == "__main__":
 
     # parse args
     args = parse_args()
+    print("Arguments parsed successfully")
+    print(args)
+    _module_name = args.component_name
+    _module_version = args.component_version
+    _get_logger()
 
     # run main function
     main(args)

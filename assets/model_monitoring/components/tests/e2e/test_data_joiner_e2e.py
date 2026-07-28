@@ -43,7 +43,7 @@ def _submit_data_joiner_job(
         data_joiner_output.identity = AmlTokenConfiguration()
         data_joiner_output.resources = {
             'instance_type': 'Standard_E8S_V3',
-            'runtime_version': '3.3',
+            'runtime_version': '3.4',
         }
 
         return {

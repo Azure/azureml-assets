@@ -1,0 +1,33 @@
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.transformers
+    model_binary: model
+    python_version: 3.8.18
+  transformers:
+    code: null
+    components:
+    - tokenizer
+    framework: pt
+    instance_type: FillMaskPipeline
+    model_binary: model
+    pipeline_model_type: BertForMaskedLM
+    task: fill-mask
+    tokenizer_type: BertTokenizerFast
+    transformers_version: 4.35.2
+metadata:
+  base_model_name: bert-large-cased
+  base_model_task: fill-mask
+  is_acft_model: true
+  is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+mlflow_version: 2.8.1
+model_size_bytes: 1335408493
+model_uuid: d7b9bc14e71c4731bb7db78cc4042cf3
+signature:
+  inputs: '[{"type": "string"}]'
+  outputs: '[{"type": "string"}]'
+  params: null
+utc_time_created: '2023-12-08 12:33:13.972896'

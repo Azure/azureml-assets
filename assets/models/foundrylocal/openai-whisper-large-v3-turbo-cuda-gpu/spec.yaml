@@ -1,0 +1,41 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: openai-whisper-large-v3-turbo-cuda-gpu
+path: ./
+isArchived: true
+tags:
+  contextLength: 448
+  capabilities: ''
+  supportsReasoning: ''
+system_metadata:
+  alias: whisper-large-v3-turbo
+  publisher: Microsoft
+  directoryPath: v3
+  foundryLocal: ''
+  inputModalities:
+  - audio
+  license: apache-2.0
+  licenseDescription: This model is provided under the License Terms available at https://www.apache.org/licenses/LICENSE-2.0.html.
+  maxOutputTokens: 2048
+  outputModalities:
+  - text
+  promptTemplate: '{"prompt": "<|startoftranscript|> <|en|> <|transcribe|> <|notimestamps|>"}'
+  tasks:
+    inferenceTasks:
+    - automatic-speech-recognition
+  platformCapabilities:
+    enableMaap: false
+  reasoningStart: ''
+  reasoningEnd: ''
+  minFLVersion: 0.0.0
+variantInfo:
+  parents:
+  - assetId: azureml://registries/azureml/models/openai-whisper-large-v3-turbo/versions/1
+  variantMetadata:
+    modelType: ONNX
+    quantization:
+    - RTN
+    device: gpu
+    executionProvider: CUDAExecutionProvider
+    fileSizeBytes: 842333753
+    vRamFootprintBytes: 842333753
+version: 3

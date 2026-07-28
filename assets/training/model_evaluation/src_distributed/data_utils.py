@@ -17,9 +17,9 @@ import json
 import glob
 
 from mltable import load
-
-
-from logging_utilities import get_logger
+from exceptions import DataLoaderException
+from error_definitions import BadLabelColumnData
+from logging_utilities import get_logger, get_azureml_exception, log_traceback
 
 logger = get_logger(name=__name__)
 
@@ -178,6 +178,28 @@ def read_multiple_files(path):
         raise ValueError(error)
     data = pd.concat(dfs, ignore_index=True)
     return iter([data])
+
+
+def prepare_chat_data_from_ft_pipeline(data: pd.DataFrame):
+    """Prepare Chat completion data from FT pipeline.
+
+    Args:
+        data: pd.DataFrame
+    """
+    try:
+        messages_col = data[local_constants.LLM_FT_CHAT_COMPLETION_KEY]
+    except Exception as e:
+        logger.error(f"'{local_constants.LLM_FT_CHAT_COMPLETION_KEY}' not found in FT test dataset.")
+        exception = get_azureml_exception(DataLoaderException, BadLabelColumnData, e, error=repr(e))
+        log_traceback(exception, logger)
+        raise exception
+    X_test, y_test = {local_constants.LLM_FT_CHAT_COMPLETION_KEY:[]}, []
+    for message in messages_col.to_list():
+        X_test[local_constants.LLM_FT_CHAT_COMPLETION_KEY].append(message[:-1])
+        y_test.append(message[-1]["content"])
+    X_test = pd.DataFrame(X_test)
+    y_test = pd.Series(y_test)
+    return X_test, y_test.values
 
 
 def prepare_data(data, task, label_column_name=None, _has_multiple_output=False, extra_y_test_cols=None):

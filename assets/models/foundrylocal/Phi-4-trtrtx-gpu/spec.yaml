@@ -1,0 +1,41 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: Phi-4-trtrtx-gpu
+path: ./
+isArchived: true
+tags:
+  contextLength: 16384
+  capabilities: ''
+  supportsReasoning: ''
+system_metadata:
+  alias: phi-4
+  publisher: Microsoft
+  directoryPath: v2
+  foundryLocal: ''
+  inputModalities:
+  - text
+  license: MIT
+  licenseDescription: This model is provided under the License Terms available at <https://huggingface.co/microsoft/phi-4/blob/main/LICENSE>.
+  maxOutputTokens: 2048
+  outputModalities:
+  - text
+  promptTemplate: '{"system": "<|system|>\n{Content}<|end|>", "user": "<|user|>\n{Content}<|end|>", "assistant": "<|assistant|>\n{Content}<|end|>", "prompt": "<|user|>\n{Content}<|end|>\n<|assistant|>"}'
+  tasks:
+    inferenceTasks:
+    - chat-completion
+  platformCapabilities:
+    enableMaap: false
+  reasoningStart: ''
+  reasoningEnd: ''
+  minFLVersion: 0.0.0
+variantInfo:
+  parents:
+  - assetId: azureml://registries/azureml/models/Phi-4/versions/7
+  variantMetadata:
+    modelType: ONNX
+    quantization:
+    - RTN
+    device: gpu
+    executionProvider: NvTensorRTRTXExecutionProvider
+    fileSizeBytes: 8987219066
+    vRamFootprintBytes: 8987499550
+version: 2

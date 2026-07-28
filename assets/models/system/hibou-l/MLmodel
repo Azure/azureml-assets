@@ -1,0 +1,30 @@
+flavors:
+  python_function:
+    artifacts:
+      model_dir:
+        path: artifacts/INPUT_model_path
+        uri: /mnt/azureml/cr/j/a399e68aa26f4ab583e67b22be7e179e/cap/data-capability/wd/INPUT_model_path
+    cloudpickle_version: 2.2.1
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.9.21
+    streamable: false
+metadata:
+  base_model_name: histai/hibou-l
+  base_model_task: feature-extraction
+  is_acft_model: true
+  is_finetuned_model: false
+mlflow_version: 2.19.0
+model_size_bytes: 343038521
+model_uuid: d8a335521b2f4f4e807bad0603cee59d
+signature:
+  inputs: '[{"type": "string", "name": "image", "required": true}]'
+  outputs: '[{"type": "string", "name": "image_features", "required": true}]'
+  params: '[{"name": "device_type", "type": "string", "default": "cuda", "shape":
+    null}, {"name": "to_half_precision", "type": "boolean", "default": false, "shape":
+    null}]'
+utc_time_created: '2025-03-06 17:23:02.384121'

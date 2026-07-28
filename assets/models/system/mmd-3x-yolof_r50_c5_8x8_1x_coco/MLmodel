@@ -1,0 +1,35 @@
+flavors:
+  python_function:
+    artifacts:
+      config_path:
+        path: artifacts/yolof_r50_c5_8x8_1x_coco.py
+        uri: /mnt/azureml/cr/j/da24db315f314653a4d64a0dcfb05562/cap/data-capability/wd/INPUT_model_path/model/yolof_r50_c5_8x8_1x_coco.py
+      model_metadata:
+        path: artifacts/model_metadata.json
+        uri: /mnt/azureml/cr/j/da24db315f314653a4d64a0dcfb05562/cap/data-capability/wd/INPUT_model_path/model/model_metadata.json
+      weights_path:
+        path: artifacts/yolof_r50_c5_8x8_1x_coco_weights.pth
+        uri: /mnt/azureml/cr/j/da24db315f314653a4d64a0dcfb05562/cap/data-capability/wd/INPUT_model_path/model/yolof_r50_c5_8x8_1x_coco_weights.pth
+    cloudpickle_version: 2.2.1
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.8.18
+metadata:
+  base_model_name: yolof_r50_c5_8x8_1x_coco
+  base_model_task: image-object-detection
+  is_acft_model: true
+  is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+mlflow_version: 2.10.2
+model_size_bytes: 177017811
+model_uuid: 063ebfbfcdb14dda9660fa7101808596
+signature:
+  inputs: '[{"type": "binary", "name": "image", "required": true}]'
+  outputs: '[{"type": "string", "name": "boxes", "required": true}]'
+  params: '[{"name": "text_prompt", "type": "string", "default": null, "shape": null},
+    {"name": "custom_entities", "type": "boolean", "default": true, "shape": null}]'
+utc_time_created: '2024-04-29 15:29:37.707125'

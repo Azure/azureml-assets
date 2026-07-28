@@ -1,0 +1,7 @@
+name: tau2_telecom
+version: 1
+type: data
+spec: spec.yaml
+extra_config: storage.yaml
+categories:
+  - pipeline

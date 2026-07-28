@@ -1,0 +1,35 @@
+flavors:
+  python_function:
+    artifacts:
+      config_path:
+        path: artifacts/mask-rcnn_swin-t-p4-w7_fpn_1x_coco.py
+        uri: /mnt/azureml/cr/j/2cb04185befc4aada74a65e7e39010dc/cap/data-capability/wd/INPUT_model_path/model/mask-rcnn_swin-t-p4-w7_fpn_1x_coco.py
+      model_metadata:
+        path: artifacts/model_metadata.json
+        uri: /mnt/azureml/cr/j/2cb04185befc4aada74a65e7e39010dc/cap/data-capability/wd/INPUT_model_path/model/model_metadata.json
+      weights_path:
+        path: artifacts/mask-rcnn_swin-t-p4-w7_fpn_1x_coco_weights.pth
+        uri: /mnt/azureml/cr/j/2cb04185befc4aada74a65e7e39010dc/cap/data-capability/wd/INPUT_model_path/model/mask-rcnn_swin-t-p4-w7_fpn_1x_coco_weights.pth
+    cloudpickle_version: 2.2.1
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.8.19
+metadata:
+  base_model_name: mask-rcnn_swin-t-p4-w7_fpn_1x_coco
+  base_model_task: image-instance-segmentation
+  is_acft_model: true
+  is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+mlflow_version: 2.10.2
+model_size_bytes: 191490861
+model_uuid: a86c066aad6a4cae9457f4ade7db156e
+signature:
+  inputs: '[{"type": "binary", "name": "image", "required": true}]'
+  outputs: '[{"type": "string", "name": "boxes", "required": true}]'
+  params: '[{"name": "text_prompt", "type": "string", "default": null, "shape": null},
+    {"name": "custom_entities", "type": "boolean", "default": true, "shape": null}]'
+utc_time_created: '2024-06-12 05:08:49.343455'

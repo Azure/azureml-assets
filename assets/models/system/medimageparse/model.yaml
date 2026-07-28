@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: MedImageParse/mlflow_model_folder
+  storage_name: hlsmodelonboarding
+  type: azureblob
+publish:
+  description: description.md
+  type: mlflow_model

@@ -1,0 +1,6 @@
+BrowseComp - Web browsing benchmark for AI agents
+
+Source: https://github.com/openai/simple-evals
+Paper: https://arxiv.org/pdf/2504.12516
+
+Licensed under MIT License.

@@ -1,0 +1,42 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: qwen3-embedding-0.6b-generic-gpu
+path: ./
+isArchived: true
+tags:
+  capabilities: embedding
+  supportsReasoning: 'false'
+  contextLength: 32768
+system_metadata:
+  alias: qwen3-embedding-0.6b
+  publisher: Microsoft
+  directoryPath: v1
+  foundryLocal: ''
+  inputModalities:
+  - text
+  license: apache-2.0
+  licenseDescription: This model is provided under the License Terms available at https://huggingface.co/Qwen/Qwen3-Embedding-0.6B/blob/main/LICENSE
+  maxOutputTokens: 1
+  outputModalities:
+  - text
+  promptTemplate: ''
+  supportsToolCalling: false
+  tasks:
+    inferenceTasks:
+    - embeddings
+  platformCapabilities:
+    enableMaap: false
+  reasoningStart: ''
+  reasoningEnd: ''
+  minFLVersion: 1.1.0
+variantInfo:
+  parents:
+  - assetId: azureml://registries/azureml/models/qwen3-embedding-0.6b/versions/1
+  variantMetadata:
+    modelType: ONNX
+    quantization:
+    - RTN
+    device: gpu
+    executionProvider: WebGPUExecutionProvider
+    fileSizeBytes: 540924753
+    vRamFootprintBytes: 540924753
+version: 1

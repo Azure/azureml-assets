@@ -1,25 +1,28 @@
 # PTCA image
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py39-torch1131:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 USER root
-RUN apt-get -y update
+RUN apt-get -y update \
+ && apt-get install -y --only-upgrade tar wget libsqlite3-0 libkrb5support0 libgssapi-krb5-2 libk5crypto3 libkrb5-3 \
+ && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install required packages from pypi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
-# # # Install mmcv-full and mmdet
-# Request for scipy installation to avoid error in mmcv-full installation
-RUN apt-get install -y gfortran libopenblas-dev liblapack-dev
-RUN mim install mmtrack==0.14.0
-RUN mim install mmcv-full==1.7.1
-# # Note that MMDet installs pycocotools
-# Note: mmdet should be installed via mim to access the model zoo config folder.
-RUN mim install mmdet==2.28.2
+# transformers: fix GHSA-69w3-r845-3855 (CVE-2026-1839, arbitrary code execution in Trainer).
+# --no-deps keeps the pinned HF stack intact (transformers is a direct requirements.txt pin).
+RUN pip install --no-cache-dir --no-deps 'transformers==5.5.4'
 
-# vulnerability fixes - this will be removed once we update to MMTracking's latest version
+# Compatibility pins for the MMTracking stack.
 RUN pip install scipy==1.10.1
-RUN pip install gunicorn==22.0.0
+RUN pip install gunicorn==23.0.0
+
+# onnx: pinned transitive dep of azureml-acft-accelerator; keeps the base onnx from being downgraded and fixes GHSA-hwpq-hmq9-wj77.
+RUN pip install --no-cache-dir --upgrade 'onnx==1.22.0'
+
+# cryptography: pinned transitive dep of azureml-core/pyOpenSSL; fixes GHSA-537c-gmf6-5ccf.
+RUN pip install --no-cache-dir --upgrade 'cryptography>=48.0.1,<49'
 
 # It is recommended to upgrade to numpy version 1.23.5 to address the numpy.core.multiarray issue
 RUN pip install numpy==1.23.5
@@ -28,4 +31,15 @@ RUN pip install numpy==1.23.5
 # https://github.com/open-mmlab/mmdetection/issues/10962
 RUN pip install yapf==0.40.1
 
-# dummy number to change when needing to force rebuild without changing the definition: 1
+# diffusers 0.24.0 -> 0.38.0 to fix GHSA-98h9-4798-4q5v (CVE-2026-44513).
+# --no-deps keeps the pinned HF stack intact (diffusers is a direct requirements.txt pin).
+RUN pip install --no-cache-dir --no-deps 'diffusers==0.38.0'
+
+# pyarrow>=23.0.1 in ptca env (py3.10): fix GHSA-rgxp-2hwp-jwgg (API-compatible with 20.x).
+# pinned transitive dep of datasets; fixes GHSA-rgxp-2hwp-jwgg.
+RUN pip install --no-cache-dir 'pyarrow>=23.0.1'
+
+# torch: pinned dep from ACPT ptca env; fixes GHSA-rrmf-rvhw-rf47, GHSA-qfhq-4f3w-5fph, and GHSA-vgrw-7cvw-pwgx.
+# torchvision and torchaudio are upgraded with torch to keep the CUDA PyTorch stack compatible.
+RUN pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 \
+    'torch==2.13.0' 'torchvision==0.28.0' 'torchaudio==2.11.0'

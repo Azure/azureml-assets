@@ -1,0 +1,31 @@
+flavors:
+  python_function:
+    artifacts:
+      config:
+        path: artifacts/pretrain_model_config.json
+        uri: /home/azureuser/cloudfiles/code/Users/haoqiu/atomica_mlflow_test/model_artifacts/pretrain_model_config.json
+      weights:
+        path: artifacts/pretrain_model_weights.pt
+        uri: /home/azureuser/cloudfiles/code/Users/haoqiu/atomica_mlflow_test/model_artifacts/pretrain_model_weights.pt
+    cloudpickle_version: 3.1.1
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.9.21
+    streamable: false
+is_signature_from_type_hint: false
+mlflow_version: 2.21.3
+model_size_bytes: 33747357
+model_uuid: 5dce2d05d406461682f5153852bd324b
+prompts: null
+signature:
+  inputs: '[{"type": "string", "name": "pdb_data", "required": true}]'
+  outputs: '[{"type": "string", "name": "graph_embedding", "required": true}, {"type":
+    "string", "name": "block_embedding", "required": true}, {"type": "string", "name":
+    "atom_embedding", "required": true}]'
+  params: null
+type_hint_from_example: false
+utc_time_created: '2025-05-08 17:28:36.871725'

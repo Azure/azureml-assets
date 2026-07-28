@@ -13,11 +13,13 @@ from string import Template
 from subprocess import CompletedProcess, run
 from tempfile import TemporaryDirectory
 from typing import Dict, List, Tuple, Union
-from azureml.assets.config import AssetConfig, AssetType, ComponentType, ModelConfig
+from azureml.assets.config import AssetConfig, AssetType, ComponentType, ModelConfig, DataConfig
 from azureml.assets.deployment_config import AssetVersionUpdate
-from azureml.assets.model.model_utils import CopyUpdater, prepare_model, update_model_metadata
+from azureml.assets.model.registry_utils import CopyUpdater, prepare_model, update_metadata, \
+    prepare_data, RegistryUtils
 from azureml.assets.util import logger
-from azure.ai.ml import MLClient
+from azureml.assets.util.util import resolve_from_file_for_asset
+from azure.ai.ml import MLClient, load_model
 from azure.ai.ml.entities import Component, Environment, Model
 from ruamel.yaml import YAML
 
@@ -30,14 +32,6 @@ BEARER = r"Bearer.*"
 LATEST_LABEL = "latest"
 
 
-def pluralize_asset_type(asset_type: Union[AssetType, str]) -> str:
-    """Return pluralized asset type."""
-    # Convert to string if enum
-    if isinstance(asset_type, AssetType):
-        asset_type = asset_type.value
-    return f"{asset_type}s" if asset_type != "data" else asset_type
-
-
 def sanitize_output(input: str) -> str:
     """Return sanitized string."""
     # Remove sensitive token
@@ -45,10 +39,33 @@ def sanitize_output(input: str) -> str:
     return sanitized_output
 
 
+def extract_json_from_output(text: str) -> Union[Dict, List, None]:
+    """Extract and parse JSON from text that may contain non-JSON content.
+
+    :param text: Text containing JSON, possibly with warnings or other output
+    :type text: str
+    :return: Parsed JSON object or None if not found/invalid
+    :rtype: Union[Dict, List, None]
+    """
+    # Try to match JSON object {...} or array [...]
+    match = re.search(r'(\{.*\}|\[.*\])', text, re.DOTALL)
+    if not match:
+        logger.log_error("No JSON object or array found in output")
+        return None
+
+    json_str = match.group(0)
+
+    try:
+        return json.loads(json_str)
+    except json.JSONDecodeError as e:
+        logger.log_error(f"Invalid JSON detected: {e}")
+        return None
+
+
 def update_spec(asset: Union[Component, Environment, Model], spec_path: Path) -> bool:
     """Update the yaml spec file with updated properties in asset.
 
-    :param asset: Asset loaded using load_*(component, environemnt, model) method.
+    :param asset: Asset loaded using load_*(component, environment, model) method.
     :type asset: Union[Component, Environment, Model]
     :param spec_path: path to asset spec file
     :type spec_path: Path
@@ -57,6 +74,9 @@ def update_spec(asset: Union[Component, Environment, Model], spec_path: Path) ->
     """
     try:
         asset_dict = json.loads(json.dumps(asset._to_dict()))
+        # Preserve system_metadata due to SDK bug (_to_dict() doesn't include it)
+        if hasattr(asset, '_system_metadata') and asset._system_metadata:
+            asset_dict["system_metadata"] = asset._system_metadata
         util.dump_yaml(asset_dict, spec_path)
         return True
     except Exception as e:
@@ -70,6 +90,7 @@ def prepare_model_for_registration(
     temp_dir: Path,
     ml_client: MLClient,
     copy_updater: CopyUpdater = None,
+    output_level: str = "essential",
 ) -> bool:
     """Prepare model.
 
@@ -83,15 +104,52 @@ def prepare_model_for_registration(
     :type ml_client: MLClient
     :param copy_updater: CopyUpdater object to update files during azcopy
     :type copy_updater: CopyUpdater
+    :param output_level: Parameter for azcopy output verbosity level
+    :type output_level: str
     :return: Model successfully prepared for creation in registry.
     :rtype: bool
     """
     model, success = prepare_model(
         spec_path=spec_file_path, model_config=model_config, temp_dir=temp_dir, ml_client=ml_client,
-        copy_updater=copy_updater
+        copy_updater=copy_updater, output_level=output_level
     )
     if success:
         success = update_spec(model, spec_file_path)
+        logger.print(f"updated spec file? {success}")
+    return success
+
+
+def prepare_data_for_registration(
+    data_config: DataConfig,
+    spec_file_path: Path,
+    temp_dir: Path,
+    ml_client: MLClient,
+    copy_updater: CopyUpdater = None,
+    output_level: str = "essential",
+) -> bool:
+    """Prepare data.
+
+    :param data_config: Data Config object
+    :type data_config: DataConfig
+    :param spec_file_path: path to data spec file
+    :type spec_file_path: Path
+    :param temp_dir: temp dir for data operation
+    :type temp_dir: Path
+    :param ml_client: MLClient object
+    :type ml_client: MLClient
+    :param copy_updater: CopyUpdater object to update files during azcopy
+    :type copy_updater: CopyUpdater
+    :param output_level: Parameter for azcopy output verbosity level
+    :type output_level: str
+    :return: Data successfully prepared for creation in registry.
+    :rtype: bool
+    """
+    data, success = prepare_data(
+        spec_path=spec_file_path, data_config=data_config, temp_dir=temp_dir, ml_client=ml_client,
+        copy_updater=copy_updater, output_level=output_level
+    )
+    if success:
+        success = update_spec(data, spec_file_path)
         logger.print(f"updated spec file? {success}")
     return success
 
@@ -157,6 +215,13 @@ def validate_and_prepare_pipeline_component(
         if not registry:
             logger.print(f"Workspace asset URI was used, using component from registry {registry}")
             registry = registry_name
+
+        if not version:
+            logger.log_error(
+                f"Component {name} parsed label {label} from the asset URI. Labels are not supported "
+                f"for job components. Please specify a valid version instead."
+            )
+            return False
 
         # Check if component's env exists
         final_version = util.apply_version_template(version, version_template)
@@ -270,7 +335,7 @@ def validate_update_component(
     :return: True for successful validation and update
     :rtype: bool
     """
-    with open(spec_path) as f:
+    with open(spec_path, encoding='utf-8') as f:
         try:
             component_dict = YAML().load(f)
         except Exception:
@@ -365,6 +430,21 @@ def create_asset_cli(
     return True
 
 
+def create_asset_sdk(
+    ml_client: MLClient,
+    asset: AssetConfig
+) -> bool:
+    """Create asset in registry."""
+    try:
+        model = load_model(source=asset.spec_with_path)
+        ml_client.models.create_or_update(model)
+    except Exception as e:
+        redacted_err = sanitize_output(str(e))
+        logger.log_error(f"Error creating {asset.type.value} {asset.name}: {redacted_err}")
+        return False
+    return True
+
+
 def get_asset_versions(
     asset_type: str,
     asset_name: str,
@@ -380,7 +460,11 @@ def get_asset_versions(
     if result.returncode != 0:
         logger.log_error(f"Failed to list assets: {result.stderr}")
         return []
-    return [a['version'] for a in json.loads(result.stdout)]
+
+    parsed_output = extract_json_from_output(result.stdout)
+    if parsed_output is None:
+        return []
+    return [a['version'] for a in parsed_output]
 
 
 def get_asset_details(
@@ -396,6 +480,7 @@ def get_asset_details(
         "--name", asset_name,
         "--version", asset_version,
         "--registry-name", registry_name,
+        "--only-show-errors",
     ]
     result = run_command(cmd)
     if result.returncode != 0:
@@ -403,7 +488,7 @@ def get_asset_details(
             # Don't show the error if it's expected for new assets
             logger.log_error(f"Failed to get asset details: {result.stderr}")
         return None
-    return json.loads(result.stdout)
+    return extract_json_from_output(result.stdout)
 
 
 def get_parsed_details_from_asset_uri(asset_type: str, asset_uri: str) -> Tuple[str, str, str, str]:
@@ -419,7 +504,7 @@ def get_parsed_details_from_asset_uri(asset_type: str, asset_uri: str) -> Tuple[
     :rtype: Tuple
     """
     REGISTRY_ASSET_PATTERN = re.compile(REGISTRY_ASSET_TEMPLATE.substitute(
-                                        asset_type=pluralize_asset_type(asset_type)))
+                                        asset_type=RegistryUtils.pluralize_asset_type(asset_type)))
     asset_registry_name = None
     if (match := REGISTRY_ASSET_PATTERN.match(asset_uri)) is not None:
         asset_registry_name, asset_name, asset_version, asset_label = match.groups()
@@ -440,38 +525,49 @@ def stringify_dictionary(dictionary: Dict):
 
 def update_asset_metadata(asset: AssetConfig, ml_client: MLClient, allow_no_op_update: bool = False):
     """Update the mutable metadata of asset."""
-    if asset.type == AssetType.MODEL:
-        model_name = asset.name
-        model_version = asset.version
+    if asset.type in [AssetType.COMPONENT, AssetType.DATA, AssetType.MODEL]:
+        asset_name = asset.name
+        asset_version = asset.version
         spec_path = asset.spec_with_path
-        model_config = asset.extra_config_as_object()
 
-        # get tags to update from model spec file
         tags_to_update = None
         try:
-            with open(spec_path) as f:
-                model_spec = YAML().load(f)
-                tags = model_spec.get("tags", {})
-                properties = model_spec.get("properties", {})
+            with open(spec_path, encoding='utf-8') as f:
+                asset_spec = YAML().load(f)
+                tags = asset_spec.get("tags", {})
+                properties = asset_spec.get("properties", {})
+                system_metadata = asset_spec.get("system_metadata", {})
+
+                if asset.type == AssetType.MODEL:
+                    model_config = asset.extra_config_as_object()
+                    tags = {k: resolve_from_file_for_asset(model_config, v) for k, v in tags.items()}
+                    description = model_config.description
 
                 # convert tags, properties value to string
                 tags = stringify_dictionary(tags)
                 properties = stringify_dictionary(properties)
+                system_metadata = stringify_dictionary(system_metadata)
                 tags_to_update = {"replace": tags}
                 properties_to_update = {"add": properties}
-        except Exception as e:
-            logger.log_error(f"Failed to get tags for model {model_name}: {e}")
+                system_metadata_to_update = {"replace": system_metadata}
 
-        update_model_metadata(
-            model_name=model_name,
-            model_version=model_version,
+                if asset.type in [AssetType.COMPONENT, AssetType.DATA]:
+                    description = asset_spec.get("description", None)
+        except Exception as e:
+            logger.log_error(f"Failed to get tags for {asset.type.value} {asset_name}: {e}")
+
+        update_metadata(
+            name=asset_name,
+            version=asset_version,
             update=AssetVersionUpdate(
-                versions=[model_version],
+                versions=[asset_version],
                 tags=tags_to_update,
                 properties=properties_to_update,
-                description=model_config.description
+                description=description,
+                system_metadata=system_metadata_to_update
             ),
             ml_client=ml_client,
+            asset_type=asset.type,
             allow_no_op_update=allow_no_op_update,
         )
     else:
@@ -479,7 +575,7 @@ def update_asset_metadata(asset: AssetConfig, ml_client: MLClient, allow_no_op_u
 
 
 def create_asset(asset: AssetConfig, registry_name: str, ml_client: MLClient, version_template: str = None,
-                 debug: bool = None, copy_updater: CopyUpdater = None) -> bool:
+                 debug: bool = None, copy_updater: CopyUpdater = None, output_level: str = "essential") -> bool:
     """Create asset or update model metadata if it already exists.
 
     Args:
@@ -489,6 +585,7 @@ def create_asset(asset: AssetConfig, registry_name: str, ml_client: MLClient, ve
         version_template (str, optional): Version template. Defaults to None.
         debug (bool, optional): Enable debug logging. Defaults to None.
         copy_updater (CopyUpdater, optional): CopyUpdater object to update files during azcopy. Defaults to None.
+        output_level (str, optional): Output verbosity level parameter for azcopy. Defaults to "essential".
 
     Returns:
         bool: True of successfully create/updated, otherwise False.
@@ -521,11 +618,25 @@ def create_asset(asset: AssetConfig, registry_name: str, ml_client: MLClient, ve
                     return False
         elif asset.type == AssetType.MODEL:
             version = asset.version
-            model_config = asset.extra_config_as_object()
+            model_config: ModelConfig = asset.extra_config_as_object()
             if not prepare_model_for_registration(model_config, asset.spec_with_path, Path(temp_dir), ml_client,
-                                                  copy_updater):
+                                                  copy_updater, output_level):
                 logger.log_error("Failed to prepare model")
                 return False
+        elif asset.type == AssetType.DATA:
+            version = asset.version
+            data_config: DataConfig = asset.extra_config_as_object()
+            if not prepare_data_for_registration(data_config, asset.spec_with_path, Path(temp_dir), ml_client,
+                                                 copy_updater, output_level):
+                logger.log_error("Failed to prepare data asset")
+                return False
+
+        # Create asset using SDK (Models only)
+        if asset.type == AssetType.MODEL:
+            return create_asset_sdk(
+                ml_client=ml_client,
+                asset=asset
+            )
 
         # Create asset
         return create_asset_cli(

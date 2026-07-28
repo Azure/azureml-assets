@@ -9,17 +9,20 @@ import logging
 import json
 from pathlib import Path
 import shutil
+import time
+import base64
 from dataclasses import dataclass, field, fields
 from typing import Optional, List
 
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS, SaveFileConstants
 from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
+from azureml.acft.accelerator.utils.run_utils import is_main_process, get_process_name, wait_at_barrier
 from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError
 from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
     swallow_all_exceptions,
 )
-from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
+from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals, SystemSettings
 from azureml._common._error_definition.azureml_error import AzureMLError
 from azureml.acft.contrib.hf.nlp.constants.constants import Tasks
 
@@ -32,6 +35,7 @@ _COMPONENTS_SCRIPTS_REL_PATH = Path("entry_point", "ftaas", "finetune")
 _ALLOWED_MAX_STRING_LENGTH = 128
 PEFT_ADAPTER_WEIGHTS_DIR = "peft_adapter_weights"
 CHAT_KEY = "messages"
+_AZUREML_FT_ENALBE_MULTI_NODE_SUPPORT = "_AZUREML_FT_ENALBE_MULTI_NODE_SUPPORT"
 
 TASK_SPECIFIC_PARAMS = {
     "preprocess": {
@@ -50,6 +54,27 @@ TASK_SPECIFIC_PARAMS = {
         }
     }
 }
+
+
+def retry_with_backoff(delay: int = 1, retries: int = 3):
+    """Retry with backoff."""
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            current_retry = 0
+            current_delay = delay
+            while current_retry < retries:
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    current_retry += 1
+                    if current_retry >= retries:
+                        raise e
+                    logger.warning(f"Failed to execute function '{func.__name__}'. \
+                                   Retrying in {current_delay} seconds...")
+                    time.sleep(current_delay)
+                    current_delay *= 2
+        return wrapper
+    return decorator
 
 
 @dataclass
@@ -367,32 +392,90 @@ def add_task_specific_params(cmd: List[str], task_name: str, component_name: str
                     add_optional_input(cmd, param)
 
 
-def _run_subprocess_cmd(cmd: List[str], component_name: str, completion_files_folder: str):
+def _is_multi_node_enabled() -> bool:
+    """
+    To check if multi-node support is enabled.
+
+    Multi-node support is enabled by setting the environment variable _AZUREML_FT_ENABLE_MULTI_NODE_SUPPORT to "true".
+    If this environment variable is not defined, the function will return False by default.
+
+    :return: True if multi-node support is enabled, False otherwise.
+    """
+    if os.environ.get(_AZUREML_FT_ENALBE_MULTI_NODE_SUPPORT, None) == "true":
+        return True
+    else:
+        return False
+
+
+def _run_subprocess_cmd(cmd: List[str], component_name: str, completion_files_folder: str,
+                        single_run=True, number_of_processes=1):
     """Run the subprocess command."""
     logger.info(f"Starting the command: {cmd}")
     completion_file = Path(completion_files_folder, f"{component_name}.complete.txt")
+    barrier_file = Path(completion_files_folder, f"{component_name}.barrier.txt")
+    Path(completion_files_folder).mkdir(parents=True, exist_ok=True)
     if completion_file.exists():
         logger.info(f"Skipping {component_name} as completion file exists: {completion_file}")
         return
+    process_name = get_process_name()
+    if single_run and _is_multi_node_enabled():
+        if not barrier_file.exists():
+            Path(barrier_file).touch()
+            logger.info(f'Barrier file {barrier_file} is created by process name {process_name}')
+        if is_main_process():
+            logger.info(f"Executing command: {cmd} in single run mode. Process name is {process_name}")
+            # Not setting stdout and stderr will stream all the logs directly to stdout
+            process = subprocess.Popen(cmd)
 
-    # Not setting stdout and stderr will stream all the logs directly to stdout
-    process = subprocess.Popen(cmd)
+            # get the return code
+            return_code = process.wait()
+            if return_code != 0:
+                intermediate_folder = decode_output_from_env_var("intermediate_folder")
+                completion_files_folder = os.path.join(intermediate_folder, "completion_files")
+                shutil.rmtree(completion_files_folder, ignore_errors=True)
+                raise ACFTValidationException._with_error(
+                    AzureMLError.create(
+                        ACFTUserError,
+                        pii_safe_message=(
+                            f"{component_name} failed"
+                        )
+                    )
+                )
+            logger.info(f"{component_name} completed successfully")
+            Path(completion_file).touch()
+            logger.info(f"Created completion file: {completion_file}")
+        logger.info(f"Waiting for completion file: {completion_file}, by rank : {process_name}")
+        while not completion_file.exists():
+            if is_main_process():
+                time.sleep(1)
+            else:
+                pass
+        logger.info(f"Process name on subprocess entering count barrier : {process_name}")
+        wait_at_barrier(barrier_file, number_of_processes)
+        logger.info(f"Process name on subprocess exiting count barrier : {process_name}")
+    else:
+        logger.info(f"Executing the command: {cmd}.")
+        # Not setting stdout and stderr will stream all the logs directly to stdout
+        process = subprocess.Popen(cmd)
 
-    # get the return code
-    return_code = process.wait()
-    if return_code != 0:
-        raise ACFTValidationException._with_error(
-            AzureMLError.create(
-                ACFTUserError,
-                pii_safe_message=(
-                    f"{component_name} failed"
+        # get the return code
+        return_code = process.wait()
+        if return_code != 0:
+            intermediate_folder = decode_output_from_env_var("intermediate_folder")
+            completion_files_folder = os.path.join(intermediate_folder, "completion_files")
+            shutil.rmtree(completion_files_folder, ignore_errors=True)
+            raise ACFTValidationException._with_error(
+                AzureMLError.create(
+                    ACFTUserError,
+                    pii_safe_message=(
+                        f"{component_name} failed"
+                    )
                 )
             )
-        )
-    logger.info(f"{component_name} completed successfully")
-    Path(completion_files_folder).mkdir(parents=True, exist_ok=True)
-    Path(completion_file).touch()
-    logger.info(f"Created completion file: {completion_file}")
+        logger.info(f"{component_name} completed successfully")
+        Path(completion_files_folder).mkdir(parents=True, exist_ok=True)
+        Path(completion_file).touch()
+        logger.info(f"Created completion file: {completion_file}")
 
 
 def cleanup(completion_files_folder: str, model_selector_output: str,
@@ -429,8 +512,44 @@ def initiate_run():
 
     _initiate_run(completion_files_folder, model_selector_output,
                   preprocess_output, pytorch_model_folder, mlflow_model_folder)
-    cleanup(completion_files_folder, model_selector_output,
-            preprocess_output, pytorch_model_folder, mlflow_model_folder)
+
+    if is_main_process():
+        cleanup(completion_files_folder, model_selector_output,
+                preprocess_output, pytorch_model_folder, mlflow_model_folder)
+
+
+def parse_to_int(s):
+    """
+    To parse string to integer with default value in case of failure as one.
+
+    s: String which need to be parsed to integer.
+    """
+    try:
+        return int(s)
+    except ValueError:
+        raise ACFTValidationException._with_error(
+                    AzureMLError.create(
+                        ACFTUserError,
+                        pii_safe_message=(
+                            f"Invalid value {s} entered, it should be a number."
+                        )
+                    )
+                )
+
+
+def parse_system_properties(arg_str: str):
+    """Parse system properties."""
+    if not arg_str:
+        return {}
+
+    try:
+        json_bytes = base64.b64decode(arg_str)
+        json_str = json_bytes.decode('utf-8')
+        system_properties_dict = json.loads(json_str)
+        return system_properties_dict
+    except ValueError:
+        logger.error(f"Failed to parse system properties: {arg_str}")
+        return {}
 
 
 def _initiate_run(completion_files_folder: str, model_selector_output: str,
@@ -438,6 +557,17 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
     """Run the model selector, preprocess, finetune and registration script."""
     # get task name
     task_name = decode_param_from_env_var("task_name")
+    num_nodes = parse_to_int(decode_param_from_env_var("Node_Count"))
+    num_gpus = parse_to_int(decode_param_from_env_var("number_of_gpu_to_use_finetuning"))
+    logger.info(f'Nodes are {num_nodes} , gpus are : {num_gpus}')
+
+    # get system properties
+    system_properties = parse_system_properties(decode_param_from_env_var("system_properties"))
+
+    # set log_level_debug as environment parameter
+    log_level_debug_enabled = \
+        system_properties.get(SystemSettings.LOG_LEVEL_DEBUG, False) if system_properties else False
+    os.environ[SystemSettings.LOG_LEVEL_DEBUG] = str(log_level_debug_enabled)
 
     # model selector
     cmd = [
@@ -446,9 +576,16 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
         "--output_dir", model_selector_output
     ]
     add_optional_input(cmd, "mlflow_model_path")
-    add_optional_input(cmd, "pytorch_model_path")
-    _run_subprocess_cmd(cmd, component_name="model_selector", completion_files_folder=completion_files_folder)
+    pytorch_model_path = decode_input_from_env_var("pytorch_model_path")
+    if pytorch_model_path is not None and os.path.exists(pytorch_model_path):
+        pytorch_model_path_with_artifact = os.path.join(pytorch_model_path, "model_artifact", "model")
+        if os.path.exists(pytorch_model_path_with_artifact):
+            cmd += ["--pytorch_model_path", pytorch_model_path_with_artifact]
+        else:
+            cmd += ["--pytorch_model_path", pytorch_model_path]
 
+    _run_subprocess_cmd(cmd, component_name="model_selector", completion_files_folder=completion_files_folder,
+                        single_run=True, number_of_processes=num_gpus)
     # preprocess
     cmd = [
         "python", "-m", "azureml.acft.contrib.hf.nlp.entry_point.finetune.preprocess",
@@ -458,6 +595,7 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
         "--max_seq_length", decode_param_from_env_var("max_seq_length"),
         "--train_file_path", os.path.join(decode_input_from_env_var("dataset_input") or "", "train_input.jsonl"),
         "--test_file_path", os.path.join(decode_input_from_env_var("dataset_input") or "", "train_input.jsonl"),
+        "--num_train_epochs", decode_param_from_env_var('num_train_epochs'),
         "--model_selector_output", model_selector_output,
         "--output_dir", preprocess_output
     ]
@@ -468,13 +606,24 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
     if os.path.isfile(validation_file_path):
         cmd += ["--validation_file_path", validation_file_path]
 
-    _run_subprocess_cmd(cmd, component_name="preprocess", completion_files_folder=completion_files_folder)
+    num_retries = system_properties.get("num_retries", 3) if system_properties else 3
+
+    @retry_with_backoff(delay=2, retries=num_retries)
+    def _run_preprocess_cmd_with_retries():
+        _run_subprocess_cmd(cmd, component_name="preprocess", completion_files_folder=completion_files_folder,
+                            single_run=True, number_of_processes=num_gpus)
+
+    _run_preprocess_cmd_with_retries()
 
     # finetune
+    if not _is_multi_node_enabled():
+        cmd_base = ["python", "-m", "torch.distributed.launch", "--nproc_per_node",
+                    decode_param_from_env_var('number_of_gpu_to_use_finetuning'), "-m"]
+    else:
+        cmd_base = ["python", "-m"]
+
     cmd = [
-        "python", "-m", "torch.distributed.launch",
-        "--nproc_per_node", decode_param_from_env_var('number_of_gpu_to_use_finetuning'),
-        "-m", "azureml.acft.contrib.hf.nlp.entry_point.finetune.finetune",
+        "azureml.acft.contrib.hf.nlp.entry_point.finetune.finetune",
         "--apply_lora", decode_param_from_env_var('apply_lora'),
         "--merge_lora_weights", decode_param_from_env_var('merge_lora_weights'),
         "--lora_alpha", decode_param_from_env_var('lora_alpha'),
@@ -524,7 +673,9 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
         "--mlflow_model_folder", mlflow_model_folder,
         "--output_model", decode_output_from_env_var('output_model')
     ]
-    _run_subprocess_cmd(cmd, component_name="finetune", completion_files_folder=completion_files_folder)
+    cmd_base.extend(cmd)
+    _run_subprocess_cmd(cmd_base, component_name="finetune", completion_files_folder=completion_files_folder,
+                        single_run=False, number_of_processes=num_gpus)
 
     # validate lora weights
 
@@ -542,7 +693,8 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
         "--train_file_path", os.path.join(decode_input_from_env_var("dataset_input") or "", "train_input.jsonl"),
     ]
     add_task_specific_params(cmd, task_name, component_name="validate_lora_weights")
-    _run_subprocess_cmd(cmd, component_name="validate_lora_weights", completion_files_folder=completion_files_folder)
+    _run_subprocess_cmd(cmd, component_name="validate_lora_weights", completion_files_folder=completion_files_folder,
+                        single_run=True, number_of_processes=num_gpus)
 
     # model registration
     cmd = [
@@ -557,7 +709,9 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
         "--convert_to_safetensors", "true",
     ]
     add_optional_param(cmd=cmd, component_param_name="registered_model_name", argparse_param_name="model_name")
-    _run_subprocess_cmd(cmd, component_name="register_model", completion_files_folder=completion_files_folder)
+    add_optional_param(cmd=cmd, component_param_name="model_registration_tag", argparse_param_name="model_tag")
+    _run_subprocess_cmd(cmd, component_name="register_model", completion_files_folder=completion_files_folder,
+                        single_run=True, number_of_processes=num_gpus)
 
 
 @swallow_all_exceptions(time_delay=60)

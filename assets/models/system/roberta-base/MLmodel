@@ -1,0 +1,34 @@
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.transformers
+    model_binary: model
+    python_version: 3.8.18
+  transformers:
+    code: null
+    components:
+    - tokenizer
+    framework: pt
+    instance_type: FillMaskPipeline
+    model_binary: model
+    pipeline_model_type: RobertaForMaskedLM
+    source_model_name: /mnt/azureml/cr/j/8b39f9623f4c49af9b2d3d116db6abcb/cap/data-capability/wd/INPUT_model_path
+    task: fill-mask
+    tokenizer_type: RobertaTokenizerFast
+    transformers_version: 4.35.2
+metadata:
+  base_model_name: roberta-base
+  base_model_task: fill-mask
+  is_acft_model: true
+  is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+mlflow_version: 2.8.1
+model_size_bytes: 502179447
+model_uuid: a997439da0414442bce9249baa598bb0
+signature:
+  inputs: '[{"type": "string"}]'
+  outputs: '[{"type": "string"}]'
+  params: null
+utc_time_created: '2023-12-08 12:32:47.488723'

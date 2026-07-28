@@ -1,0 +1,29 @@
+flavors:
+  python_function:
+    artifacts:
+      model_dir:
+        path: artifacts/checkpoints
+        uri: /mnt/batch/tasks/shared/LS_root/mounts/clusters/albertosa2/code/Users/albertosa/GigaPathDeployment/checkpoints
+    cloudpickle_version: 3.1.0
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.10.15
+    streamable: false
+metadata:
+  base_model_name: Prov-Gigapath
+  base_model_task: image-feature-extraction
+  is_acft_model: true
+  is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+mlflow_version: 2.17.0
+model_size_bytes: 4539872630
+model_uuid: 882ff461448e4d4cb7c59bfb19932c29
+signature:
+  inputs: '[{"type": "binary", "name": "image", "required": true}]'
+  outputs: '[{"type": "string", "name": "image_features", "required": true}]'
+  params: null
+utc_time_created: '2024-10-24 20:10:56.464360'

@@ -36,7 +36,7 @@ class PredictionDriftSignal(Signal):
         self.feature_metrics: List[FeatureMetrics] = self._build_feature_metrics(
             monitor_name, signal_name, metrics
         )
-        self.histogram_builder = HistogramBuilder(baseline_histogram, target_histogram)
+        self.histogram_builder = HistogramBuilder(target_histogram, baseline_histogram)
 
     def to_dict(self) -> dict:
         """Convert to a dictionary object."""

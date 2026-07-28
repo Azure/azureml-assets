@@ -7,4 +7,4 @@ general:
     sample_pytest: 
       pytest_job: "./general/jobs/sample_pytest.py"
       assets:
-      - ./general/components/sample_component
+      - ./general/components/my_sample

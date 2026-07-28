@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:{{latest-image-tag}}
 
 WORKDIR /
 
@@ -19,7 +19,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Create conda environment
 COPY conda_dependencies.yaml .
+# azureml-dataset-runtime currently caps pyarrow below the patched release,
+# so upgrade pyarrow after the environment resolves successfully.
 RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
+    conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade --no-deps 'pyarrow>=23.0.1' && \
     conda run -p $CONDA_PREFIX pip cache purge && \
     conda clean -a -y

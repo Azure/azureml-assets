@@ -6,6 +6,7 @@ from .config import (
     AssetType,
     ComponentType,
     Config,
+    DataConfig,
     DEFAULT_ASSET_FILENAME,
     ModelConfig,
     ModelFlavor,

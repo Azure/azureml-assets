@@ -494,17 +494,20 @@ class InferencePostprocessor(object):
         """Postprocessor run using custom template."""
         params_dict = deepcopy(self.__get_parameters())
         postprocessor_script = params_dict.pop("user_postprocessor")
+        prediction_dataset = params_dict.pop("prediction_dataset")
+        result = params_dict.pop("result")
+        ground_truth_dataset = params_dict.pop("ground_truth_dataset")
+        additional_parameters = json.dumps(params_dict)
         argss = [
             "--prediction_dataset",
-            params_dict.pop("prediction_dataset"),
+            prediction_dataset,
             "--output_dataset",
-            params_dict.pop("result"),
+            result
         ]
         if self.ground_truth_dataset:
             argss.extend(
-                ["--ground_truth_dataset", params_dict.pop("ground_truth_dataset")]
+                ["--ground_truth_dataset", ground_truth_dataset]
             )
-        additional_parameters = json.dumps(params_dict)
         argss.extend(["--additional_parameters", f"'{additional_parameters}'"])
         argss = " ".join(argss)
         try:
@@ -514,8 +517,25 @@ class InferencePostprocessor(object):
                 universal_newlines=True,
                 shell=True,
             )
-        except subprocess.CalledProcessError as e:
-            error_message = e.output.strip()
-            raise BenchmarkUserException._with_error(
-                AzureMLError.create(BenchmarkUserError, error_details=error_message)
-            )
+        except subprocess.CalledProcessError:
+            argss = [
+                "python", postprocessor_script,
+                "--prediction_dataset", prediction_dataset,
+                "--output_dataset", result
+            ]
+
+            # Add ground truth dataset if available
+            if self.ground_truth_dataset:
+                argss.extend(["--ground_truth_dataset", ground_truth_dataset])
+            argss.extend(["--additional_parameters", additional_parameters])
+            try:
+                _ = subprocess.check_output(
+                    argss,
+                    stderr=subprocess.STDOUT,
+                    universal_newlines=True
+                )
+            except subprocess.CalledProcessError as e:
+                error_message = e.output.strip()
+                raise BenchmarkUserException._with_error(
+                    AzureMLError.create(BenchmarkUserError, error_details=error_message)
+                )

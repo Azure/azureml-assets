@@ -1,0 +1,33 @@
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.transformers
+    model_binary: model
+    python_version: 3.8.18
+  transformers:
+    code: null
+    components:
+    - tokenizer
+    framework: pt
+    instance_type: QuestionAnsweringPipeline
+    model_binary: model
+    pipeline_model_type: DistilBertForQuestionAnswering
+    task: question-answering
+    tokenizer_type: DistilBertTokenizerFast
+    transformers_version: 4.35.2
+metadata:
+  base_model_name: distilbert-base-uncased-distilled-squad
+  base_model_task: question-answering
+  is_acft_model: true
+  is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+mlflow_version: 2.8.1
+model_size_bytes: 266414913
+model_uuid: fa50e21262fc4112922c42005fc5367c
+signature:
+  inputs: '[{"type": "string", "name": "question"}, {"type": "string", "name": "context"}]'
+  outputs: '[{"type": "string"}]'
+  params: null
+utc_time_created: '2023-12-06 10:46:21.551654'

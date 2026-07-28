@@ -1,0 +1,34 @@
+flavors:
+  python_function:
+    artifacts:
+      config_path:
+        path: artifacts/bytetrack_yolox_x_crowdhuman_mot17-private-half.py
+        uri: /mnt/azureml/cr/j/8f2a300123244415847ffe8244e9ac12/cap/data-capability/wd/INPUT_model_path/model/bytetrack_yolox_x_crowdhuman_mot17-private-half.py
+      model_metadata:
+        path: artifacts/model_metadata.json
+        uri: /mnt/azureml/cr/j/8f2a300123244415847ffe8244e9ac12/cap/data-capability/wd/INPUT_model_path/model/model_metadata.json
+      weights_path:
+        path: artifacts/bytetrack_yolox_x_crowdhuman_mot17-private-half_weights.pth
+        uri: /mnt/azureml/cr/j/8f2a300123244415847ffe8244e9ac12/cap/data-capability/wd/INPUT_model_path/model/bytetrack_yolox_x_crowdhuman_mot17-private-half_weights.pth
+    cloudpickle_version: 2.2.1
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.8.18
+metadata:
+  base_model_name: null
+  base_model_task: video-multi-object-tracking
+  is_acft_model: true
+  is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+mlflow_version: 2.10.2
+model_size_bytes: 793188435
+model_uuid: 439c035f257845a98ebce768eec1bf0c
+signature:
+  inputs: '[{"type": "string", "name": "video", "required": true}]'
+  outputs: '[{"type": "string", "name": "boxes", "required": true}]'
+  params: null
+utc_time_created: '2024-04-30 11:06:52.859453'

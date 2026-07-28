@@ -4,13 +4,9 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - scripts/azureml-assets/**
   pull_request_target:
     branches:
       - main
-    paths:
-      - scripts/azureml-assets/**
     types:
       - opened
       - labeled
@@ -26,11 +22,19 @@ jobs:
   check-execution-context:
     uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
 
+  check-directory-file-changes:
+    needs: check-execution-context
+    if: fromJSON(needs.check-execution-context.outputs.continue)
+    uses: Azure/azureml-assets/.github/workflows/check-changed-files.yaml@main
+    with:
+      folder_path: "scripts/azureml-assets/**"
+      forked_pr_input: ${{ needs.check-execution-context.outputs.forked_pr }}
+
   test:
     name: Test scripts
-    if: fromJSON(needs.check-execution-context.outputs.continue)
+    if: needs.check-directory-file-changes.outputs.files-changed != ''
     runs-on: ubuntu-latest
-    needs: check-execution-context
+    needs: [check-execution-context, check-directory-file-changes]
     environment: Testing
 
     permissions:

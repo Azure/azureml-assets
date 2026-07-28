@@ -32,7 +32,7 @@ def _submit_action_detector_job(ml_client: MLClient, get_component, signal_score
         action_detector.identity = AmlTokenConfiguration()
         action_detector.resources = {
             'instance_type': 'Standard_E4S_V3',
-            'runtime_version': '3.3',
+            'runtime_version': '3.4',
         }
         return {"action_output": action_detector.outputs.action_output}
 

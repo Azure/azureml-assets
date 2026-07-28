@@ -1,0 +1,6 @@
+# Valid tag values that can be applied to evaluation results whose evaluation_type is `text_quality`.
+index_metric_key:
+  required: True
+  allow_multiple: False
+  values:
+  - index_metric

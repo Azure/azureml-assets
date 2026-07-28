@@ -15,4 +15,4 @@ class TestPublishComponentsForCI():
 
     def test_publish_components(self, upload_component_version_file, cleanup_previous_e2e_tests):
         """Init calls fixture to publish components."""
-        pass
+        assert os.path.exists('.version_upload')

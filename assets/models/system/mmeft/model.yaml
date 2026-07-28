@@ -1,6 +1,6 @@
 path:
   container_name: finetuning-multimodal-models
-  container_path: mlflow_models/microsoft/mmeft/mlflow_model_folder/
+  container_path: mlflow_models/microsoft/mmeft/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:

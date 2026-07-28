@@ -4,12 +4,15 @@
 """Evaluator."""
 
 import ast
+import os
 import re
+import shutil
+import tempfile
+
 import pandas as pd
 import numpy as np
-from abc import abstractmethod
 
-from PIL import Image
+from abc import abstractmethod
 
 from exceptions import (
     DataValidationException,
@@ -617,16 +620,45 @@ class ChatCompletionEvaluator(Evaluator):
         """
         #  dataframe with 2 columns predictions and predictions appended to the conversation
         if len(y_pred.columns) > 1:
-            y_pred_formatted = [
-                list(item[ChatCompletionConstants.OUTPUT_FULL_CONVERSATION][0].values())[0]
-                for idx, item in y_pred.iterrows()
-            ]
+            logger.info("Found more than 1 col. Trying to fetch conversation.")
+
+            def check_item(row_item: pd.Series):
+                """Convert input data to correct format for metrics package.
+
+                Args:
+                    row_item (pd.Series): Single row input from Dataframe
+                """
+                item = row_item.get(ChatCompletionConstants.OUTPUT_FULL_CONVERSATION, None)
+                if item is None:
+                    return row_item
+                if isinstance(item, list) and isinstance(item[0], dict):
+                    if item[0].get("role", False) and item[0].get("content", False):
+                        return item
+                    else:
+                        if item[0].get("0", False):
+                            return item["0"]
+                return item
+
+            y_pred_formatted = y_pred.apply(check_item, axis=1).tolist()
         # dataframe wih just predictions appended to conversations
         else:
-            y_pred_formatted = y_pred.values.tolist()[0]
-        #  if ground truth is passed
+            y_pred_formatted = y_pred.values.tolist()
+        # if ground truth is passed
         if y_test is not None and len(y_test) > 0:
-            y_test = y_test.iloc[:, 0].apply(lambda x: [x]).tolist()
+
+            def check_y_test(row_item: pd.Series):
+                """Convert ground truth into correct format for metrics package.
+
+                Args:
+                    row_item (pd.Series): Single row input from Dataframe
+                """
+                item = row_item.get(y_test.columns[0])
+                if isinstance(item, str) or isinstance(item, dict):
+                    return [item]
+                if isinstance(item, list):
+                    return item
+
+            y_test = y_test.apply(check_y_test, axis=1).tolist()
             metrics = compute_metrics(task_type=constants.Tasks.CHAT_COMPLETION, y_pred=y_pred_formatted,
                                       y_test=y_test, **self.metrics_config)
         else:
@@ -801,15 +833,19 @@ class ImageGenerationEvaluator(Evaluator):
         Returns:
             Dict: Dict of metrics
         """
-        metrics = compute_metrics(
-            task_type=constants.Tasks.IMAGE_GENERATION,
-            y_test=self._download_images(y_test[ImageDataFrameParams.LABEL_COLUMN_NAME]),
-            y_pred=self._download_images(y_pred[ImageDataFrameParams.PREDICTIONS]),
-            **self.metrics_config
-        )
+        with tempfile.TemporaryDirectory() as ground_truth_folder_name, \
+             tempfile.TemporaryDirectory() as predictions_folder_name:
+            self._download_images(y_test[ImageDataFrameParams.LABEL_COLUMN_NAME], ground_truth_folder_name)
+            self._download_images(y_pred[ImageDataFrameParams.PREDICTIONS], predictions_folder_name)
+
+            metrics = compute_metrics(
+                task_type=constants.Tasks.IMAGE_GENERATION,
+                y_test=ground_truth_folder_name, y_pred=predictions_folder_name,
+                **self.metrics_config
+            )
         return metrics
 
-    def _download_images(self, image_urls):
+    def _download_images(self, image_urls, local_folder_name):
         # Get the workspace of the run.
         run = Run.get_context()
         workspace = run.experiment.workspace
@@ -827,13 +863,11 @@ class ImageGenerationEvaluator(Evaluator):
         # Convert URLs referring to datastore to DataPath format.
         image_urls = [maybe_make_data_path(image_url) for image_url in image_urls]
 
-        images = []
-
-        # Download images and load them as `PIL Image`'s.
+        # Download images to temporary folder.
         remote_image_files = FileDatasetFactory.from_files(image_urls, is_file=True)
         local_image_file_names = remote_image_files.download()
-        for local_image_file_name in local_image_file_names:
-            image = Image.open(local_image_file_name).convert("RGB")
-            images.append(image)
 
-        return images
+        # Move images to specified folder.
+        for i, local_image_file_name in enumerate(local_image_file_names):
+            f = os.path.splitext(local_image_file_name)[1]
+            shutil.move(local_image_file_name, os.path.join(local_folder_name, f"image_{i:09d}{f}"))

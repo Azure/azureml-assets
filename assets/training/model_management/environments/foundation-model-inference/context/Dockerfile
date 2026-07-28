@@ -1,71 +1,71 @@
-FROM nvidia/cuda:12.1.1-devel-ubuntu20.04
+FROM mcr.microsoft.com/azureml/openmpi5.0-cuda13.1-ubuntu24.04:{{latest-image-tag}}
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     TZ=Etc/UTC \
-    DEBIAN_FRONTEND=noninteractive
-RUN apt update && apt upgrade -y && apt install software-properties-common -y && add-apt-repository ppa:deadsnakes/ppa -y
-RUN apt install git -y
+    DEBIAN_FRONTEND=noninteractive \
+    PYTORCH_NVML_BASED_CUDA_CHECK=0
 
-ENV MINICONDA_VERSION py310_23.10.0-1
-ENV PATH /opt/miniconda/bin:$PATH
+# Remove vulnerable NVIDIA Nsight Compute components
+# nic_sampler (Go stdlib v1.23.4) contains 36 CVEs; this profiling plugin is not needed for inference
+RUN /opt/nvidia/nsight-compute/2025.4.1/host/target-linux-x64/python/bin/python \
+    -m pip install --upgrade pip==26.1.2 2>/dev/null || true && \
+    rm -rf /opt/nvidia/nsight-compute/2025.4.1/host/target-linux-x64/plugins/efa_metrics
+
+# CUDA forward-compat: lets CUDA 13.1 userspace run on hosts with older (e.g. 535-series) NVIDIA drivers.
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends wget runit
-RUN wget -qO /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh && \
-    bash /tmp/miniconda.sh -bf -p /opt/miniconda && \
-    conda update --all -c conda-forge -y && \
-    conda clean -ay && \
-    rm -rf /opt/miniconda/pkgs && \
-    rm /tmp/miniconda.sh && \
-    find / -type d -name __pycache__ | xargs rm -rf
+    apt-get install -y --no-install-recommends cuda-compat-13-1 && \
+    rm -rf /var/lib/apt/lists/*
+# Explicit list (no trailing ${LD_LIBRARY_PATH}) avoids an empty path element
+# that the dynamic loader would resolve to the CWD.
+ENV LD_LIBRARY_PATH=/usr/local/cuda/compat:/usr/local/cuda/lib64:/usr/local/nvidia/lib:/usr/local/nvidia/lib64
 
-ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/default
+# System packages
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y software-properties-common && \
+    add-apt-repository ppa:deadsnakes/ppa -y && \
+    apt-get install -y \
+        git \
+        wget \
+        runit
 
-# Create conda environment with py310
-RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
+# AzureML conda environment
+ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/default
+
+RUN conda create -y \
+    -p ${AZUREML_CONDA_ENVIRONMENT_PATH} \
     python=3.10 \
-    -c conda-forge 
+    -c conda-forge
 
-ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
-
-ENV CONDA_DEFAULT_ENV=$AZUREML_CONDA_ENVIRONMENT_PATH
-ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
+# Activate environment via PATH
+ENV PATH=${AZUREML_CONDA_ENVIRONMENT_PATH}/bin:$PATH
+ENV CONDA_DEFAULT_ENV=${AZUREML_CONDA_ENVIRONMENT_PATH}
+ENV CONDA_PREFIX=${AZUREML_CONDA_ENVIRONMENT_PATH}
 
 WORKDIR /
 
-# Needed for megablocks
-RUN pip install torch~=2.3.0 --index-url https://download.pytorch.org/whl/cu121
-
-# mixtral specific
-ARG torch_cuda_arch_list='7.0 7.5 8.0 8.6 8.9 9.0+PTX'
-ENV TORCH_CUDA_ARCH_LIST=${torch_cuda_arch_list}
-RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd6
-
-# For local testing
-# Need to copy src code and install in editable mode
-# COPY . .
-# RUN pip install -e .
-
 # When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference==0.2.4 --no-cache-dir
-RUN pip uninstall transformers -y
+RUN pip install llm-optimized-inference==0.2.58 --no-cache-dir
 
-COPY ./transformers.patch ./transformers.patch
-RUN git clone https://github.com/huggingface/transformers.git && \
-    cd transformers && \
-    git checkout fc35907f95459d7a6c5281dfadd680b6f7b620e3 && \
-    git apply ../transformers.patch && \
-    python setup.py bdist_wheel && \
-    pip install dist/*.whl
+# Remove unwanted services if present
+RUN rm -rf /var/runit/gunicorn \
+           /var/runit/nginx \
+           /var/runit/rsyslog || true
 
-# clean conda and pip caches
-RUN rm -rf ~/.cache/pip
-
+# Add API server service
 ADD runit_folder/api_server /var/runit/api_server
-RUN sed -i 's/\r$//g' /var/runit/api_server/run
-RUN chmod +x /var/runit/api_server/run
 
-ENV SVDIR=/var/runit
-ENV WORKER_TIMEOUT=3600
+RUN sed -i 's/\r$//g' /var/runit/api_server/run && \
+    chmod +x /var/runit/api_server/run
+
+# Validate runsvdir exists
+RUN command -v runsvdir >/dev/null || \
+    (echo "runsvdir missing in image" && exit 1)
+
+ENV SVDIR=/var/runit \
+    WORKER_TIMEOUT=3600
+
 EXPOSE 5001
-CMD [ "runsvdir", "/var/runit" ]
+
+CMD ["runsvdir", "/var/runit"]

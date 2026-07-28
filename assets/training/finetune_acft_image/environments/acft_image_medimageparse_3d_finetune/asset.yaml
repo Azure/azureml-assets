@@ -1,0 +1,6 @@
+name: acft-medimageparse-3d-finetune
+version: auto
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml
+categories: ["PyTorch", "Training"]

@@ -1,0 +1,38 @@
+flavors:
+  python_function:
+    artifacts:
+      model_dir:
+        path: artifacts/checkpoints
+        uri: /__w/1/s/checkpoints
+    cloudpickle_version: 2.2.1
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.10.18
+    streamable: false
+is_signature_from_type_hint: false
+metadata:
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:5
+  base_model_name: MedImageInsight-onnx
+  base_model_task: embeddings
+  is_acft_model: true
+  is_finetuned_model: false
+mlflow_version: 2.21.3
+model_size_bytes: 1234541360
+model_uuid: f15d20b767d542d499477fde5482c80b
+prompts: null
+signature:
+  inputs: '[{"type": "binary", "name": "image", "required": false}, {"type": "string",
+    "name": "text", "required": false}]'
+  outputs: '[{"type": "string", "name": "image_features", "required": false}, {"type":
+    "string", "name": "text_features", "required": false}, {"type": "string", "name":
+    "scaling_factor", "required": false}]'
+  params: '[{"name": "image_standardization_jpeg_compression_ratio", "default": 75,
+    "shape": null, "type": "integer"}, {"name": "image_standardization_image_size",
+    "default": 512, "shape": null, "type": "integer"}, {"name": "get_scaling_factor",
+    "default": true, "shape": null, "type": "boolean"}]'
+type_hint_from_example: false
+utc_time_created: '2025-08-18 15:59:12.689063'

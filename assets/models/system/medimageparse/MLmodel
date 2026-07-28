@@ -1,0 +1,31 @@
+flavors:
+  python_function:
+    artifacts:
+      model_dir:
+        path: artifacts/checkpoints
+        uri: /mnt/batch/tasks/shared/LS_root/mounts/clusters/albertogpu2/code/BiomedParseDeployment/checkpoints
+    cloudpickle_version: 3.0.0
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.9.19
+    streamable: false
+mlflow_version: 2.16.0
+model_size_bytes: 2750247148
+model_uuid: 620bda70a9114bbda8a780ef590f4272
+signature:
+  inputs: '[{"type": "binary", "name": "image", "required": true}, {"type": "string",
+    "name": "text", "required": true}]'
+  outputs: '[{"type": "binary", "name": "pred_seg_mask", "required": true}, {"type":
+    "string", "name": "pred_text", "required": false}]'
+  params: null
+utc_time_created: '2024-09-27 00:51:53.191138'
+metadata:
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:5
+  base_model_name: MedImgeParse
+  base_model_task: image-segmentation
+  is_acft_model: true
+  is_finetuned_model: false

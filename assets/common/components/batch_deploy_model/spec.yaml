@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: batch_deploy_model
-version: 0.0.5
+version: 0.0.6
 type: command
 
 is_deterministic: True
@@ -9,7 +9,7 @@ display_name: Batch deploy model
 description:
   Batch deploy a model to a workspace. The component works on compute with [MSI](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-manage-compute-instance?tabs=python) attached.
 
-environment: azureml://registries/azureml/environments/python-sdk-v2/versions/19
+environment: azureml://registries/azureml/environments/python-sdk-v2/versions/31
 
 code: ../../src
 command: >-

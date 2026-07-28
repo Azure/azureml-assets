@@ -10,7 +10,7 @@ from marshmallow import Schema, fields, post_load, validates, validates_schema
 from ruamel.yaml import YAML
 
 """
-Sample deplyment config YAML file:
+Sample deployment config YAML file:
 
 create: # Assets to create
   component: # List of components
@@ -37,6 +37,9 @@ update: # Assets to update
             - Tag1
             - Tag2
         stage: "Archived" # Use Active or Archived to control visibility to list operations
+        update_on_create: # Update-on-create settings
+          enabled: true
+          clouds: ["public"] # Clouds where update-on-create applies
 
 delete: # Assets to delete
   component: # List of components
@@ -55,6 +58,21 @@ class AssetTags:
         add (Dict[str, str]): Tags to add.
         replace (Dict[str, str]): Replace any existing tags with these.
         delete (List[str]): Tags to delete.
+    """
+
+    add: Dict[str, str] = None
+    replace: Dict[str, str] = None
+    delete: List[str] = None
+
+
+@dataclass
+class AssetSystemMetadata:
+    """Asset system metadata class.
+
+    Args:
+        add (Dict[str, str]): System metadata to add.
+        replace (Dict[str, str]): Replace any existing system metadata with these.
+        delete (List[str]): System metadata to delete.
     """
 
     add: Dict[str, str] = None
@@ -87,19 +105,37 @@ class Versions:
 
 
 @dataclass
+class AssetUpdateOnCreate:
+    """Update-on-create settings.
+
+    Args:
+        enabled (bool): Enable update-on-create.
+        clouds (List[str]): Clouds where update-on-create applies.
+    """
+
+    enabled: bool = None
+    clouds: List[str] = None
+
+
+@dataclass
 class AssetVersionUpdate(Versions):
     """Asset version update class.
 
     Args:
         description (str): New description.
         tags (AssetTags): Tag updates.
+        properties (AssetProperties): Property updates.
         stage (str): New stage.
+        system_metadata (AssetSystemMetadata): System metadata updates.
+        update_on_create (AssetUpdateOnCreate): Update-on-create settings.
     """
 
     description: str = None
     tags: AssetTags = None
     properties: AssetProperties = None
     stage: str = None
+    system_metadata: AssetSystemMetadata = None
+    update_on_create: AssetUpdateOnCreate = None
 
     def __post_init__(self):
         """Convert field values to objects."""
@@ -108,6 +144,12 @@ class AssetVersionUpdate(Versions):
 
         if self.properties:
             self.properties = AssetProperties(**self.properties)
+
+        if self.system_metadata:
+            self.system_metadata = AssetSystemMetadata(**self.system_metadata)
+
+        if self.update_on_create:
+            self.update_on_create = AssetUpdateOnCreate(**self.update_on_create)
 
 
 @dataclass
@@ -196,7 +238,7 @@ class DeploymentConfig:
         Returns:
             DeploymentConfig: Deployment config.
         """
-        with open(deployment_config) as fp:
+        with open(deployment_config, encoding='utf-8') as fp:
             config = YAML().load(fp)
             return DeploymentConfigSchema().load(config)
 
@@ -236,6 +278,29 @@ class TagsSchema(Schema):
             raise ValueError("replace can't be used with add or delete")
 
 
+class SystemMetadataSchema(Schema):
+    """System metadata schema."""
+
+    add = fields.Dict(fields.Str(), fields.Str())
+    replace = fields.Dict(fields.Str(), fields.Str())
+    delete = fields.List(fields.Str())
+
+    @validates('add')
+    def _validate_add(self, value: Dict[str, str]):
+        if value is not None and not value:
+            raise ValueError("add must be non-empty")
+
+    @validates('delete')
+    def _validate_delete(self, value: List[str]):
+        if value is not None and not value:
+            raise ValueError("delete must be non-empty")
+
+    @validates_schema
+    def _validate_schema(self, data: Dict[str, object], **kwargs):
+        if data.get('replace') and (data.get('add') or data.get('delete')):
+            raise ValueError("replace can't be used with add or delete")
+
+
 class PropertiesSchema(Schema):
     """Properties schema."""
 
@@ -245,6 +310,21 @@ class PropertiesSchema(Schema):
     def _validate_add(self, value: Dict[str, str]):
         if value is not None and not value:
             raise ValueError("add must be non-empty")
+
+
+class UpdateOnCreateSchema(Schema):
+    """Update-on-create schema."""
+
+    enabled = fields.Boolean()
+    clouds = fields.List(fields.Str())
+
+    @validates_schema
+    def _validate_schema(self, data: Dict[str, object], **kwargs):
+        if data.get('enabled') is None:
+            raise ValueError("enabled is required when update_on_create is set")
+        clouds = data.get('clouds')
+        if not clouds:
+            raise ValueError("clouds must be a non-empty list when update_on_create is set")
 
 
 class VersionsSchema(Schema):
@@ -271,6 +351,8 @@ class AssetVersionUpdateSchema(VersionsSchema):
     tags = fields.Nested(TagsSchema)
     properties = fields.Nested(PropertiesSchema)
     stage = fields.Str()
+    system_metadata = fields.Nested(SystemMetadataSchema)
+    update_on_create = fields.Nested(UpdateOnCreateSchema)
 
 
 class AssetVersionDeleteSchema(VersionsSchema):

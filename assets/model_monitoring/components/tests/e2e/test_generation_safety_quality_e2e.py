@@ -53,6 +53,7 @@ def _submit_generation_safety_quality_model_monitor_job(
             completion_column_name=completion_column_name,
             ground_truth_column_name=ground_truth_column_name,
             context_column_name=context_column_name,
+            instance_type="standard_e8s_v3",
         )
         return {
             "signal_output": generation_safety_quality_signal_monitor_output.outputs.signal_output
@@ -60,7 +61,6 @@ def _submit_generation_safety_quality_model_monitor_job(
 
     pipeline_job = _generation_safety_quality_signal_monitor_e2e()
     pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
-
     pipeline_job = submit_pipeline_job(
         pipeline_job, experiment_name, expect_failure
     )

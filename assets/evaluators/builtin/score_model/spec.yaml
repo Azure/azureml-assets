@@ -1,0 +1,50 @@
+type: "evaluator"
+name: "builtin.score_model"
+version: 1
+displayName: "Score-Model-Evaluator"
+description: "Evaluates the model’s overall performance across relevant criteria by comparing model-assigned scores to human annotated using correlation metrics. Useful for comparing quality between different model runs. Use this metric in ranking systems, evaluation pipelines, and model calibration."
+evaluatorType: "builtin"
+evaluatorSubType: "openai_graders"
+categories: ["quality"]
+tags:
+  provider: "Microsoft"
+initParameterSchema:
+  type: "object"
+  properties:
+    deployment_name:
+      type: "string"
+    model:
+      type: "string"
+    name:
+      type: "string"
+    input:
+      type: "array"
+      items:
+        type: "object"
+        properties:
+          content:
+            type: "string"
+          role:
+            type: "string"
+            enum: ["system", "user", "assistant"]
+        required: ["content", "role"]
+      minItems: 2
+    type:
+      type: "string"
+    range:
+      type: "array"
+      items:
+        type: "number"
+      minItems: 2
+      maxItems: 2
+    pass_threshold:
+      type: "number"
+      minimum: 0
+  required: ["deployment_name", "model", "name", "input", "type", "range", "pass_threshold"]
+dataMappingSchema: {}
+outputSchema:
+  score_model:
+    type: "continuous"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1

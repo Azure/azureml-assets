@@ -1,0 +1,30 @@
+flavors:
+  hftransformersv2:
+    code: null
+    generator_config:
+      do_sample: true
+      max_new_tokens: 256
+      temperature: 0.8
+      top_p: 0.7
+    hf_config_class: LlamaConfig
+    hf_pretrained_class: LlamaForCausalLM
+    hf_tokenizer_class: LlamaTokenizer
+    pytorch_version: 2.0.1+cu117
+    task_type: text-generation
+    transformers_version: 4.31.0
+    model_hf_load_kwargs:
+      torch_dtype: torch.float16
+      device_map: auto
+  python_function:
+    data: data
+    env: conda.yaml
+    loader_module: azureml.evaluate.mlflow.hftransformers
+    python_version: 3.8.16
+metadata:
+  azureml.base_image: mcr.microsoft.com/azureml/curated/foundation-model-inference:63
+  base_model_name: Llama-2-13b
+  base_model_task: text-generation
+  model_provider_name: meta
+mlflow_version: 2.3.1
+model_uuid: 12fd644f9e9349509a2472763b78491f
+utc_time_created: '2023-07-24 06:22:15.253950'

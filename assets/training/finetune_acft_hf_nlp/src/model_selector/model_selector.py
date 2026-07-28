@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 """File containing function for model selector component."""
+import os
 import shutil
 from pathlib import Path
 import argparse
@@ -13,7 +14,7 @@ import logging
 from typing import Optional, Dict, Any
 
 from transformers.utils import GENERATION_CONFIG_NAME
-
+from transformers import AutoConfig, AutoTokenizer, AutoModelForCausalLM
 from azureml.acft.accelerator.utils.code_utils import update_json_file_and_overwrite
 
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
@@ -93,13 +94,13 @@ def get_model_asset_id() -> str:
 
 def validate_huggingface_id(huggingface_id: str) -> None:
     """Validate the huggingface_id using Hfapi. Raise exception if the huggingface id is invalid."""
-    from huggingface_hub import HfApi, ModelFilter
+    from huggingface_hub import HfApi
     hf_api = HfApi()  # by default endpoint points to https://huggingface.co
 
     try:
         model_infos = [
             info
-            for info in hf_api.list_models(filter=ModelFilter(model_name=huggingface_id))
+            for info in hf_api.list_models(model_name=huggingface_id)
             if info.modelId == huggingface_id
         ]
     except ConnectionError:
@@ -121,6 +122,7 @@ def validate_huggingface_id(huggingface_id: str) -> None:
                 )
             )
         )
+    return True
 
 
 def get_parser():
@@ -198,7 +200,30 @@ def model_selector(args: Namespace) -> Dict[str, Any]:
         # remove the spaces at either ends of hf id
         args.model_name = args.huggingface_id.strip()
         # validate hf_id
-        validate_huggingface_id(args.model_name)
+        if validate_huggingface_id(args.model_name):
+            # if neither pytorch nor mlflow model path is provided, pull from HF
+            if args.pytorch_model_path is None and args.mlflow_model_path is None:
+
+                model_dir = Path(args.output_dir)
+                # download config, tokenizer, and model into model_dir
+                # Download config, tokenizer, and model from Hugging Face
+                config = AutoConfig.from_pretrained(args.model_name)
+                tokenizer = AutoTokenizer.from_pretrained(args.model_name)
+                model = AutoModelForCausalLM.from_pretrained(args.model_name, config=config)
+
+                # Save everything into args.output_dir
+                config.save_pretrained(model_dir)
+                tokenizer.save_pretrained(model_dir)
+                model.save_pretrained(model_dir)
+                logger.info(f"Downloaded and saved model {args.model_name} to {model_dir}")
+
+                # Clear the Hugging Face cache
+                hf_cache = os.getenv(
+                    "HF_HOME",
+                    os.path.join(os.path.expanduser("~"), ".cache", "huggingface")
+                )
+                shutil.rmtree(hf_cache, ignore_errors=True)
+                logger.info(f"Cleared Hugging Face cache at {hf_cache}")
     else:
         # TODO Revist whether `model_id` is still relevant
         args.model_name = args.model_id
@@ -316,14 +341,48 @@ def main():
         log_level=logging.INFO,
     )
 
+    # Validated custom model type
+    if args.mlflow_model_path and \
+       not Path(args.mlflow_model_path, MLFlowHFFlavourConstants.MISC_CONFIG_FILE).is_file():
+        raise ACFTValidationException._with_error(
+                    AzureMLError.create(
+                        ACFTUserError,
+                        pii_safe_message=(
+                            "MLmodel file is not found, If this is a custom model "
+                            "it needs to be connected to pytorch_model_path"
+                        )
+                    )
+            )
+
     # Adding flavor map to args
     setattr(args, "flavor_map", FLAVOR_MAP)
+
+    if args.pytorch_model_path:
+        logger.info(f"Using PyTorch model path: {args.pytorch_model_path}")
+        model_artifact_dir = Path(args.pytorch_model_path) / "model_artifact" / "model"
+        if model_artifact_dir.is_dir():
+            args.pytorch_model_path = str(model_artifact_dir)
+            # To support the latest pytorch artifact path
+            logger.info(f"Updated PyTorch model path: {args.pytorch_model_path}")
+        else:
+            logger.info(f"'model' subfolder does not exist, using original path: {args.pytorch_model_path}")
 
     # run model selector
     model_selector_args = model_selector(args)
     model_name = model_selector_args.get("model_name", ModelSelectorConstants.MODEL_NAME_NOT_FOUND)
     logger.info(f"Model name - {model_name}")
     logger.info(f"Task name: {getattr(args, 'task_name', None)}")
+    # Validate port for right model type
+    if args.pytorch_model_path and Path(args.pytorch_model_path, MLFlowHFFlavourConstants.MISC_CONFIG_FILE).is_file():
+        raise ACFTValidationException._with_error(
+                AzureMLError.create(
+                    ACFTUserError,
+                    pii_safe_message=(
+                        "MLFLOW model is connected to pytorch_model_path, "
+                        "it needs to be connected to mlflow_model_path"
+                    )
+                )
+            )
 
     # load ft config and update ACFT config
     # finetune_config_dict = load_finetune_config(args)
@@ -387,6 +446,16 @@ def main():
         if conda_file_path.is_file():
             shutil.copy(str(conda_file_path), args.output_dir)
             logger.info(f"Copied {MLFlowHFFlavourConstants.CONDA_YAML_FILE} file to output dir.")
+
+        # copy inference config files
+        mlflow_ml_configs_dir = Path(args.mlflow_model_path, "ml_configs")
+        ml_config_dir = Path(args.output_dir, "ml_configs")
+        if mlflow_ml_configs_dir.is_dir():
+            shutil.copytree(
+                mlflow_ml_configs_dir,
+                ml_config_dir
+            )
+            logger.info("Copied ml_configs folder to output dir.")
 
 
 if __name__ == "__main__":

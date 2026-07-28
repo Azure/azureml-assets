@@ -27,7 +27,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-asr" target="_blank">asr-
 ```json
 {
    "input_data": {
-       "audio": ["https://www2.cs.uic.edu/~i101/SoundFiles/gettysburg.wav", "https://www2.cs.uic.edu/~i101/SoundFiles/preamble.wav"],
+       "audio": ["https://www.cs.uic.edu/~troy/spring09/cs101/SoundFiles/gettysburg.wav", "https://www.cs.uic.edu/~troy/spring09/cs101/SoundFiles/preamble.wav"],
        "language": ["en", "en"]
    }
 }
@@ -36,11 +36,11 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-asr" target="_blank">asr-
 #### Sample output
 ```json
 [
-    {
-        "text":"four score and seven years ago our fathers brought forth on this continent a new nation conceived in liberty and dedicated to the proposition that all men are created equal now we are engaged in a great civil war testing whether that nation or any nation so conceived and so dedicated can long endure"
-    }
-    {
-        "text":" we the people of the united states in order to form a more perfect union establish justice insure domestic tranquillity provide for the common defense promote the general welfare and secure the blessings of liberty to ourselves and our posterity do ordain and establish this constitution for the united states of america"
-    }
+  {
+    "text": " four score and seven years ago our fathers brought forth on this continent a new nation conceived in liberty and dedicated to the proposition that all men are created equal now we are engaged in a great civil war testing whether that nation or any nation so conceived and so dedicated can long endure"
+  },
+  {
+    "text": " we the people of the united states in order to form a more perfect union establish justice insure domestic tranquillity provide for the common defense promote the general welfare and secure the blessings of liberty to ourselves and our posterity do ordain and establish this constitution for the united states of america"
+  }
 ]
 ```

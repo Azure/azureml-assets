@@ -5,17 +5,3 @@ tabular_rai_insight:
     raiinsight_pipeline:
       pre: "./tabular/jobs/prepare.py"
       job: "./tabular/jobs/pipeline_boston_analyze.yml"
-text_rai_insight:
-  includes:
-    - "./text/jobs/"
-  jobs:
-    raitextinsight_pipeline:
-      pre: "./text/jobs/prepare.py"
-      job: "./text/jobs/pipeline_dbpedia_analyze.yml"
-vision_rai_insight:
-  includes:
-    - "./vision/jobs/"
-  jobs:
-    raivisioninsight_pipeline:
-      pre: "./vision/jobs/prepare.py"
-      job: "./vision/jobs/pipeline_fridge_analyze.yml"

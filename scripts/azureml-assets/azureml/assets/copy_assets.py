@@ -17,6 +17,7 @@ from azureml.assets.util import logger
 from azureml.assets.config import AssetType
 
 COPIED_COUNT = "copied_count"
+ASSET_COUNT = "asset_count"
 COPIED_TYPE_COUNT = Template("copied_${type}_count")
 
 
@@ -35,6 +36,7 @@ def copy_asset(asset_config: assets.AssetConfig,
     """
     if release_directory_root is not None and assets.release_tag_exists(asset_config, release_directory_root):
         # Skip a released version
+        logger.log_warning(f"Release tag already exists for {asset_config.full_name}.")
         return None
 
     if check_previous_release and asset_config.type == AssetType.ENVIRONMENT:
@@ -109,6 +111,7 @@ def copy_assets(input_dirs: List[Path],
 
     # Set variables
     logger.set_output(COPIED_COUNT, copied_count)
+    logger.set_output(ASSET_COUNT, asset_count)
     for type, count in copied_type_counter.items():
         logger.set_output(COPIED_TYPE_COUNT.substitute(type=type.value), count)
 

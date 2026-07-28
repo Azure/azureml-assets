@@ -56,6 +56,12 @@ class SupportedTasks(_CustomEnum):
     IMAGE_OBJECT_DETECTION = "image-object-detection"
     IMAGE_INSTANCE_SEGMENTATION = "image-instance-segmentation"
 
+    # Virchow
+    IMAGE_FEATURE_EXTRACTION = "image-feature-extraction"
+
+    # Hibou-B family
+    FEATURE_EXTRACTION = "feature-extraction"
+
 
 class ModelFamilyPrefixes(_CustomEnum):
     """Prefixes for some of the models converted to PyFunc MLflow."""
@@ -65,3 +71,9 @@ class ModelFamilyPrefixes(_CustomEnum):
 
     # DinoV2 model family.
     DINOV2 = "facebook/dinov2"
+
+    # Virchow model family.
+    VIRCHOW = "paige-ai/Virchow"
+
+    # Hibou-B family
+    HIBOU_B = "histai/hibou-b"

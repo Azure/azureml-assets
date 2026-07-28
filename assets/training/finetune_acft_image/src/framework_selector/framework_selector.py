@@ -9,8 +9,7 @@ Return true for runtime image command component and False for using FT component
 TODO: Framework selectors to use "switch" control flow once its supported by pipeline team.
 """
 
-from azure.ai.ml import Input
-from mldesigner import Output, command_component
+from mldesigner import Input, Output, command_component
 from azureml._common._error_definition.azureml_error import AzureMLError
 from azureml.acft.common_components import (
     get_logger_app,

@@ -1,0 +1,6 @@
+# Valid tag values that can be applied to evaluation results whose evaluation_type is `text_cost`.
+index_metric_key:
+  required: True
+  allow_multiple: False
+  values:
+  - total_cost_per_1M_tokens

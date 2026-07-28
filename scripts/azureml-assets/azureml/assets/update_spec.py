@@ -14,6 +14,7 @@ from typing import Dict
 import azureml.assets as assets
 import azureml.assets.util as util
 from azureml.assets.util import logger
+from azureml.assets.util.util import resolve_from_file_for_asset, is_file_relative_to_asset_path
 
 
 def create_template_data(asset_config: assets.AssetConfig, release_directory_root: Path = None, version: str = None,
@@ -101,7 +102,7 @@ def update(asset_config: assets.AssetConfig, release_directory_root: Path = None
     yaml.preserve_quotes = True
 
     # Load spec template and render
-    with open(asset_config.spec_with_path) as f:
+    with open(asset_config.spec_with_path, encoding='utf-8') as f:
         contents = util.render(f.read(), data)
         contents_yaml = yaml.load(contents)
 
@@ -109,11 +110,17 @@ def update(asset_config: assets.AssetConfig, release_directory_root: Path = None
     description_file = asset_config.description_file_with_path
     if description_file is not None:
         # Load description
-        with open(description_file) as f:
+        with open(description_file, encoding='utf-8') as f:
             description = f.read()
 
         # Replace description in spec
         contents_yaml['description'] = LiteralScalarString(description)
+
+    if 'tags' in contents_yaml:
+        unresolved_tags = contents_yaml['tags']
+        contents_yaml['tags'] = {k: (LiteralScalarString(resolve_from_file_for_asset(asset_config, v))
+                                     if is_file_relative_to_asset_path(asset_config, v) else v)
+                                 for k, v in unresolved_tags.items()}
 
     # Write spec
     if output_file == "-":
@@ -122,7 +129,7 @@ def update(asset_config: assets.AssetConfig, release_directory_root: Path = None
     else:
         if output_file is None:
             output_file = asset_config.spec_with_path
-        with open(output_file, "w") as f:
+        with open(output_file, "w", encoding='utf-8') as f:
             yaml.dump(contents_yaml, f)
 
 

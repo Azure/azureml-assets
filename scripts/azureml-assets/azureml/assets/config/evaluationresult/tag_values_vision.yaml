@@ -1,0 +1,7 @@
+# Valid tag values that can be applied to evaluation results whose evaluation_type is `vision`.
+task:
+  required: True
+  allow_multiple: False
+  values:
+  - image-generation
+  - image-vqa

@@ -1,0 +1,29 @@
+flavors:
+  python_function:
+    artifacts:
+      model:
+        path: artifacts/yolov5.pth
+        uri: /tmp/yolov5.pth
+      settings:
+        path: artifacts/settings.json
+        uri: /mnt/azureml/cr/j/bee857b55e454cd9a8ea41e44bc485ed/exe/wd/azureml/model/mgmt/processors/pyfunc/automl/settings.json
+    cloudpickle_version: 2.2.1
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.8.18
+metadata:
+  base_model_name: null
+  base_model_task: image-object-detection
+  is_acft_model: true
+  is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+mlflow_version: 2.6.0
+model_uuid: a9cc0135960c4b2787c8ac973870746a
+signature:
+  inputs: '[{"type": "binary", "name": "image"}]'
+  outputs: '[{"type": "string", "name": "boxes"}]'
+  params: null
+utc_time_created: '2023-11-22 00:48:53.693341'

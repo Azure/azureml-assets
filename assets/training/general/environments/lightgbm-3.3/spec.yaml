@@ -13,9 +13,9 @@ build:
 os_type: linux
 
 tags:
-  LightGBM: "3.3"
-  OS: Ubuntu20.04
+  LightGBM: "4.6"
+  OS: Ubuntu24.04
   Training: ""
   Preview: ""
-  OpenMpi: "4.1.0"
-  Python: "3.8"
+  OpenMpi: "5.0"
+  Python: "3.10"

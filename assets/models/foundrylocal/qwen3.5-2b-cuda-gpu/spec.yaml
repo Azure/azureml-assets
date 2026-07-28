@@ -1,0 +1,49 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: qwen3.5-2b-cuda-gpu
+path: ./
+isArchived: true
+tags:
+  capabilities: reasoning,tool-calling
+  supportsReasoning: 'true'
+  contextLength: 262144
+system_metadata:
+  alias: qwen3.5-2b
+  publisher: Microsoft
+  directoryPath: v2
+  foundryLocal: ''
+  inputModalities:
+  - text
+  - image
+  license: apache-2.0
+  licenseDescription: This model is provided under the License Terms available at <https://huggingface.co/Qwen/Qwen3.5-2B/blob/main/LICENSE>.
+  maxOutputTokens: 2048
+  outputModalities:
+  - text
+  promptTemplate: '{"system": "<|im_start|>system\n{Content}<|im_end|>", "user": "<|im_start|>user\n{Content}<|im_end|>", "assistant": "<|im_start|>assistant\n{Content}<|im_end|>", "prompt": "<|im_start|>user\n{Content}<|im_end|>\n<|im_start|>assistant"}'
+  supportsToolCalling: true
+  toolCallEnd: </tool_call>
+  toolCallStart: <tool_call>
+  toolRegisterEnd: </tools>
+  toolRegisterStart: <tools>
+  toolResponseEnd: </tool_response>
+  toolResponseStart: <tool_response>
+  tasks:
+    inferenceTasks:
+    - vision-language-chat
+  platformCapabilities:
+    enableMaap: false
+  reasoningStart: <think>
+  reasoningEnd: </think>
+  minFLVersion: 1.1.0
+variantInfo:
+  parents:
+  - assetId: azureml://registries/azureml/models/qwen3.5-2b/versions/1
+  variantMetadata:
+    modelType: ONNX
+    quantization:
+    - RTN
+    device: gpu
+    executionProvider: CUDAExecutionProvider
+    fileSizeBytes: 3357039819
+    vRamFootprintBytes: 3357039819
+version: 2

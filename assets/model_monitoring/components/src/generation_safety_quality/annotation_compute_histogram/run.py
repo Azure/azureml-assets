@@ -21,9 +21,9 @@ import json
 import uuid
 
 import pandas as pd
-from promptflow.core import AzureOpenAIModelConfiguration
-from promptflow.evals.evaluate import evaluate
-from promptflow.evals.evaluators import (
+from azure.ai.evaluation._model_configurations import AzureOpenAIModelConfiguration
+from azure.ai.evaluation import (
+    evaluate,
     CoherenceEvaluator,
     FluencyEvaluator,
     GroundednessEvaluator,
@@ -49,6 +49,9 @@ PROMPT = "prompt"
 COMPLETION = "completion"
 CONTEXT = "context"
 GROUND_TRUTH = "ground_truth"
+QUERY = "query"
+RESPONSE = "response"
+COLUMN_MAPPING = "column_mapping"
 CORRELATION_ID = "correlationid"
 TRACE_ID = "trace_id"
 ROOT_SPAN = "root_span"
@@ -514,7 +517,7 @@ def apply_annotation(
                 input_columns.append(GROUND_TRUTH)
             passthrough_cols = get_passthrough_cols(batch)
             for index, row in batch.iterrows():
-                qca = {PROMPT: row[PROMPT], COMPLETION: row[COMPLETION]}
+                qca = {QUERY: row[PROMPT], RESPONSE: row[COMPLETION]}
                 if has_context:
                     qca[CONTEXT] = row[CONTEXT]
                 if has_ground_truth:
@@ -543,14 +546,16 @@ def apply_annotation(
                 evaluators[metric_name_compact] = evaluator(
                     model_config=model_config)
                 evaluator_config[metric_name_compact] = {
-                    "answer": format_data_column(COMPLETION),
-                    "question": format_data_column(PROMPT)
+                    COLUMN_MAPPING: {
+                        RESPONSE: format_data_column(RESPONSE),
+                        QUERY: format_data_column(QUERY)
+                    }
                 }
                 config = evaluator_config[metric_name_compact]
                 if has_context:
-                    config["context"] = format_data_column(CONTEXT)
+                    config[COLUMN_MAPPING][CONTEXT] = format_data_column(CONTEXT)
                 if has_ground_truth:
-                    config["ground_truth"] = format_data_column(GROUND_TRUTH)
+                    config[COLUMN_MAPPING][GROUND_TRUTH] = format_data_column(GROUND_TRUTH)
             # write rows to jsonl file
             input_file_name = "eval_input_" + str(uuid.uuid4()) + ".jsonl"
             input_file_path = os.path.join(input_dir.name, input_file_name)
@@ -590,7 +595,12 @@ def apply_annotation(
                     tabular_result.rename(columns={result_name: metric_name_compact}, inplace=True)
                 for column_name in input_columns:
                     # input column names follow schema like "inputs.context"
-                    result_name = "inputs." + column_name
+                    if column_name == PROMPT:
+                        result_name = "inputs." + QUERY
+                    elif column_name == COMPLETION:
+                        result_name = "inputs." + RESPONSE
+                    else:
+                        result_name = "inputs." + column_name
                     tabular_result.rename(columns={result_name: column_name}, inplace=True)
             except KeyError as e:
                 # raise new user error with more context

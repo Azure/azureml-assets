@@ -1,0 +1,152 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: oss_distillation_generate_data_batch_preprocess
+version: 0.0.1
+type: command
+
+is_deterministic: False
+
+display_name: OSS Distillation Generate Data Batch Scoring Preprocess
+description: Component to prepare data to invoke teacher model enpoint in batch 
+
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/76
+
+inputs:
+  # Inputs
+  train_file_path:
+    type: uri_file
+    description: Path to the registered training data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    mode: rw_mount
+
+  validation_file_path:
+    type: uri_file
+    optional: true
+    description: Path to the registered validation data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    mode: rw_mount
+
+  teacher_model_endpoint_name:
+    type: string
+    optional: true
+    description: Teacher model endpoint name
+
+  teacher_model_endpoint_url: 
+    type: string
+    optional: true
+    description: Teacher model endpoint url
+
+  teacher_model_endpoint_key:
+    type: string
+    optional: true
+    description: Teacher model endpoint key
+
+  teacher_model_max_new_tokens:
+    type: integer
+    default: 128
+    description: Teacher model max_new_tokens inference parameter
+
+  teacher_model_temperature:
+    type: number
+    default: 0.2
+    description: Teacher model temperature inference parameter
+
+  teacher_model_top_p:
+    type: number
+    default: 0.1
+    description: Teacher model top_p inference parameter
+
+  teacher_model_frequency_penalty:
+    type: number
+    default: 0.0
+    description: Teacher model frequency penalty inference parameter
+
+  teacher_model_presence_penalty:
+    type: number
+    default: 0.0
+    description: Teacher model presence penalty inference parameter
+
+  teacher_model_stop:
+    type: string
+    optional: true
+    description: Teacher model stop inference parameter
+
+  enable_chain_of_thought:
+    type: string
+    optional: true
+    default: "false"
+    description: Enable Chain of thought for data generation
+  
+  enable_chain_of_density:
+    type: string
+    optional: true
+    default: "false"
+    description: Enable Chain of density for text summarization
+
+  max_len_summary:
+    type: integer
+    optional: true
+    default: 80
+    description: Maximum Length Summary for text summarization
+
+  data_generation_task_type:
+    type: string
+    enum:
+      - NLI
+      - CONVERSATION
+      - NLU_QA
+      - MATH
+      - SUMMARIZATION
+    description: >
+      Data generation task type. Supported values are:
+      1. NLI: Generate Natural Language Inference data
+      2. CONVERSATION: Generate conversational data (multi/single turn)
+      3. NLU_QA: Generate Natural Language Understanding data for Question Answering data
+      4. MATH: Generate Math data for numerical responses
+      5. SUMMARIZATION: Generate Key Summary for an Article
+
+  
+  # Output of validation component.
+  validation_info:
+    type: uri_file
+    optional: true
+    description: Validation status.
+    mode: rw_mount
+    
+outputs:
+  generated_train_payload_path:
+    type: mltable
+    description: directory containing the payload to be sent to the model.
+  generated_validation_payload_path:
+    type: mltable
+    description: directory containing the payload to be sent to the model.
+  hash_train_data:
+    type: uri_file
+    description: jsonl file containing the hash for each payload.
+  hash_validation_data:
+    type: uri_file
+    description: jsonl file containing the hash for each payload.
+  batch_config_connection:
+    type: uri_file
+    description: Config file path that contains deployment configurations
+
+code: ../../src
+command: >-
+  python generate_data_preprocess.py
+  --train_file_path  ${{inputs.train_file_path}}
+  $[[--validation_file_path  ${{inputs.validation_file_path}}]]
+  $[[--teacher_model_endpoint_name ${{inputs.teacher_model_endpoint_name}}]]
+  $[[--teacher_model_endpoint_url ${{inputs.teacher_model_endpoint_url}}]]
+  $[[--teacher_model_endpoint_key ${{inputs.teacher_model_endpoint_key}}]]
+  --teacher_model_max_new_tokens ${{inputs.teacher_model_max_new_tokens}}
+  --teacher_model_temperature ${{inputs.teacher_model_temperature}}
+  --teacher_model_top_p ${{inputs.teacher_model_top_p}}
+  --teacher_model_frequency_penalty ${{inputs.teacher_model_frequency_penalty}}
+  --teacher_model_presence_penalty ${{inputs.teacher_model_presence_penalty}}
+  $[[--teacher_model_stop ${{inputs.teacher_model_stop}}]]
+  $[[--enable_chain_of_thought ${{inputs.enable_chain_of_thought}}]]
+  $[[--enable_chain_of_density ${{inputs.enable_chain_of_density}}]]
+  $[[--max_len_summary ${{inputs.max_len_summary}}]]
+  --data_generation_task_type ${{inputs.data_generation_task_type}}
+  --generated_train_payload_path ${{outputs.generated_train_payload_path}}
+  --generated_validation_payload_path ${{outputs.generated_validation_payload_path}}
+  --hash_train_data ${{outputs.hash_train_data}}
+  --hash_validation_data ${{outputs.hash_validation_data}}
+  --batch_config_connection ${{outputs.batch_config_connection}}

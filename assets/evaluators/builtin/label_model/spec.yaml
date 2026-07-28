@@ -1,0 +1,46 @@
+type: "evaluator"
+name: "builtin.label_model"
+version: 1
+displayName: "Label-Model-Evaluator"
+description: "Compares model predictions against reference labels and returns structured results with explanations for why each label was chosen. Measures how closely results match expected outcomes. Use this metric in classification tasks, tagging systems, and intent detection."
+evaluatorType: "builtin"
+evaluatorSubType: "openai_graders"
+categories: ["quality"]
+tags:
+  provider: "Microsoft"
+initParameterSchema:
+  type: "object"
+  properties:
+    deployment_name:
+      type: "string"
+    model:
+      type: "string"
+    name:
+      type: "string"
+    input:
+      type: "array"
+      items:
+        type: "object"
+        properties:
+          content:
+            type: "string"
+          role:
+            type: "string"
+            enum: ["system", "user", "assistant"]
+        required: ["content", "role"]
+    type:
+      type: "string"
+    labels:
+      type: "array"
+      items:
+        type: "string"
+    passing_labels:
+      type: "array"
+      items:
+        type: "string"
+  required: ["deployment_name", "model", "name", "input", "type", "labels", "passing_labels"]
+dataMappingSchema: {}
+outputSchema:
+  label_model:
+    type: "boolean"
+    desirable_direction: "increase"

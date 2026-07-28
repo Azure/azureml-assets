@@ -1,0 +1,11 @@
+image:
+  name: azureml/curated/ai-ml-automl
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+  publish:
+    location: mcr
+    visibility: public

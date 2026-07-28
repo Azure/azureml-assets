@@ -1,0 +1,31 @@
+flavors:
+  hftransformersv2:
+    code: code
+    config_hf_load_kwargs:
+      trust_remote_code: true
+      attn_implementation: eager
+    model_hf_load_kwargs:
+      trust_remote_code: true
+    hf_config_class: AutoConfig
+    hf_pretrained_class: AutoModelForCausalLM
+    hf_tokenizer_class: AutoTokenizer
+    hf_predict_module: predict_phi
+    task_type: chat-completion
+    model_data: data
+    pytorch_version: 1.13.1
+    transformers_version: 4.38.2
+    model_id: microsoft/phi-3-medium-128k-instruct
+  python_function:
+    code: code
+    data: data
+    env: conda.yaml
+    loader_module: azureml.evaluate.mlflow.hftransformers
+    python_version: 3.8.18
+metadata:
+  base_model_name: Phi-3-medium-128k-instruct
+  base_model_task: chat-completion
+  model_provider_name: microsoft
+  azureml.base_image: mcr.microsoft.com/azureml/curated/foundation-model-inference:63
+mlflow_version: 2.10.2
+model_uuid: 53cc26bc8d2843c48369a20e205983f9
+utc_time_created: '2024-05-01 17:06:09.382806'

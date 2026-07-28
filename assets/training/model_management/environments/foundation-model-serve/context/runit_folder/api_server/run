@@ -1,0 +1,3 @@
+#!/bin/sh
+exec 2>&1
+exec python -m foundation.model.serve.api_server

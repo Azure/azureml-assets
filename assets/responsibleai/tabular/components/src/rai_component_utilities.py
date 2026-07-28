@@ -12,37 +12,152 @@ import sys
 import tempfile
 import time
 import traceback
+import types
 import uuid
-from pathlib import Path
 from typing import Any, Dict, Optional
+from urllib.parse import urlparse
 
 import mlflow
 import mltable
 import pandas as pd
 import requests
 from arg_helpers import get_from_args
-from azureml.core import Model, Run, Workspace
-# TODO: seems this method needs to be made public
-from azureml.rai.utils.telemetry.loggerfactory import _extract_and_filter_stack
-from constants import (MLFLOW_MODEL_SERVER_PORT, DashboardInfo,
-                       PropertyKeyValues, RAIToolType)
-from raiutils.exceptions import UserConfigValidationException
-from responsibleai._internal._served_model_wrapper import ServedModelWrapper
-from responsibleai.feature_metadata import FeatureMetadata
+from azure.core.configuration import Configuration
+from azure.core.pipeline import Pipeline
+from azure.core.pipeline.policies import (CustomHookPolicy, HeadersPolicy,
+                                          HttpLoggingPolicy,
+                                          NetworkTraceLoggingPolicy,
+                                          ProxyPolicy, RedirectPolicy,
+                                          RetryPolicy, UserAgentPolicy)
+from azure.core.pipeline.transport import RequestsTransport
+from azure.core.rest import HttpRequest
 
-from responsibleai import RAIInsights
-from responsibleai import __version__ as responsibleai_version
+"""Runtime shims to satisfy deprecated imports expected by azureml-telemetry.
+
+- azureml._common._error_response._error_response_constants.ErrorCodes
+  Provides USER_ERROR and SYSTEM_ERROR constants.
+- azureml._base_sdk_common._ClientSessionId
+  Provides a unique session id string so `from azureml._base_sdk_common import _ClientSessionId` works.
+- azureml.telemetry.logger._abstract_event_logger._ClientSessionId
+  Provides a unique session id string so _ClientSessionId import works.
+"""
+
+
+def ensure_shim():
+    try:
+        from azureml._common._error_response._error_response_constants import \
+            ErrorCodes  # noqa: F401
+    except Exception:
+        sys.modules.setdefault("azureml", types.ModuleType("azureml"))
+        sys.modules.setdefault("azureml._common", types.ModuleType("azureml._common"))
+        sys.modules.setdefault("azureml._common._error_response", types.ModuleType("azureml._common._error_response"))
+        mod = types.ModuleType("azureml._common._error_response._error_response_constants")
+        class ErrorCodes:  # noqa: E306
+            USER_ERROR = "UserError"
+            SYSTEM_ERROR = "SystemError"
+        mod.ErrorCodes = ErrorCodes
+        sys.modules["azureml._common._error_response._error_response_constants"] = mod
+    try:
+        from azureml._base_sdk_common import _ClientSessionId  # noqa: F401
+    except Exception:
+        sys.modules.setdefault("azureml", types.ModuleType("azureml"))
+        base_mod = types.ModuleType("azureml._base_sdk_common")
+        base_mod._ClientSessionId = 'l_' + str(uuid.uuid4())
+        sys.modules["azureml._base_sdk_common"] = base_mod
+    try:
+        from azureml.telemetry.logger._abstract_event_logger import \
+            _ClientSessionId  # noqa: F401, F811
+    except Exception:
+        abs_mod = types.ModuleType("azureml.telemetry.logger._abstract_event_logger")
+        abs_mod._ClientSessionId = 'l_' + str(uuid.uuid4())
+        sys.modules["azureml.telemetry.logger._abstract_event_logger"] = abs_mod
+
+
+# Ensure shim before importing telemetry loggerfactory
+ensure_shim()
+# TODO: seems this method needs to be made public
+from azureml.rai.utils.telemetry.loggerfactory import \
+    _extract_and_filter_stack  # noqa: E402
+from constants import (MLFLOW_MODEL_SERVER_PORT, DashboardInfo,  # noqa: E402
+                       PropertyKeyValues, RAIToolType)
+from raiutils.common.retries import retry_function  # noqa: E402
+from raiutils.exceptions import UserConfigValidationException  # noqa: E402
+from responsibleai._internal._served_model_wrapper import \
+    ServedModelWrapper  # noqa: E402
+from responsibleai.feature_metadata import FeatureMetadata  # noqa: E402
+
+from responsibleai import RAIInsights  # noqa: E402
 
 assetid_re = re.compile(
     r"azureml://locations/(?P<location>.*)/workspaces/(?P<workspaceid>.*)/(?P<assettype>.*)/(?P<assetname>.*)/versions/(?P<assetversion>.*)"  # noqa: E501
 )
 data_type = "data_type"
+MODELS_DIR = os.path.join(os.environ.get('AML_APP_ROOT', ''), "azureml-models")
 
-FORECASTING = "forecasting"
-
+# Taken from azure-ai-evaluation _eval_run.py file
+_MAX_RETRIES = 5
+_BACKOFF_FACTOR = 2
+_TIMEOUT = 5
+_POLLING_INTERVAL = 30
 
 _logger = logging.getLogger(__file__)
 logging.basicConfig(level=logging.INFO)
+
+
+def add_properties_to_gather_run(
+    dashboard_info: Dict[str, str],
+    run_properties: Dict[str, str],
+    included_tools: Dict[str, bool],
+    module_name: str,
+    module_version: str
+):
+    """
+    Common function to add properties to MLflow run for RAI components.
+
+    Args:
+        dashboard_info: Dashboard information dictionary
+        run_properties: Base run properties to add
+        included_tools: Dictionary of tool types and their presence status
+        module_name: Module name for user agent
+        module_version: Module version for user agent
+    """
+    _logger.info("Adding properties to the gather run")
+
+    # Add tool present information
+    _logger.info("Appending tool present information")
+    for k, v in included_tools.items():
+        key = PropertyKeyValues.RAI_INSIGHTS_TOOL_KEY_FORMAT.format(k)
+        run_properties[key] = str(v)
+
+    # Get current MLflow run
+    _logger.info("Making service call from MlflowClient")
+    run_id = os.environ.get("AZUREML_RUN_ID")
+    current_run = mlflow.active_run()
+    if current_run is not None:
+        experiment_id = current_run.info.experiment_id
+        _logger.info("Using experiment_id from active run: {0}".format(experiment_id))
+    else:
+        # Fallback if we can't get experiment_id from active run
+        experiment_id = os.environ.get("AZUREML_EXPERIMENT_ID", "unknown")
+        _logger.info("Using experiment_id from environment variable: {0}".format(experiment_id))
+
+    # Prepare request
+    json_dict = {"runId": run_id, "properties": run_properties}
+    _logger.info("Adding properties to run history: {0}".format(json_dict))
+
+    headers = {}
+    headers["User-Agent"] = module_name + "(" + module_version + ")"
+    token = os.environ.get("MLFLOW_TRACKING_TOKEN")
+    headers["Authorization"] = f"Bearer {token}"
+
+    # Make HTTP request
+    session = get_http_client()
+    method = "PATCH"
+    url = get_run_history_uri(mlflow.get_tracking_uri(), run_id, experiment_id)
+    request = HttpRequest(method, url, headers=headers, json=json_dict)
+    response = session.run(request, timeout=_TIMEOUT).http_response
+    _logger.info("Response from run history on adding properties: {0}".format(response))
+    _logger.info("Properties added to gather run")
 
 
 # Directory names saved by RAIInsights might not match tool names
@@ -96,46 +211,121 @@ def fetch_model_id(model_info_path: str):
         return model_info[DashboardInfo.MODEL_ID_KEY]
 
 
-def load_mlflow_model(
-    workspace: Workspace,
-    use_model_dependency: bool = False,
-    use_separate_conda_env: bool = False,
-    model_id: Optional[str] = None,
-    model_path: Optional[str] = None,
-) -> Any:
-    model_uri = model_path
-    mlflow.set_tracking_uri(workspace.get_mlflow_tracking_uri())
+def get_http_client():
+    """Create and configure HTTP client with retry policies."""
+    config = Configuration()
+    config.headers_policy = HeadersPolicy()
+    config.proxy_policy = ProxyPolicy()
+    config.redirect_policy = RedirectPolicy()
+    config.retry_policy = RetryPolicy(
+        retry_total=_MAX_RETRIES,
+        retry_connect=_MAX_RETRIES,
+        retry_read=_MAX_RETRIES,
+        retry_status=_MAX_RETRIES,
+        retry_on_status_codes=(408, 429, 500, 502, 503, 504),
+        retry_backoff_factor=_BACKOFF_FACTOR)
+    config.custom_hook_policy = CustomHookPolicy()
+    config.logging_policy = NetworkTraceLoggingPolicy()
+    config.http_logging_policy = HttpLoggingPolicy()
+    config.user_agent_policy = UserAgentPolicy()
+    config.polling_interval = _POLLING_INTERVAL
+    return Pipeline(
+        transport=RequestsTransport(),
+        policies=[
+            config.headers_policy,
+            config.user_agent_policy,
+            config.proxy_policy,
+            config.redirect_policy,
+            config.retry_policy,
+            config.custom_hook_policy,
+            config.logging_policy,
+        ]
+    )
 
-    if model_id:
-        try:
-            model = Model._get(workspace, id=model_id)
-        except Exception as e:
-            raise UserConfigError(
-                "Unable to retrieve model by model id {} in workspace {}, error:\n{}".format(
-                    model_id, workspace.name, e
-                ), e
-            )
-        model_uri = "models:/{}/{}".format(model.name, model.version)
 
-    if use_model_dependency:
-        if not use_separate_conda_env:
-            try:
-                conda_file = mlflow.pyfunc.get_model_dependencies(
-                    model_uri,
-                    format="conda"
-                )
-            except Exception as e:
-                raise UserConfigError(
-                    "Failed to get model dependency from given model {}, error:\n{}".format(
-                        model_uri, e
-                    ), e
-                )
+def get_scope() -> str:
+    """
+    Return the scope information for the workspace.
+
+    :return: The scope information for the workspace.
+    :rtype: str
+    """
+    workspace_name = os.environ.get("AZUREML_ARM_WORKSPACE_NAME")
+    resource_group = os.environ.get("AZUREML_ARM_RESOURCEGROUP")
+    subscription_id = os.environ.get("AZUREML_ARM_SUBSCRIPTION")
+    return (
+        "/subscriptions/{}/resourceGroups/{}/providers"
+        "/Microsoft.MachineLearningServices"
+        "/workspaces/{}"
+    ).format(
+        subscription_id,
+        resource_group,
+        workspace_name,
+    )
+
+
+def get_run_history_uri(tracking_uri: str, run_id: str,
+                        experiment_id: str) -> str:
+    """
+    Get the run history service URI.
+
+    :return: The run history service URI.
+    :rtype: str
+    """
+    url_base = urlparse(tracking_uri).netloc
+    return (
+        f"https://{url_base}"
+        "/history/v1.0"
+        f"{get_scope()}"
+        f"/experimentids/{experiment_id}/runs/{run_id}"
+    )
+
+
+class InstallCondaEnv(object):
+    def __init__(self, use_separate_conda_env: bool, conda_file: str,
+                 model_path: str, model_id: str = None, model=None):
+        self.use_separate_conda_env = use_separate_conda_env
+        self.conda_file = conda_file
+        self.model_path = model_path
+        self.model_id = model_id
+        self.model = model
+
+    def install(self):
         try:
-            if use_separate_conda_env:
-                tmp_model_path = "./mlflow_model"
-                if (not model_path and model_id):
-                    model_path = Model.get_model_path(model_name=model.name,
-                                                      version=model.version)
+            if self.use_separate_conda_env:
+                # generate some random characters to add to model path
+                random_chars = str(uuid.uuid4())[:8]
+                tmp_model_path = "./mlflow_model" + random_chars
+                model_path = self.model_path
+                if (not model_path and self.model_id):
+                    # model_path = Model.get_model_path(model_name=self.model.name,
+                    #                                   version=self.model.version)
+                    # Load from cache <azureml-models>/$MODEL_NAME/$SPECIFIED_VERSION/
+                    candidate_model_path = os.path.join(MODELS_DIR, self.model.name, self.model.version)
+                    if not os.path.exists(candidate_model_path):
+                        _logger.warning("Candidate model path does not exist: {}".format(
+                            candidate_model_path
+                        ))
+                        # Download model locally using mlflow
+                        model_uri = "models:/{}/{}".format(self.model.name, self.model.version)
+                        _logger.info("Downloading model from MLflow: {}".format(model_uri))
+                        try:
+                            downloaded_model_path = mlflow.artifacts.download_artifacts(
+                                artifact_uri=model_uri,
+                                dst_path="./downloaded_model"
+                            )
+                            model_path = downloaded_model_path
+                            _logger.info("Successfully downloaded model to: {}".format(model_path))
+                        except Exception as e:
+                            _logger.error("Failed to download model from MLflow: {}".format(e))
+                            raise UserConfigError(
+                                "Unable to download model {} from MLflow, error: {}".format(
+                                    model_uri, e
+                                ), e
+                            )
+                    else:
+                        model_path = candidate_model_path
+
                 shutil.copytree(model_path, tmp_model_path)
                 model_uri = tmp_model_path
 
@@ -154,9 +344,10 @@ def load_mlflow_model(
                                          "-m", model_uri,
                                          "--env-manager", "conda"]
             else:
+                # mlflow model input mount as read only. Conda need write access.
                 local_conda_dep = "./conda_dep.yaml"
-                shutil.copyfile(conda_file, local_conda_dep)
-                conda_prefix = str(Path(sys.executable).parents[1])
+                shutil.copyfile(self.conda_file, local_conda_dep)
+                conda_prefix = str(pathlib.Path(sys.executable).parents[1])
                 conda_install_command = ["conda", "env", "update",
                                          "--prefix", conda_prefix,
                                          "-f", local_conda_dep]
@@ -174,6 +365,63 @@ def load_mlflow_model(
                 )
             )
             _classify_and_log_pip_install_error(e.output)
+            raise e
+        return
+
+
+def load_mlflow_model(
+    use_model_dependency: bool = False,
+    use_separate_conda_env: bool = False,
+    model_id: Optional[str] = None,
+    model_path: Optional[str] = None,
+) -> Any:
+    model_uri = model_path
+    client = mlflow.tracking.MlflowClient()
+    model = None
+
+    if model_id:
+        split_model_id = model_id.rsplit(":", 1)
+        model_name = split_model_id[0]
+        try:
+            if model_name == model_id:
+                model = client.get_registered_model(model_id)
+                model_uri_name = model.name
+                model_uri_version = model.latest_versions[0].version
+            else:
+                version = split_model_id[1]
+                model = client.get_model_version(model_name, version=version)
+                model_uri_name = model.name
+                model_uri_version = model.version
+        except Exception as e:
+            raise UserConfigError(
+                "Unable to retrieve model by model id {}, error:\n{}".format(
+                    model_id, e
+                ), e
+            )
+        model_uri = "models:/{}/{}".format(model_uri_name, model_uri_version)
+
+    if use_model_dependency:
+        conda_file = None
+        if not use_separate_conda_env:
+            try:
+                conda_file = mlflow.pyfunc.get_model_dependencies(model_uri, format="conda")
+            except Exception as e:
+                raise UserConfigError(
+                    "Failed to get model dependency from given model {}, error:\n{}".format(
+                        model_uri, e
+                    ), e
+                )
+        try:
+            installer = InstallCondaEnv(
+                use_separate_conda_env, conda_file, model_path, model_id, model)
+            action_name = "Install conda"
+            err_msg = "Failed to install conda"
+            max_retries = 3
+            retry_delay = 60
+            retry_function(installer.install, action_name, err_msg,
+                           max_retries=max_retries,
+                           retry_delay=retry_delay)
+        except RuntimeError:
             raise UserConfigValidationException(
                 "Installing dependency using conda environment spec from mlflow model failed. "
                 "This behavior can be turned off with setting use_model_dependency to False in job spec. "
@@ -463,52 +711,7 @@ def save_to_output_port(rai_i: RAIInsights, output_port_path: str, tool_type: st
     _logger.info("Copied to output")
 
 
-def add_properties_to_gather_run(
-    dashboard_info: Dict[str, str], tool_present_dict: Dict[str, str]
-):
-    _logger.info("Adding properties to the gather run")
-    gather_run = Run.get_context()
-
-    run_properties = {
-        PropertyKeyValues.RAI_INSIGHTS_TYPE_KEY: PropertyKeyValues.RAI_INSIGHTS_TYPE_GATHER,
-        PropertyKeyValues.RAI_INSIGHTS_DASHBOARD_ID_KEY: dashboard_info[
-            DashboardInfo.RAI_INSIGHTS_RUN_ID_KEY
-        ],
-        PropertyKeyValues.RAI_INSIGHTS_RESPONSIBLEAI_VERSION_KEY: responsibleai_version,
-        PropertyKeyValues.RAI_INSIGHTS_MODEL_ID_KEY: dashboard_info[
-            DashboardInfo.RAI_INSIGHTS_MODEL_ID_KEY
-        ],
-        PropertyKeyValues.RAI_INSIGHTS_TEST_DATASET_ID_KEY: dashboard_info[
-            DashboardInfo.RAI_INSIGHTS_TEST_DATASET_ID_KEY
-        ],
-        PropertyKeyValues.RAI_INSIGHTS_TRAIN_DATASET_ID_KEY: dashboard_info[
-            DashboardInfo.RAI_INSIGHTS_TRAIN_DATASET_ID_KEY
-        ],
-        PropertyKeyValues.RAI_INSIGHTS_DASHBOARD_TITLE_KEY: dashboard_info[
-            DashboardInfo.RAI_INSIGHTS_DASHBOARD_TITLE_KEY
-        ],
-    }
-
-    constructor_args = dashboard_info[
-        DashboardInfo.RAI_INSIGHTS_CONSTRUCTOR_ARGS_KEY
-    ]
-    if "task_type" in constructor_args:
-        if constructor_args["task_type"] == FORECASTING:
-            run_properties[
-                PropertyKeyValues.RAI_INSIGHTS_DATA_TYPE_KEY
-            ] = FORECASTING
-
-    _logger.info("Appending tool present information")
-    for k, v in tool_present_dict.items():
-        key = PropertyKeyValues.RAI_INSIGHTS_TOOL_KEY_FORMAT.format(k)
-        run_properties[key] = str(v)
-
-    _logger.info("Making service call")
-    gather_run.add_properties(run_properties)
-    _logger.info("Properties added to gather run")
-
-
-def create_rai_insights_from_port_path(my_run: Run, port_path: str) -> RAIInsights:
+def create_rai_insights_from_port_path(port_path: str) -> RAIInsights:
     _logger.info("Creating RAIInsights from constructor component output")
 
     _logger.info("Loading data files")
@@ -535,7 +738,6 @@ def create_rai_insights_from_port_path(my_run: Run, port_path: str) -> RAIInsigh
         constructor_args["forecasting_enabled"] = is_forecasting_task
 
     model_estimator = load_mlflow_model(
-        workspace=my_run.experiment.workspace,
         use_model_dependency=use_model_dependency,
         use_separate_conda_env=use_separate_conda_env,
         model_id=model_id,

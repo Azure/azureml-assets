@@ -12,6 +12,7 @@ from llm.optimized.inference.constants import ALL_TASKS
 MLTABLE_FILE_NAME = "MLTable"
 LLM_FT_PREPROCESS_FILENAME = "preprocess_args.json"
 LLM_FT_TEST_DATA_KEY = "raw_test_data_fname"
+LLM_FT_CHAT_COMPLETION_KEY = "messages"
 
 # default values
 class ModelPath:
@@ -24,6 +25,7 @@ class ModelPath:
     DEFAULT_TOKENIZER_FILE = "tokenizer_config.json"
     DEFAULT_MLFLOW_MODEL_PATH = "model"
     DEFAULT_TOKENIZER_PATH = "components/tokenizer"
+    INFERENCE_CONFIG_PATH = "ml_configs/inference_config.json"
 
 
 class ArgumentLiterals:
@@ -195,3 +197,9 @@ FILTER_MODEL_PREDICTION_PARAMS = [
     "tokenizer_config",
     "generator_config"
 ]
+
+class ChatCompletionConstants:
+    """Chat completion constants."""
+
+    OUTPUT = "predictions"
+    OUTPUT_FULL_CONVERSATION = "prediction_appended"

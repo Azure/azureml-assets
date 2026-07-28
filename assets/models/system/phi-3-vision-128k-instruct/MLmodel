@@ -1,0 +1,24 @@
+flavors:
+  python_function:
+    artifacts:
+      model_dir:
+        path: model
+        uri: /code/mlflow_conversion/../phi3-mini-v-rc3-13-long-20240510
+    cloudpickle_version: 3.0.0
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.10.14
+metadata:
+  azureml.base_image: mcr.microsoft.com/azureml/curated/foundation-model-inference:39
+  base_model_name: phi3-mini-vision
+  base_model_task: chat-completion
+  is_acft_model: true
+  is_finetuned_model: false
+mlflow_version: 2.12.1
+model_size_bytes: 8295925056
+model_uuid: ab940bbf7a4f4959aa4346b5a8d9b301
+utc_time_created: '2024-05-09 08:30:34.663253'

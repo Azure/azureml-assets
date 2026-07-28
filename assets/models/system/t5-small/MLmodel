@@ -1,0 +1,33 @@
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.transformers
+    model_binary: model
+    python_version: 3.8.18
+  transformers:
+    code: null
+    components:
+    - tokenizer
+    framework: pt
+    instance_type: TranslationPipeline
+    model_binary: model
+    pipeline_model_type: T5ForConditionalGeneration
+    task: translation_en_to_de
+    tokenizer_type: T5TokenizerFast
+    transformers_version: 4.35.2
+metadata:
+  base_model_name: t5-small
+  base_model_task: translation
+  is_acft_model: true
+  is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+mlflow_version: 2.8.1
+model_size_bytes: 245280615
+model_uuid: 690b7253fc2f4fe4a17e2541d342f814
+signature:
+  inputs: '[{"type": "string"}]'
+  outputs: '[{"type": "string"}]'
+  params: null
+utc_time_created: '2023-12-06 12:32:36.738961'

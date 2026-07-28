@@ -1,0 +1,7 @@
+#!/bin/bash
+
+exit_code="$1" # The exit code from rsyslog
+signal="$2"    # The signal which caused rsyslog to exit (or 0)
+
+echo "`date -uIns` - rsyslog/finish $@"
+echo "`date -uIns` - Exit code $exit_code is not normal. Restarting rsyslog."

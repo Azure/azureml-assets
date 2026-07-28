@@ -1,6 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Download, extract, and score images using trained MLflow model."""
+
+
 import argparse
 import base64
 import os
@@ -38,6 +41,7 @@ if __name__ == "__main__":
 
     # Define helper method to read the bytes of a file from disk
     def read_file_bytes(image_path):
+        """Define helper method to read the bytes of a file from disk."""
         with open(image_path, "rb") as f:
             return f.read()
 

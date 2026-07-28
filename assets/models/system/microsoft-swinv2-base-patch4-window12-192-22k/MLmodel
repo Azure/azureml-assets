@@ -1,0 +1,36 @@
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.transformers
+    model_binary: model
+    python_version: 3.8.19
+  transformers:
+    code: null
+    components:
+    - image_processor
+    framework: pt
+    image_processor_type: ViTImageProcessor
+    instance_type: ImageClassificationPipeline
+    model_binary: model
+    pipeline_model_type: Swinv2ForImageClassification
+    source_model_name: /mnt/azureml/cr/j/f2eeb4a9d43a4689a23c183f741be95b/cap/data-capability/wd/INPUT_model_path
+    task: image-classification
+    torch_dtype: torch.float32
+    transformers_version: 4.40.1
+metadata:
+  base_model_name: microsoft/swinv2-base-patch4-window12-192-22k
+  base_model_task: image-classification
+  is_acft_model: true
+  is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+mlflow_version: 2.10.2
+model_size_bytes: 438322938
+model_uuid: 021401000cd743bda83ae5cb65d0f5da
+signature:
+  inputs: '[{"type": "string", "required": true}]'
+  outputs: '[{"type": "string", "name": "label", "required": true}, {"type": "double",
+    "name": "score", "required": true}]'
+  params: null
+utc_time_created: '2024-05-03 05:05:17.229727'

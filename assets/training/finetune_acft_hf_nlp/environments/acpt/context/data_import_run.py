@@ -295,14 +295,16 @@ def _run_subprocess_cmd(cmd: List[str], component_name: str):
 def _initiate_run():
     """Run the Data Import script."""
     # Data Import
+    task_name = decode_param_from_env_var("task_name")
     cmd = [
         "python", "-m", "azureml.acft.contrib.hf.nlp.entry_point.data_import.data_import",
-        "--task_name", "TextGeneration",
+        "--task_name", task_name,
         "--output_dataset", decode_output_from_env_var("output_dataset")
     ]
     add_train_validation_file_path_input(cmd=cmd, input_name="train_file_path")
     add_train_validation_file_path_input(
         cmd=cmd, input_name="validation_file_path")
+    add_optional_param(cmd, "user_column_names")
     logger.info(f"Starting the command: {cmd}")
 
     _run_subprocess_cmd(cmd=cmd, component_name="Data Import")
@@ -322,9 +324,10 @@ def run():
 
 
 if __name__ == "__main__":
+    task_name = decode_param_from_env_var("task_name")
     # set logger
     set_logging_parameters(
-        task_type="TextGeneration",
+        task_type=task_name,
         acft_custom_dimensions={
             LoggingLiterals.PROJECT_NAME: PROJECT_NAME,
             LoggingLiterals.PROJECT_VERSION_NUMBER: VERSION,

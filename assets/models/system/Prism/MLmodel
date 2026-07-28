@@ -1,0 +1,29 @@
+flavors:
+  python_function:
+    artifacts:
+      checkpoint_path:
+        path: artifacts/Prism
+        uri: Prism
+    cloudpickle_version: 2.2.1
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.10.14
+    streamable: false
+metadata:
+  base_model_name: Prism
+  base_model_task: zero-shot-image-classification
+  is_acft_model: true
+  is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+mlflow_version: 2.13.2
+model_size_bytes: 2355510581
+model_uuid: b14330b0a47745c9bfdc83c32299a6eb
+signature:
+  inputs: '[{"type": "string", "name": "embeddings", "required": true}, {"type": "string", "name": "neg_prompts", "required": false}, {"type": "string", "name": "pos_prompts", "required": false}]'
+  outputs: '[{"type": "string", "name": "output", "required": true}]'
+  params: null
+utc_time_created: '2024-09-09 03:48:15.134832'

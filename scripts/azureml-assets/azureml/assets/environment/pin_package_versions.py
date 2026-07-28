@@ -122,7 +122,7 @@ def transform_file(input_file: Path, output_file: Path = None):
         output_file (Path, optional): Output file. If not specific, input file will be updated in place.
     """
     # Read file
-    with open(input_file) as f:
+    with open(input_file, encoding='utf-8') as f:
         contents = f.read()
 
     # Transform
@@ -134,7 +134,7 @@ def transform_file(input_file: Path, output_file: Path = None):
     else:
         if output_file is None:
             output_file = input_file
-        with open(output_file, "w") as f:
+        with open(output_file, "w", encoding='utf-8') as f:
             f.write(contents)
 
 

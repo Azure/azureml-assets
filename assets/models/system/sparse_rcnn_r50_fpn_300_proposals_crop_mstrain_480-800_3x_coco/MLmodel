@@ -1,0 +1,31 @@
+flavors:
+  python_function:
+    artifacts:
+      config_path:
+        path: artifacts/sparse_rcnn_r50_fpn_300_proposals_crop_mstrain_480-800_3x_coco.py
+        uri: /mnt/azureml/cr/j/159e7ed584ba451cb145090daf6e8431/cap/data-capability/wd/INPUT_model_path/model/sparse_rcnn_r50_fpn_300_proposals_crop_mstrain_480-800_3x_coco.py
+      model_metadata:
+        path: artifacts/model_metadata.json
+        uri: /mnt/azureml/cr/j/159e7ed584ba451cb145090daf6e8431/cap/data-capability/wd/INPUT_model_path/model/model_metadata.json
+      weights_path:
+        path: artifacts/sparse_rcnn_r50_fpn_300_proposals_crop_mstrain_480-800_3x_coco_weights.pth
+        uri: /mnt/azureml/cr/j/159e7ed584ba451cb145090daf6e8431/cap/data-capability/wd/INPUT_model_path/model/sparse_rcnn_r50_fpn_300_proposals_crop_mstrain_480-800_3x_coco_weights.pth
+    cloudpickle_version: 2.2.1
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.8.16
+metadata:
+  base_model_name: sparse_rcnn_r50_fpn_300_proposals_crop_mstrain_480-800_3x_coco
+  is_acft_model: true
+  is_finetuned_model: false
+  base_model_task: object-detection
+mlflow_version: 2.3.1
+model_uuid: 4f13f4d0db6e4b36b3a827675ca9a1df
+signature:
+  inputs: '[{"name": "image", "type": "binary"}]'
+  outputs: '[{"name": "boxes", "type": "string"}]'
+utc_time_created: '2023-07-27 15:43:44.989876'
