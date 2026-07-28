@@ -98,6 +98,84 @@ class TestGroundednessEvaluatorBehavior(
 
     MINIMAL_RESPONSE = BaseEvaluatorBehaviorTest.weather_tool_result_and_assistant_response
 
+    def test_bing_grounding(self):
+        """Bing grounding tool is supported for groundedness evaluation."""
+        self._run_tool_type_test(
+            test_label="Bing Grounding",
+            evaluation_inputs={
+                "query": data.BING_GROUNDING_QUERY,
+                "response": data.BING_GROUNDING_RESPONSE,
+                "tool_definitions": data.BING_GROUNDING_TOOL_DEFINITIONS,
+            },
+            assert_type=self.AssertType.PASS,
+            expected_flow_inputs=self.test_bing_grounding_expected_flow_inputs,
+        )
+
+    def test_bing_custom_search(self):
+        """Bing custom search tool is supported for groundedness evaluation."""
+        self._run_tool_type_test(
+            test_label="Bing Custom Search",
+            evaluation_inputs={
+                "query": data.BING_CUSTOM_SEARCH_QUERY,
+                "response": data.BING_CUSTOM_SEARCH_RESPONSE,
+                "tool_definitions": data.BING_CUSTOM_SEARCH_TOOL_DEFINITIONS,
+            },
+            assert_type=self.AssertType.PASS,
+            expected_flow_inputs=self.test_bing_custom_search_expected_flow_inputs,
+        )
+
+    def test_azure_ai_search(self):
+        """Azure AI Search tool is supported for groundedness evaluation."""
+        self._run_tool_type_test(
+            test_label="Azure AI Search",
+            evaluation_inputs={
+                "query": data.AZURE_AI_SEARCH_QUERY,
+                "response": data.AZURE_AI_SEARCH_RESPONSE,
+                "tool_definitions": data.AZURE_AI_SEARCH_TOOL_DEFINITIONS,
+            },
+            assert_type=self.AssertType.PASS,
+            expected_flow_inputs=self.test_azure_ai_search_expected_flow_inputs,
+        )
+
+    def test_sharepoint_grounding(self):
+        """Validate that sharepoint grounding is supported for groundedness evaluation."""
+        self._run_tool_type_test(
+            test_label="SharePoint Grounding",
+            evaluation_inputs={
+                "query": data.SHAREPOINT_QUERY,
+                "response": data.SHAREPOINT_RESPONSE,
+                "tool_definitions": data.SHAREPOINT_TOOL_DEFINITIONS,
+            },
+            assert_type=self.AssertType.PASS,
+            expected_flow_inputs=self.test_sharepoint_grounding_expected_flow_inputs,
+        )
+
+    def test_fabric_data_agent(self):
+        """Fabric data agent tool is supported for groundedness evaluation."""
+        self._run_tool_type_test(
+            test_label="Fabric Data Agent",
+            evaluation_inputs={
+                "query": data.FABRIC_QUERY,
+                "response": data.FABRIC_RESPONSE,
+                "tool_definitions": data.FABRIC_TOOL_DEFINITIONS,
+            },
+            assert_type=self.AssertType.PASS,
+            expected_flow_inputs=self.test_fabric_data_agent_expected_flow_inputs,
+        )
+
+    def test_openapi(self):
+        """Validate that openapi tool calls are supported for groundedness evaluation."""
+        self._run_tool_type_test(
+            test_label="OpenAPI",
+            evaluation_inputs={
+                "query": data.OPENAPI_QUERY,
+                "response": data.OPENAPI_RESPONSE,
+                "tool_definitions": data.OPENAPI_TOOL_DEFINITIONS,
+            },
+            assert_type=self.AssertType.PASS,
+            expected_flow_inputs=self.test_openapi_expected_flow_inputs,
+        )
+
 
 # region Conversation-level (messages) behavioral tests
 
