@@ -9,6 +9,7 @@ pytest-mock>=3.10.0
 pytest-timeout>=2.1.0
 pytest-xdist
 pytest>=7.2.1
+setuptools>=72.1.0,<82
 
 # batch_score module requirements
 -r ../src/batch_score/requirements.txt

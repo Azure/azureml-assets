@@ -90,13 +90,13 @@ class CallbackFactory:
                     input_row_count=mini_batch_context.target_result_len,
                     output_row_count=len(scoring_results),
                     exception=type(ex).__name__,
-                    stacktrace=traceback.format_exception(etype=type(ex), value=ex, tb=ex.__traceback__))
+                    stacktrace=traceback.format_exception(type(ex), ex, ex.__traceback__))
         except Exception as e:
             lu.get_events_client().emit_mini_batch_completed(
                 input_row_count=mini_batch_context.target_result_len,
                 output_row_count=len(scoring_results),
                 exception=type(e).__name__,
-                stacktrace=traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__))
+                stacktrace=traceback.format_exception(type(e), e, e.__traceback__))
         finally:
             event_utils.generate_minibatch_summary(
                 minibatch_id=mini_batch_id,

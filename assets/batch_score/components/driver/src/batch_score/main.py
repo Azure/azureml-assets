@@ -229,7 +229,7 @@ def run(input_data: pd.DataFrame, mini_batch_context):
             input_row_count=len(data_list),
             output_row_count=len(ret),
             exception=type(e).__name__,
-            stacktrace=traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
+            stacktrace=traceback.format_exception(type(e), e, e.__traceback__)
         )
         raise e
     else:
@@ -275,7 +275,7 @@ def enqueue(input_data: pd.DataFrame, mini_batch_context):
             input_row_count=len(data_list),
             output_row_count=0,
             exception=type(e).__name__,
-            stacktrace=traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
+            stacktrace=traceback.format_exception(type(e), e, e.__traceback__)
         )
         event_utils.generate_minibatch_summary(
             minibatch_id=mini_batch_id,

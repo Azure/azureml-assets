@@ -4,6 +4,7 @@
 """This file contains fixtures to mock worker."""
 
 from collections import deque
+from unittest.mock import MagicMock
 
 import aiohttp
 import pytest
@@ -19,11 +20,11 @@ def make_worker(make_pool_scoring_client, make_routing_client):
     """Mock worker."""
     def make(
             scoring_client=None,
-            client_session=aiohttp.ClientSession(),
+            client_session=None,
             client_settings_provider=None,
-            scoring_request_queue=deque(),
-            scoring_result_queue=deque(),
-            request_metrics=RequestMetrics(),
+            scoring_request_queue=None,
+            scoring_result_queue=None,
+            request_metrics=None,
             segment_large_requests="disabled",
             segment_max_token_size=None,
             id=1,
@@ -39,11 +40,11 @@ def make_worker(make_pool_scoring_client, make_routing_client):
         return Worker(
             configuration=configuration,
             scoring_client=scoring_client or make_pool_scoring_client(),
-            client_session=client_session,
+            client_session=client_session or MagicMock(spec=aiohttp.ClientSession),
             client_settings_provider=client_settings_provider or make_routing_client(),
-            scoring_request_queue=scoring_request_queue,
-            scoring_result_queue=scoring_result_queue,
-            request_metrics=request_metrics,
+            scoring_request_queue=scoring_request_queue if scoring_request_queue is not None else deque(),
+            scoring_result_queue=scoring_result_queue if scoring_result_queue is not None else deque(),
+            request_metrics=request_metrics or RequestMetrics(),
             id=id,
         )
 

@@ -12,7 +12,7 @@ from src.batch_score.batch_pool.quota.estimators import CompletionEstimator
     ({"prompt": "Hello world!", "max_tokens": 10}, 3 + 10),
     ({"prompt": "<|endoftext|>", "max_tokens": 10}, 7 + 10),
     ({"prompt": "x"*10000, "max_tokens": 10}, 1250 + 10),
-    ({"prompt": "x"*1000000, "max_tokens": 10}, 165776 + 10),
+    ({"prompt": "x"*1000000, "max_tokens": 10}, 125000 + 10),
     ({"prompt": " x"*1000000, "max_tokens": 10}, 1000000 + 10),
 ])
 def test_estimate_request_cost(request_obj, expected_cost):

@@ -24,9 +24,9 @@ def make_conductor(make_routing_client, make_pool_scoring_client):
     async_mode_outer = False
     conductor = None
 
-    def make(loop=asyncio.get_event_loop(),
+    def make(loop=None,
              routing_client=None,
-             scoring_client=make_pool_scoring_client(),
+             scoring_client=None,
              segment_large_requests="disabled",
              segment_max_token_size=None,
              initial_worker_count=1,
@@ -50,9 +50,9 @@ def make_conductor(make_routing_client, make_pool_scoring_client):
         nonlocal conductor
         conductor = Conductor(
             configuration=configuration,
-            loop=loop,
+            loop=loop or asyncio.new_event_loop(),
             routing_client=routing_client or make_routing_client(),
-            scoring_client=scoring_client,
+            scoring_client=scoring_client or make_pool_scoring_client(),
             trace_configs=trace_configs,
         )
 
