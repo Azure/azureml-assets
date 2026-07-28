@@ -156,7 +156,7 @@ except (
             raise ValueError(
                 "messages must contain at least one message with role 'user'."
             )
-        return messages[: latest_user_index + 1], messages[latest_user_index + 1 :]
+        return messages[: latest_user_index + 1], messages[latest_user_index + 1:]
 
     def _wrap_string_messages(
         query: str, response: str
