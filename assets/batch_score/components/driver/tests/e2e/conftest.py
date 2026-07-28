@@ -112,6 +112,18 @@ def pytest_configure():
     pytest.copied_batch_score_component_filepath = os.path.join(tmp_dir, f"spec_copy_{str(uuid.uuid4())}.yml")
 
 
+def pytest_collection_modifyitems(items):
+    """Skip e2e tests when the deprecated component spec is unavailable."""
+    component_spec = _get_spec_filepath("batch_score_llm")
+    if os.path.isfile(component_spec):
+        return
+
+    skip = pytest.mark.skip(reason=f"Deprecated component spec not found: {component_spec}")
+    for item in items:
+        if item.get_closest_marker("e2e"):
+            item.add_marker(skip)
+
+
 def pytest_unconfigure():
     """Tear down pytest configuration."""
     print("Pytest unconfigure started.")
