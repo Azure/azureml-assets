@@ -13,6 +13,7 @@ from mock import MagicMock
 from src.batch_score.common.request_modification.modifiers.vesta_image_encoder import (
     FolderNotMounted,
     ImageEncoder,
+    UnsafeUrl,
     UnsuccessfulUrlResponse,
     VestaImageModificationException,
 )
@@ -138,10 +139,15 @@ def test__b64_from_url(mock_get_logger: MagicMock, monkeypatch, make_image_encod
     image_encoder: ImageEncoder = make_image_encoder()
     target_url = "https://fake.url"
 
+    # Resolve to a public address so the SSRF validation permits the request.
+    monkeypatch.setattr(
+        "socket.getaddrinfo",
+        lambda host, port, **kwargs: [(2, 1, 6, "", ("93.184.216.34", port or 443))])
+
     mock_get = MagicMock()
     mock_get.status_code = 200
     mock_get.content = b"MOCK_CONTENT_BYTES"
-    monkeypatch.setattr("requests.get", lambda url: mock_get)
+    monkeypatch.setattr("requests.get", lambda url, **kwargs: mock_get)
 
     encoding = image_encoder._b64_from_url(target_url)
     assert encoding
@@ -149,12 +155,60 @@ def test__b64_from_url(mock_get_logger: MagicMock, monkeypatch, make_image_encod
     mock_get.status_code = 404
     mock_get.content = None
     mock_get.reason = "mocked for testing purposes"
-    monkeypatch.setattr("requests.get", lambda url: mock_get)
+    monkeypatch.setattr("requests.get", lambda url, **kwargs: mock_get)
 
     with pytest.raises(UnsuccessfulUrlResponse):
         image_encoder._b64_from_url(target_url)
     assert mock_get_logger.info.called
     assert target_url in mock_get_logger.info.call_args.args[0]
+
+
+def test__b64_from_url_rejects_disallowed_scheme(make_image_encoder):
+    """Test that non-http(s) urls are rejected to mitigate SSRF (CWE-918)."""
+    image_encoder: ImageEncoder = make_image_encoder()
+
+    for url in ["file:///etc/passwd", "ftp://example.com/image.png", "gopher://example.com"]:
+        with pytest.raises(UnsafeUrl):
+            image_encoder._b64_from_url(url)
+
+
+def test__b64_from_url_rejects_non_public_address(monkeypatch, make_image_encoder):
+    """Test that urls resolving to non-public addresses are rejected to mitigate SSRF (CWE-918)."""
+    image_encoder: ImageEncoder = make_image_encoder()
+
+    def fail_get(*args, **kwargs):
+        raise AssertionError("requests.get must not be called for an unsafe url")
+
+    monkeypatch.setattr("requests.get", fail_get)
+
+    blocked_ips = [
+        "169.254.169.254",  # cloud instance metadata endpoint (link-local)
+        "127.0.0.1",        # loopback
+        "10.0.0.5",         # private
+        "192.168.1.1",      # private
+        "0.0.0.0",          # unspecified
+    ]
+    for ip in blocked_ips:
+        monkeypatch.setattr(
+            "socket.getaddrinfo",
+            lambda host, port, _ip=ip, **kwargs: [(2, 1, 6, "", (_ip, port or 443))])
+        with pytest.raises(UnsafeUrl):
+            image_encoder._b64_from_url("https://malicious.example/image.png")
+
+
+def test__b64_from_url_rejects_unresolvable_host(monkeypatch, make_image_encoder):
+    """Test that urls whose host cannot be resolved are rejected to mitigate SSRF (CWE-918)."""
+    import socket
+
+    image_encoder: ImageEncoder = make_image_encoder()
+
+    def raise_gaierror(*args, **kwargs):
+        raise socket.gaierror("name resolution failed")
+
+    monkeypatch.setattr("socket.getaddrinfo", raise_gaierror)
+
+    with pytest.raises(UnsafeUrl):
+        image_encoder._b64_from_url("https://does-not-resolve.example/image.png")
 
 
 def test_encode_b64_raw(mock_get_logger, make_image_encoder):
