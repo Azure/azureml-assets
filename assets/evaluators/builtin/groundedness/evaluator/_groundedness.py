@@ -51,8 +51,13 @@ from azure.ai.evaluation._evaluators._common._validators import (
 # ---------------------------------------------------------------------------
 
 try:  # azure-ai-evaluation >= 1.18.1
-    from azure.ai.evaluation._common.utils import _is_intermediate_response, _preprocess_messages
-except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
+    from azure.ai.evaluation._common.utils import (
+        _is_intermediate_response,
+        _preprocess_messages,
+    )
+except (
+    ImportError
+):  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
     from azure.ai.evaluation._evaluators._common._base_prompty_eval import (
         _is_intermediate_response,
         _preprocess_messages,
@@ -65,7 +70,9 @@ try:  # azure-ai-evaluation >= 1.18.1
         _drop_mcp_approval_messages,
         _normalize_function_call_types,
     )
-except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
+except (
+    ImportError
+):  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
     from azure.ai.evaluation._evaluators._common._base_prompty_eval import (  # noqa: F401
         _drop_mcp_approval_messages,
         _normalize_function_call_types,
@@ -73,7 +80,9 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
 
 try:  # azure-ai-evaluation >= 1.18.1
     from azure.ai.evaluation._evaluators._common._validators import MessageRole
-except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
+except (
+    ImportError
+):  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
     # azure-ai-evaluation 1.18.1 MessageRole; the 1.17.x SDK enum omits DEVELOPER,
     # which serialize_messages below relies on.
     class MessageRole(str, Enum):
@@ -85,6 +94,7 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
         TOOL = "tool"
         DEVELOPER = "developer"
 
+
 try:  # azure-ai-evaluation >= 1.18.1
     from azure.ai.evaluation._common.constants import EvaluationLevel
     from azure.ai.evaluation._common.utils import (
@@ -94,8 +104,12 @@ try:  # azure-ai-evaluation >= 1.18.1
         _split_messages_at_latest_user,
         serialize_messages,
     )
-    from azure.ai.evaluation._evaluators._common._validators import MessagesOrQueryResponseInputValidator
-except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
+    from azure.ai.evaluation._evaluators._common._validators import (
+        MessagesOrQueryResponseInputValidator,
+    )
+except (
+    ImportError
+):  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
     # Bodies below are copied from azure-ai-evaluation 1.18.1 (the earliest release
     # that ships these symbols). The only change is that serialize_messages uses the
     # module-level MessageRole above so the DEVELOPER role stays available on 1.17.x
@@ -110,7 +124,9 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
         CONVERSATION = "conversation"
         TURN = "turn"
 
-    def _merge_query_response_messages(query: List[dict], response: List[dict]) -> List[dict]:
+    def _merge_query_response_messages(
+        query: List[dict], response: List[dict]
+    ) -> List[dict]:
         """Merge query and response message lists into a single conversation.
 
         :param query: The query messages.
@@ -122,7 +138,9 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
         """
         return [*query, *response]
 
-    def _split_messages_at_latest_user(messages: List[dict]) -> Tuple[List[dict], List[dict]]:
+    def _split_messages_at_latest_user(
+        messages: List[dict],
+    ) -> Tuple[List[dict], List[dict]]:
         """Split messages into query/response slices at the latest user turn.
 
         :param messages: The conversation messages.
@@ -135,10 +153,14 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
             default=-1,
         )
         if latest_user_index == -1:
-            raise ValueError("messages must contain at least one message with role 'user'.")
-        return messages[: latest_user_index + 1], messages[latest_user_index + 1:]
+            raise ValueError(
+                "messages must contain at least one message with role 'user'."
+            )
+        return messages[: latest_user_index + 1], messages[latest_user_index + 1 :]
 
-    def _wrap_string_messages(query: str, response: str) -> Tuple[List[dict], List[dict]]:
+    def _wrap_string_messages(
+        query: str, response: str
+    ) -> Tuple[List[dict], List[dict]]:
         """Wrap string query/response into separate message lists.
 
         :param query: The query string.
@@ -176,13 +198,19 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
                 return EvaluationLevel(evaluation_level)
             except ValueError as exc:
                 raise EvaluationException(
-                    message=(f"Invalid evaluation_level '{evaluation_level}'. " f"Must be one of: {valid}."),
+                    message=(
+                        f"Invalid evaluation_level '{evaluation_level}'. "
+                        f"Must be one of: {valid}."
+                    ),
                     blame=ErrorBlame.USER_ERROR,
                     category=ErrorCategory.INVALID_VALUE,
                     target=error_target,
                 ) from exc
         raise EvaluationException(
-            message=(f"Invalid evaluation_level '{evaluation_level}'. " f"Must be one of: {valid}."),
+            message=(
+                f"Invalid evaluation_level '{evaluation_level}'. "
+                f"Must be one of: {valid}."
+            ),
             blame=ErrorBlame.USER_ERROR,
             category=ErrorCategory.INVALID_VALUE,
             target=error_target,
@@ -239,7 +267,10 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
             # _get_agent_response expects content as list of dicts, not a plain string
             normalized = msg
             if role == MessageRole.ASSISTANT and isinstance(msg.get("content"), str):
-                normalized = {**msg, "content": [{"type": "text", "text": msg["content"]}]}
+                normalized = {
+                    **msg,
+                    "content": [{"type": "text", "text": msg["content"]}],
+                }
 
             if role in (MessageRole.SYSTEM, MessageRole.DEVELOPER):
                 content = msg.get("content", "")
@@ -250,7 +281,9 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
 
             elif role == MessageRole.USER and "content" in msg:
                 if cur_agent_response:
-                    formatted = _get_agent_response(cur_agent_response, include_tool_messages=True)
+                    formatted = _get_agent_response(
+                        cur_agent_response, include_tool_messages=True
+                    )
                     all_agent_responses.append([formatted])
                     cur_agent_response = []
                 content = msg["content"]
@@ -271,12 +304,18 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
         if cur_user_query:
             all_user_queries.append(cur_user_query)
         if cur_agent_response:
-            formatted = _get_agent_response(cur_agent_response, include_tool_messages=True)
+            formatted = _get_agent_response(
+                cur_agent_response, include_tool_messages=True
+            )
             all_agent_responses.append([formatted])
 
         conversation_history: Dict = {
             "user_queries": all_user_queries,
-            "agent_responses": all_agent_responses[: len(all_user_queries) - 1] if len(all_user_queries) > 0 else [],
+            "agent_responses": (
+                all_agent_responses[: len(all_user_queries) - 1]
+                if len(all_user_queries) > 0
+                else []
+            ),
         }
         if system_message:
             conversation_history["system_message"] = system_message
@@ -318,7 +357,12 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
             enforce_tool_definitions: bool = False,
         ):
             """Initialize MessagesOrQueryResponseInputValidator."""
-            super().__init__(error_target, requires_query, optional_tool_definitions, check_for_unsupported_tools)
+            super().__init__(
+                error_target,
+                requires_query,
+                optional_tool_definitions,
+                check_for_unsupported_tools,
+            )
             self.enforce_tool_definitions = enforce_tool_definitions
 
         @override
@@ -397,7 +441,9 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
 
                 if self.enforce_tool_definitions:
                     tool_definitions = eval_input.get("tool_definitions")
-                    tool_definitions_validation_exception = self._validate_tool_definitions(tool_definitions)
+                    tool_definitions_validation_exception = (
+                        self._validate_tool_definitions(tool_definitions)
+                    )
                     if tool_definitions_validation_exception:
                         raise tool_definitions_validation_exception
                 return True
@@ -406,11 +452,13 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
                 return super().validate_eval_input(eval_input)
             return ConversationValidator.validate_eval_input(self, eval_input)
 
+
 try:
     from azure.ai.evaluation._evaluators._common._validators import (
         GroundednessConversationValidator,
     )
 except ImportError:  # pragma: no cover
+
     class GroundednessConversationValidator(ConversationValidator):
         """Fallback used when the installed SDK lacks GroundednessConversationValidator.
 
@@ -436,7 +484,9 @@ _GROUNDEDNESS_ALLOWED_RESTRICTED_TOOLS = {
 }
 
 
-class GroundednessConversationValidatorPolicyOverride(GroundednessConversationValidator):
+class GroundednessConversationValidatorPolicyOverride(
+    GroundednessConversationValidator
+):
     """Groundedness-specific tool support policy override.
 
     Keep the validator's unsupported-tool enforcement behavior enabled, but
@@ -523,7 +573,9 @@ def simplify_messages(messages, drop_system=True, drop_tool_calls=False, logger=
                     continue
 
                 # Drop tool calls (if should)
-                if drop_tool_calls and any(c.get("type") == "tool_call" for c in content if isinstance(c, dict)):
+                if drop_tool_calls and any(
+                    c.get("type") == "tool_call" for c in content if isinstance(c, dict)
+                ):
                     continue
 
             # If we reach here, it means we want to keep the message
@@ -533,7 +585,9 @@ def simplify_messages(messages, drop_system=True, drop_tool_calls=False, logger=
 
     except Exception as ex:
         if logger:
-            logger.debug(f"Error simplifying messages: {str(ex)}. Returning original messages.")
+            logger.debug(
+                f"Error simplifying messages: {str(ex)}. Returning original messages."
+            )
         return messages
 
 
@@ -616,7 +670,15 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     """Evaluator identifier, experimental and to be used only with evaluation in cloud."""
 
     @override
-    def __init__(self, model_config, *, threshold=3, credential=None, evaluation_level=None, **kwargs):
+    def __init__(
+        self,
+        model_config,
+        *,
+        threshold=3,
+        credential=None,
+        evaluation_level=None,
+        **kwargs,
+    ):
         """Initialize a GroundednessEvaluator instance.
 
         :param model_config: Configuration for the Azure OpenAI model.
@@ -632,7 +694,9 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :type evaluation_level: Optional[Union[EvaluationLevel, str]]
         """
         current_dir = os.path.dirname(__file__)
-        prompty_path = os.path.join(current_dir, self._PROMPTY_FILE_NO_QUERY)  # Default to no query
+        prompty_path = os.path.join(
+            current_dir, self._PROMPTY_FILE_NO_QUERY
+        )  # Default to no query
 
         self._higher_is_better = True
 
@@ -645,12 +709,13 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         self._validator = GroundednessConversationValidatorPolicyOverride(
             error_target=ErrorTarget.GROUNDEDNESS_EVALUATOR,
             requires_query=False,
-            check_for_unsupported_tools=True
+            check_for_unsupported_tools=True,
         )
 
         self._validator_with_query = GroundednessConversationValidatorPolicyOverride(
-            error_target=ErrorTarget.GROUNDEDNESS_EVALUATOR, requires_query=True,
-            check_for_unsupported_tools=True
+            error_target=ErrorTarget.GROUNDEDNESS_EVALUATOR,
+            requires_query=True,
+            check_for_unsupported_tools=True,
         )
 
         self._validator_messages = MessagesOrQueryResponseInputValidator(
@@ -673,7 +738,9 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         self._credential = credential
 
         # Load the multi-turn prompty flow for conversation-level evaluation
-        multi_turn_prompty_path = os.path.join(current_dir, self._MULTI_TURN_PROMPTY_FILE)
+        multi_turn_prompty_path = os.path.join(
+            current_dir, self._MULTI_TURN_PROMPTY_FILE
+        )
         prompty_model_config = construct_prompty_model_config(
             validate_model_config(model_config),
             self._DEFAULT_OPEN_API_VERSION,
@@ -868,7 +935,12 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         if status is not None:
             parsed_result[f"{self._result_key}_status"] = status
         # Add top-level token metadata fields for backward compatibility.
-        parsed_result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+        parsed_result.update(
+            {
+                f"{self._result_key}_{key}": value
+                for key, value in token_metadata.items()
+            }
+        )
         return parsed_result
 
     def _return_not_applicable_result(
@@ -895,10 +967,17 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             f"{self._result_key}_properties": None,
         }
         # Add top-level token metadata fields for backward compatibility.
-        result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+        result.update(
+            {
+                f"{self._result_key}_{key}": value
+                for key, value in token_metadata.items()
+            }
+        )
         return result
 
-    async def _the_super_do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:
+    async def _the_super_do_eval(
+        self, eval_input: Dict
+    ) -> Dict[str, Union[float, str]]:
         """Do a relevance evaluation.
 
         :param eval_input: The input to the evaluator.
@@ -926,7 +1005,9 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         if isinstance(eval_input.get("query"), list):
             eval_input["query"] = _preprocess_messages(eval_input["query"])
         # Call the prompty flow to get the evaluation result.
-        prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
+        prompty_output_dict = await self._flow(
+            timeout=self._LLM_CALL_TIMEOUT, **eval_input
+        )
         score = math.nan
         reason = ""
         llm_properties = {}
@@ -944,12 +1025,17 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 llm_status = parsed_output.get("status", "completed")
                 if llm_status == "skipped":
                     skip_reason = parsed_output.get("reason", "")
-                    return self._return_not_applicable_result(skip_reason, self._threshold)
+                    return self._return_not_applicable_result(
+                        skip_reason, self._threshold
+                    )
                 score = parsed_output.get("score", math.nan)
                 reason = parsed_output.get("reason", "")
                 llm_properties = parsed_output.get("properties", {}) or {}
             else:
-                if isinstance(llm_output, str) and self._result_key in PROMPT_BASED_REASON_EVALUATORS:
+                if (
+                    isinstance(llm_output, str)
+                    and self._result_key in PROMPT_BASED_REASON_EVALUATORS
+                ):
                     score, reason = parse_quality_evaluator_reason_score(llm_output)
                 elif isinstance(llm_output, str):
                     match = re.search(r"\d", llm_output)
@@ -970,7 +1056,12 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 f"{self._result_key}_properties": llm_properties,
             }
             # Add top-level token metadata fields for backward compatibility.
-            result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+            result.update(
+                {
+                    f"{self._result_key}_{key}": value
+                    for key, value in token_metadata.items()
+                }
+            )
             return result
         raise EvaluationException(
             message="Evaluator returned invalid output.",
@@ -1040,8 +1131,12 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         contains_context = self.has_context(eval_input)
 
-        simplified_query = simplify_messages(eval_input["query"], drop_tool_calls=contains_context)
-        simplified_response = simplify_messages(eval_input["response"], drop_tool_calls=False)
+        simplified_query = simplify_messages(
+            eval_input["query"], drop_tool_calls=contains_context
+        )
+        simplified_response = simplify_messages(
+            eval_input["response"], drop_tool_calls=False
+        )
 
         # Build simplified input
         simplified_eval_input = {
@@ -1063,7 +1158,9 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             )
         return result
 
-    async def _do_eval_conversation_level(self, eval_input: Dict) -> Dict[str, Union[float, str]]:
+    async def _do_eval_conversation_level(
+        self, eval_input: Dict
+    ) -> Dict[str, Union[float, str]]:
         """Evaluate groundedness for a full conversation-level evaluation.
 
         :param eval_input: The input containing ``messages`` and optionally ``tool_definitions``.
@@ -1079,9 +1176,13 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         prompty_kwargs: Dict[str, Any] = {"messages": conversation_text}
         tool_definitions = eval_input.get("tool_definitions")
         if tool_definitions:
-            prompty_kwargs["tool_definitions"] = reformat_tool_definitions(tool_definitions, logger)
+            prompty_kwargs["tool_definitions"] = reformat_tool_definitions(
+                tool_definitions, logger
+            )
 
-        prompty_output_dict = await self._multi_turn_flow(timeout=self._LLM_CALL_TIMEOUT, **prompty_kwargs)
+        prompty_output_dict = await self._multi_turn_flow(
+            timeout=self._LLM_CALL_TIMEOUT, **prompty_kwargs
+        )
         return self._parse_prompty_output(prompty_output_dict)
 
     def _parse_prompty_output(self, prompty_output_dict: Dict) -> Dict[str, Any]:
@@ -1103,7 +1204,9 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         if isinstance(llm_output, dict):
             status = str(llm_output.get("status", "completed")).strip().lower()
             reason = llm_output.get("reason", llm_output.get("explanation", ""))
-            properties = llm_output.get("properties", llm_output.get("properties", {})) or {}
+            properties = (
+                llm_output.get("properties", llm_output.get("properties", {})) or {}
+            )
             if not isinstance(properties, dict):
                 properties = {}
 
@@ -1114,7 +1217,11 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 score_value = llm_output.get("score", self.threshold)
                 if isinstance(score_value, str):
                     normalized_score = score_value.strip()
-                    score = float(normalized_score) if normalized_score.replace(".", "", 1).isdigit() else None
+                    score = (
+                        float(normalized_score)
+                        if normalized_score.replace(".", "", 1).isdigit()
+                        else None
+                    )
                 elif isinstance(score_value, (int, float)):
                     score = float(score_value)
                 else:
@@ -1153,16 +1260,25 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
         """
         # Reshape inputs based on evaluation level before validation
-        if self._evaluation_level == EvaluationLevel.CONVERSATION and not kwargs.get("messages"):
+        if self._evaluation_level == EvaluationLevel.CONVERSATION and not kwargs.get(
+            "messages"
+        ):
             query = kwargs.get("query")
             response = kwargs.get("response")
-            if isinstance(query, str) and isinstance(response, str) and query and response:
+            if (
+                isinstance(query, str)
+                and isinstance(response, str)
+                and query
+                and response
+            ):
                 query, response = _wrap_string_messages(query, response)
             if isinstance(query, list) and isinstance(response, list):
                 kwargs["messages"] = _merge_query_response_messages(query, response)
         elif self._evaluation_level == EvaluationLevel.TURN and kwargs.get("messages"):
             if any(m.get("role") == MessageRole.USER for m in kwargs["messages"]):
-                query_messages, response_messages = _split_messages_at_latest_user(kwargs["messages"])
+                query_messages, response_messages = _split_messages_at_latest_user(
+                    kwargs["messages"]
+                )
                 kwargs["query"] = query_messages
                 kwargs["response"] = response_messages
                 kwargs.pop("messages", None)
@@ -1216,7 +1332,9 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                             result_key = f"{base_key}_result"
                             threshold_key = f"{base_key}_threshold"
                             threshold_value = (
-                                self._threshold.get(base_key) if isinstance(self._threshold, dict) else self._threshold
+                                self._threshold.get(base_key)
+                                if isinstance(self._threshold, dict)
+                                else self._threshold
                             )
                             if not isinstance(threshold_value, (int, float)):
                                 raise EvaluationException(
@@ -1233,14 +1351,22 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                             if not contains_result_key:
                                 if self._higher_is_better:
                                     if float(score_value) >= threshold_value:
-                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[True]
+                                        result[result_key] = (
+                                            EVALUATION_PASS_FAIL_MAPPING[True]
+                                        )
                                     else:
-                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[False]
+                                        result[result_key] = (
+                                            EVALUATION_PASS_FAIL_MAPPING[False]
+                                        )
                                 else:
                                     if float(score_value) <= threshold_value:
-                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[True]
+                                        result[result_key] = (
+                                            EVALUATION_PASS_FAIL_MAPPING[True]
+                                        )
                                     else:
-                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[False]
+                                        result[result_key] = (
+                                            EVALUATION_PASS_FAIL_MAPPING[False]
+                                        )
             except Exception as e:
                 logger.warning(f"Error calculating binary result: {e}")
             per_turn_results.append(result)
@@ -1288,11 +1414,17 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         # If response is a string, we can skip the context extraction and just return the eval input
         if response and isinstance(response, str):
-            return super()._convert_kwargs_to_eval_input(query=query, response=response, context=response)
+            return super()._convert_kwargs_to_eval_input(
+                query=query, response=response, context=response
+            )
 
         context = self._get_context_from_agent_response(response, tool_definitions)
 
-        if not self._validate_context(context) and self._is_single_entry(response) and self._is_single_entry(query):
+        if (
+            not self._validate_context(context)
+            and self._is_single_entry(response)
+            and self._is_single_entry(query)
+        ):
             msg = (
                 f"{type(self).__name__}: No valid context provided or could be extracted from the query or response. "
                 "Please either provide valid context or pass the full items list for 'response' and 'query' "
@@ -1305,14 +1437,26 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 target=ErrorTarget.GROUNDEDNESS_EVALUATOR,
             )
 
-        filtered_response = self._filter_file_search_results(response) if self._validate_context(context) else response
-        return super()._convert_kwargs_to_eval_input(response=filtered_response, context=context, query=query)
+        filtered_response = (
+            self._filter_file_search_results(response)
+            if self._validate_context(context)
+            else response
+        )
+        return super()._convert_kwargs_to_eval_input(
+            response=filtered_response, context=context, query=query
+        )
 
-    def _filter_file_search_results(self, messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _filter_file_search_results(
+        self, messages: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """Filter out file_search tool results from the messages."""
         file_search_ids = self._get_file_search_tool_call_ids(messages)
         return [
-            msg for msg in messages if not (msg.get("role") == "tool" and msg.get("tool_call_id") in file_search_ids)
+            msg
+            for msg in messages
+            if not (
+                msg.get("role") == "tool" and msg.get("tool_call_id") in file_search_ids
+            )
         ]
 
     def _get_context_from_agent_response(self, response, tool_definitions):
@@ -1322,14 +1466,20 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         try:
             logger.debug("Extracting context from response")
             tool_calls = self._parse_tools_from_response(response=response)
-            logger.debug("Tool calls parsed successfully: count=%d", len(tool_calls) if tool_calls else 0)
+            logger.debug(
+                "Tool calls parsed successfully: count=%d",
+                len(tool_calls) if tool_calls else 0,
+            )
 
             if not tool_calls:
                 return NO_CONTEXT
 
             context_lines = []
             for tool_call in tool_calls:
-                if not isinstance(tool_call, dict) or tool_call.get("type") != "tool_call":
+                if (
+                    not isinstance(tool_call, dict)
+                    or tool_call.get("type") != "tool_call"
+                ):
                     continue
 
                 tool_name = tool_call.get("name")
@@ -1358,4 +1508,8 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     def _get_file_search_tool_call_ids(self, query_or_response):
         """Return a list of tool_call_ids for file search tool calls."""
         tool_calls = self._parse_tools_from_response(query_or_response)
-        return [tc.get("tool_call_id") for tc in tool_calls if tc.get("name") == "file_search"]
+        return [
+            tc.get("tool_call_id")
+            for tc in tool_calls
+            if tc.get("name") == "file_search"
+        ]

@@ -46,7 +46,10 @@ from ..common.evaluator_mock_config import (
 
 @pytest.mark.unittest
 class TestGroundednessEvaluatorBehavior(
-    BaseEvaluatorBehaviorTest, BaseToolEvaluationTest, _TurnLevelUtilE2ETests, _MessagesUtilE2ETests
+    BaseEvaluatorBehaviorTest,
+    BaseToolEvaluationTest,
+    _TurnLevelUtilE2ETests,
+    _MessagesUtilE2ETests,
 ):
     """
     Behavioral tests for Groundedness Evaluator.
@@ -96,7 +99,9 @@ class TestGroundednessEvaluatorBehavior(
 
     check_for_unsupported_tools = True
 
-    MINIMAL_RESPONSE = BaseEvaluatorBehaviorTest.weather_tool_result_and_assistant_response
+    MINIMAL_RESPONSE = (
+        BaseEvaluatorBehaviorTest.weather_tool_result_and_assistant_response
+    )
 
     def test_bing_grounding(self):
         """Bing grounding tool is supported for groundedness evaluation."""
@@ -138,7 +143,7 @@ class TestGroundednessEvaluatorBehavior(
         )
 
     def test_sharepoint_grounding(self):
-        """SharePoint grounding tool is supported for groundedness evaluation."""
+        """Validate that sharepoint grounding is supported for groundedness evaluation."""
         self._run_tool_type_test(
             test_label="SharePoint Grounding",
             evaluation_inputs={
@@ -164,7 +169,7 @@ class TestGroundednessEvaluatorBehavior(
         )
 
     def test_openapi(self):
-        """OpenAPI tool is supported for groundedness evaluation."""
+        """Validate that openapi tool calls are supported for groundedness evaluation."""
         self._run_tool_type_test(
             test_label="OpenAPI",
             evaluation_inputs={
@@ -192,14 +197,18 @@ _MULTI_TURN_PROPERTIES = {
 def _create_mocked_groundedness_evaluator():
     """Create a GroundednessEvaluator with both _flow and _multi_turn_flow mocked."""
     model_config = AzureOpenAIModelConfiguration(
-        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
+        azure_endpoint=os.getenv(
+            "AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"
+        ),
         azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
     )
     evaluator = GroundednessEvaluator(model_config=model_config)
     mock_side_effect = get_flow_side_effect_for_evaluator("groundedness")
     evaluator._flow = MagicMock(side_effect=mock_side_effect)
     evaluator._multi_turn_flow = MagicMock(
-        side_effect=create_multi_turn_mock_side_effect(reason=_MULTI_TURN_REASON, properties=_MULTI_TURN_PROPERTIES)
+        side_effect=create_multi_turn_mock_side_effect(
+            reason=_MULTI_TURN_REASON, properties=_MULTI_TURN_PROPERTIES
+        )
     )
     return evaluator
 
@@ -207,7 +216,12 @@ def _create_mocked_groundedness_evaluator():
 VALID_GROUNDEDNESS_MESSAGES: List[Dict[str, Any]] = [
     {
         "role": "user",
-        "content": [{"type": "text", "text": "What are the office hours for the downtown branch?"}],
+        "content": [
+            {
+                "type": "text",
+                "text": "What are the office hours for the downtown branch?",
+            }
+        ],
     },
     {
         "role": "assistant",
@@ -242,7 +256,9 @@ VALID_GROUNDEDNESS_MESSAGES: List[Dict[str, Any]] = [
     },
     {
         "role": "user",
-        "content": [{"type": "text", "text": "Can I visit on Saturday afternoon at 1 PM?"}],
+        "content": [
+            {"type": "text", "text": "Can I visit on Saturday afternoon at 1 PM?"}
+        ],
     },
     {
         "role": "assistant",
@@ -280,10 +296,15 @@ class TestGroundednessMultiturnBehavior:
             {
                 "name": "search_info",
                 "description": "Search for information.",
-                "parameters": {"type": "object", "properties": {"query": {"type": "string"}}},
+                "parameters": {
+                    "type": "object",
+                    "properties": {"query": {"type": "string"}},
+                },
             }
         ]
-        result = evaluator(messages=VALID_GROUNDEDNESS_MESSAGES, tool_definitions=tool_defs)
+        result = evaluator(
+            messages=VALID_GROUNDEDNESS_MESSAGES, tool_definitions=tool_defs
+        )
 
         assert "groundedness" in result
         assert 1 <= result["groundedness"] <= 5
@@ -307,7 +328,10 @@ class TestGroundednessMultiturnBehavior:
 
         assert result["groundedness"] is None
         assert result["groundedness_result"] == "not_applicable"
-        assert result["groundedness_reason"] == "No agent responses to evaluate for groundedness."
+        assert (
+            result["groundedness_reason"]
+            == "No agent responses to evaluate for groundedness."
+        )
         assert result["groundedness_status"] == "skipped"
 
     def test_messages_invalid_output_returns_error_result(self):
@@ -371,7 +395,10 @@ class TestGroundednessMultiturnBehavior:
     def test_query_response_uses_single_turn_flow(self):
         """Verify that the query/response/context path still calls _flow, not _multi_turn_flow."""
         evaluator = _create_mocked_groundedness_evaluator()
-        evaluator(response="The sky is blue.", context="The sky appears blue due to Rayleigh scattering.")
+        evaluator(
+            response="The sky is blue.",
+            context="The sky appears blue due to Rayleigh scattering.",
+        )
 
         evaluator._flow.assert_called_once()
         evaluator._multi_turn_flow.assert_not_called()
@@ -388,7 +415,9 @@ class TestGroundednessMultiturnBehavior:
             {
                 "role": "tool",
                 "tool_call_id": "req_1",
-                "content": [{"type": "mcp_approval_response", "id": "req_1", "approved": True}],
+                "content": [
+                    {"type": "mcp_approval_response", "id": "req_1", "approved": True}
+                ],
             },
             {"role": "assistant", "content": [{"type": "text", "text": "Done!"}]},
         ]
@@ -423,7 +452,10 @@ class TestGroundednessMultiturnBehavior:
         evaluator = _create_mocked_groundedness_evaluator()
         messages = [
             {"role": "user", "content": [{"type": "text", "text": "Hello"}]},
-            {"role": "narrator", "content": [{"type": "text", "text": "The agent responded."}]},
+            {
+                "role": "narrator",
+                "content": [{"type": "text", "text": "The agent responded."}],
+            },
             {"role": "assistant", "content": [{"type": "text", "text": "Hi!"}]},
         ]
         with pytest.raises(EvaluationException, match="Invalid role"):
@@ -485,10 +517,13 @@ class TestGroundednessMultiturnBehavior:
 
 # region evaluation_level tests
 
+
 def _create_mocked_groundedness_evaluator_with_level(evaluation_level=None):
     """Create a GroundednessEvaluator with evaluation_level and mocked flows."""
     model_config = AzureOpenAIModelConfiguration(
-        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
+        azure_endpoint=os.getenv(
+            "AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"
+        ),
         azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
     )
     evaluator = GroundednessEvaluator(
@@ -498,7 +533,9 @@ def _create_mocked_groundedness_evaluator_with_level(evaluation_level=None):
     mock_side_effect = get_flow_side_effect_for_evaluator("groundedness")
     evaluator._flow = MagicMock(side_effect=mock_side_effect)
     evaluator._multi_turn_flow = MagicMock(
-        side_effect=create_multi_turn_mock_side_effect(reason=_MULTI_TURN_REASON, properties=_MULTI_TURN_PROPERTIES)
+        side_effect=create_multi_turn_mock_side_effect(
+            reason=_MULTI_TURN_REASON, properties=_MULTI_TURN_PROPERTIES
+        )
     )
     return evaluator
 
@@ -509,15 +546,22 @@ class TestGroundednessEvaluationLevel:
 
     def test_auto_detect_uses_multi_turn_for_messages(self):
         """Default (None) mode auto-detects multi-turn when messages provided."""
-        evaluator = _create_mocked_groundedness_evaluator_with_level(evaluation_level=None)
+        evaluator = _create_mocked_groundedness_evaluator_with_level(
+            evaluation_level=None
+        )
         evaluator(messages=VALID_GROUNDEDNESS_MESSAGES)
         evaluator._multi_turn_flow.assert_called_once()
         evaluator._flow.assert_not_called()
 
     def test_auto_detect_uses_single_turn_for_response_context(self):
         """Default (None) mode auto-detects single-turn when response/context provided."""
-        evaluator = _create_mocked_groundedness_evaluator_with_level(evaluation_level=None)
-        evaluator(response="The sky is blue.", context="The sky is blue due to Rayleigh scattering.")
+        evaluator = _create_mocked_groundedness_evaluator_with_level(
+            evaluation_level=None
+        )
+        evaluator(
+            response="The sky is blue.",
+            context="The sky is blue due to Rayleigh scattering.",
+        )
         evaluator._flow.assert_called_once()
         evaluator._multi_turn_flow.assert_not_called()
 
@@ -539,7 +583,7 @@ class TestGroundednessEvaluationLevel:
         result = evaluator(
             query="What color is the sky?",
             response="The sky is blue.",
-            context="The sky is blue."
+            context="The sky is blue.",
         )
         # Note: _flow may be reassigned by _ensure_query_prompty_loaded when query is present,
         # so we only assert that multi_turn_flow was used for conversation-level evaluation.
@@ -552,29 +596,42 @@ class TestGroundednessEvaluationLevel:
 
     def test_string_level_conversation(self):
         """String 'conversation' is accepted as evaluation_level."""
-        evaluator = _create_mocked_groundedness_evaluator_with_level(evaluation_level="conversation")
+        evaluator = _create_mocked_groundedness_evaluator_with_level(
+            evaluation_level="conversation"
+        )
         result = evaluator(messages=VALID_GROUNDEDNESS_MESSAGES)
         evaluator._multi_turn_flow.assert_called_once()
         assert "groundedness" in result
 
     def test_string_level_turn(self):
         """String 'turn' is accepted as evaluation_level."""
-        evaluator = _create_mocked_groundedness_evaluator_with_level(evaluation_level="turn")
-        evaluator(response="The sky is blue.", context="The sky is blue due to scattering.")
+        evaluator = _create_mocked_groundedness_evaluator_with_level(
+            evaluation_level="turn"
+        )
+        evaluator(
+            response="The sky is blue.", context="The sky is blue due to scattering."
+        )
         evaluator._flow.assert_called_once()
         evaluator._multi_turn_flow.assert_not_called()
 
     def test_empty_string_level_defaults_to_auto_detect_messages(self):
         """Empty string evaluation_level is treated as None (auto-detect) and uses multi-turn for messages."""
-        evaluator = _create_mocked_groundedness_evaluator_with_level(evaluation_level="")
+        evaluator = _create_mocked_groundedness_evaluator_with_level(
+            evaluation_level=""
+        )
         evaluator(messages=VALID_GROUNDEDNESS_MESSAGES)
         evaluator._multi_turn_flow.assert_called_once()
         evaluator._flow.assert_not_called()
 
     def test_empty_string_level_defaults_to_auto_detect_response_context(self):
         """Empty string evaluation_level is treated as None (auto-detect) and uses single-turn for response/context."""
-        evaluator = _create_mocked_groundedness_evaluator_with_level(evaluation_level="")
-        evaluator(response="The sky is blue.", context="The sky is blue due to Rayleigh scattering.")
+        evaluator = _create_mocked_groundedness_evaluator_with_level(
+            evaluation_level=""
+        )
+        evaluator(
+            response="The sky is blue.",
+            context="The sky is blue due to Rayleigh scattering.",
+        )
         evaluator._flow.assert_called_once()
         evaluator._multi_turn_flow.assert_not_called()
 
@@ -628,7 +685,10 @@ class TestGroundednessSerializeMessages:
     def test_with_tool_calls(self):
         """Tool calls and results are included in serialization."""
         messages = [
-            {"role": "user", "content": [{"type": "text", "text": "What's the weather?"}]},
+            {
+                "role": "user",
+                "content": [{"type": "text", "text": "What's the weather?"}],
+            },
             {
                 "role": "assistant",
                 "content": [
@@ -672,7 +732,10 @@ class TestGroundednessSerializeMessages:
     def test_system_content_block_list_flattened_to_string(self):
         """System message with content-block list is flattened, not passed as raw list."""
         messages = [
-            {"role": "system", "content": [{"type": "text", "text": "You are a helpful assistant."}]},
+            {
+                "role": "system",
+                "content": [{"type": "text", "text": "You are a helpful assistant."}],
+            },
             {"role": "user", "content": "Hello"},
             {"role": "assistant", "content": "Hi!"},
         ]
@@ -703,10 +766,13 @@ class TestGroundednessSerializeMessages:
     def test_multi_text_block_user_message(self):
         """User message with multiple text blocks produces flat turn content."""
         messages = [
-            {"role": "user", "content": [
-                {"type": "text", "text": "Part A."},
-                {"type": "text", "text": "Part B."},
-            ]},
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "Part A."},
+                    {"type": "text", "text": "Part B."},
+                ],
+            },
             {"role": "assistant", "content": "Got it."},
         ]
         result = serialize_messages(messages)
@@ -716,10 +782,13 @@ class TestGroundednessSerializeMessages:
     def test_system_content_block_multi_text(self):
         """System message with multiple text blocks joins them with newline."""
         messages = [
-            {"role": "system", "content": [
-                {"type": "text", "text": "Rule 1."},
-                {"type": "text", "text": "Rule 2."},
-            ]},
+            {
+                "role": "system",
+                "content": [
+                    {"type": "text", "text": "Rule 1."},
+                    {"type": "text", "text": "Rule 2."},
+                ],
+            },
             {"role": "user", "content": "Hello"},
             {"role": "assistant", "content": "Hi!"},
         ]
@@ -736,7 +805,9 @@ class TestGroundednessSerializeMessages:
         # serialize_messages resolves _get_agent_response from the module where it is
         # defined: the SDK's _common.utils on 1.18.1, or this evaluator module on 1.17.x.
         serialize_module = sys.modules[serialize_messages.__module__]
-        with patch.object(serialize_module, "_get_agent_response", return_value="line one\nline two"):
+        with patch.object(
+            serialize_module, "_get_agent_response", return_value="line one\nline two"
+        ):
             result = serialize_messages(messages)
         assert "Agent turn 1:" in result
         assert "line one" in result
@@ -747,6 +818,7 @@ class TestGroundednessSerializeMessages:
 
 
 # region None score handling tests
+
 
 @pytest.mark.unittest
 class TestGroundednessNoneScoreHandling:
@@ -798,12 +870,19 @@ class TestGroundednessInternalBranches:
 
     def test_simplify_messages_drops_tool_call_only_assistant(self):
         """Assistant message with only a tool_call is dropped when drop_tool_calls=True."""
-        messages = [{"role": "assistant", "content": [{"type": "tool_call", "name": "f", "arguments": {}}]}]
+        messages = [
+            {
+                "role": "assistant",
+                "content": [{"type": "tool_call", "name": "f", "arguments": {}}],
+            }
+        ]
         assert simplify_messages(messages, drop_tool_calls=True) == []
 
     def test_serialize_messages_single_turn_appends_agent_text(self):
         """Single user/assistant turn serializes with an 'Agent turn' string block."""
-        result = serialize_messages([{"role": "user", "content": "q"}, {"role": "assistant", "content": "a"}])
+        result = serialize_messages(
+            [{"role": "user", "content": "q"}, {"role": "assistant", "content": "a"}]
+        )
         assert "Agent turn 1:" in result
 
     def test_validate_context_list_with_content(self):
@@ -819,13 +898,17 @@ class TestGroundednessInternalBranches:
     def test_parse_prompty_output_non_dict_properties_reset(self):
         """Non-dict 'properties' in llm_output is reset to an empty dict."""
         ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
-        result = ev._parse_prompty_output({"llm_output": {"status": "completed", "properties": "x", "score": 5}})
+        result = ev._parse_prompty_output(
+            {"llm_output": {"status": "completed", "properties": "x", "score": 5}}
+        )
         assert result[ev._result_key] == 5.0
 
     def test_parse_prompty_output_non_numeric_score_becomes_none(self):
         """A score value that is neither string nor number becomes None."""
         ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
-        result = ev._parse_prompty_output({"llm_output": {"status": "completed", "score": ["l"]}})
+        result = ev._parse_prompty_output(
+            {"llm_output": {"status": "completed", "score": ["l"]}}
+        )
         assert result[ev._result_key] is None
 
     def test_is_single_entry_string(self):
@@ -836,12 +919,16 @@ class TestGroundednessInternalBranches:
     def test_filter_file_search_results_removes_matching_tool_messages(self):
         """File-search tool result messages are filtered out by tool_call_id."""
         ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
-        ev._parse_tools_from_response = MagicMock(return_value=[{"name": "file_search", "tool_call_id": "tc1"}])
+        ev._parse_tools_from_response = MagicMock(
+            return_value=[{"name": "file_search", "tool_call_id": "tc1"}]
+        )
         messages = [
             {"role": "tool", "tool_call_id": "tc1"},
             {"role": "assistant", "content": "x"},
         ]
-        assert ev._filter_file_search_results(messages) == [{"role": "assistant", "content": "x"}]
+        assert ev._filter_file_search_results(messages) == [
+            {"role": "assistant", "content": "x"}
+        ]
 
     def test_get_context_from_agent_response_extracts_file_search_text(self):
         """Context text is extracted from file_search tool results."""
@@ -851,7 +938,9 @@ class TestGroundednessInternalBranches:
                 {
                     "type": "tool_call",
                     "name": "file_search",
-                    "tool_result": [{"file_name": "f.txt", "content": [{"text": "hello"}]}],
+                    "tool_result": [
+                        {"file_name": "f.txt", "content": [{"text": "hello"}]}
+                    ],
                 }
             ]
         )
@@ -862,13 +951,17 @@ class TestGroundednessInternalBranches:
         """Parsed entries that are not tool_calls are skipped, yielding no context."""
         ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
         ev._parse_tools_from_response = MagicMock(return_value=[{"type": "other"}])
-        assert ev._get_context_from_agent_response([{"role": "assistant"}], None) == "<>"
+        assert (
+            ev._get_context_from_agent_response([{"role": "assistant"}], None) == "<>"
+        )
 
     def test_get_context_from_agent_response_handles_parse_exception(self):
         """An exception while parsing tool calls falls back to the no-context marker."""
         ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
         ev._parse_tools_from_response = MagicMock(side_effect=ValueError("boom"))
-        assert ev._get_context_from_agent_response([{"role": "assistant"}], None) == "<>"
+        assert (
+            ev._get_context_from_agent_response([{"role": "assistant"}], None) == "<>"
+        )
 
     def test_do_eval_intermediate_response_returns_not_applicable(self):
         """An intermediate (function_call) response yields a not-applicable result."""
@@ -876,7 +969,12 @@ class TestGroundednessInternalBranches:
         eval_input = {
             "query": "q",
             "response": [
-                {"role": "assistant", "content": [{"type": "function_call", "name": "f", "arguments": "{}"}]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {"type": "function_call", "name": "f", "arguments": "{}"}
+                    ],
+                }
             ],
             "context": "c",
         }
@@ -893,7 +991,14 @@ class TestGroundednessInternalBranches:
 
         ev._the_super_do_eval = _nan
         with pytest.raises(EvaluationException):
-            asyncio.run(ev._do_eval({"response": [{"role": "assistant", "content": "a"}], "context": "c"}))
+            asyncio.run(
+                ev._do_eval(
+                    {
+                        "response": [{"role": "assistant", "content": "a"}],
+                        "context": "c",
+                    }
+                )
+            )
 
     def test_do_eval_with_query_invalid_output_raises(self):
         """A NaN score from the base evaluator (query present) raises EvaluationException."""
