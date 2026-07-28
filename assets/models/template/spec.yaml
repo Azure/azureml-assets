@@ -6,11 +6,6 @@ name: "example-model-name" # Model name (required)
 path: "./" # Path to model files (required)
 version: 1 # Model version (can be integer or string (minimum: 1)) (required)
 
-tags: # Tags (required)
-  evaluation: "evaluation.md" # Reference to evaluation documentation (optional)
-  notes: "notes.md" # Reference to notes documentation (optional)
-  licenseDescription: "license.md" # Description of the license terms (String type) (optional)
-
 system_metadata:
   displayName:  "example-value" # Display name for marketing materials (String type) (optional)
   summary: "example-value" # Brief description of the model (String type) (optional)
@@ -21,6 +16,9 @@ system_metadata:
   tasks:
     inferenceTasks: ["audio-analysis", "audio-classification", "audio-generation"] # Tasks supported by the model as a comma-separated string (options: audio-analysis, audio-classification, audio-generation, automatic-speech-recognition, chat-completion, completions, etc. (comma-separated)) (optional)
   license: "custom"
+  licenseDescription: "license.md" # Description of the license terms (String type) (optional)
+  evaluation: "evaluation.md" # Reference to evaluation documentation (optional)
+  notes: "notes.md" # Reference to notes documentation (optional)
   datasets: ["Publicly available sources,bookcorpus,wikipedia"] # Where data was sourced for training as a comma-separated string (options: Publicly available sources, bookcorpus, wikipedia (comma-separated)) (optional)
   trainingDataDate: "January 2024" # Training cutoff date (pattern: ^(January|February|March|April|May|June|July|Augus...) (optional)
   modelCapabilities: ["agents", "assistants", "routing"] # Comma-separated list of capabilities 
