@@ -14,23 +14,23 @@ from src.batch_score.common.parallel.parallel_driver import Parallel
 @pytest.fixture()
 def make_parallel_driver(make_conductor, make_input_transformer):
     """Mock parallel driver."""
-    loop = asyncio.get_event_loop()
+    default_loop = asyncio.new_event_loop()
 
-    """Make a mock parallel driver."""
     def make(
-        loop=loop,
-        conductor=make_conductor(loop=loop),
-        input_to_request_transformer=make_input_transformer(),
-        input_to_log_transformer=make_input_transformer(),
-        input_to_output_transformer=make_input_transformer(),
+        loop=None,
+        conductor=None,
+        input_to_request_transformer=None,
+        input_to_log_transformer=None,
+        input_to_output_transformer=None,
     ):
+        loop = loop or default_loop
         return Parallel(
             configuration=Configuration(),
             loop=loop,
-            conductor=conductor,
-            input_to_request_transformer=input_to_request_transformer,
-            input_to_log_transformer=input_to_log_transformer,
-            input_to_output_transformer=input_to_output_transformer,
+            conductor=conductor or make_conductor(loop=loop),
+            input_to_request_transformer=input_to_request_transformer or make_input_transformer(),
+            input_to_log_transformer=input_to_log_transformer or make_input_transformer(),
+            input_to_output_transformer=input_to_output_transformer or make_input_transformer(),
         )
 
     return make

@@ -4,9 +4,12 @@
 """Vesta image encoder."""
 
 import base64
+import ipaddress
 import os
+import socket
 import time
 from pathlib import Path
+from urllib.parse import urlparse
 
 import requests
 
@@ -19,6 +22,10 @@ class ImageEncoder():
 
     IMAGE_URL = "ImageUrl!"
     IMAGE_FILE = "ImageFile!"
+
+    # SSRF (CWE-918) mitigation: only fetch http(s) urls that resolve to public addresses.
+    ALLOWED_URL_SCHEMES = ("http", "https")
+    URL_REQUEST_TIMEOUT_SECONDS = 30
 
     def __init__(self, image_input_folder_str: str = None) -> None:
         """Initialize ImageEncoder."""
@@ -51,9 +58,49 @@ class ImageEncoder():
             lu.get_logger().debug("Image is already encoded, no encoding necessary.")
             return image_data
 
+    def _validate_url(self, url: str) -> None:
+        """Validate a caller-supplied image url to mitigate SSRF (CWE-918).
+
+        The image url originates from untrusted per-row input data. Only http(s)
+        urls whose host resolves exclusively to public addresses are permitted.
+        Requests targeting loopback, private, link-local (e.g. the cloud instance
+        metadata endpoint at 169.254.169.254), reserved, multicast, or
+        unspecified addresses are rejected before any network call is made.
+        """
+        parsed = urlparse(url)
+
+        if parsed.scheme not in ImageEncoder.ALLOWED_URL_SCHEMES:
+            raise UnsafeUrl(url)
+
+        hostname = parsed.hostname
+        if not hostname:
+            raise UnsafeUrl(url)
+
+        try:
+            address_infos = socket.getaddrinfo(hostname, parsed.port, proto=socket.IPPROTO_TCP)
+        except socket.gaierror as e:
+            raise UnsafeUrl(url) from e
+
+        if not address_infos:
+            raise UnsafeUrl(url)
+
+        for address_info in address_infos:
+            ip = ipaddress.ip_address(address_info[4][0])
+            if (
+                ip.is_private
+                or ip.is_loopback
+                or ip.is_link_local
+                or ip.is_reserved
+                or ip.is_multicast
+                or ip.is_unspecified
+            ):
+                raise UnsafeUrl(url)
+
     def _b64_from_url(self, url: str) -> str:
+        self._validate_url(url)
+
         start = time.time()
-        resp = requests.get(url)
+        resp = requests.get(url, timeout=ImageEncoder.URL_REQUEST_TIMEOUT_SECONDS)
         if resp.status_code != 200:
             lu.get_logger().info(
                 f"URL '{url}' responded with an unsuccessful response: {resp.status_code}, {resp.reason}.")
@@ -86,6 +133,16 @@ class UnsuccessfulUrlResponse(Exception):
     def __init__(self, *args: object) -> None:
         """Initialize UnsuccessfulUrlResponse."""
         super().__init__(f"{ImageEncoder.IMAGE_URL} used in data, but url did not respond succesfully.")
+
+
+class UnsafeUrl(Exception):
+    """Unsafe url rejected by SSRF protection."""
+
+    def __init__(self, url: str, *args: object) -> None:
+        """Initialize UnsafeUrl."""
+        super().__init__(
+            f"{ImageEncoder.IMAGE_URL} used in data, but the url is not permitted. "
+            "Only http(s) urls that resolve to public addresses are allowed.")
 
 
 class FolderNotMounted(Exception):

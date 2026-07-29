@@ -19,6 +19,7 @@ from src.batch_score.common.scoring.scoring_client_factory import ScoringClientF
 def test_create_success(mocker, make_metadata, scoring_url, expected_scoring_client_type):
     """Test create success."""
     # Arrange
+    validate_auth = mocker.patch.object(expected_scoring_client_type, 'validate_auth')
     configuration = ConfigurationParser().parse_configuration([
         '--scoring_url', scoring_url
     ])
@@ -32,3 +33,4 @@ def test_create_success(mocker, make_metadata, scoring_url, expected_scoring_cli
 
     # Assert
     assert isinstance(scoring_client, expected_scoring_client_type)
+    validate_auth.assert_called_once_with()
