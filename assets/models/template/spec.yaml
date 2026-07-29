@@ -22,6 +22,9 @@ system_metadata:
   datasets: ["Publicly available sources,bookcorpus,wikipedia"] # Where data was sourced for training as a comma-separated string (options: Publicly available sources, bookcorpus, wikipedia (comma-separated)) (optional)
   trainingDataDate: "January 2024" # Training cutoff date (pattern: ^(January|February|March|April|May|June|July|Augus...) (optional)
   modelCapabilities: ["agents", "assistants", "routing"] # Comma-separated list of capabilities 
+  azureOffers: ["VM", "VM-withSurcharge"] # Azure Offers Should be applied only for monetised models(optional)
+  maapSurcharge: true # MAAP Surcharge flag Should be applied only for monetised models (optional)
+  maapSurchargeType: "model" # Type of MAAP surcharge Should be applied only for monetised models(optional)
   SKU:
     inferenceMinSkuSpec: "example-value" # Minimum SKU specification for inference in the format of 'cores|GPUs|RAM(GB)|VRAM(GB)' (pattern: ^\d+\|\d+\|\d+\|\d+$) (optional)
     inferenceRecommendedSkus: ["example-value"] # A list of comma separated skus that the client should use to deploy the model (optional)
