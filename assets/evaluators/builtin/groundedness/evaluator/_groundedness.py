@@ -433,6 +433,7 @@ _GROUNDEDNESS_ALLOWED_RESTRICTED_TOOLS = {
     "bing_grounding",
     "openapi_call",
     "sharepoint_grounding",
+    "web_search",
 }
 
 

@@ -176,6 +176,19 @@ class TestGroundednessEvaluatorBehavior(
             expected_flow_inputs=self.test_openapi_expected_flow_inputs,
         )
 
+    def test_web_search(self):
+        """Web search tool is supported for groundedness evaluation."""
+        self._run_tool_type_test(
+            test_label="Web Search",
+            evaluation_inputs={
+                "query": data.WEB_SEARCH_QUERY,
+                "response": data.WEB_SEARCH_RESPONSE,
+                "tool_definitions": data.WEB_SEARCH_TOOL_DEFINITIONS,
+            },
+            assert_type=self.AssertType.PASS,
+            expected_flow_inputs=self.test_web_search_expected_flow_inputs,
+        )
+
 
 # region Conversation-level (messages) behavioral tests
 
