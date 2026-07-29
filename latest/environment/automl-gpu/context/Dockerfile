@@ -9,6 +9,21 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 ENV ENABLE_METADATA=true
 
+RUN apt-get update && \
+    apt-get install --only-upgrade -y --no-install-recommends \
+        tar=1.34+dfsg-1ubuntu0.1.22.04.6 \
+        libsqlite3-0=3.37.2-2ubuntu0.7 \
+        nginx-light=1.18.0-6ubuntu14.18 \
+        libnginx-mod-http-echo=1.18.0-6ubuntu14.18 \
+        nginx-common=1.18.0-6ubuntu14.18 \
+        libnginx-mod-http-geoip2=1.18.0-6ubuntu14.18 \
+        wget=1.21.2-2ubuntu1.4 \
+        libkrb5support0=1.19.2-2ubuntu0.8 \
+        libgssapi-krb5-2=1.19.2-2ubuntu0.8 \
+        libk5crypto3=1.19.2-2ubuntu0.8 \
+        libkrb5-3=1.19.2-2ubuntu0.8 && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY conda_dependencies.yaml .
 RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
@@ -22,13 +37,13 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
 # GHSA-538c-55jv-c5g9, GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m (onnx)
 # cryptography is a pinned transitive dep of azureml-core; fixes GHSA-537c-gmf6-5ccf.
 # pyarrow is a pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg.
-# torch is a pinned transitive dep of azureml-contrib-automl-dnn-forecasting; fixes GHSA-qfhq-4f3w-5fph and GHSA-vgrw-7cvw-pwgx.
+# torch is a pinned transitive dep of azureml-contrib-automl-dnn-forecasting; fixes GHSA-rrmf-rvhw-rf47.
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --upgrade --no-cache-dir \
     'cryptography>=48.0.1' 'setuptools>=79.0.0' 'distributed>=2026.1.0' \
     'bokeh>=3.8.2' \
     'onnx>=1.21.0' \
     'pyarrow==23.0.1' \
-    'torch==2.10.0'
+    'torch==2.13.0'
 
 RUN rm -rf /opt/miniconda/pkgs/
 

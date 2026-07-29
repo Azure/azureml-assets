@@ -2,7 +2,6 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly
 
 ENV PIP_PROGRESS_BAR=off
 
-# Install pip dependencies
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
@@ -27,15 +26,25 @@ RUN printf 'Acquire::Retries "5";\n' > /etc/apt/apt.conf.d/80-retries && \
     apt-get install -y --only-upgrade \
         curl \
         gzip \
+        libasound2 \
+        libasound2-data \
         libcurl3-gnutls \
         libcurl4 \
+        libgssapi-krb5-2 \
+        libk5crypto3 \
+        libkrb5-3 \
+        libkrb5support0 \
         libnghttp2-14 \
         libpython3.10-minimal \
         libpython3.10-stdlib \
         libsqlite3-0 \
+        dotnet-host-8.0 \
+        dotnet-hostfxr-8.0 \
+        dotnet-runtime-8.0 \
         python3.10 \
         python3.10-minimal \
-        tar && \
+        tar \
+        wget && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
     cp /var/configuration/nginx.conf /etc/nginx/sites-available/app && \

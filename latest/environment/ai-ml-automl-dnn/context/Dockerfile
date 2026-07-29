@@ -9,6 +9,22 @@ COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:2025
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 ENV ENABLE_METADATA=true
 
+# Upgrade vulnerable Ubuntu packages inherited from the base image when installed.
+RUN set -eux; \
+    apt-get update; \
+    os_security_packages="libgssapi-krb5-2 libk5crypto3 libkrb5-3 libkrb5support0 libsqlite3-0 nginx nginx-common nginx-light tar wget"; \
+    installed_os_packages=""; \
+    for package in $os_security_packages; do \
+        if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
+            installed_os_packages="$installed_os_packages $package"; \
+        fi; \
+    done; \
+    if [ -n "$installed_os_packages" ]; then \
+        apt-get install -y --only-upgrade $installed_os_packages; \
+    fi; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*
+
 # Create conda environment (minimal; packages installed via pip to avoid solver OOM)
 RUN conda create -y -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
@@ -33,7 +49,7 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
     'setuptools-git' \
     'setuptools==82.0.1' \
     'wheel>=0.46.2' \
-    'torch==2.10.0' \
+    'torch==2.13.0' \
     'scipy==1.10.1' \
     'psutil>5.0.0,<6.0.0' \
     'pip>=26.1'
@@ -113,7 +129,7 @@ RUN pip install \
 # pyarrow>=23.0.1          GHSA-rgxp-2hwp-jwgg / CVE-2026-25087 use-after-free
 #                          in Apache Arrow C++. Chain (L1):
 #                          azureml-dataset-runtime -> pyarrow.
-# torch==2.10.0            GHSA-qfhq-4f3w-5fph, GHSA-vgrw-7cvw-pwgx.
+# torch==2.13.0            GHSA-rrmf-rvhw-rf47 plus prior torch findings
 #                          azureml-train-automl-runtime resolves torch 2.8.0,
 #                          so the DNN environment direct pin must be re-applied
 #                          after AzureML package installation.
@@ -123,7 +139,7 @@ RUN pip install --no-cache-dir --upgrade 'distributed>=2026.1.0' 'protobuf>=5.29
     'urllib3>=2.7.0' \
     'ujson>=5.12.1' \
     'pyarrow>=23.0.1' \
-    'torch==2.10.0'
+    'torch==2.13.0'
 RUN rm -rf /opt/miniconda/pkgs/
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
