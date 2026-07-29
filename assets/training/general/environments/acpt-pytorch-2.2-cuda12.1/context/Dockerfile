@@ -44,11 +44,20 @@ RUN pip install -r requirements.txt --no-cache-dir && \
         'pyarrow>=23.0.1' \
         'cryptography>=48.0.1'
 
-# Inference requirements
+# Inference requirements.
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
 RUN apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y --no-install-recommends \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade --no-install-recommends \
+        libgssapi-krb5-2 \
+        libk5crypto3 \
+        libkrb5-3 \
+        libkrb5support0 \
+        libsqlite3-0 \
+        tar \
+        wget && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        libnginx-mod-http-echo \
+        libnginx-mod-http-geoip2 \
         libunwind8 \
         libxml++2.6-2v5 \
         nginx-light \
@@ -67,4 +76,6 @@ ENV WORKER_TIMEOUT=400
 EXPOSE 5001 8883 8888
 
 # Deepspeed launcher requires passwordless ssh; server side not in base image
-RUN apt-get update && apt-get install -y openssh-server && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends openssh-server && \
+    rm -rf /var/lib/apt/lists/*

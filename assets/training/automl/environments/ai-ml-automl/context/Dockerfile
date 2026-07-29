@@ -14,7 +14,7 @@ ENV PIP_PROGRESS_BAR=off
 # Upgrade vulnerable Ubuntu packages when this image variant includes them.
 RUN set -eux; \
     apt-get update; \
-    os_security_packages="curl gzip libasound2 libasound2-data libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libnghttp2-14 libpython3.10-minimal libpython3.10-stdlib libpython3.12-minimal libpython3.12-stdlib libsqlite3-0 libxml2 nginx nginx-common nginx-light openssh-client python3.10 python3.10-minimal python3.12 python3.12-minimal tar wget"; \
+    os_security_packages="curl gzip libarchive13 libasound2 libasound2-data libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libgssapi-krb5-2 libk5crypto3 libkrb5-3 libkrb5support0 libnghttp2-14 libnginx-mod-http-echo libnginx-mod-http-geoip2 libpython3.10-minimal libpython3.10-stdlib libpython3.12-minimal libpython3.12-stdlib libsqlite3-0 libxml2 nginx nginx-common nginx-light openssh-client openssh-server openssh-sftp-server python3.10 python3.10-minimal python3.12 python3.12-minimal tar wget"; \
     installed_os_packages=""; \
     for package in $os_security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
@@ -33,49 +33,15 @@ RUN conda create -q -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     -c conda-forge && \
     conda clean -q -a -y
 
-# Security overrides for packages installed in independent Python prefixes:
-# - pip>=26.1.2 fixes GHSA-wf93-45jw-7689. pip is its own parent,
-#   so explicit upgrades are the only available remediation.
-# - PyJWT>=2.13.0 is pinned as a transitive dep brought in by the base image
-#   (mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04), fixing GHSA-993g-76c3-p5m4
-#   and GHSA-jq35-7prp-9v3f.
-# - idna>=3.15 is pinned as a transitive dep brought in by the base image,
-#   fixing GHSA-65pc-fj4g-8rjx.
-# - msgpack>=1.2.1 is pinned as a transitive dep brought in by AzureML/ACPT
-#   base layers, fixing GHSA-6v7p-g79w-8964.
-# - pydantic-settings>=2.14.2 is pinned as a transitive dep of AzureML/MLflow
-#   Python dependencies, fixing GHSA-4xgf-cpjx-pc3j.
-# - py-rattler>=0.24.0 is pinned as a transitive dep brought in by the base image,
-#   fixing GHSA-q53q-5r4j-5729.
-# - cryptography>=48.0.1 is pinned as a transitive dep brought in by the base image
-#   and its ptca conda env, fixing GHSA-537c-gmf6-5ccf.
-RUN set -eux; \
-    base_prefix_found=0; \
-    for base_python in /opt/conda/bin/python /opt/miniconda/bin/python /opt/conda/envs/ptca/bin/python; do \
-        if [ -x "$base_python" ]; then \
-            base_prefix_found=1; \
-            "$base_python" -m pip install --no-cache-dir --progress-bar off --upgrade \
-                'pip>=26.1.2' \
-                'PyJWT>=2.13.0' \
-                'idna>=3.15' \
-                'msgpack>=1.2.1' \
-                'pydantic-settings>=2.14.2' \
-                'py-rattler>=0.24.0' \
-                'cryptography>=48.0.1'; \
-        fi; \
-    done; \
-    test "$base_prefix_found" = "1"; \
-    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --progress-bar off --upgrade 'pip>=26.1.2'
+# Keep the new AutoML conda environment on a patched pip.
+RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --progress-bar off --upgrade 'pip>=26.1.2'
 
 # Patch the PTCA conda environment when present.
-# pip>=26.1.2 fixes GHSA-wf93-45jw-7689; VCM reads the conda-meta record, so
-#   conda must update it.
-# torch==2.10.0 fixes GHSA-vgrw-7cvw-pwgx and GHSA-qfhq-4f3w-5fph in inherited
-#   PTCA environments.
+# torch==2.13.0 fixes GHSA-rrmf-rvhw-rf47 in image-managed Python
+# environments, including PTCA when present.
 RUN set -eux; \
     if [ -d /opt/conda/envs/ptca ]; then \
-        conda install -p /opt/conda/envs/ptca -c conda-forge -y 'pip>=26.1.2'; \
-        conda run -p /opt/conda/envs/ptca python -m pip install --no-cache-dir --progress-bar off --upgrade 'torch==2.10.0'; \
+        conda run -p /opt/conda/envs/ptca python -m pip install --no-cache-dir --progress-bar off --upgrade 'torch==2.13.0'; \
     fi
 
 # Install packages via pip (avoids conda solver OOM)
@@ -85,7 +51,7 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --pr
     'setuptools-git' \
     'setuptools==81.0.0' \
     'psutil>5.0.0,<6.0.0' \
-    'torch==2.10.0'
+    'torch==2.13.0'
 
 # Install pip dependencies
 RUN pip install --progress-bar off \
@@ -108,17 +74,17 @@ RUN pip install --progress-bar off \
                 'prophet==1.1.4' \
                 'inference-schema' \
                 'mltable>=1.0.0' \
-                'pillow==12.2.0'
+                'pillow==12.3.0'
 
 # Install pip ad-hoc dependencies for security updates
 # distributed>=2026.1.0 (CVE-2026-23528): XSS leading to RCE via Dask dashboard
 #   Chain: azureml-train-automl-runtime -> dask[complete] -> distributed
-#   Parent (azureml-train-automl-runtime==1.62.0, latest) still pins dask[complete]<=2023.2.0;
+#   AzureML AutoML runtime still pins dask[complete]<=2023.2.0;
 #   parent fix not available, override required.
 #
 # bokeh>=3.8.2 (GHSA-793v-589g-574v): conda env installs 2.4.3, pip can't auto-upgrade
 #   Chain: azureml-train-automl-runtime -> bokeh
-#   Parent (azureml-train-automl-runtime==1.62.0, latest) still pins bokeh<3.0.0;
+#   AzureML AutoML runtime still pins bokeh<3.0.0;
 #   parent fix not available, override required.
 #
 # python-dotenv>=1.2.2 (GHSA-mf9w-mj56-hr94): set_key()/unset_key() follow symlinks
@@ -135,22 +101,26 @@ RUN pip install --progress-bar off \
 # cryptography>=48.0.1 (GHSA-537c-gmf6-5ccf): pinned transitive dep of
 #   azureml-core/azureml-automl packages; fixes vulnerable cryptography 46.0.7
 #   resolved in the AzureML AutoML environment.
+# GitPython>=3.1.51 (GHSA-v396-v7q4-x2qj, GHSA-956x-8gvw-wg5v, GHSA-2f96-g7mh-g2hx):
+#   pinned transitive dep of AzureML/MLflow Python dependencies.
+# msgpack>=1.2.1 (GHSA-6v7p-g79w-8964): pinned transitive dep of the
+#   distributed/dask stack used by AzureML AutoML runtime.
 # onnx: azureml-automl-runtime pins onnx<=1.17.0; override needed for
 #   GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6,
 #   GHSA-538c-55jv-c5g9, GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m
-# pillow: upgraded from 12.1.1 for GHSA-whj4-6x5x-4v2j
-# msgpack>=1.2.1 (GHSA-6v7p-g79w-8964): pinned transitive dep of the
-#   distributed/dask stack used by AzureML AutoML runtime.
 # pydantic-settings>=2.14.2 (GHSA-4xgf-cpjx-pc3j): pinned transitive dep of
 #   AzureML/MLflow Python dependencies.
+# pyasn1>=0.6.4 (GHSA-8ppf-4f7h-5ppj, GHSA-hm4w-wwcw-mr6r):
+#   pinned transitive dep of AzureML authentication dependencies.
 RUN pip install --no-cache-dir --progress-bar off --upgrade \
     'distributed>=2026.1.0' \
     'bokeh>=3.8.2' \
     'cryptography>=48.0.1' \
+    'GitPython>=3.1.51' \
     'msgpack>=1.2.1' \
     'onnx>=1.21.0' \
-    'pillow>=12.2.0' \
     'pydantic-settings>=2.14.2' \
+    'pyasn1>=0.6.4' \
     'python-dotenv>=1.2.2' \
     'pyarrow>=23.0.1'  # pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg / CVE-2026-25087
 RUN pip install --no-deps --force-reinstall 'skl2onnx==1.19.1'

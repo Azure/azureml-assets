@@ -10,6 +10,7 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 /artifacts /var/
+# Pin OS packages to patched Ubuntu USN versions when this image installs or inherits them.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get install -y --no-install-recommends \
@@ -17,14 +18,20 @@ RUN apt-get update && \
         libcurl3-gnutls=7.81.0-1ubuntu1.25 \
         libcurl4=7.81.0-1ubuntu1.25 \
         libnghttp2-14=1.43.0-1ubuntu0.4 \
-        libnginx-mod-http-echo=1.18.0-6ubuntu14.16 \
-        libnginx-mod-http-geoip2=1.18.0-6ubuntu14.16 \
+        libnginx-mod-http-echo=1.18.0-6ubuntu14.18 \
+        libnginx-mod-http-geoip2=1.18.0-6ubuntu14.18 \
         libunwind8 \
-        libsqlite3-0=3.37.2-2ubuntu0.6 \
+        libsqlite3-0=3.37.2-2ubuntu0.7 \
         libxml2=2.9.13+dfsg-1ubuntu0.12 \
-        nginx-common=1.18.0-6ubuntu14.16 \
+        nginx-common=1.18.0-6ubuntu14.18 \
         libxml++2.6-2v5 \
-        nginx-light=1.18.0-6ubuntu14.16 \
+        nginx-light=1.18.0-6ubuntu14.18 \
+        wget=1.21.2-2ubuntu1.4 \
+        tar=1.34+dfsg-1ubuntu0.1.22.04.6 \
+        libkrb5support0=1.19.2-2ubuntu0.8 \
+        libgssapi-krb5-2=1.19.2-2ubuntu0.8 \
+        libk5crypto3=1.19.2-2ubuntu0.8 \
+        libkrb5-3=1.19.2-2ubuntu0.8 \
         psmisc \
         rsyslog \
         runit \
@@ -53,8 +60,8 @@ RUN pip install --no-cache-dir \
                 azureml-train-automl-runtime=={{latest-pypi-version}} \
                 azureml-automl-dnn-vision=={{latest-pypi-version}}
 
-# Security: fix torch vulnerabilities GHSA-qfhq-4f3w-5fph and GHSA-vgrw-7cvw-pwgx.
-RUN pip install --no-cache-dir --upgrade torch==2.10.0 torchvision==0.25.0
+# Security: fix torch vulnerability GHSA-rrmf-rvhw-rf47 in the active conda env.
+RUN pip install --no-cache-dir --upgrade torch==2.13.0 torchvision==0.28.0
 # Security: fix urllib3 (CVE-2026-37152) — transitive dep of azureml SDK
 RUN pip install --no-cache-dir --upgrade 'urllib3>=2.7.0'
 # Security: fix onnx (multiple CVEs) — transitive dep of azureml-automl-runtime via onnxruntime; parent pinned, cannot upgrade
@@ -78,8 +85,8 @@ RUN /opt/conda/bin/conda install -n base -c conda-forge 'pip>=26.1' -y && \
     'setuptools>=82.0.1' 'cryptography>=46.0.7' 'PyJWT>=2.12.0' \
     'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3' 'pydantic-settings>=2.14.2' 'msgpack>=1.2.1'
 # Security: fix ptca conda env (python 3.10).
-# torch==2.10.0: pinned dep from ACPT ptca env; fixes GHSA-qfhq-4f3w-5fph and GHSA-vgrw-7cvw-pwgx.
-RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade torch==2.10.0 torchvision==0.25.0
+# torch==2.13.0: pinned transitive dep from ACPT ptca env; fixes GHSA-rrmf-rvhw-rf47.
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade torch==2.13.0 torchvision==0.28.0
 # idna>=3.15 (GHSA-65pc-fj4g-8rjx): ptca has idna 3.11 from requests 2.32.5 (idna<4,>=2.5)
 # and yarl 1.22.0 (idna>=2.0). As of 2026-05-25, latest requests/yarl keep the same loose
 # idna ranges, so parent upgrades cannot force the fixed idna version.

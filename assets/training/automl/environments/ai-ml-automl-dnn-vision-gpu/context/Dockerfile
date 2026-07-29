@@ -8,9 +8,7 @@ COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:2025
 
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
-# Inference requirements
-# Security: reinstall packages to pick up patched versions when older base
-# layers are cached or held by the parent image.
+# Inference requirements and OS security updates.
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 /artifacts /var/
 RUN apt-get update && \
     apt-get upgrade -y && \
@@ -31,9 +29,15 @@ RUN apt-get update && \
         libcurl3-gnutls \
         libcurl4 \
         libgcrypt20 \
+        libgssapi-krb5-2 \
+        libk5crypto3 \
+        libkrb5-3 \
+        libkrb5support0 \
         libnghttp2-14 \
         libsqlite3-0 \
         liblzma5 \
+        tar \
+        wget \
         nginx-common \
         nginx-light \
         libnginx-mod-http-geoip2 \
@@ -86,7 +90,7 @@ RUN pip install --no-cache-dir \
                 azureml-interpret=={{latest-pypi-version}} \
                 'azureml-dataprep>=2.24.4' \
                 'azure-identity>=1.25.1' \
-                'pillow==12.2.0'
+                'pillow==12.3.0'
 
 # Install packages with torch packages separately to reduce layer size
 RUN pip install --no-cache-dir \
@@ -110,12 +114,15 @@ RUN pip install --no-cache-dir \
 #       explicit override required until the AzureML parent pins a patched floor.
 # NOTE: torch>=2.10.0 (GHSA-vgrw-7cvw-pwgx / GHSA-qfhq-4f3w-5fph): installed
 #       by azureml-automl-dnn-vision/base torch image; explicit override required.
+# NOTE: pillow==12.3.0 fixes GHSA-8v84-f9pq-wr9x, GHSA-9hw9-ch79-4vh6,
+#       GHSA-vjc4-5qp5-m44j, GHSA-pg7v-jwj7-p798, GHSA-45hq-cxwh-f6vc,
+#       GHSA-phj9-mv4w-65pm, GHSA-62p4-gmf7-7g93, and GHSA-5x94-69rx-g8h2.
 RUN pip install --no-cache-dir --upgrade \
                 'cryptography>=48.0.1' \
                 'distributed>=2026.1.0' \
                 'mlflow-skinny>=2.16.0' \
                 'bokeh>=3.8.2' \
-                'pillow==12.2.0' \
+                'pillow==12.3.0' \
                 'onnx>=1.21.0' \
                 'requests>=2.33.0' \
                 'idna>=3.15' \
@@ -133,9 +140,14 @@ RUN pip install --no-cache-dir --upgrade \
 #   fixed pip via dependency resolution), so explicit override is required.
 # torch>=2.10.0 (GHSA-vgrw-7cvw-pwgx / GHSA-qfhq-4f3w-5fph): ptca env in the
 #   ACPT base image ships torch 2.8.0+cu126; explicit override required.
+# pillow==12.3.0: pinned transitive dep brought in by the ACPT base image;
+#   fixes GHSA-8v84-f9pq-wr9x, GHSA-9hw9-ch79-4vh6, GHSA-vjc4-5qp5-m44j,
+#   GHSA-pg7v-jwj7-p798, GHSA-45hq-cxwh-f6vc, GHSA-phj9-mv4w-65pm,
+#   GHSA-62p4-gmf7-7g93, and GHSA-5x94-69rx-g8h2.
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
                 'pip>=26.1' \
                 'aiohttp>=3.14.0' \
+                'pillow==12.3.0' \
                 'torch>=2.10.0'
 # setuptools resolver picks wrong version due to dep conflicts; force install to fix jaraco.context vuln (GHSA-58pv-8j8x-9vj2)
 # setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced
@@ -175,6 +187,10 @@ RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-d
 # cryptography>=48.0.1 (GHSA-537c-gmf6-5ccf): cryptography 46.0.7 is shipped in
 #   the base conda env (py3.13) of the ACPT base image; explicit override required
 #   until the base image is rebuilt with a patched floor.
+# pillow==12.3.0: pinned transitive dep brought in by the ACPT base image;
+#   fixes GHSA-8v84-f9pq-wr9x, GHSA-9hw9-ch79-4vh6, GHSA-vjc4-5qp5-m44j,
+#   GHSA-pg7v-jwj7-p798, GHSA-45hq-cxwh-f6vc, GHSA-phj9-mv4w-65pm,
+#   GHSA-62p4-gmf7-7g93, and GHSA-5x94-69rx-g8h2.
 RUN conda run -n base pip install --no-cache-dir --upgrade \
                 'python-dotenv>=1.2.2' \
                 'pip>=26.1' \
@@ -184,7 +200,8 @@ RUN conda run -n base pip install --no-cache-dir --upgrade \
                 'aiohttp>=3.14.0' \
                 'PyJWT>=2.13.0' \
                 'py-rattler>=0.24.0' \
-                'cryptography>=48.0.1'
+                'cryptography>=48.0.1' \
+                'pillow==12.3.0'
 # Fix vendored jaraco.context (GHSA-58pv-8j8x-9vj2) and wheel (GHSA-8rrh-rw8j-w5fx) in base setuptools
 # setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced
 RUN /opt/conda/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
