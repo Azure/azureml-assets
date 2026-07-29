@@ -11,10 +11,11 @@ from typing import Any, Dict, List
 import json
 import copy
 from ..common.base_prompty_evaluator_runner import BasePromptyEvaluatorRunner
+from .byo_judge_behavior_mixin import ByoJudgeBehaviorMixin
 from . import common_tool_test_data as _tool_data
 
 
-class BaseEvaluatorBehaviorTest(BasePromptyEvaluatorRunner):
+class BaseEvaluatorBehaviorTest(BasePromptyEvaluatorRunner, ByoJudgeBehaviorMixin):
     """
     Base class for evaluator behavioral tests with query and response inputs.
 

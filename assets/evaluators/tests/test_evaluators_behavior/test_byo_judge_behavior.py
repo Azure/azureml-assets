@@ -9,10 +9,12 @@ every auth type). A BYO model configuration carries ``byo_model`` + ``project_en
 ``azure_endpoint`` / ``azure_deployment``.
 
 The built-in prompty judges (coherence, relevance, fluency, groundedness, ...) are thin
-pass-throughs over ``azure-ai-evaluation`` — all BYO routing lives in the SDK. These tests guard the
-asset's contract: that the shipped evaluators (1) accept a BYO config and forward it unchanged so the
-SDK recognises it as BYO, and (2) end-to-end route a judge call through the BYO project-Responses
-client (with the network call mocked), rather than a direct Azure OpenAI client.
+pass-throughs over ``azure-ai-evaluation`` — all BYO routing lives in the SDK. The per-evaluator
+guard that each shipped evaluator accepts and forwards a BYO config lives in
+``ByoJudgeBehaviorMixin`` (mixed into ``BaseEvaluatorBehaviorTest``), so it runs automatically
+whenever an evaluator's code changes. This module adds two cross-cutting guards: the SDK
+BYO-detection contract the evaluators rely on, and an end-to-end judge call routed through the BYO
+project-Responses client (network mocked) for a representative set of core judges.
 """
 
 import json
@@ -20,45 +22,15 @@ import json
 import pytest
 from unittest.mock import AsyncMock, patch
 
-from openai.types.chat import ChatCompletion, ChatCompletionMessage
-from openai.types.chat.chat_completion import Choice
-
-from azure.ai.evaluation._byo_judge import is_byo_model_config
-
 from ...builtin.coherence.evaluator._coherence import CoherenceEvaluator
 from ...builtin.relevance.evaluator._relevance import RelevanceEvaluator
 from ...builtin.fluency.evaluator._fluency import FluencyEvaluator
 from ...builtin.groundedness.evaluator._groundedness import GroundednessEvaluator
 
-
-BYO_MODEL = "my-conn/gpt-4o-mini"
-PROJECT_ENDPOINT = "https://acct.services.ai.azure.com/api/projects/proj"
-
-# The SDK prompty imports the BYO client into its own module namespace; patch it there so the
-# built-in evaluator's judge call is intercepted before any network I/O.
-_BYO_CLIENT_PATH = "azure.ai.evaluation._legacy.prompty._prompty.AsyncByoProjectResponsesClient"
-
-
-def _byo_config(byo_model=BYO_MODEL, project_endpoint=PROJECT_ENDPOINT):
-    """Build a minimal admin-connected (BYO) model configuration (both markers, no AOAI fields)."""
-    return {"byo_model": byo_model, "project_endpoint": project_endpoint}
-
-
-def _make_chat_completion(content):
-    """Build a ``ChatCompletion`` carrying the judge's raw JSON output (the shim's return shape)."""
-    return ChatCompletion(
-        id="byo-test",
-        created=0,
-        model="byo-model",
-        object="chat.completion",
-        choices=[
-            Choice(
-                index=0,
-                finish_reason="stop",
-                message=ChatCompletionMessage(role="assistant", content=content),
-            )
-        ],
-    )
+from .byo_judge_behavior_mixin import BYO_MODEL, PROJECT_ENDPOINT, is_byo_model_config
+from .byo_judge_behavior_mixin import BYO_CLIENT_PATH as _BYO_CLIENT_PATH
+from .byo_judge_behavior_mixin import byo_config as _byo_config
+from .byo_judge_behavior_mixin import make_chat_completion as _make_chat_completion
 
 
 # (EvaluatorClass, metric_name, call_kwargs) for the core grader-style prompty judges (1-5 scale).
@@ -122,27 +94,6 @@ class TestIsByoModelConfigContract:
     def test_false_for_non_string_markers(self):
         """Reject non-string BYO markers as non-BYO."""
         assert is_byo_model_config({"byo_model": 1, "project_endpoint": 2}) is False
-
-
-@pytest.mark.unittest
-@pytest.mark.parametrize("evaluator_cls, name, _call_kwargs", _CORE_JUDGES, ids=_CORE_IDS)
-class TestByoConfigForwarding:
-    """Each shipped prompty judge accepts a BYO config and forwards it intact to the SDK prompty."""
-
-    def test_byo_config_forwarded_and_detected_as_byo(self, evaluator_cls, name, _call_kwargs):
-        """The evaluator forwards the BYO markers so the SDK routes chat.completions to Responses."""
-        evaluator = evaluator_cls(model_config=_byo_config())
-        configuration = evaluator._flow._model.configuration
-        assert is_byo_model_config(configuration) is True
-        assert configuration["byo_model"] == BYO_MODEL
-        assert configuration["project_endpoint"] == PROJECT_ENDPOINT
-
-    def test_byo_config_omits_azure_openai_markers(self, evaluator_cls, name, _call_kwargs):
-        """A BYO config is accepted without the ``azure_endpoint`` / ``azure_deployment`` fields."""
-        evaluator = evaluator_cls(model_config=_byo_config())
-        configuration = evaluator._flow._model.configuration
-        assert "azure_endpoint" not in configuration
-        assert "azure_deployment" not in configuration
 
 
 @pytest.mark.unittest
