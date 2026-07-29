@@ -9,10 +9,50 @@ from typing import Dict, Union, List
 from typing_extensions import overload, override
 
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
-from azure.ai.evaluation._common.utils import reformat_conversation_history, reformat_agent_response
+
+# ---------------------------------------------------------------------------
+# Imports target azure-ai-evaluation >= 1.18.1. Each ``except ImportError``
+# branch below inlines the corresponding azure-ai-evaluation 1.18.1
+# implementation so the evaluator also runs on azure-ai-evaluation 1.17.x,
+# which predates these symbols. The 1.17.x compatibility branches are kept only
+# for backward compatibility and can be removed once 1.17.x is no longer
+# supported.
+# ---------------------------------------------------------------------------
+
+from azure.ai.evaluation._common.utils import (
+    reformat_conversation_history,
+    reformat_agent_response,
+)
+from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
 
 from azure.ai.evaluation._model_configurations import Conversation
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
+from azure.ai.evaluation._evaluators._common._validators import (
+    ValidatorInterface,
+    ConversationValidator,
+)
+
+try:  # azure-ai-evaluation >= 1.18.1
+    from azure.ai.evaluation._common.utils import _is_intermediate_response, _preprocess_messages
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
+    from azure.ai.evaluation._evaluators._common._base_prompty_eval import (
+        _is_intermediate_response,
+        _preprocess_messages,
+    )
+
+# Re-exported so the module keeps exposing the message-preprocessing helpers used
+# by the test suite; they are invoked indirectly through _preprocess_messages.
+try:  # azure-ai-evaluation >= 1.18.1
+    from azure.ai.evaluation._common.utils import (  # noqa: F401
+        _drop_mcp_approval_messages,
+        _normalize_function_call_types,
+    )
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
+    from azure.ai.evaluation._evaluators._common._base_prompty_eval import (  # noqa: F401
+        _drop_mcp_approval_messages,
+        _normalize_function_call_types,
+    )
+
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +75,11 @@ class RelevanceEvaluator(PromptyEvaluatorBase):
         ~azure.ai.evaluation.OpenAIModelConfiguration]
     :param threshold: The threshold for the relevance evaluator. Default is 3.
     :type threshold: int
+    :param credential: The credential for authenticating to Azure AI service.
+    :type credential: ~azure.core.credentials.TokenCredential
+    :keyword is_reasoning_model: If True, the evaluator will use reasoning model configuration (o1/o3 models).
+        This will adjust parameters like max_completion_tokens and remove unsupported parameters. Default is False.
+    :paramtype is_reasoning_model: bool
 
     .. admonition:: Example:
 
@@ -75,11 +120,13 @@ class RelevanceEvaluator(PromptyEvaluatorBase):
     _PROMPTY_FILE = "relevance.prompty"
     _RESULT_KEY = "relevance"
 
+    _validator: ValidatorInterface
+
     id = "azureai://built-in/evaluators/relevance"
     """Evaluator identifier, experimental and to be used only with evaluation in cloud."""
 
     @override
-    def __init__(self, model_config, *, credential=None, threshold=3):
+    def __init__(self, model_config, *, credential=None, threshold=3, **kwargs):
         """Initialize the Relevance evaluator.
 
         :param model_config: Configuration for the Azure OpenAI model.
@@ -92,15 +139,18 @@ class RelevanceEvaluator(PromptyEvaluatorBase):
         """
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
-        self._threshold = threshold
-        self._higher_is_better = True
+
+        # Initialize input validator
+        self._validator = ConversationValidator(error_target=ErrorTarget.RELEVANCE_EVALUATOR)
+
         super().__init__(
             model_config=model_config,
             prompty_file=prompty_path,
             result_key=self._RESULT_KEY,
             threshold=threshold,
             credential=credential,
-            _higher_is_better=self._higher_is_better,
+            _higher_is_better=True,
+            **kwargs,
         )
 
     @overload
@@ -161,6 +211,129 @@ class RelevanceEvaluator(PromptyEvaluatorBase):
         """
         return super().__call__(*args, **kwargs)
 
+    def _return_not_applicable_result(
+        self, error_message: str, threshold: Union[int, float]
+    ) -> Dict[str, Union[str, float, Dict, None]]:
+        """Return a result indicating that the tool call is not applicable for evaluation.
+
+        :param error_message: The error message indicating why the evaluation is not applicable.
+        :type error_message: str
+        :param threshold: The threshold value for the evaluation.
+        :type threshold: Union[int, float]
+        :return: A dictionary containing the result of the evaluation.
+        :rtype: Dict[str, Union[str, float, None]]
+        """
+        token_metadata = self._get_token_metadata({})
+        result = {
+            f"{self._result_key}": None,
+            f"{self._result_key}_score": None,
+            f"{self._result_key}_passed": None,
+            f"{self._result_key}_result": "not_applicable",
+            f"{self._result_key}_reason": f"Not applicable: {error_message}",
+            f"{self._result_key}_status": "skipped",
+            f"{self._result_key}_threshold": threshold,
+            f"{self._result_key}_properties": None,
+        }
+        # Add top-level token metadata fields for backward compatibility.
+        result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+        return result
+
+    @staticmethod
+    def _get_token_metadata(prompty_output: Dict) -> Dict:
+        """Extract token usage and model metadata from the prompty output dict."""
+        return {
+            "prompt_tokens": prompty_output.get("input_token_count", 0),
+            "completion_tokens": prompty_output.get("output_token_count", 0),
+            "total_tokens": prompty_output.get("total_token_count", 0),
+            "finish_reason": prompty_output.get("finish_reason", ""),
+            "model": prompty_output.get("model_id", ""),
+            "sample_input": prompty_output.get("sample_input", ""),
+            "sample_output": prompty_output.get("sample_output", ""),
+        }
+
+    @override
+    async def _real_call(self, **kwargs):
+        """Perform asynchronous call where real end-to-end evaluation logic is executed.
+
+        :keyword kwargs: The inputs to evaluate.
+        :type kwargs: Dict
+        :return: The evaluation result.
+        :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
+        """
+        # Validate input before processing
+        self._validator.validate_eval_input(kwargs)
+
+        return await self._the_super_real_call(**kwargs)
+
+    async def _the_super_real_call(self, **kwargs):
+        """Perform the asynchronous call where real end-to-end evaluation logic runs.
+
+        :keyword kwargs: The inputs to evaluate.
+        :type kwargs: Dict
+        :return: The evaluation result.
+        :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
+        """
+        # Convert inputs into list of evaluable inputs.
+        try:
+            eval_input_list = self._convert_kwargs_to_eval_input(**kwargs)
+        except Exception as e:
+            logger.error(f"Error converting kwargs to eval_input_list: {e}")
+            raise e
+        per_turn_results = []
+        # Evaluate all inputs.
+        for eval_input in eval_input_list:
+            result = await self._do_eval(eval_input)
+            # logic to determine threshold pass/fail
+            # if it wasn't computed in _do_eval
+            try:
+                keys = list(result.keys())
+                contains_result_key = any(key.endswith("_result") for key in keys)
+                contains_threshold_key = any(key.endswith("_threshold") for key in keys)
+                if not contains_result_key or not contains_threshold_key:
+                    for key in keys:
+                        if key.endswith("_score"):
+                            score_value = result[key]
+                            base_key = key[:-6]  # Remove "_score" suffix
+                            result_key = f"{base_key}_result"
+                            threshold_key = f"{base_key}_threshold"
+                            threshold_value = (
+                                self._threshold.get(base_key) if isinstance(self._threshold, dict) else self._threshold
+                            )
+                            if not isinstance(threshold_value, (int, float)):
+                                raise EvaluationException(
+                                    "Threshold value must be a number.",
+                                    internal_message=str(threshold_value),
+                                    target=ErrorTarget.EVALUATE,
+                                    category=ErrorCategory.INVALID_VALUE,
+                                    blame=ErrorBlame.USER_ERROR,
+                                )
+
+                            if not contains_threshold_key:
+                                result[threshold_key] = threshold_value
+
+                            if not contains_result_key:
+                                if self._higher_is_better:
+                                    if float(score_value) >= threshold_value:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[True]
+                                    else:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[False]
+                                else:
+                                    if float(score_value) <= threshold_value:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[True]
+                                    else:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[False]
+            except Exception as e:
+                logger.warning(f"Error calculating binary result: {e}")
+            per_turn_results.append(result)
+        # Return results as-is if only one result was produced.
+
+        if len(per_turn_results) == 1:
+            return per_turn_results[0]
+        if len(per_turn_results) == 0:
+            return {}  # TODO raise something?
+        # Otherwise, aggregate results.
+        return self._aggregate_results(per_turn_results=per_turn_results)
+
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:  # type: ignore[override]
         """Do a relevance evaluation.
 
@@ -179,30 +352,53 @@ class RelevanceEvaluator(PromptyEvaluatorBase):
                 category=ErrorCategory.INVALID_VALUE,
                 target=ErrorTarget.CONVERSATION,
             )
+        if _is_intermediate_response(eval_input.get("response")):
+            return self._return_not_applicable_result(
+                "Intermediate response. Please provide the agent's final response for evaluation.",
+                self._threshold,
+            )
+        if isinstance(eval_input.get("response"), list):
+            eval_input["response"] = _preprocess_messages(eval_input["response"])
+        if isinstance(eval_input.get("query"), list):
+            eval_input["query"] = _preprocess_messages(eval_input["query"])
         if not isinstance(eval_input["query"], str):
             eval_input["query"] = reformat_conversation_history(eval_input["query"], logger)
         if not isinstance(eval_input["response"], str):
             eval_input["response"] = reformat_agent_response(eval_input["response"], logger)
-        llm_output = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
+        result = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
+        llm_output = result.get("llm_output", result)
         score = math.nan
 
         if isinstance(llm_output, dict):
-            score = float(llm_output.get("score", math.nan))
-            reason = llm_output.get("explanation", "")
-            # Parse out score and reason from evaluators known to possess them.
-            binary_result = self._get_binary_result(score)
-            return {
-                self._result_key: float(score),
-                f"gpt_{self._result_key}": float(score),
-                f"{self._result_key}_reason": reason,
-                f"{self._result_key}_result": binary_result,
-                f"{self._result_key}_threshold": self._threshold,
-            }
+            # Handle skipped status from LLM
+            llm_status = llm_output.get("status", "completed")
+            if llm_status == "skipped":
+                reason = llm_output.get("reason", "")
+                return self._return_not_applicable_result(reason, self._threshold)
 
-        binary_result = self._get_binary_result(score)
-        return {
-            self._result_key: float(score),
-            f"gpt_{self._result_key}": float(score),
-            f"{self._result_key}_result": binary_result,
-            f"{self._result_key}_threshold": self._threshold,
-        }
+            score = float(llm_output.get("score", math.nan))
+            reason = llm_output.get("reason", "")
+            llm_properties = llm_output.get("properties", {}) or {}
+            score_result = self._get_binary_result(score)
+            token_metadata = self._get_token_metadata(result)
+            llm_properties.update(token_metadata)
+            response_dict = {
+                self._result_key: score,
+                f"{self._result_key}_score": score,
+                f"{self._result_key}_passed": score_result == "pass",
+                f"{self._result_key}_result": score_result,
+                f"{self._result_key}_reason": reason,
+                f"{self._result_key}_status": "completed",
+                f"{self._result_key}_threshold": self._threshold,
+                f"{self._result_key}_properties": llm_properties,
+            }
+            # Add top-level token metadata fields for backward compatibility.
+            response_dict.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+            return response_dict
+
+        raise EvaluationException(
+            message="Evaluator returned invalid output.",
+            blame=ErrorBlame.SYSTEM_ERROR,
+            category=ErrorCategory.FAILED_EXECUTION,
+            target=ErrorTarget.RELEVANCE_EVALUATOR,
+        )

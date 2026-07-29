@@ -1,0 +1,49 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: qwen2.5-coder-7b-instruct-qnn-npu
+path: ./
+isArchived: true
+tags:
+  capabilities: tool-calling
+  supportsReasoning: ''
+  contextLength: 32768
+system_metadata:
+  alias: qwen2.5-coder-7b
+  publisher: Microsoft
+  directoryPath: v1
+  foundryLocal: ''
+  inputModalities:
+  - text
+  license: MIT
+  licenseDescription: This model is provided under the License Terms available at <https://huggingface.co/Qwen/qwen2.5-coder-7b-instruct/blob/main/LICENSE>.
+  maxOutputTokens: 2048
+  outputModalities:
+  - text
+  promptTemplate: '{"system": "<|system|>You are Qwen, an AI assistant developed by Alibaba. {Content}<|end|>", "user": "<|user|>{Content}<|end|>", "assistant": "<|assistant|>{Content}<|end|>", "prompt": "<|user|>{Content}<|end|><|assistant|>"}'
+  supportsToolCalling: true
+  toolCallEnd: </tool_call>
+  toolCallStart: <tool_call>
+  toolRegisterEnd: </tools>
+  toolRegisterStart: <tools>
+  toolResponseEnd: </tool_response>
+  toolResponseStart: <tool_response>
+  tasks:
+    inferenceTasks:
+    - chat-completion
+  platformCapabilities:
+    enableMaap: false
+  reasoningStart: ''
+  reasoningEnd: ''
+  minFLVersion: 0.0.0
+variantInfo:
+  parents:
+  - assetId: azureml://registries/azureml/models/qwen2.5-coder-7b-instruct/versions/1
+  variantMetadata:
+    modelType: ONNX
+    quantization:
+    - QuaRot
+    - GPTQ
+    device: npu
+    executionProvider: QNNExecutionProvider
+    fileSizeBytes: 7606003998
+    vRamFootprintBytes: 7606003998
+version: 1

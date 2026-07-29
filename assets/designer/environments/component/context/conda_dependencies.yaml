@@ -2,9 +2,12 @@ name: component
 channels:
 - conda-forge
 dependencies:
-- python=3.9
-- pip=24.0
+- python=3.10
+- pip=26.1
+- setuptools<82
 - pip:
+  - urllib3>=2.6.0
+  - cryptography>=46.0.7
   - azure-ml-component=={{latest-pypi-version}}
   - azureml-defaults=={{latest-pypi-version}}
   - pyarrow>=14.0.1

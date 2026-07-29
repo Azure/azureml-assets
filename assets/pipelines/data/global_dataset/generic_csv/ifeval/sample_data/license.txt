@@ -1,0 +1,9 @@
+IFEval (c) 2023 Google Research
+
+IFEval is licensed under the Apache License, Version 2.0.
+
+You may obtain a copy of the License at:
+https://www.apache.org/licenses/LICENSE-2.0
+
+Source: https://huggingface.co/datasets/google/IFEval
+Paper: https://arxiv.org/abs/2311.07911

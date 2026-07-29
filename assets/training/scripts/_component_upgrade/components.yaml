@@ -56,15 +56,15 @@ component:
   - nlp_textclassification_ner
 
   # Distillation
-  - batch_benchmark_config_generator
-  - batch_score_oss
-  - oss_distillation_generate_data
-  - oss_distillation_generate_data_batch_preprocess
-  - oss_distillation_generate_data_batch_postprocess
-  - oss_distillation_data_generation_batch_scoring_selector
-  - oss_distillation_data_generation_file_selector
-  - oss_distillation_data_generation_validation_file_checker
-  - oss_distillation_validate_pipeline
-  - oss_distillation_batchscoring_datagen_pipeline
-  - oss_distillation_seq_scoring_pipeline
-  - oss_distillation_pipeline
+  # - batch_benchmark_config_generator
+  # - batch_score_oss
+  # - oss_distillation_generate_data
+  # - oss_distillation_generate_data_batch_preprocess
+  # - oss_distillation_generate_data_batch_postprocess
+  # - oss_distillation_data_generation_batch_scoring_selector
+  # - oss_distillation_data_generation_file_selector
+  # - oss_distillation_data_generation_validation_file_checker
+  # - oss_distillation_validate_pipeline
+  # - oss_distillation_batchscoring_datagen_pipeline
+  # - oss_distillation_seq_scoring_pipeline
+  # - oss_distillation_pipeline

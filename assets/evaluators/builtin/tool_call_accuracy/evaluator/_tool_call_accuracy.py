@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-from itertools import chain
 import os
 import logging
 from typing import Dict, List, Union, TypeVar
@@ -19,6 +18,115 @@ from azure.ai.evaluation._converters._models import (
     _BUILT_IN_DESCRIPTIONS,
     _BUILT_IN_PARAMS,
 )
+# ConversationValidator is re-exported for the test suite / capability surface (unused here).
+from azure.ai.evaluation._evaluators._common._validators import (  # noqa: F401
+    ValidatorInterface,
+    ConversationValidator,
+    ToolCallsValidator,
+)
+
+# ---------------------------------------------------------------------------
+# Imports target azure-ai-evaluation >= 1.18.1. Each ``except ImportError``
+# branch below inlines the corresponding azure-ai-evaluation 1.18.1
+# implementation so the evaluator also runs on azure-ai-evaluation 1.17.x,
+# which predates these symbols. The 1.17.x compatibility branches are kept only
+# for backward compatibility and can be removed once 1.17.x is no longer
+# supported.
+# ---------------------------------------------------------------------------
+
+try:  # azure-ai-evaluation >= 1.18.1
+    from azure.ai.evaluation._common.utils import _is_intermediate_response, _preprocess_messages
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
+    # Bodies below are copied from azure-ai-evaluation 1.18.1. The 1.17.x
+    # _base_prompty_eval versions do not normalize openapi_call / openapi_call_output
+    # content types, so inlining the 1.18.1 bodies keeps OpenAPI tool handling
+    # consistent across SDK versions. _preprocess_messages resolves the two helpers
+    # defined in the block below at call time.
+    def _is_intermediate_response(response):
+        """Return True if the assistant's last content item is a function_call or mcp_approval_request."""
+        if isinstance(response, list) and len(response) > 0:
+            last_msg = response[-1]
+            if isinstance(last_msg, dict) and last_msg.get("role") == "assistant":
+                content = last_msg.get("content", [])
+                if isinstance(content, list) and len(content) > 0:
+                    last_content = content[-1]
+                    if isinstance(last_content, dict) and last_content.get("type") in (
+                        "function_call",
+                        "mcp_approval_request",
+                    ):
+                        return True
+        return False
+
+    def _preprocess_messages(messages):
+        """Drop MCP approval messages, then normalize function/openapi call types."""
+        messages = _drop_mcp_approval_messages(messages)
+        messages = _normalize_function_call_types(messages)
+        return messages
+
+# Re-exported so the module keeps exposing the message-preprocessing helpers used
+# by the test suite; they are invoked indirectly through _preprocess_messages.
+try:  # azure-ai-evaluation >= 1.18.1
+    from azure.ai.evaluation._common.utils import (  # noqa: F401
+        _drop_mcp_approval_messages,
+        _normalize_function_call_types,
+    )
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
+    # Bodies below are copied from azure-ai-evaluation 1.18.1; they add openapi_call /
+    # openapi_call_output normalization that the 1.17.x _base_prompty_eval versions lack.
+    def _drop_mcp_approval_messages(messages):
+        """Remove MCP approval request/response messages from a conversation."""
+        if not isinstance(messages, list):
+            return messages
+        return [
+            msg
+            for msg in messages
+            if not (
+                isinstance(msg, dict)
+                and isinstance(msg.get("content"), list)
+                and (
+                    (
+                        msg.get("role") == "assistant"
+                        and any(
+                            isinstance(c, dict) and c.get("type") == "mcp_approval_request"
+                            for c in msg["content"]
+                        )
+                    )
+                    or (
+                        msg.get("role") == "tool"
+                        and any(
+                            isinstance(c, dict) and c.get("type") == "mcp_approval_response"
+                            for c in msg["content"]
+                        )
+                    )
+                )
+            )
+        ]
+
+    def _normalize_function_call_types(messages):
+        """Normalize function_call/function_call_output/openapi_call/openapi_call_output to tool_call/tool_result."""
+        if not isinstance(messages, list):
+            return messages
+        for msg in messages:
+            if not isinstance(msg, dict) or not isinstance(msg.get("content"), list):
+                continue
+            for item in msg["content"]:
+                if not isinstance(item, dict):
+                    continue
+                t = item.get("type")
+                if t == "function_call":
+                    item["type"] = "tool_call"
+                elif t == "function_call_output":
+                    item["type"] = "tool_result"
+                    if "function_call_output" in item:
+                        item["tool_result"] = item.pop("function_call_output")
+                elif t == "openapi_call":
+                    item["type"] = "tool_call"
+                elif t == "openapi_call_output":
+                    item["type"] = "tool_result"
+                    if "openapi_call_output" in item:
+                        item["tool_result"] = item.pop("openapi_call_output")
+        return messages
+
 
 logger = logging.getLogger(__name__)
 
@@ -101,9 +209,10 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
     .. note::
 
-        To align with our support of a diverse set of models, an output key without the `gpt_` prefix has been added.
-        To maintain backwards compatibility, the old key with the `gpt_` prefix is still be present in the output;
-        however, it is recommended to use the new key moving forward as the old key will be deprecated in the future.
+        The output field "details" has been renamed to "tool_call_accuracy_properties" for clarity.
+
+        The `gpt_` prefix is deprecated. Use `_score` suffix instead.
+
     """
 
     _PROMPTY_FILE = "tool_call_accuracy.prompty"
@@ -118,7 +227,9 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     _TOOL_DEFINITIONS_MISSING_MESSAGE = "Tool definitions for all tool calls must be provided."
     _INVALID_SCORE_MESSAGE = "Tool call accuracy score must be between 1 and 5."
 
-    _LLM_SCORE_KEY = "tool_calls_success_level"
+    _LLM_SCORE_KEY = "score"
+
+    _validator: ValidatorInterface
 
     id = "azureai://built-in/evaluators/tool_call_accuracy"
     """Evaluator identifier, experimental and to be used only with evaluation in cloud."""
@@ -139,12 +250,21 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
-        self.threshold = threshold
+        threshold_value = kwargs.pop("threshold", threshold)
+        self.threshold = threshold_value
+
+        # Initialize input validator
+        self._validator = ToolCallsValidator(
+            error_target=ErrorTarget.TOOL_CALL_ACCURACY_EVALUATOR,
+            check_for_unsupported_tools=False,
+        )
+
         super().__init__(
             model_config=model_config,
             prompty_file=prompty_path,
             result_key=self._RESULT_KEY,
             credential=credential,
+            threshold=threshold,
             **kwargs,
         )
 
@@ -215,23 +335,30 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 tool_calls = parsed_tool_calls
 
         if not tool_calls:
-            return {"error_message": self._NO_TOOL_CALLS_MESSAGE}
+            # If no tool calls provided and response is string, use response string as tool calls as is
+            if response and isinstance(response, str):
+                tool_calls = response
+            else:
+                return {"error_message": self._NO_TOOL_CALLS_MESSAGE}
 
-        if not isinstance(tool_calls, list):
+        if not isinstance(tool_calls, list) and not isinstance(tool_calls, str):
             tool_calls = [tool_calls]
-        if not isinstance(tool_definitions, list):
+        if not isinstance(tool_definitions, list) and not isinstance(tool_definitions, str):
             tool_definitions = [tool_definitions] if tool_definitions else []
 
-        try:
-            needed_tool_definitions = self._extract_needed_tool_definitions(tool_calls, tool_definitions)
-        except EvaluationException:
-            # Check if this is because no tool definitions were provided at all
-            if len(tool_definitions) == 0:
-                return {"error_message": self._NO_TOOL_DEFINITIONS_MESSAGE}
-            else:
-                return {"error_message": self._TOOL_DEFINITIONS_MISSING_MESSAGE}
+        if isinstance(tool_calls, str) or isinstance(tool_definitions, str):
+            needed_tool_definitions = tool_definitions
+        else:
+            try:
+                needed_tool_definitions = self._extract_needed_tool_definitions(tool_calls, tool_definitions)
+            except EvaluationException:
+                # Check if this is because no tool definitions were provided at all
+                if len(tool_definitions) == 0:
+                    return {"error_message": self._NO_TOOL_DEFINITIONS_MESSAGE}
+                else:
+                    return {"error_message": self._TOOL_DEFINITIONS_MISSING_MESSAGE}
 
-        if len(needed_tool_definitions) == 0:
+        if not needed_tool_definitions:
             return {"error_message": self._NO_TOOL_DEFINITIONS_MESSAGE}
 
         return {
@@ -251,10 +378,30 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: The evaluation result.
         :rtype: Dict
         """
+        if eval_input.get("query") is None:
+            raise EvaluationException(
+                message=(
+                    "Query is a required input to the Tool Call Accuracy evaluator."
+                ),
+                internal_message=(
+                    "Query is a required input to the Tool Call Accuracy evaluator."
+                ),
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=ErrorTarget.TOOL_CALL_ACCURACY_EVALUATOR,
+            )
+
         # Single LLM call for all tool calls
-        llm_output = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
+        prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
+        llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
 
         if isinstance(llm_output, dict):
+            # Handle skipped status from LLM
+            llm_status = llm_output.get("status", "completed")
+            if llm_status == "skipped":
+                reason = llm_output.get("reason", "")
+                return self._return_not_applicable_result(reason, self._threshold)
+
             score = llm_output.get(self._LLM_SCORE_KEY, None)
             if not score or not check_score_is_valid(
                 score,
@@ -271,21 +418,36 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 )
 
             # Format the output
-            reason = llm_output.get("chain_of_thought", "")
+            reason = llm_output.get("reason", "")
             score = float(score)
-            score_result = "pass" if score >= self.threshold else "fail"
+            score_result = "pass" if score >= self._threshold else "fail"
+            llm_properties = llm_output.get("properties", {}) or {}
+            llm_properties.update(
+                {
+                    "prompt_tokens": prompty_output_dict.get("input_token_count", 0),
+                    "completion_tokens": prompty_output_dict.get("output_token_count", 0),
+                    "total_tokens": prompty_output_dict.get("total_token_count", 0),
+                    "finish_reason": prompty_output_dict.get("finish_reason", ""),
+                    "model": prompty_output_dict.get("model_id", ""),
+                    "sample_input": prompty_output_dict.get("sample_input", ""),
+                    "sample_output": prompty_output_dict.get("sample_output", ""),
+                }
+            )
             response_dict = {
                 self._result_key: score,
+                f"{self._result_key}_score": score,
                 f"{self._result_key}_result": score_result,
-                f"{self._result_key}_threshold": self.threshold,
+                f"{self._result_key}_passed": score_result == "pass",
                 f"{self._result_key}_reason": reason,
-                "details": llm_output.get("details", {}),
+                f"{self._result_key}_status": "completed",
+                f"{self._result_key}_threshold": self._threshold,
+                f"{self._result_key}_properties": llm_properties,
             }
             return response_dict
 
         else:
             raise EvaluationException(
-                message="Tool call accuracy evaluator returned invalid output.",
+                message="Evaluator returned invalid output.",
                 blame=ErrorBlame.SYSTEM_ERROR,
                 category=ErrorCategory.FAILED_EXECUTION,
                 target=ErrorTarget.TOOL_CALL_ACCURACY_EVALUATOR,
@@ -299,31 +461,50 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: The evaluation result.
         :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
         """
+        # Validate input before processing
+        self._validator.validate_eval_input(kwargs)
+
+        response = kwargs.get("response")
+        if _is_intermediate_response(response):
+            return self._return_not_applicable_result(
+                "Intermediate response. Please provide the agent's final response for evaluation.",
+                self._threshold,
+            )
+        if "response" in kwargs:
+            kwargs["response"] = _preprocess_messages(kwargs["response"])
+        if "query" in kwargs:
+            kwargs["query"] = _preprocess_messages(kwargs["query"])
         # Convert inputs into list of evaluable inputs.
         eval_input = self._convert_kwargs_to_eval_input(**kwargs)
         if isinstance(eval_input, dict) and eval_input.get("error_message"):
             # If there is an error message, return not applicable result
-            return self._not_applicable_result(eval_input.get("error_message"))
+            return self._return_not_applicable_result(eval_input.get("error_message"), self._threshold)
         # Do the evaluation
         result = await self._do_eval(eval_input)
         # Return the result
         return result
 
-    def _not_applicable_result(self, error_message):
+    def _return_not_applicable_result(
+        self, error_message: str, threshold: Union[int, float]
+    ) -> Dict[str, Union[str, float, Dict, None]]:
         """Return a result indicating that the tool call is not applicable for evaluation.
 
-        :param eval_input: The input to the evaluator.
-        :type eval_input: Dict
+        :param error_message: The error message indicating why the evaluation is not applicable.
+        :type error_message: str
+        :param threshold: The threshold value for the evaluation.
+        :type threshold: Union[int, float]
         :return: A dictionary containing the result of the evaluation.
-        :rtype: Dict[str, Union[str, float]]
+        :rtype: Dict[str, Union[str, float, None]]
         """
-        # If no tool calls were made or tool call type is not supported, return not applicable result
         return {
-            self._result_key: self._NOT_APPLICABLE_RESULT,
-            f"{self._result_key}_result": "pass",
-            f"{self._result_key}_threshold": self.threshold,
-            f"{self._result_key}_reason": error_message,
-            "details": {},
+            f"{self._result_key}": None,
+            f"{self._result_key}_score": None,
+            f"{self._result_key}_passed": None,
+            f"{self._result_key}_result": "not_applicable",
+            f"{self._result_key}_reason": f"Not applicable: {error_message}",
+            f"{self._result_key}_status": "skipped",
+            f"{self._result_key}_threshold": threshold,
+            f"{self._result_key}_properties": None,
         }
 
     def _extract_needed_tool_definitions(self, tool_calls, tool_definitions):
@@ -337,14 +518,6 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         built_in_definitions = _get_needed_built_in_definitions(tool_calls)
         needed_tool_definitions.extend(built_in_definitions)
 
-        # OpenAPI tool is a collection of functions, so we need to expand it
-        tool_definitions_expanded = list(
-            chain.from_iterable(
-                tool.get("functions", []) if tool.get("type") == "openapi" else [tool]
-                for tool in needed_tool_definitions
-            )
-        )
-
         # Validate that all tool calls have corresponding definitions
         for tool_call in tool_calls:
             if isinstance(tool_call, dict):
@@ -356,10 +529,9 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                         # This is a built-in tool from converter, already handled above
                         continue
                     elif tool_name:
-                        # This is a regular function tool from converter
+                        # This is a regular function tool from converter or built-in tool from agent v2
                         tool_definition_exists = any(
-                            tool.get("name") == tool_name and tool.get("type", "function") == "function"
-                            for tool in tool_definitions_expanded
+                            tool.get("name") == tool_name for tool in needed_tool_definitions
                         )
                         if not tool_definition_exists:
                             raise EvaluationException(

@@ -318,7 +318,7 @@ def update_metadata(
                 need_update = True
 
         # Update system_metadata
-        if update.system_metadata:
+        if update.system_metadata and hasattr(asset, '_system_metadata'):
             updated_system_metadata = copy.deepcopy(asset._system_metadata)
 
             if update.system_metadata.replace is not None:

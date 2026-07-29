@@ -57,7 +57,7 @@ def get_tokens(input_dirs: List[Path],
             if generic_config and isinstance(generic_config.path, AzureBlobstoreAssetPath):
                 add_token_info(generic_config.path, json_info, sas_expiration_hrs)
 
-    with open(json_output_path, 'w') as json_token_file:
+    with open(json_output_path, 'w', encoding='utf-8') as json_token_file:
         json.dump(json_info, json_token_file)
 
 

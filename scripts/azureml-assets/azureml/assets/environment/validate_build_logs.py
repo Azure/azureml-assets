@@ -89,7 +89,7 @@ def validate_build_logs(build_logs_dir):
         build_log_file_path = os.path.join(build_logs_dir, build_log_file_name)
         print(f"Validating {build_log_file_name} for additional vulnerabilities")
 
-        with open(build_log_file_path, "r") as f:
+        with open(build_log_file_path, "r", encoding='utf-8') as f:
             build_log_content = f.read()
             error_count += validate_py_version(build_log_file_name, build_log_content)
             error_count += validate_ubuntu_version(build_log_file_name, build_log_content)

@@ -1,0 +1,5 @@
+type: DataFrameDirectory
+extension: {}
+format: JSONL
+data: tau2_telecom.jsonl
+schema: schema/_schema.json

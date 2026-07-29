@@ -1,41 +1,424 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-
 import os
-import math
 import logging
-from typing import Dict, Union, List, Optional
+from enum import Enum
+from typing import Any, Dict, List, Optional, Union, Tuple
 
 from typing_extensions import overload, override
 
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
+from azure.ai.evaluation._common._experimental import experimental
+from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
 from azure.ai.evaluation._common.utils import (
+    construct_prompty_model_config,
+    validate_model_config,
     reformat_conversation_history,
     reformat_agent_response,
-    reformat_tool_definitions
+    reformat_tool_definitions,
 )
-from azure.ai.evaluation._common._experimental import experimental
+from azure.ai.evaluation._evaluators._common._validators import (
+    ValidatorInterface,
+    ConversationValidator,
+    ToolDefinitionsValidator,
+)
+
+# ---------------------------------------------------------------------------
+# Imports target azure-ai-evaluation >= 1.18.1. Each ``except ImportError``
+# branch below inlines the corresponding azure-ai-evaluation 1.18.1
+# implementation so the evaluator also runs on azure-ai-evaluation 1.17.x,
+# which predates these symbols. The 1.17.x compatibility branches are kept only
+# for backward compatibility and can be removed once 1.17.x is no longer
+# supported.
+# ---------------------------------------------------------------------------
+
+try:  # azure-ai-evaluation >= 1.18.1
+    from azure.ai.evaluation._common.utils import _is_intermediate_response, _preprocess_messages
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
+    from azure.ai.evaluation._evaluators._common._base_prompty_eval import (
+        _is_intermediate_response,
+        _preprocess_messages,
+    )
+
+# Re-exported so the module keeps exposing the message-preprocessing helpers used
+# by the test suite; they are invoked indirectly through _preprocess_messages.
+try:  # azure-ai-evaluation >= 1.18.1
+    from azure.ai.evaluation._common.utils import (  # noqa: F401
+        _drop_mcp_approval_messages,
+        _normalize_function_call_types,
+    )
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
+    from azure.ai.evaluation._evaluators._common._base_prompty_eval import (  # noqa: F401
+        _drop_mcp_approval_messages,
+        _normalize_function_call_types,
+    )
+
+try:  # azure-ai-evaluation >= 1.18.1
+    from azure.ai.evaluation._evaluators._common._validators import MessageRole
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
+    # azure-ai-evaluation 1.18.1 MessageRole; the 1.17.x SDK enum omits DEVELOPER,
+    # which serialize_messages below relies on.
+    class MessageRole(str, Enum):
+        """Valid message roles in conversations."""
+
+        USER = "user"
+        ASSISTANT = "assistant"
+        SYSTEM = "system"
+        TOOL = "tool"
+        DEVELOPER = "developer"
+
+try:  # azure-ai-evaluation >= 1.18.1
+    from azure.ai.evaluation._common.constants import EvaluationLevel
+    from azure.ai.evaluation._common.utils import (
+        _resolve_evaluation_level,
+        _wrap_string_messages,
+        _merge_query_response_messages,
+        _split_messages_at_latest_user,
+        serialize_messages,
+    )
+    from azure.ai.evaluation._evaluators._common._validators import MessagesOrQueryResponseInputValidator
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
+    # Bodies below are copied from azure-ai-evaluation 1.18.1 (the earliest release
+    # that ships these symbols). The only change is that serialize_messages uses the
+    # module-level MessageRole above so the DEVELOPER role stays available on 1.17.x.
+    from azure.ai.evaluation._common.utils import (
+        _extract_text_from_content,
+        _get_agent_response,
+        _pretty_format_conversation_history,
+    )
+
+    class EvaluationLevel(str, Enum):
+        """Supported evaluation levels for multi-turn evaluators.
+
+        - ``CONVERSATION``: Force conversation-level evaluation using the multi-turn path.
+        - ``TURN``: Force turn-level evaluation using the single-turn query/response path.
+        """
+
+        CONVERSATION = "conversation"
+        TURN = "turn"
+
+    def _merge_query_response_messages(query: List[dict], response: List[dict]) -> List[dict]:
+        """Merge query and response message lists into a single conversation.
+
+        :param query: The query messages.
+        :type query: List[dict]
+        :param response: The response messages.
+        :type response: List[dict]
+        :return: The merged conversation messages.
+        :rtype: List[dict]
+        """
+        return [*query, *response]
+
+    def _split_messages_at_latest_user(messages: List[dict]) -> Tuple[List[dict], List[dict]]:
+        """Split messages into query/response slices at the latest user turn.
+
+        :param messages: The conversation messages.
+        :type messages: List[dict]
+        :return: A tuple of (query_messages, response_messages).
+        :rtype: Tuple[List[dict], List[dict]]
+        """
+        latest_user_index = max(
+            (i for i, message in enumerate(messages) if message.get("role") == "user"),
+            default=-1,
+        )
+        if latest_user_index == -1:
+            raise ValueError("messages must contain at least one message with role 'user'.")
+        return messages[: latest_user_index + 1], messages[latest_user_index + 1:]
+
+    def _wrap_string_messages(query: str, response: str) -> Tuple[List[dict], List[dict]]:
+        """Wrap string query/response into separate message lists.
+
+        :param query: The query string.
+        :type query: str
+        :param response: The response string.
+        :type response: str
+        :return: A tuple of (query_messages, response_messages).
+        :rtype: Tuple[List[dict], List[dict]]
+        """
+        return (
+            [{"role": "user", "content": [{"type": "text", "text": query}]}],
+            [{"role": "assistant", "content": [{"type": "text", "text": response}]}],
+        )
+
+    def _resolve_evaluation_level(
+        evaluation_level: Optional[Union[EvaluationLevel, str]],
+        error_target: ErrorTarget,
+    ) -> Optional[EvaluationLevel]:
+        """Validate and normalize the evaluation_level parameter.
+
+        :param evaluation_level: The evaluation level to resolve.
+        :type evaluation_level: Optional[Union[EvaluationLevel, str]]
+        :param error_target: The error target for exceptions.
+        :type error_target: ErrorTarget
+        :return: The resolved EvaluationLevel or None for auto-detect.
+        :rtype: Optional[EvaluationLevel]
+        """
+        valid = [level.value for level in EvaluationLevel]
+        if evaluation_level is None or evaluation_level == "":
+            return None
+        if isinstance(evaluation_level, EvaluationLevel):
+            return evaluation_level
+        if isinstance(evaluation_level, str):
+            try:
+                return EvaluationLevel(evaluation_level)
+            except ValueError as exc:
+                raise EvaluationException(
+                    message=(f"Invalid evaluation_level '{evaluation_level}'. " f"Must be one of: {valid}."),
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=error_target,
+                ) from exc
+        raise EvaluationException(
+            message=(f"Invalid evaluation_level '{evaluation_level}'. " f"Must be one of: {valid}."),
+            blame=ErrorBlame.USER_ERROR,
+            category=ErrorCategory.INVALID_VALUE,
+            target=error_target,
+        )
+
+    def serialize_messages(messages):
+        """Serialize a list of chat messages into a labeled text transcript for multi-turn prompts.
+
+        **Input format:** List of message dicts, each with ``"role"`` (``user``, ``assistant``, ``tool``,
+        ``system``, ``developer``) and ``"content"`` (string or list of content-block dicts like
+        ``{"type": "text", "text": "..."}``). Tool messages may include ``tool_call_id`` and content
+        blocks of type ``tool_result``/``tool_call``.
+
+        **Output format:** Plain-text transcript with labeled turns::
+
+            User turn 1:
+              <user text>
+
+            Agent turn 1:
+              <assistant text>
+              [TOOL_CALL] func_name({"arg": "val"})
+              [TOOL_RESULT] <result>
+
+            User turn 2:
+              <user text>
+            ...
+
+        System/developer messages are included as a system preamble. Consecutive messages of the same
+        role are grouped into a single turn. Assistant string content is auto-normalized to content-block
+        format for consistent formatting.
+
+        :param messages: Chat messages with role and content.
+        :type messages: List[dict]
+        :return: Formatted text transcript.
+        :rtype: str
+        """
+        if not messages:
+            return ""
+
+        # Uses the module-level MessageRole above (the 1.17.x SDK enum omits DEVELOPER).
+        all_user_queries = []
+        all_agent_responses = []
+        cur_user_query = []
+        cur_agent_response = []
+        system_message = None
+
+        for msg in messages:
+            if not isinstance(msg, dict):
+                continue
+            role = msg.get("role")
+            if not role:
+                continue
+
+            # _get_agent_response expects content as list of dicts, not a plain string
+            normalized = msg
+            if role == MessageRole.ASSISTANT and isinstance(msg.get("content"), str):
+                normalized = {**msg, "content": [{"type": "text", "text": msg["content"]}]}
+
+            if role in (MessageRole.SYSTEM, MessageRole.DEVELOPER):
+                content = msg.get("content", "")
+                if isinstance(content, list):
+                    system_message = "\n".join(_extract_text_from_content(content))
+                else:
+                    system_message = content
+
+            elif role == MessageRole.USER and "content" in msg:
+                if cur_agent_response:
+                    formatted = _get_agent_response(cur_agent_response, include_tool_messages=True)
+                    all_agent_responses.append([formatted])
+                    cur_agent_response = []
+                content = msg["content"]
+                if isinstance(content, str):
+                    text_in_msg = [content]
+                else:
+                    text_in_msg = _extract_text_from_content(content)
+                if text_in_msg:
+                    cur_user_query.append(text_in_msg)
+
+            elif role in (MessageRole.ASSISTANT, MessageRole.TOOL):
+                if cur_user_query:
+                    all_user_queries.append(cur_user_query)
+                    cur_user_query = []
+                cur_agent_response.append(normalized)
+
+        # Flush any remaining buffered turn
+        if cur_user_query:
+            all_user_queries.append(cur_user_query)
+        if cur_agent_response:
+            formatted = _get_agent_response(cur_agent_response, include_tool_messages=True)
+            all_agent_responses.append([formatted])
+
+        conversation_history: Dict = {
+            "user_queries": all_user_queries,
+            "agent_responses": all_agent_responses[: len(all_user_queries) - 1] if len(all_user_queries) > 0 else [],
+        }
+        if system_message:
+            conversation_history["system_message"] = system_message
+
+        result = _pretty_format_conversation_history(conversation_history)
+
+        # Append any trailing agent turn (the final response after the last user query)
+        start = max(len(all_user_queries) - 1, 0)
+        for i, agent_response in enumerate(all_agent_responses[start:], start=start):
+            result += f"Agent turn {i + 1}:\n"
+            for msg_text in agent_response:
+                if isinstance(msg_text, list):
+                    for submsg in msg_text:
+                        result += "  " + "\n  ".join(submsg.split("\n")) + "\n"
+                else:
+                    result += "  " + "\n  ".join(msg_text.split("\n")) + "\n"
+            result += "\n"
+
+        return result.rstrip("\n")
+
+    class MessagesOrQueryResponseInputValidator(ToolDefinitionsValidator):
+        """Validator that supports both single-turn (query/response) and multi-turn (messages) inputs.
+
+        A single implementation serves all evaluators via a behavior flag:
+          - ``enforce_tool_definitions`` (default False): validate ``tool_definitions`` in both the
+            messages path and the query/response path. Set True for evaluators that require
+            tool definitions.
+        """
+
+        enforce_tool_definitions: bool = False
+
+        def __init__(
+            self,
+            error_target: ErrorTarget,
+            requires_query: bool = True,
+            optional_tool_definitions: bool = True,
+            check_for_unsupported_tools: bool = False,
+            *,
+            enforce_tool_definitions: bool = False,
+        ):
+            """Initialize MessagesOrQueryResponseInputValidator."""
+            super().__init__(error_target, requires_query, optional_tool_definitions, check_for_unsupported_tools)
+            self.enforce_tool_definitions = enforce_tool_definitions
+
+        @override
+        def validate_eval_input(self, eval_input: Dict[str, Any]) -> bool:
+            """Validate evaluation input, supporting messages as an alternative to query/response."""
+            # Multi-turn path (messages list)
+            messages = eval_input.get("messages")
+            if messages is not None:
+                if not isinstance(messages, list):
+                    raise EvaluationException(
+                        message="messages must be provided as a list of message dictionaries.",
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=self.error_target,
+                    )
+                if len(messages) == 0:
+                    raise EvaluationException(
+                        message="messages list must not be empty.",
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=self.error_target,
+                    )
+
+                # Per-message structural checks
+                valid_roles = {role.value for role in MessageRole}
+                roles_present: set = set()
+                for index, message in enumerate(messages):
+                    if not isinstance(message, dict):
+                        raise EvaluationException(
+                            message=(
+                                "Each item in 'messages' must be a dictionary, "
+                                f"but item at index {index} is {type(message).__name__}."
+                            ),
+                            blame=ErrorBlame.USER_ERROR,
+                            category=ErrorCategory.INVALID_VALUE,
+                            target=self.error_target,
+                        )
+                    role = message.get("role")
+                    if role is None:
+                        raise EvaluationException(
+                            message=(
+                                "Each message must contain a 'role' key, "
+                                f"but message at index {index} is missing it."
+                            ),
+                            blame=ErrorBlame.USER_ERROR,
+                            category=ErrorCategory.INVALID_VALUE,
+                            target=self.error_target,
+                        )
+                    if role not in valid_roles:
+                        raise EvaluationException(
+                            message=(
+                                f"Invalid role '{role}' at message index {index}. "
+                                f"Must be one of: {sorted(valid_roles)}."
+                            ),
+                            blame=ErrorBlame.USER_ERROR,
+                            category=ErrorCategory.INVALID_VALUE,
+                            target=self.error_target,
+                        )
+                    roles_present.add(role)
+
+                # Conversation-level checks
+                if MessageRole.USER.value not in roles_present:
+                    raise EvaluationException(
+                        message="messages must contain at least one message with role 'user'.",
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=self.error_target,
+                    )
+                if MessageRole.ASSISTANT.value not in roles_present:
+                    raise EvaluationException(
+                        message="messages must contain at least one message with role 'assistant'.",
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=self.error_target,
+                    )
+
+                if self.enforce_tool_definitions:
+                    tool_definitions = eval_input.get("tool_definitions")
+                    tool_definitions_validation_exception = self._validate_tool_definitions(tool_definitions)
+                    if tool_definitions_validation_exception:
+                        raise tool_definitions_validation_exception
+                return True
+
+            if self.enforce_tool_definitions:
+                return super().validate_eval_input(eval_input)
+            return ConversationValidator.validate_eval_input(self, eval_input)
+
+
+if os.getenv("AI_EVALS_USE_PF_PROMPTY", "false").lower() == "true":
+    from promptflow.core._flow import AsyncPrompty
+else:
+    from azure.ai.evaluation._legacy.prompty import AsyncPrompty
+
 
 logger = logging.getLogger(__name__)
 
 
 @experimental
 class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
-    """The Task Adherence evaluator assesses how well an AI response follows the assigned task based on criteria.
+    """The Task Adherence evaluator assesses whether an AI assistant's actions fully align with the user's intent.
 
-        - Alignment with instructions and definitions
-        - Accuracy and clarity of the response
-        - Proper use of provided tool definitions
+    The evaluator fully achieves the intended goal across three dimensions:
 
-    Scoring is based on five levels:
-    1. Fully Inadherent - Response completely ignores instructions.
-    2. Barely Adherent - Partial alignment with critical gaps.
-    3. Moderately Adherent - Meets core requirements but lacks precision.
-    4. Mostly Adherent - Clear and accurate with minor issues.
-    5. Fully Adherent - Flawless adherence to instructions.
+        - Goal adherence: Did the assistant achieve the user's objective within scope and constraints?
+        - Rule adherence: Did the assistant respect safety, privacy, authorization, and presentation contracts?
+        - Procedural adherence: Did the assistant follow required workflows, tool use, sequencing, and verification?
 
-    The evaluation includes a step-by-step reasoning process, a brief explanation, and a final integer score.
+    The evaluator returns a boolean flag indicating whether there was any material failure in any dimension.
+    A material failure is an issue that makes the output unusable, creates verifiable risk, violates an explicit
+    constraint, or is a critical issue as defined in the evaluation dimensions.
+
+    The evaluation includes step-by-step reasoning and a flagged boolean result.
 
 
     :param model_config: Configuration for the Azure OpenAI model.
@@ -43,6 +426,7 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         ~azure.ai.evaluation.OpenAIModelConfiguration]
 
     .. admonition:: Example:
+
         .. literalinclude:: ../samples/evaluation_samples_evaluate.py
             :start-after: [START task_adherence_evaluator]
             :end-before: [END task_adherence_evaluator]
@@ -63,37 +447,71 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     """
 
     _PROMPTY_FILE = "task_adherence.prompty"
+    _MULTI_TURN_PROMPTY_FILE = "task_adherence_multi_turn.prompty"
     _RESULT_KEY = "task_adherence"
-    _OPTIONAL_PARAMS = ["tool_definitions"]
+    _OPTIONAL_PARAMS = ["tool_definitions", "messages"]
 
-    _DEFAULT_TASK_ADHERENCE_SCORE = 3
+    _DEFAULT_TASK_ADHERENCE_SCORE = 0
+
+    _validator: ValidatorInterface
+    _evaluation_level: Optional[EvaluationLevel]
+    _multi_turn_flow: AsyncPrompty
 
     id = "azureai://built-in/evaluators/task_adherence"
     """Evaluator identifier, experimental and to be used only with evaluation in cloud."""
 
     @override
-    def __init__(self, model_config, *, threshold=_DEFAULT_TASK_ADHERENCE_SCORE, credential=None, **kwargs):
-        """Initialize the Task Adherence evaluator.
+    def __init__(
+        self,
+        model_config,
+        *,
+        threshold=_DEFAULT_TASK_ADHERENCE_SCORE,
+        credential=None,
+        evaluation_level=None,
+        **kwargs,
+    ):
+        """Initialize the TaskAdherenceEvaluator.
 
-        :param model_config: Configuration for the Azure OpenAI model.
-        :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
-            ~azure.ai.evaluation.OpenAIModelConfiguration]
-        :param threshold: The threshold for evaluation.
-        :type threshold: int
-        :param credential: The credential for authentication.
-        :type credential: Optional[Any]
-        :param kwargs: Additional keyword arguments.
-        :type kwargs: Any
+        :param model_config: Configuration for the model
+        :param threshold: Threshold for evaluation scoring
+        :param credential: Authentication credential
         """
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
-        self.threshold = threshold
+        threshold_value = kwargs.pop("threshold", threshold)
+        higher_is_better_value = kwargs.pop("_higher_is_better", True)
+        self.threshold = threshold_value  # to be removed in favor of _threshold
+
+        self._evaluation_level = _resolve_evaluation_level(
+            evaluation_level, ErrorTarget.TASK_ADHERENCE_EVALUATOR
+        )
+
+        self._validator = MessagesOrQueryResponseInputValidator(
+            error_target=ErrorTarget.TASK_ADHERENCE_EVALUATOR,
+            enforce_tool_definitions=True,
+        )
+
         super().__init__(
             model_config=model_config,
             prompty_file=prompty_path,
             result_key=self._RESULT_KEY,
+            threshold=threshold_value,
             credential=credential,
+            _higher_is_better=higher_is_better_value,
             **kwargs,
+        )
+
+        multi_turn_prompty_path = os.path.join(current_dir, self._MULTI_TURN_PROMPTY_FILE)
+        prompty_model_config = construct_prompty_model_config(
+            validate_model_config(model_config),
+            self._DEFAULT_OPEN_API_VERSION,
+            f"azure-ai-evaluation (type=evaluator subtype={self.__class__.__name__})",
+        )
+        self._multi_turn_flow = AsyncPrompty.load(
+            source=multi_turn_prompty_path,
+            model=prompty_model_config,
+            token_credential=credential,
+            is_reasoning_model=self._is_reasoning_model,
         )
 
     @overload
@@ -104,88 +522,76 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         response: Union[str, List[dict]],
         tool_definitions: Optional[Union[dict, List[dict]]] = None,
     ) -> Dict[str, Union[str, float]]:
-        """Evaluate task adherence for a given query, response, and optional tool definitions.
+        """Evaluate task adherence for a given query and response.
 
-        The query and response can be either a string or a list of messages.
+        The query and response must be lists of messages in conversation format.
 
-
-        Example with string inputs and no tools:
-            evaluator = TaskAdherenceEvaluator(model_config)
-            query = "What is the weather today?"
-            response = "The weather is sunny."
-
-            result = evaluator(query=query, response=response)
 
         Example with list of messages:
             evaluator = TaskAdherenceEvaluator(model_config)
             query = [
                 {'role': 'system', 'content': 'You are a friendly and helpful customer service agent.'},
-                {'createdAt': 1700000060, 'role': 'user', 'content': [{'type': 'text',
-                 'text': 'Hi, I need help with the last 2 orders on my account #888. Could you please update me '
-                         'on their status?'}]}
+                {
+                    'createdAt': 1700000060,
+                    'role': 'user',
+                    'content': [
+                        {
+                            'type': 'text',
+                            'text': ('Hi, I need help with the last 2 orders on my account #888. '
+                                   'Could you please update me on their status?')
+                        }
+                    ]
+                }
             ]
             response = [
-                {'createdAt': 1700000070, 'run_id': '0', 'role': 'assistant',
-                 'content': [{'type': 'text', 'text': 'Hello! Let me quickly look up your account details.'}]},
-                {'createdAt': 1700000075, 'run_id': '0', 'role': 'assistant', 'content': [
-                    {'type': 'tool_call', 'tool_call': {'id': 'tool_call_20250310_001', 'type': 'function',
-                     'function': {'name': 'get_orders', 'arguments': {'account_number': '888'}}}}
-                ]},
-                {'createdAt': 1700000080, 'run_id': '0', 'tool_call_id': 'tool_call_20250310_001', 'role': 'tool',
-                 'content': [{'type': 'tool_result',
-                              'tool_result': '[{ "order_id": "123" }, { "order_id": "124" }]'}]},
-                {'createdAt': 1700000085, 'run_id': '0', 'role': 'assistant', 'content': [
-                    {'type': 'text',
-                     'text': 'Thanks for your patience. I see two orders on your account. '
-                             'Let me fetch the details for both.'}
-                ]},
-                {'createdAt': 1700000090, 'run_id': '0', 'role': 'assistant', 'content': [
-                    {'type': 'tool_call', 'tool_call': {'id': 'tool_call_20250310_002', 'type': 'function',
-                     'function': {'name': 'get_order', 'arguments': {'order_id': '123'}}}},
-                    {'type': 'tool_call', 'tool_call': {'id': 'tool_call_20250310_003', 'type': 'function',
-                     'function': {'name': 'get_order', 'arguments': {'order_id': '124'}}}}
-                ]},
-                {'createdAt': 1700000095, 'run_id': '0', 'tool_call_id': 'tool_call_20250310_002', 'role': 'tool',
-                 'content': [{'type': 'tool_result',
-                              'tool_result': '{ "order": { "id": "123", "status": "shipped", '
-                                             '"delivery_date": "2025-03-15" } }'}]},
-                {'createdAt': 1700000100, 'run_id': '0', 'tool_call_id': 'tool_call_20250310_003', 'role': 'tool',
-                 'content': [{'type': 'tool_result',
-                              'tool_result': '{ "order": { "id": "124", "status": "delayed", '
-                                             '"expected_delivery": "2025-03-20" } }'}]},
-                {'createdAt': 1700000105, 'run_id': '0', 'role': 'assistant', 'content': [{'type': 'text',
-                 'text': 'The order with ID 123 has been shipped and is expected to be delivered on March 15, 2025. '
-                         'However, the order with ID 124 is delayed and should now arrive by March 20, 2025. '
-                         'Is there anything else I can help you with?'}]}
-            ]
-            tool_definitions = [
-                {'name': 'get_orders', 'description': 'Get the list of orders for a given account number.',
-                 'parameters': {'type': 'object', 'properties': {'account_number': {'type': 'string',
-                 'description': 'The account number to get the orders for.'}}}},
-                {'name': 'get_order', 'description': 'Get the details of a specific order.',
-                 'parameters': {'type': 'object', 'properties': {'order_id': {'type': 'string',
-                 'description': 'The order ID to get the details for.'}}}},
-                {'name': 'initiate_return', 'description': 'Initiate the return process for an order.',
-                 'parameters': {'type': 'object', 'properties': {'order_id': {'type': 'string',
-                 'description': 'The order ID for the return process.'}}}},
-                {'name': 'update_shipping_address', 'description': 'Update the shipping address for a given account.',
-                 'parameters': {'type': 'object', 'properties': {'account_number': {'type': 'string',
-                 'description': 'The account number to update.'}, 'new_address': {'type': 'string',
-                 'description': 'The new shipping address.'}}}}
+                {
+                    'createdAt': 1700000070,
+                    'run_id': '0',
+                    'role': 'assistant',
+                    'content': [{'type': 'text', 'text': 'Hello! Let me quickly look up your account details.'}]
+                },
+                {
+                    'createdAt': 1700000075,
+                    'run_id': '0',
+                    'role': 'assistant',
+                    'content': [
+                        {
+                            'type': 'tool_call',
+                            'tool_call': {
+                                'id': 'tool_call_20250310_001',
+                                'type': 'function',
+                                'function': {
+                                    'name': 'get_orders',
+                                    'arguments': {'account_number': '888'}
+                                }
+                            }
+                        }
+                    ]
+                },
+                # ... additional response messages would continue here ...
             ]
 
-            result = evaluator(query=query, response=response, tool_definitions=tool_definitions)
+            result = evaluator(query=query, response=response)
 
-        :keyword query: The query being evaluated, either a string or a list of messages.
+        :keyword query: The query being evaluated, must be a list of messages
+            including system and user messages.
         :paramtype query: Union[str, List[dict]]
-        :keyword response: The response being evaluated, either a string or a list of messages (full agent
-            response potentially including tool calls)
+        :keyword response: The response being evaluated, must be a list of messages
+            (full agent response including tool calls and results)
         :paramtype response: Union[str, List[dict]]
-        :keyword tool_definitions: An optional list of messages containing the tool definitions the agent is aware of.
-        :paramtype tool_definitions: Optional[Union[dict, List[dict]]]
-        :return: A dictionary with the task adherence evaluation results.
-        :rtype: Dict[str, Union[str, float]]
+        :return: A dictionary with the task adherence evaluation results
+            including flagged (bool) and reasoning (str).
+        :rtype: Dict[str, Union[str, float, bool]]
         """
+
+    @overload
+    def __call__(
+        self,
+        *,
+        messages: List[dict],
+        tool_definitions: Optional[Union[dict, List[dict]]] = None,
+    ) -> Dict[str, Union[str, float]]:
+        """Evaluate task adherence for a full multi-turn conversation."""
 
     @override
     def __call__(  # pylint: disable=docstring-missing-param
@@ -200,19 +606,191 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """
         return super().__call__(*args, **kwargs)
 
+    def _build_result(
+        self,
+        score: Optional[Union[int, float]],
+        result: str,
+        reason: str,
+        properties: Dict[str, Any],
+        *,
+        threshold: Optional[Union[int, float]] = None,
+        prompty_output_dict: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Union[str, int, float, Dict[str, Any], None]]:
+        """Build a standardized task adherence result dictionary."""
+        p = prompty_output_dict if isinstance(prompty_output_dict, dict) else {}
+        resolved_threshold = threshold if threshold is not None else self._threshold
+        properties = dict(properties) if isinstance(properties, dict) else {}
+        token_metadata = self._get_token_metadata(p)
+        properties.update(token_metadata)
+        result_payload = {
+            self._result_key: score,
+            f"{self._result_key}_score": score,
+            f"{self._result_key}_result": result,
+            f"{self._result_key}_threshold": resolved_threshold,
+            f"{self._result_key}_reason": reason,
+            f"{self._result_key}_properties": properties,
+        }
+        # Add top-level token metadata fields for backward compatibility.
+        result_payload.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+        return result_payload
+
+    def _return_not_applicable_result(
+        self, error_message: str, threshold: Union[int, float]
+    ) -> Dict[str, Union[str, float, Dict, None]]:
+        """Return a result indicating that the tool call is not applicable for evaluation.
+
+        :param error_message: The error message indicating why the evaluation is not applicable.
+        :type error_message: str
+        :param threshold: The threshold value for the evaluation.
+        :type threshold: Union[int, float]
+        :return: A dictionary containing the result of the evaluation.
+        :rtype: Dict[str, Union[str, float, None]]
+        """
+        token_metadata = self._get_token_metadata({})
+        result = {
+            f"{self._result_key}": None,
+            f"{self._result_key}_score": None,
+            f"{self._result_key}_passed": None,
+            f"{self._result_key}_result": "not_applicable",
+            f"{self._result_key}_reason": f"Not applicable: {error_message}",
+            f"{self._result_key}_status": "skipped",
+            f"{self._result_key}_threshold": threshold,
+            f"{self._result_key}_properties": None,
+        }
+        # Add top-level token metadata fields for backward compatibility.
+        result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+        return result
+
+    @staticmethod
+    def _get_token_metadata(prompty_output: Dict) -> Dict:
+        """Extract token usage and model metadata from the prompty output dict."""
+        return {
+            "prompt_tokens": prompty_output.get("input_token_count", 0),
+            "completion_tokens": prompty_output.get("output_token_count", 0),
+            "total_tokens": prompty_output.get("total_token_count", 0),
+            "finish_reason": prompty_output.get("finish_reason", ""),
+            "model": prompty_output.get("model_id", ""),
+            "sample_input": prompty_output.get("sample_input", ""),
+            "sample_output": prompty_output.get("sample_output", ""),
+        }
+
+    def _should_use_conversation_level(self, eval_input: Dict[str, Any]) -> bool:
+        """Determine whether to use conversation-level evaluation."""
+        if self._evaluation_level == EvaluationLevel.CONVERSATION:
+            return True
+        if self._evaluation_level == EvaluationLevel.TURN:
+            return False
+        return eval_input.get("messages") is not None
+
     @override
-    async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:  # type: ignore[override]
+    async def _real_call(self, **kwargs):
+        """Perform asynchronous call where real end-to-end evaluation logic is executed.
+
+        :keyword kwargs: The inputs to evaluate.
+        :type kwargs: Dict
+        :return: The evaluation result.
+        :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
+        """
+        if self._evaluation_level == EvaluationLevel.CONVERSATION and not kwargs.get("messages"):
+            query = kwargs.get("query")
+            response = kwargs.get("response")
+            if isinstance(query, str) and isinstance(response, str) and query and response:
+                query, response = _wrap_string_messages(query, response)
+            if isinstance(query, list) and isinstance(response, list):
+                kwargs["messages"] = _merge_query_response_messages(query, response)
+        elif self._evaluation_level == EvaluationLevel.TURN and kwargs.get("messages"):
+            if any(message.get("role") == MessageRole.USER for message in kwargs["messages"]):
+                query_messages, response_messages = _split_messages_at_latest_user(kwargs["messages"])
+                kwargs["query"] = query_messages
+                kwargs["response"] = response_messages
+                kwargs.pop("messages", None)
+
+        self._validator.validate_eval_input(kwargs)
+
+        return await self._the_super_real_call(**kwargs)
+
+    async def _the_super_real_call(self, **kwargs):
+        """Perform the asynchronous call where real end-to-end evaluation logic runs.
+
+        :keyword kwargs: The inputs to evaluate.
+        :type kwargs: Dict
+        :return: The evaluation result.
+        :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
+        """
+        # Convert inputs into list of evaluable inputs.
+        try:
+            eval_input_list = self._convert_kwargs_to_eval_input(**kwargs)
+        except Exception as e:
+            logger.error(f"Error converting kwargs to eval_input_list: {e}")
+            raise e
+        per_turn_results = []
+        # Evaluate all inputs.
+        for eval_input in eval_input_list:
+            result = await self._do_eval(eval_input)
+            # logic to determine threshold pass/fail
+            # if it wasn't computed in _do_eval
+            try:
+                keys = list(result.keys())
+                contains_result_key = any(key.endswith("_result") for key in keys)
+                contains_threshold_key = any(key.endswith("_threshold") for key in keys)
+                if not contains_result_key or not contains_threshold_key:
+                    for key in keys:
+                        if key.endswith("_score"):
+                            score_value = result[key]
+                            base_key = key[:-6]  # Remove "_score" suffix
+                            result_key = f"{base_key}_result"
+                            threshold_key = f"{base_key}_threshold"
+                            threshold_value = (
+                                self._threshold.get(base_key) if isinstance(self._threshold, dict) else self._threshold
+                            )
+                            if not isinstance(threshold_value, (int, float)):
+                                raise EvaluationException(
+                                    "Threshold value must be a number.",
+                                    internal_message=str(threshold_value),
+                                    target=ErrorTarget.EVALUATE,
+                                    category=ErrorCategory.INVALID_VALUE,
+                                    blame=ErrorBlame.USER_ERROR,
+                                )
+
+                            if not contains_threshold_key:
+                                result[threshold_key] = threshold_value
+
+                            if not contains_result_key:
+                                if self._higher_is_better:
+                                    if float(score_value) >= threshold_value:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[True]
+                                    else:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[False]
+                                else:
+                                    if float(score_value) <= threshold_value:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[True]
+                                    else:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[False]
+            except Exception as e:
+                logger.warning(f"Error calculating binary result: {e}")
+            per_turn_results.append(result)
+        # Return results as-is if only one result was produced.
+
+        if len(per_turn_results) == 1:
+            return per_turn_results[0]
+        if len(per_turn_results) == 0:
+            return {}  # TODO raise something?
+        # Otherwise, aggregate results.
+        return self._aggregate_results(per_turn_results=per_turn_results)
+
+    @override
+    async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str, bool]]:  # type: ignore[override]
         """Do Task Adherence evaluation.
 
-        :param eval_input: The input to the evaluator. Expected to contain whatever inputs are needed for
-            the _flow method
+        :param eval_input: The input to the evaluator. Expected to contain whatever
+            inputs are needed for the _flow method
         :type eval_input: Dict
         :return: The evaluation result.
         :rtype: Dict
         """
-        # we override the _do_eval method as we want the output to be a dictionary,
-        # which is a different schema than _base_prompty_eval.py
-        if "query" not in eval_input and "response" not in eval_input:
+        if self._should_use_conversation_level(eval_input):
+            return await self._do_eval_conversation(eval_input)
+        if "query" not in eval_input or "response" not in eval_input:
             raise EvaluationException(
                 message="Both query and response must be provided as input to the Task Adherence evaluator.",
                 internal_message="Both query and response must be provided as input to the Task Adherence evaluator.",
@@ -220,23 +798,122 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 category=ErrorCategory.MISSING_FIELD,
                 target=ErrorTarget.TASK_ADHERENCE_EVALUATOR,
             )
-        eval_input["query"] = reformat_conversation_history(eval_input["query"], logger, include_system_messages=True)
-        eval_input["response"] = reformat_agent_response(eval_input["response"], logger, include_tool_messages=True)
-        if "tool_definitions" in eval_input and eval_input["tool_definitions"] is not None:
-            eval_input["tool_definitions"] = reformat_tool_definitions(eval_input["tool_definitions"], logger)
-        llm_output = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
-        if isinstance(llm_output, dict):
-            score = float(llm_output.get("score", math.nan))
-            score_result = "pass" if score >= self.threshold else "fail"
-            reason = llm_output.get("explanation", "")
-            return {
-                f"{self._result_key}": score,
-                f"{self._result_key}_result": score_result,
-                f"{self._result_key}_threshold": self.threshold,
-                f"{self._result_key}_reason": reason,
-                # Uncomment the following line in the next iteration after UI contracts are validated.
-                # f"{self._result_key}_additional_details": llm_output
-            }
-        if logger:
-            logger.warning("LLM output is not a dictionary, returning NaN for the score.")
-        return {self._result_key: math.nan}
+
+        if _is_intermediate_response(eval_input.get("response")):
+            return self._return_not_applicable_result(
+                "Intermediate response. Please provide the agent's final response for evaluation.",
+                self._threshold,
+            )
+        if isinstance(eval_input.get("response"), list):
+            eval_input["response"] = _preprocess_messages(eval_input["response"])
+        if isinstance(eval_input.get("query"), list):
+            eval_input["query"] = _preprocess_messages(eval_input["query"])
+
+        # Reformat conversation history and extract system message
+        query_messages = reformat_conversation_history(eval_input["query"], logger, include_system_messages=True)
+        system_message = ""
+        user_query = ""
+
+        # Parse query messages to extract system message and user query
+        if isinstance(query_messages, list):
+            for msg in query_messages:
+                if isinstance(msg, dict) and msg.get("role") == "system":
+                    system_message = msg.get("content", "")
+                elif isinstance(msg, dict) and msg.get("role") == "user":
+                    user_query = msg.get("content", "")
+        elif isinstance(query_messages, str):
+            user_query = query_messages
+
+        # Reformat response and separate assistant messages from tool calls
+        response_messages = reformat_agent_response(eval_input["response"], logger, include_tool_messages=True)
+        assistant_response = ""
+        tool_calls = ""
+
+        # Parse response messages to extract assistant response and tool calls
+        if isinstance(response_messages, list):
+            assistant_parts = []
+            tool_parts = []
+            for msg in response_messages:
+                if isinstance(msg, dict):
+                    role = msg.get("role", "")
+                    if role == "assistant":
+                        content = msg.get("content", "")
+                        if isinstance(content, list):
+                            for item in content:
+                                if isinstance(item, dict):
+                                    if item.get("type", None) in ("text", "input_text", "output_text"):
+                                        assistant_parts.append(item.get("text", ""))
+                                    elif item.get("type") == "tool_call":
+                                        tool_parts.append(str(item.get("tool_call", "")))
+                        else:
+                            assistant_parts.append(str(content))
+                    elif role == "tool":
+                        tool_parts.append(str(msg))
+            assistant_response = "\n".join(assistant_parts)
+            tool_calls = "\n".join(tool_parts)
+        elif isinstance(response_messages, str):
+            assistant_response = response_messages
+
+        # Prepare inputs for prompty
+        prompty_input = {
+            "system_message": system_message,
+            "query": user_query,
+            "response": assistant_response,
+            "tool_calls": tool_calls,
+        }
+
+        prompty_input.pop("messages", None)
+        prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **prompty_input)
+        return self._parse_prompty_output(prompty_output_dict)
+
+    async def _do_eval_conversation(self, eval_input: Dict[str, Any]) -> Dict[str, Union[float, str, bool]]:
+        """Evaluate task adherence across a full conversation."""
+        messages = _preprocess_messages(eval_input["messages"])
+        conversation_text = serialize_messages(messages)
+
+        prompty_kwargs: Dict[str, Any] = {"messages": conversation_text}
+        tool_definitions = eval_input.get("tool_definitions")
+        if tool_definitions:
+            prompty_kwargs["tool_definitions"] = reformat_tool_definitions(tool_definitions, logger)
+
+        prompty_output_dict = await self._multi_turn_flow(timeout=self._LLM_CALL_TIMEOUT, **prompty_kwargs)
+        return self._parse_prompty_output(prompty_output_dict)
+
+    def _parse_prompty_output(self, prompty_output_dict: Dict[str, Any]) -> Dict[str, Union[float, str, bool]]:
+        """Parse prompty output into the task adherence result shape."""
+        llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
+
+        if not isinstance(llm_output, dict):
+            raise EvaluationException(
+                message="Evaluator returned invalid output.",
+                blame=ErrorBlame.SYSTEM_ERROR,
+                category=ErrorCategory.FAILED_EXECUTION,
+                target=ErrorTarget.TASK_ADHERENCE_EVALUATOR,
+            )
+
+        # Handle skipped status from LLM
+        llm_status = llm_output.get("status", "completed")
+        if llm_status == "skipped":
+            reason = llm_output.get("reason", "")
+            return self._return_not_applicable_result(reason, self._threshold)
+
+        reasoning = llm_output.get("reason", "")
+        score = float(llm_output.get("score", 0.0))
+        score_result = "pass" if score >= 1.0 else "fail"
+        llm_properties = llm_output.get("properties", {}) or {}
+        token_metadata = self._get_token_metadata(prompty_output_dict)
+        llm_properties.update(token_metadata)
+
+        result = {
+            self._result_key: score,
+            f"{self._result_key}_score": score,
+            f"{self._result_key}_passed": score_result == "pass",
+            f"{self._result_key}_result": score_result,
+            f"{self._result_key}_reason": reasoning,
+            f"{self._result_key}_status": "completed",
+            f"{self._result_key}_threshold": self._threshold,
+            f"{self._result_key}_properties": llm_properties,
+        }
+        # Add top-level token metadata fields for backward compatibility.
+        result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+        return result

@@ -10,12 +10,51 @@ from typing_extensions import overload, override
 
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
+
+# ---------------------------------------------------------------------------
+# Imports target azure-ai-evaluation >= 1.18.1. Each ``except ImportError``
+# branch below inlines the corresponding azure-ai-evaluation 1.18.1
+# implementation so the evaluator also runs on azure-ai-evaluation 1.17.x,
+# which predates these symbols. The 1.17.x compatibility branches are kept only
+# for backward compatibility and can be removed once 1.17.x is no longer
+# supported.
+# ---------------------------------------------------------------------------
+
 from azure.ai.evaluation._common.utils import (
     check_score_is_valid,
     reformat_conversation_history,
-    reformat_agent_response
+    reformat_agent_response,
 )
 from azure.ai.evaluation._common._experimental import experimental
+from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
+
+from azure.ai.evaluation._evaluators._common._validators import (  # noqa: F401
+    ValidatorInterface,
+    ConversationValidator,
+    ToolDefinitionsValidator,
+)
+
+try:  # azure-ai-evaluation >= 1.18.1
+    from azure.ai.evaluation._common.utils import _is_intermediate_response, _preprocess_messages
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
+    from azure.ai.evaluation._evaluators._common._base_prompty_eval import (
+        _is_intermediate_response,
+        _preprocess_messages,
+    )
+
+# Re-exported so the module keeps exposing the message-preprocessing helpers used
+# by the test suite; they are invoked indirectly through _preprocess_messages.
+try:  # azure-ai-evaluation >= 1.18.1
+    from azure.ai.evaluation._common.utils import (  # noqa: F401
+        _drop_mcp_approval_messages,
+        _normalize_function_call_types,
+    )
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
+    from azure.ai.evaluation._evaluators._common._base_prompty_eval import (  # noqa: F401
+        _drop_mcp_approval_messages,
+        _normalize_function_call_types,
+    )
+
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +99,8 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     _MAX_INTENT_RESOLUTION_SCORE = 5
     _DEFAULT_INTENT_RESOLUTION_THRESHOLD = 3
 
+    _validator: ValidatorInterface
+
     id = "azureai://built-in/evaluators/intent_resolution"
     """Evaluator identifier, experimental and to be used only with evaluation in cloud."""
 
@@ -79,12 +120,20 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
-        self.threshold = threshold
+        threshold_value = kwargs.pop("threshold", threshold)
+        higher_is_better_value = kwargs.pop("_higher_is_better", True)
+        self.threshold = threshold_value
+
+        # Initialize input validator
+        self._validator = ToolDefinitionsValidator(error_target=ErrorTarget.INTENT_RESOLUTION_EVALUATOR)
+
         super().__init__(
             model_config=model_config,
             prompty_file=prompty_path,
             result_key=self._RESULT_KEY,
+            threshold=threshold_value,
             credential=credential,
+            _higher_is_better=higher_is_better_value,
             **kwargs,
         )
 
@@ -195,6 +244,129 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """
         return super().__call__(*args, **kwargs)
 
+    def _return_not_applicable_result(
+        self, error_message: str, threshold: Union[int, float]
+    ) -> Dict[str, Union[str, float, Dict, None]]:
+        """Return a result indicating that the tool call is not applicable for evaluation.
+
+        :param error_message: The error message indicating why the evaluation is not applicable.
+        :type error_message: str
+        :param threshold: The threshold value for the evaluation.
+        :type threshold: Union[int, float]
+        :return: A dictionary containing the result of the evaluation.
+        :rtype: Dict[str, Union[str, float, None]]
+        """
+        token_metadata = self._get_token_metadata({})
+        result = {
+            f"{self._result_key}": None,
+            f"{self._result_key}_score": None,
+            f"{self._result_key}_passed": None,
+            f"{self._result_key}_result": "not_applicable",
+            f"{self._result_key}_reason": f"Not applicable: {error_message}",
+            f"{self._result_key}_status": "skipped",
+            f"{self._result_key}_threshold": threshold,
+            f"{self._result_key}_properties": None,
+        }
+        # Add top-level token metadata fields for backward compatibility.
+        result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+        return result
+
+    @staticmethod
+    def _get_token_metadata(prompty_output: Dict) -> Dict:
+        """Extract token usage and model metadata from the prompty output dict."""
+        return {
+            "prompt_tokens": prompty_output.get("input_token_count", 0),
+            "completion_tokens": prompty_output.get("output_token_count", 0),
+            "total_tokens": prompty_output.get("total_token_count", 0),
+            "finish_reason": prompty_output.get("finish_reason", ""),
+            "model": prompty_output.get("model_id", ""),
+            "sample_input": prompty_output.get("sample_input", ""),
+            "sample_output": prompty_output.get("sample_output", ""),
+        }
+
+    @override
+    async def _real_call(self, **kwargs):
+        """Perform asynchronous call where real end-to-end evaluation logic is executed.
+
+        :keyword kwargs: The inputs to evaluate.
+        :type kwargs: Dict
+        :return: The evaluation result.
+        :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
+        """
+        # Validate input before processing
+        self._validator.validate_eval_input(kwargs)
+
+        return await self._the_super_real_call(**kwargs)
+
+    async def _the_super_real_call(self, **kwargs):
+        """Perform the asynchronous call where real end-to-end evaluation logic runs.
+
+        :keyword kwargs: The inputs to evaluate.
+        :type kwargs: Dict
+        :return: The evaluation result.
+        :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
+        """
+        # Convert inputs into list of evaluable inputs.
+        try:
+            eval_input_list = self._convert_kwargs_to_eval_input(**kwargs)
+        except Exception as e:
+            logger.error(f"Error converting kwargs to eval_input_list: {e}")
+            raise e
+        per_turn_results = []
+        # Evaluate all inputs.
+        for eval_input in eval_input_list:
+            result = await self._do_eval(eval_input)
+            # logic to determine threshold pass/fail
+            # if it wasn't computed in _do_eval
+            try:
+                keys = list(result.keys())
+                contains_result_key = any(key.endswith("_result") for key in keys)
+                contains_threshold_key = any(key.endswith("_threshold") for key in keys)
+                if not contains_result_key or not contains_threshold_key:
+                    for key in keys:
+                        if key.endswith("_score"):
+                            score_value = result[key]
+                            base_key = key[:-6]  # Remove "_score" suffix
+                            result_key = f"{base_key}_result"
+                            threshold_key = f"{base_key}_threshold"
+                            threshold_value = (
+                                self._threshold.get(base_key) if isinstance(self._threshold, dict) else self._threshold
+                            )
+                            if not isinstance(threshold_value, (int, float)):
+                                raise EvaluationException(
+                                    "Threshold value must be a number.",
+                                    internal_message=str(threshold_value),
+                                    target=ErrorTarget.EVALUATE,
+                                    category=ErrorCategory.INVALID_VALUE,
+                                    blame=ErrorBlame.USER_ERROR,
+                                )
+
+                            if not contains_threshold_key:
+                                result[threshold_key] = threshold_value
+
+                            if not contains_result_key:
+                                if self._higher_is_better:
+                                    if float(score_value) >= threshold_value:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[True]
+                                    else:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[False]
+                                else:
+                                    if float(score_value) <= threshold_value:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[True]
+                                    else:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[False]
+            except Exception as e:
+                logger.warning(f"Error calculating binary result: {e}")
+            per_turn_results.append(result)
+        # Return results as-is if only one result was produced.
+
+        if len(per_turn_results) == 1:
+            return per_turn_results[0]
+        if len(per_turn_results) == 0:
+            return {}  # TODO raise something?
+        # Otherwise, aggregate results.
+        return self._aggregate_results(per_turn_results=per_turn_results)
+
     @override
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:  # type: ignore[override]
         """Do intent resolution evaluation.
@@ -211,19 +383,34 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             raise EvaluationException(
                 message="Both query and response must be provided as input to the intent resolution evaluator.",
                 internal_message="Both query and response must be provided as input to the intent resolution "
-                                 "evaluator.",
+                "evaluator.",
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.MISSING_FIELD,
                 target=ErrorTarget.INTENT_RESOLUTION_EVALUATOR,
             )
+        if _is_intermediate_response(eval_input.get("response")):
+            return self._return_not_applicable_result(
+                "Intermediate response. Please provide the agent's final response for evaluation.",
+                self._threshold,
+            )
+        if isinstance(eval_input.get("response"), list):
+            eval_input["response"] = _preprocess_messages(eval_input["response"])
+        if isinstance(eval_input.get("query"), list):
+            eval_input["query"] = _preprocess_messages(eval_input["query"])
         # reformat query and response to the format expected by the prompty flow
         eval_input["query"] = reformat_conversation_history(eval_input["query"], logger)
         eval_input["response"] = reformat_agent_response(eval_input["response"], logger)
 
-        llm_output = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
-        # llm_output should always be a dictionary because the response_format of prompty is set to json_object,
-        # but checking anyway
+        prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
+        llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
+        score = math.nan
         if isinstance(llm_output, dict):
+            # Handle skipped status from LLM
+            llm_status = llm_output.get("status", "completed")
+            if llm_status == "skipped":
+                reason = llm_output.get("reason", "")
+                return self._return_not_applicable_result(reason, self._threshold)
+
             score = llm_output.get("score", math.nan)
             if not check_score_is_valid(
                 score,
@@ -232,24 +419,35 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             ):
                 raise EvaluationException(
                     message=f"Invalid score value: {score}. Expected a number in range "
-                            f"[{IntentResolutionEvaluator._MIN_INTENT_RESOLUTION_SCORE}, "
-                            f"{IntentResolutionEvaluator._MAX_INTENT_RESOLUTION_SCORE}].",
+                    f"[{IntentResolutionEvaluator._MIN_INTENT_RESOLUTION_SCORE}, "
+                    f"{IntentResolutionEvaluator._MAX_INTENT_RESOLUTION_SCORE}].",
                     internal_message="Invalid score value.",
                     category=ErrorCategory.FAILED_EXECUTION,
                     blame=ErrorBlame.SYSTEM_ERROR,
                 )
-            reason = llm_output.get("explanation", "")
+            reason = llm_output.get("reason", "")
             score = float(score)
-            score_result = "pass" if score >= self.threshold else "fail"
+            score_result = "pass" if score >= self._threshold else "fail"
+            llm_properties = llm_output.get("properties", {}) or {}
+            token_metadata = self._get_token_metadata(prompty_output_dict)
+            llm_properties.update(token_metadata)
 
             response_dict = {
-                f"{self._result_key}": score,
+                self._result_key: score,
+                f"{self._result_key}_score": score,
+                f"{self._result_key}_passed": score_result == "pass",
                 f"{self._result_key}_result": score_result,
-                f"{self._result_key}_threshold": self.threshold,
                 f"{self._result_key}_reason": reason,
+                f"{self._result_key}_status": "completed",
+                f"{self._result_key}_threshold": self._threshold,
+                f"{self._result_key}_properties": llm_properties,
             }
+            # Add top-level token metadata fields for backward compatibility.
+            response_dict.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
             return response_dict
-        # If llm_output is not a dictionary, return NaN for the score. This should never happen
-        if logger:
-            logger.warning("LLM output is not a dictionary, returning NaN for the score.")
-        return {self._result_key: math.nan}
+        raise EvaluationException(
+            message="Evaluator returned invalid output.",
+            blame=ErrorBlame.SYSTEM_ERROR,
+            category=ErrorCategory.FAILED_EXECUTION,
+            target=ErrorTarget.INTENT_RESOLUTION_EVALUATOR,
+        )

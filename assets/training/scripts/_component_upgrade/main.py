@@ -31,7 +31,7 @@ FIRST_VERSION = "0.0.1"
 CACHE: Dict[str, str] = {}
 
 _components_yaml_path = Path(__file__).resolve().parents[0] / "components.yaml"
-with open(_components_yaml_path, "r") as file:
+with open(_components_yaml_path, "r", encoding="utf-8") as file:
     OWNED_COMPONENT_NAMES: Set[str] = set(safe_load(file)["component"])
 
 
@@ -42,7 +42,7 @@ def _get_components_spec_path() -> List[str]:
     for root, _, files in os.walk(ASSETS_DIR):
         if "spec.yaml" in files:
             asset_path = os.path.join(root, "spec.yaml")
-            with open(asset_path, "r") as file:
+            with open(asset_path, "r", encoding="utf-8") as file:
                 spec = safe_load(file)
             if spec.get("name", None) not in OWNED_COMPONENT_NAMES:
                 continue
@@ -154,7 +154,7 @@ def _upgrade_component(
     error = None
     name = None
     try:
-        with open(component_path, "r") as file:
+        with open(component_path, "r", encoding="utf-8") as file:
             spec = safe_load(file)
             file.seek(0)
             spec_str = file.read()
@@ -177,7 +177,7 @@ def _upgrade_component(
         # bump component's environment only where version is hardcoded
         spec_str = _upgrade_component_env(spec, spec_str)
 
-        with open(component_path, "w") as file:
+        with open(component_path, "w", encoding="utf-8") as file:
             file.write(spec_str)
     except Exception as e:
         is_error = True

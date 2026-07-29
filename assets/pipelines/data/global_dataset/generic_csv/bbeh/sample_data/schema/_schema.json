@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "task": {
+      "type": "string",
+      "description": "The BBEH task name (e.g., bbeh_boardgame_qa, bbeh_boolean_expressions)"
+    },
+    "input": {
+      "type": "string",
+      "description": "The input prompt for the model"
+    },
+    "target": {
+      "type": "string",
+      "description": "The expected answer"
+    }
+  },
+  "required": ["task", "input", "target"]
+}

@@ -1,0 +1,85 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+"""
+Azure Python Grader
+
+This is a user-defined custom grader for evaluating model responses.
+Users should modify this file to implement their own grading logic.
+
+This file is placed in verl/utils/reward_score/ directory (same location as gsm8k.py)
+and is imported directly when using data_source="azure_python_grader".
+
+Usage:
+    from verl.utils.reward_score import default_compute_score
+
+    score = default_compute_score(
+        data_source="azure_python_grader",
+        solution_str="Your solution text",
+        ground_truth="Expected answer"
+    )
+
+IMPORTANT:
+- This file must define a compute_score(solution_str, ground_truth) function
+- Users can replace this entire file with their own implementation
+- The compute_score function must return a float between 0.0 and 1.0
+"""
+
+
+import ast
+import warnings
+
+# Suppress SyntaxWarnings during validation
+warnings.filterwarnings('ignore', category=SyntaxWarning)
+
+
+def check_syntax(code: str) -> bool:
+    """
+    Check if Python code has valid syntax using ast.parse
+
+    Args:
+        code: Python code string to validate
+
+    Returns:
+        bool: True if code has valid syntax, False otherwise
+    """
+    try:
+        ast.parse(code)
+        print(f"Code syntax is valid for code: {code}")
+        return True
+    except (SyntaxError, Exception):
+        print(f"Code syntax is invalid for code: {code}")
+        return False
+
+
+def compute_score(solution_str: str, ground_truth: str) -> float:
+    """
+    Custom grading function for Python code using AST syntax validation.
+
+    Validates that the solution_str is syntactically valid Python code
+    using the same AST-based validation approach.
+
+    Args:
+        solution_str: The solution string to evaluate (generated Python code)
+        ground_truth: The expected/reference string (reference Python code)
+
+    Returns:
+        float: Score between 0.0 and 1.0
+               1.0 if solution has valid Python syntax
+               0.0 if solution has syntax errors
+    """
+    # Handle "###" prefix - take content after the last #
+    if solution_str.lstrip().startswith('#'):
+        # Find the position after the last consecutive # at the beginning
+        stripped = solution_str.lstrip()
+        hash_end = 0
+        for i, char in enumerate(stripped):
+            if char == '#':
+                hash_end = i + 1
+            else:
+                break
+        solution_str = stripped[hash_end:]
+
+    # Strip all whitespace from the beginning
+    solution_str = solution_str.lstrip()
+
+    return 1.0 if check_syntax(solution_str) else 0.0

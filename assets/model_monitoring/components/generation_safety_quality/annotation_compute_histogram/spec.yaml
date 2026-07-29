@@ -4,7 +4,7 @@ type: spark
 name: gsq_annotation_compute_histogram
 display_name: Annotation - Compute Histogram
 description: Compute annotation histogram given a deployment's model data input.
-version: 0.4.37
+version: 0.4.38
 is_deterministic: false
 inputs:
   production_dataset:
@@ -116,8 +116,11 @@ conf:
           - azure-ai-ml>=1.26.3
           - openai>=1.56.2
           - azure-ai-evaluation~=1.0.1
+          - azureml-mlflow~=1.61.0
           - azureml-dataprep==5.1.6
-          - mltable~=1.6.1
+          - mltable~=1.6.3
+          - tiktoken~=0.11.0
+          - protobuf~=6.32.1
     name: momo-gsq-spark
 code: ../../src
 entry:

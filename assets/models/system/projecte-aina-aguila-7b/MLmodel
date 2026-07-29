@@ -25,7 +25,7 @@ metadata:
   base_model_task: text-generation
   is_acft_model: true
   is_finetuned_model: false
-  azureml.base_image: mcr.microsoft.com/azureml/curated/foundation-model-inference:34
+  azureml.base_image: mcr.microsoft.com/azureml/curated/foundation-model-inference:86
 mlflow_version: 2.10.2
 model_uuid: 7ec8ff40799941fea68163499aa8f499
 utc_time_created: '2024-04-09 11:46:41.435612'

@@ -21,6 +21,11 @@ FAILED_COUNT = "failed_count"
 COUNTERS = [SUCCESS_COUNT, FAILED_COUNT]
 BASE_ENVIRONMENT = "base_env"
 
+# Subdirectory within an evaluator asset that contains its source code, and the minimum
+# percentage of that source which must be exercised by the asset's tests (via coverage.py).
+EVALUATOR_SOURCE_DIRNAME = "evaluator"
+EVALUATOR_COVERAGE_THRESHOLD = 98
+
 
 def create_isolated_environment(asset_config: assets.AssetConfig, env_name: str) -> str:
     """Create isolated conda environment.
@@ -79,6 +84,19 @@ def test_asset(asset_config: assets.AssetConfig, env_name: str, reports_dir: str
         report_file = reports_dir / asset_config.type.value / f"{asset_config.name}.xml"
         cmd.append(f"--junitxml={report_file}")
         cmd.append(f"--junit-prefix={asset_config.type.value}/{asset_config.name}")
+
+    # For evaluator assets, measure coverage of the asset's source and fail if it falls
+    # below the required threshold. Coverage runs relative to the asset directory (cwd
+    # below), so the source target is the relative "evaluator" subdirectory.
+    coverage_source = asset_config.file_path / EVALUATOR_SOURCE_DIRNAME
+    if asset_config.type == assets.AssetType.EVALUATOR and coverage_source.is_dir():
+        cmd.append(f"--cov={EVALUATOR_SOURCE_DIRNAME}")
+        cmd.append("--cov-report=term-missing")
+        if reports_dir:
+            coverage_report_file = reports_dir / asset_config.type.value / f"{asset_config.name}-coverage.xml"
+            cmd.append(f"--cov-report=xml:{coverage_report_file}")
+        cmd.append(f"--cov-fail-under={EVALUATOR_COVERAGE_THRESHOLD}")
+
     cmd.append(asset_config.pytest_tests_dir)
 
     # Run tests

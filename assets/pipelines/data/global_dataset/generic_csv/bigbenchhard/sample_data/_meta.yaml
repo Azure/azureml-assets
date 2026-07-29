@@ -1,0 +1,5 @@
+type: DataFrameDirectory
+extension: {}
+format: JSONL
+data: bbh_samples_flat.jsonl
+schema: schema/_schema.json

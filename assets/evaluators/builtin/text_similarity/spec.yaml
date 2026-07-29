@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.text_similarity"
-version: 1
+version: 2
 displayName: "Text-Similarity-Evaluator"
 description: "Assesses how similar two texts are in content and structure. Higher scores indicate better alignment with the reference. Use this metric in paraphrase detection, translation evaluation, and response comparison."
 evaluatorType: "builtin"
@@ -11,8 +11,6 @@ tags:
 initParameterSchema:
   type: "object"
   properties:
-    deployment_name:
-      type: "string"
     input:
       type: "string"
     reference:
@@ -29,7 +27,7 @@ initParameterSchema:
       minimum: 0
       maximum: 1
       multipleOf: 0.1
-  required: ["deployment_name", "name", "input", "reference", "type", "evaluation_metric", "pass_threshold"]
+  required: ["name", "input", "reference", "type", "evaluation_metric", "pass_threshold"]
 dataMappingSchema: {}
 outputSchema:
   similarity:

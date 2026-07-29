@@ -1,4 +1,0 @@
-type: evaluator
-spec: spec.yaml
-categories:
-- Evaluator

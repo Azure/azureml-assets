@@ -1,0 +1,7 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: mistral-nemo-12b-instruct
+path: ./
+isArchived: true
+system_metadata:
+  foundryLocal: ''
+version: 1

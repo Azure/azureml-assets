@@ -1,7 +1,7 @@
 path:
   container_name: models
-  container_path: huggingface/Prov-GigaPath/mlflow_model_folder
-  storage_name: automlcesdkdataresources
+  container_path: Prov-GigaPath/mlflow_model_folder
+  storage_name: hlsmodelonboarding
   type: azureblob
 publish:
   description: description.md

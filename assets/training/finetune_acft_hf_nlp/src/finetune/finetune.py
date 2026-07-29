@@ -1094,6 +1094,22 @@ def validate_early_stop_settings(args: Namespace) -> None:
         )
 
 
+def validate_optimiser_name(args: Namespace) -> None:
+    """Validate optimiser name."""
+    optim = args.optim.lower()
+    valid_optimisers = ['adamw_torch', 'adafactor']
+    if optim not in valid_optimisers:
+        raise ACFTValidationException._with_error(
+            AzureMLError.create(
+                ACFTUserError,
+                pii_safe_message=(
+                    f"Invalid optimiser name '{optim}'. "
+                    f"Please select one of: {', '.join(valid_optimisers)}."
+                )
+            )
+        )
+
+
 def finetune(args: Namespace):
     """Finetune."""
     logger.info(f"full_determinism is set to {args.enable_full_determinism}")
@@ -1282,6 +1298,8 @@ def finetune(args: Namespace):
     set_gradient_checkpointing(args)
 
     validate_learning_rate(args)
+
+    validate_optimiser_name(args)
 
     # Fix: Ev2 rollout fails when using no as string in the spec.
     if args.evaluation_strategy == 'disable':

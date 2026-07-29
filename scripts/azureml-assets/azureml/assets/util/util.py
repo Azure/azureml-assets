@@ -74,7 +74,7 @@ def _log_diff(message: str, enabled: bool):
 
 def _log_file_diff(file1: Path, file2: Path, enabled: bool):
     if enabled:
-        with open(file1, "r") as file1_obj, open(file2, "r") as file2_obj:
+        with open(file1, "r", encoding='utf-8') as file1_obj, open(file2, "r", encoding='utf-8') as file2_obj:
             file1_contents = file1_obj.readlines()
             file2_contents = file2_obj.readlines()
             diff = difflib.unified_diff(file1_contents, file2_contents, str(file1), str(file2))
@@ -82,7 +82,7 @@ def _log_file_diff(file1: Path, file2: Path, enabled: bool):
 
 
 def _are_files_equal_ignore_eol(file1: Path, file2: Path) -> bool:
-    with open(file1, "r") as file1_obj, open(file2, "r") as file2_obj:
+    with open(file1, "r", encoding='utf-8') as file1_obj, open(file2, "r", encoding='utf-8') as file2_obj:
         while True:
             line1 = file1_obj.readline()
             line2 = file2_obj.readline()
@@ -96,7 +96,7 @@ def _are_files_equal_ignore_eol(file1: Path, file2: Path) -> bool:
 
 def _resolve_from_file(value):
     if os.path.isfile(value):
-        with open(value, 'r') as f:
+        with open(value, 'r', encoding='utf-8') as f:
             content = f.read()
             return (True, content)
     else:
@@ -390,22 +390,42 @@ def find_asset_config_files(input_dirs: Union[List[Path], Path],
     found_assets = []
     for input_dir in input_dirs:
         for file in input_dir.rglob(asset_config_filename):
-            # If specified, skip assets when no change in asset, source_code and test_code
+            asset_dir = file.parent.resolve()
+            # If specified, skip assets when no change in asset, source code, or test code
             try:
                 asset_config = assets.AssetConfig(file)
-                test_dir_path = asset_config.pytest_tests_dir_with_path
-                test_dir_path = test_dir_path.resolve() if test_dir_path else Path()
 
                 release_paths_resolved = [path.resolve() for path in asset_config.release_paths]
                 asset_changed_files = changed_files_resolved & set(release_paths_resolved)
+
+                # Collect the asset's declared test inputs: the test code directory/file, the
+                # pytest conda environment, and the pytest pip requirements. Changes to any of
+                # these files should re-trigger the asset's tests.
+                test_paths = set()
+                for test_path in (asset_config.pytest_tests_dir_with_path,
+                                  asset_config.pytest_conda_environment_with_path,
+                                  asset_config.pytest_pip_requirements_with_path):
+                    if test_path:
+                        test_paths.add(test_path.resolve())
             except ValidationException:
-                test_dir_path = Path()
                 asset_changed_files = set()
+                test_paths = set()
+
+            # Directories whose contents should re-trigger this asset's tests. For a test input
+            # that's a file, watch its containing directory so changes to shared/sibling test
+            # code (e.g. base classes, mocks, test requirements) also trigger. Skip any directory
+            # that contains the asset itself, to avoid re-running every asset that happens to
+            # share a parent area (e.g. a conda environment kept at an asset area's root).
+            watch_dirs = {asset_dir}
+            for test_path in test_paths:
+                watch_dir = test_path if test_path.is_dir() else test_path.parent
+                if watch_dir != asset_dir and watch_dir not in asset_dir.parents:
+                    watch_dirs.add(watch_dir)
 
             if changed_files and not asset_changed_files and not any(
-                file.parent in f.parents or
-                test_dir_path in f.resolve().parents
-                for f in changed_files
+                changed_file in test_paths or
+                any(watch_dir in changed_file.parents for watch_dir in watch_dirs)
+                for changed_file in changed_files_resolved
             ):
                 continue
 
@@ -487,7 +507,7 @@ def load_yaml(file_path: str) -> dict:
     Returns:
         dict: loaded yaml as dict
     """
-    with open(file_path, "r") as f:
+    with open(file_path, "r", encoding='utf-8') as f:
         yaml_dict = YAML().load(f)
     return yaml_dict
 
@@ -499,8 +519,8 @@ def dump_yaml(yaml_dict: dict, file_path: str):
         yaml_dict (str): dictionary object to dump into yaml.
         file_path (str): File path to store dump result to.
     """
-    with open(file_path, "w") as f:
-        yaml_dict = YAML().dump(yaml_dict, f)
+    with open(file_path, "w", encoding='utf-8') as f:
+        YAML().dump(yaml_dict, f)
 
 
 def retry(times):

@@ -5,26 +5,34 @@ from enum import Enum
 from collections import Counter
 import json
 import copy
-from typing import Dict, List, Union, Any, Tuple
+import logging
+from typing import Any, Dict, List, Union, Tuple
 from typing_extensions import overload, override
 
 from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
 from azure.ai.evaluation._evaluators._common import EvaluatorBase
 from azure.ai.evaluation._common._experimental import experimental
 from azure.ai.evaluation._exceptions import (
+    ErrorBlame,
     ErrorCategory,
     ErrorTarget,
     EvaluationException,
 )
+from azure.ai.evaluation._evaluators._common._validators import (
+    ValidatorInterface,
+    TaskNavigationEfficiencyValidator,
+)
+
+logger = logging.getLogger(__name__)
 
 
 # Extend ErrorTarget enum if needed
 def _create_extended_error_target(ErrorTarget):
-    """Create an extended ErrorTarget enum that includes TOOL_INPUT_ACCURACY_EVALUATOR."""
+    """Create an extended ErrorTarget enum that includes TASK_NAVIGATION_EFFICIENCY_EVALUATOR."""
     existing_members = {member.name: member.value for member in ErrorTarget}
-    existing_members['TOOL_INPUT_ACCURACY_EVALUATOR'] = 'ToolInputAccuracyEvaluator'
+    existing_members["TASK_NAVIGATION_EFFICIENCY_EVALUATOR"] = "TaskNavigationEfficiencyEvaluator"
 
-    ExtendedErrorTarget = Enum('ExtendedErrorTarget', existing_members)
+    ExtendedErrorTarget = Enum("ExtendedErrorTarget", existing_members)
     return ExtendedErrorTarget
 
 
@@ -36,12 +44,12 @@ class TaskNavigationEfficiencyMatchingMode(str, Enum):
     Enumeration of task navigation efficiency matching mode.
 
     This enum allows you to specify which single matching technique should be used when evaluating
-    the efficiency of an agent's tool calls sequence against a ground truth path.
+    the efficiency of an agent's tool calls sequence against a expected actions path.
     """
 
     EXACT_MATCH = "exact_match"
     """
-    Binary metric indicating whether the agent's tool calls exactly match the ground truth.
+    Binary metric indicating whether the agent's tool calls exactly match the expected actions.
 
     Returns True only if the agent's tool calls sequence is identical to the expected sequence
     in both order and content (no extra steps, no missing steps, correct order).
@@ -51,7 +59,7 @@ class TaskNavigationEfficiencyMatchingMode(str, Enum):
     """
     Binary metric allowing extra steps but requiring correct order of required tool calls.
 
-    Returns True if all ground truth steps appear in the agent's sequence in the correct
+    Returns True if all expected actions steps appear in the agent's sequence in the correct
     order, even if there are additional steps interspersed.
     """
 
@@ -59,7 +67,7 @@ class TaskNavigationEfficiencyMatchingMode(str, Enum):
     """
     Binary metric allowing both extra steps and different ordering.
 
-    Returns True if all ground truth steps appear in the agent's sequence with sufficient
+    Returns True if all expected actions steps appear in the agent's sequence with sufficient
     frequency, regardless of order. Most lenient matching criterion.
     """
 
@@ -70,7 +78,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
     Evaluates whether an agent's sequence of actions is efficient and follows optimal decision-making patterns.
 
     The Task Navigation Efficiency Evaluator returns binary matching results between the agent's tool usage trajectory
-    and the ground truth expected steps.
+    and the expected actions expected steps.
     It has three matching techniques: exact match, in-order match (allows extra steps),
     and any-order match (allows extra steps and ignores order).
     It also returns precision, recall, and F1 scores in properties bag.
@@ -90,7 +98,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
 
             # Example 1: Using simple tool names list
             result = path_efficiency_eval(
-                response=[
+                actions=[
                     {"role": "assistant", "content": [
                         {"type": "tool_call", "tool_call_id": "call_1", "name": "identify_tools_to_call",
                          "arguments": {}}
@@ -105,12 +113,12 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
                         {"type": "tool_call", "tool_call_id": "call_4", "name": "response_synthesis", "arguments": {}}
                     ]}
                 ],
-                ground_truth=["identify_tools_to_call", ""call_tool_A", "call_tool_B", "response_synthesis"]
+                expected_actions=["identify_tools_to_call", "call_tool_A", "call_tool_B", "response_synthesis"]
             )
 
             # Example 2: Using tool names with parameters (exact parameter matching required)
             result = path_efficiency_eval(
-                response=[
+                actions=[
                     {"role": "assistant", "content": [
                         {"type": "tool_call", "tool_call_id": "call_1", "name": "search",
                          "arguments": {"query": "weather", "location": "NYC"}}
@@ -120,7 +128,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
                          "arguments": {"format": "json"}}
                     ]}
                 ],
-                ground_truth=(
+                expected_actions=(
                     ["search", "format_result"],
                     {
                         "search": {"query": "weather", "location": "NYC"},
@@ -135,6 +143,11 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
 
     matching_mode: TaskNavigationEfficiencyMatchingMode
     """The matching mode to use."""
+
+    _validator: ValidatorInterface
+
+    _INPUT_ALIASES = {"actions": "response", "expected_actions": "ground_truth"}
+    """Canonical eval-input keys mapped to their accepted SDK-style aliases."""
 
     @override
     def __init__(
@@ -154,9 +167,13 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
             try:
                 self.matching_mode = TaskNavigationEfficiencyMatchingMode(matching_mode)
             except ValueError:
-                raise ValueError(
+                raise EvaluationException(
                     f"matching_mode must be one of {[m.value for m in TaskNavigationEfficiencyMatchingMode]}, "
-                    f"got '{matching_mode}'"
+                    f"got '{matching_mode}'",
+                    internal_message=str(matching_mode),
+                    target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    blame=ErrorBlame.USER_ERROR,
                 )
         elif isinstance(matching_mode, TaskNavigationEfficiencyMatchingMode):
             self.matching_mode = matching_mode
@@ -167,67 +184,204 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
                 internal_message=str(matching_mode),
                 target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
                 category=ErrorCategory.INVALID_VALUE,
+                blame=ErrorBlame.USER_ERROR,
             )
 
-        super().__init__()
+        # Initialize input validator
+        self._validator = TaskNavigationEfficiencyValidator(
+            error_target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR
+        )
+
+        super().__init__(threshold=1.0)
+
+    def _normalize_input_aliases(self, eval_input: Dict[str, Any]) -> None:
+        """Map SDK-style input keys onto the canonical keys in place.
+
+        If a canonical key (``actions``/``expected_actions``) is absent but its alias
+        (``response``/``ground_truth``) is provided, copy the alias value to the canonical
+        key so the rest of the pipeline can rely on a single set of names.
+        """
+        for canonical, alias in self._INPUT_ALIASES.items():
+            if eval_input.get(canonical) is None and eval_input.get(alias) is not None:
+                eval_input[canonical] = eval_input[alias]
+
+    @override
+    async def _real_call(self, **kwargs):
+        """Perform asynchronous call where real end-to-end evaluation logic is executed.
+
+        :keyword kwargs: The inputs to evaluate.
+        :type kwargs: Dict
+        :return: The evaluation result.
+        :rtype: Dict[str, Union[float, str, Dict[str, float]]]
+        """
+        self._normalize_input_aliases(kwargs)
+        # Backward compatibility with azure-ai-evaluation 1.17.x: that release's
+        # TaskNavigationEfficiencyValidator validates the canonical SDK keys
+        # ('response'/'ground_truth') but does not itself map the azureml-assets-style
+        # aliases ('actions'/'expected_actions') onto them. Newer SDKs (>= 1.18.0) expose
+        # ``_normalize_input_aliases`` on the validator and normalize internally, so we only
+        # backfill the canonical SDK keys here when that method is absent. Remove this shim
+        # once azure-ai-evaluation 1.17.x is no longer supported.
+        if not hasattr(self._validator, "_normalize_input_aliases"):
+            for assets_key, sdk_key in self._INPUT_ALIASES.items():
+                if kwargs.get(sdk_key) is None and kwargs.get(assets_key) is not None:
+                    kwargs[sdk_key] = kwargs[assets_key]
+        self._validator.validate_eval_input(kwargs)
+        return await self._the_super_real_call(**kwargs)
+
+    async def _the_super_real_call(self, **kwargs):
+        """Perform the asynchronous call where real end-to-end evaluation logic runs.
+
+        :keyword kwargs: The inputs to evaluate.
+        :type kwargs: Dict
+        :return: The evaluation result.
+        :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
+        """
+        # Convert inputs into list of evaluable inputs.
+        try:
+            eval_input_list = self._convert_kwargs_to_eval_input(**kwargs)
+        except Exception as e:
+            logger.error(f"Error converting kwargs to eval_input_list: {e}")
+            raise e
+        per_turn_results = []
+        # Evaluate all inputs.
+        for eval_input in eval_input_list:
+            result = await self._do_eval(eval_input)
+            # logic to determine threshold pass/fail
+            # if it wasn't computed in _do_eval
+            try:
+                keys = list(result.keys())
+                contains_result_key = any(key.endswith("_result") for key in keys)
+                contains_threshold_key = any(key.endswith("_threshold") for key in keys)
+                if not contains_result_key or not contains_threshold_key:
+                    for key in keys:
+                        if key.endswith("_score"):
+                            score_value = result[key]
+                            base_key = key[:-6]  # Remove "_score" suffix
+                            result_key = f"{base_key}_result"
+                            threshold_key = f"{base_key}_threshold"
+                            threshold_value = (
+                                self._threshold.get(base_key) if isinstance(self._threshold, dict) else self._threshold
+                            )
+                            if not isinstance(threshold_value, (int, float)):
+                                raise EvaluationException(
+                                    "Threshold value must be a number.",
+                                    internal_message=str(threshold_value),
+                                    target=ErrorTarget.EVALUATE,
+                                    category=ErrorCategory.INVALID_VALUE,
+                                    blame=ErrorBlame.USER_ERROR,
+                                )
+                            if not contains_threshold_key:
+                                result[threshold_key] = threshold_value
+                            if not contains_result_key:
+                                if self._higher_is_better:
+                                    if float(score_value) >= threshold_value:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[True]
+                                    else:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[False]
+                                else:
+                                    if float(score_value) <= threshold_value:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[True]
+                                    else:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[False]
+            except Exception as e:
+                logger.warning(f"Error calculating binary result: {e}")
+            per_turn_results.append(result)
+        # Return results as-is if only one result was produced.
+        if len(per_turn_results) == 1:
+            return per_turn_results[0]
+        if len(per_turn_results) == 0:
+            return {}  # TODO raise something?
+        # Otherwise, aggregate results.
+        return self._aggregate_results(per_turn_results=per_turn_results)
+
+    @staticmethod
+    def _normalize_param_value(value: Any) -> str:
+        """Normalize a parameter value to a string for consistent comparison.
+
+        Uses json.dumps for dicts and lists to produce canonical JSON strings,
+        and str() for other types. This ensures both agent and expected_actions
+        parameter values are compared in the same string format.
+        """
+        if isinstance(value, str):
+            return value
+        if isinstance(value, (dict, list)):
+            try:
+                return json.dumps(value, sort_keys=True)
+            except (TypeError, ValueError):
+                return str(value)
+        return str(value)
 
     def _prepare_steps_for_comparison(
         self,
         agent_tool_pairs: List[Tuple[str, Dict[str, Any]]],
-        ground_truth: List[str],
-        ground_truth_params: Dict[str, Dict[str, Any]],
+        expected_actions: List[str],
+        expected_actions_params: Dict[str, Dict[str, Any]],
         use_parameter_matching: bool,
     ) -> Tuple[
         List[Union[str, Tuple[str, Tuple]]],
         List[Union[str, Tuple[str, Tuple]]],
     ]:
-        """Prepare agent and ground truth steps for comparison based on parameter matching mode."""
+        """Prepare agent and expected actions steps for comparison based on parameter matching mode."""
         agent_steps: List[Union[str, Tuple[str, Tuple]]] = []
-        ground_truth_steps: List[Union[str, Tuple[str, Tuple]]] = []
+        expected_actions_steps: List[Union[str, Tuple[str, Tuple]]] = []
         if use_parameter_matching:
-            # When parameter matching is enabled, we need to match both tool name and parameters
-            agent_steps = [(pair[0], tuple(sorted(pair[1].items()))) for pair in agent_tool_pairs]
-            ground_truth_steps = [
-                (name, tuple(sorted(ground_truth_params.get(name, {}).items()))) for name in ground_truth
+            # When parameter matching is enabled, we need to match both tool name and parameters.
+            # Normalize all parameter values to strings on both sides for consistent comparison.
+            agent_steps = [
+                (pair[0], tuple(sorted(
+                    (k, self._normalize_param_value(v)) for k, v in pair[1].items()
+                )))
+                for pair in agent_tool_pairs
+            ]
+            expected_actions_steps = [
+                (name, tuple(sorted(
+                    (k, self._normalize_param_value(v))
+                    for k, v in expected_actions_params.get(name, {}).items()
+                )))
+                for name in expected_actions
             ]
         else:
             # When parameter matching is disabled, only compare tool names
             agent_steps = [name for name, _ in agent_tool_pairs]
-            ground_truth_steps = [step for step in ground_truth]
+            expected_actions_steps = [step for step in expected_actions]
 
-        return agent_steps, ground_truth_steps
+        return agent_steps, expected_actions_steps
 
-    def _calculate_precision_recall_f1_scores(self, agent_steps: List, ground_truth_steps: List) -> Dict[str, float]:
+    def _calculate_precision_recall_f1_scores(
+        self, agent_steps: List, expected_actions_steps: List
+    ) -> Dict[str, float]:
         """Calculate precision, recall, and F1 scores."""
         if not agent_steps:
             return {"precision_score": 0.0, "recall_score": 0.0, "f1_score": 0.0}
 
         # Count occurrences of each step in both lists to handle duplicates
         agent_steps_counts = Counter(agent_steps)
-        ground_truth_counts = Counter(ground_truth_steps)
+        expected_actions_counts = Counter(expected_actions_steps)
 
         # Calculate true positives by taking the minimum count for each common element
-        # For each step, count the intersection (min count) of agent and ground truth steps
+        # For each step, count the intersection (min count) of agent and expected actions steps
         true_positives = sum(
-            min(agent_steps_counts[step], ground_truth_counts[step])
+            min(agent_steps_counts[step], expected_actions_counts[step])
             for step in agent_steps_counts
-            if step in ground_truth_counts
+            if step in expected_actions_counts
         )
 
-        # Calculate false positives (agent steps not in ground truth or excess occurrences)
-        # For each step, count the excess occurrences of agent steps not in (minus) ground truth
-        # or zero (agent steps minus agent steps) if agent steps is less than ground truth
+        # Calculate false positives (agent steps not in expected actions or excess occurrences)
+        # For each step, count the excess occurrences of agent steps not in (minus) expected actions
+        # or zero (agent steps minus agent steps) if agent steps is less than expected actions
         false_positives = sum(
-            agent_steps_counts[step] - min(agent_steps_counts[step], ground_truth_counts.get(step, 0))
+            agent_steps_counts[step] - min(agent_steps_counts[step], expected_actions_counts.get(step, 0))
             for step in agent_steps_counts
         )
 
-        # Calculate false negatives (ground truth steps not in agent or missing occurrences)
-        # For each step, count the excess occurrences of ground truth steps not in (minus) agent steps
-        # or zero (ground truth steps minus ground truth steps) if ground truth steps is less than agent steps
+        # Calculate false negatives (expected actions steps not in agent or missing occurrences)
+        # For each step, count the excess occurrences of expected actions steps not in (minus) agent steps
+        # or zero (expected actions steps minus expected actions steps) if expected actions steps is less than
+        # agent steps
         false_negatives = sum(
-            ground_truth_counts[step] - min(ground_truth_counts[step], agent_steps_counts.get(step, 0))
-            for step in ground_truth_counts
+            expected_actions_counts[step] - min(expected_actions_counts[step], agent_steps_counts.get(step, 0))
+            for step in expected_actions_counts
         )
 
         # Calculate precision, recall, F1
@@ -243,33 +397,33 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
             "f1_score": f1_score,
         }
 
-    def _calculate_exact_match(self, agent_steps: List, ground_truth_steps: List) -> bool:
-        """Check if agent steps exactly match ground truth (order and content)."""
-        return agent_steps == ground_truth_steps
+    def _calculate_exact_match(self, agent_steps: List, expected_actions_steps: List) -> bool:
+        """Check if agent steps exactly match expected actions (order and content)."""
+        return agent_steps == expected_actions_steps
 
-    def _calculate_in_order_match(self, agent_steps: List, ground_truth_steps: List) -> bool:
-        """Check if all ground truth steps appear in agent steps in correct order (extra steps allowed)."""
-        if not ground_truth_steps:
+    def _calculate_in_order_match(self, agent_steps: List, expected_actions_steps: List) -> bool:
+        """Check if all expected actions steps appear in agent steps in correct order (extra steps allowed)."""
+        if not expected_actions_steps:
             return True
 
         gt_index = 0
         for step in agent_steps:
-            if gt_index < len(ground_truth_steps) and step == ground_truth_steps[gt_index]:
+            if gt_index < len(expected_actions_steps) and step == expected_actions_steps[gt_index]:
                 gt_index += 1
 
-        return gt_index == len(ground_truth_steps)
+        return gt_index == len(expected_actions_steps)
 
-    def _calculate_any_order_match(self, agent_steps: List, ground_truth_steps: List) -> bool:
-        """Check if all ground truth steps appear in agent steps with sufficient frequency.
+    def _calculate_any_order_match(self, agent_steps: List, expected_actions_steps: List) -> bool:
+        """Check if all expected actions steps appear in agent steps with sufficient frequency.
 
         any order, extra steps allowed.
         """
         # Count occurrences of each step in both lists to handle duplicates
         agent_counts = Counter(agent_steps)
-        ground_truth_counts = Counter(ground_truth_steps)
+        expected_actions_counts = Counter(expected_actions_steps)
 
-        # Check if agent has at least as many occurrences of each ground truth step
-        return all(agent_counts[step] >= ground_truth_counts[step] for step in ground_truth_counts)
+        # Check if agent has at least as many occurrences of each expected actions step
+        return all(agent_counts[step] >= expected_actions_counts[step] for step in expected_actions_counts)
 
     _TASK_NAVIGATION_EFFICIENCY_MATCHING_MODE_TO_FUNCTIONS = {
         TaskNavigationEfficiencyMatchingMode.EXACT_MATCH: _calculate_exact_match,
@@ -277,22 +431,22 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         TaskNavigationEfficiencyMatchingMode.ANY_ORDER_MATCH: _calculate_any_order_match,
     }
 
-    def _parse_tools_from_response(self, response):
-        """Parse the response to extract tool calls and results.
+    def _parse_tools_from_actions(self, actions):
+        """Parse the actions to extract tool calls and results.
 
-        :param response: The response to parse.
-        :type response: Union[str, List[dict]]
-        :return: List of tool calls extracted from the response.
+        :param actions: The actions to parse.
+        :type actions: Union[str, List[dict]]
+        :return: List of tool calls extracted from the actions.
         :rtype: List[dict]
         """
         tool_calls = []
         tool_results_map = {}
 
         # Work on a deep copy to avoid modifying the original object
-        response_copy = copy.deepcopy(response)
+        actions_copy = copy.deepcopy(actions)
 
-        if isinstance(response_copy, list):
-            for message in response_copy:
+        if isinstance(actions_copy, list):
+            for message in actions_copy:
                 # Extract tool calls from assistant messages
                 if message.get("role") == "assistant" and isinstance(message.get("content"), list):
                     for content_item in message.get("content"):
@@ -315,15 +469,15 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
 
         return tool_calls
 
-    def _extract_tool_names_and_params_from_response(self, response) -> List[Tuple[str, Dict[str, str]]]:
-        """Extract tool names and parameters from the response.
+    def _extract_tool_names_and_params_from_actions(self, actions) -> List[Tuple[str, Dict[str, str]]]:
+        """Extract tool names and parameters from the actions.
 
-        :param response: The response to parse.
-        :type response: Union[str, List[dict]]
-        :return: List of tuples containing (tool_name, parameters_dict) extracted from the response.
+        :param actions: The actions to parse.
+        :type actions: Union[str, List[dict]]
+        :return: List of tuples containing (tool_name, parameters_dict) extracted from the actions.
         :rtype: List[Tuple[str, Dict[str, str]]]
         """
-        tool_calls = self._parse_tools_from_response(response)
+        tool_calls = self._parse_tools_from_actions(actions)
         tool_name_param_pairs = []
         for tool_call in tool_calls:
             if not isinstance(tool_call, dict):
@@ -331,7 +485,8 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
                     "Tool call must be a dictionary.",
                     internal_message=str(tool_call),
                     target=ErrorTarget.EVALUATE,
-                    category=ErrorCategory.UNKNOWN,
+                    category=ErrorCategory.INVALID_VALUE,
+                    blame=ErrorBlame.USER_ERROR,
                 )
             if tool_call.get("type") != "tool_call":
                 raise EvaluationException(
@@ -339,6 +494,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
                     internal_message=str(tool_call),
                     target=ErrorTarget.EVALUATE,
                     category=ErrorCategory.INVALID_VALUE,
+                    blame=ErrorBlame.USER_ERROR,
                 )
 
             if "name" not in tool_call:
@@ -347,6 +503,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
                     internal_message=str(tool_call),
                     target=ErrorTarget.EVALUATE,
                     category=ErrorCategory.MISSING_FIELD,
+                    blame=ErrorBlame.USER_ERROR,
                 )
 
             tool_name = str(tool_call["name"]).strip()
@@ -356,20 +513,20 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
             if "arguments" in tool_call:
                 args = tool_call["arguments"]
                 if isinstance(args, dict):
-                    # Convert all values to strings for consistent comparison
-                    parameters = {str(k): str(v) for k, v in args.items()}
+                    parameters = {str(k): v for k, v in args.items()}
                 elif isinstance(args, str):
                     # If arguments is a string, try to parse it as JSON
                     try:
                         parsed_args = json.loads(args)
                         if isinstance(parsed_args, dict):
-                            parameters = {str(k): str(v) for k, v in parsed_args.items()}
+                            parameters = {str(k): v for k, v in parsed_args.items()}
                     except json.JSONDecodeError:
                         raise EvaluationException(
                             "Failed to parse tool call arguments as JSON.",
                             internal_message=str(tool_call),
                             target=ErrorTarget.EVALUATE,
                             category=ErrorCategory.INVALID_VALUE,
+                            blame=ErrorBlame.USER_ERROR,
                         )
 
             tool_name_param_pairs.append((tool_name, parameters))
@@ -380,77 +537,122 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str, Dict[str, float]]]:
         """Produce a path efficiency evaluation result.
 
-        :param eval_input: The input to the evaluation function. Must contain "response" and "ground_truth".
+        :param eval_input: The input to the evaluation function. Must contain "actions" and "expected_actions".
         :type eval_input: Dict
         :return: The evaluation result.
         :rtype: Dict[str, Union[float, str, Dict[str, float]]]
         """
-        response = eval_input["response"]
-        ground_truth = eval_input["ground_truth"]
+        # If actions or expected_actions is a string, try to parse it as a JSON list
+        for key in ("actions", "expected_actions"):
+            value = eval_input.get(key)
+            if isinstance(value, str):
+                try:
+                    eval_input[key] = json.loads(value)
+                except (ValueError, TypeError):
+                    pass
 
-        # Value and type checking for ground truth steps
-        if not ground_truth:
-            raise ValueError("ground_truth cannot be empty")
+        actions = eval_input["actions"]
+        expected_actions = eval_input["expected_actions"]
 
-        # Check if ground_truth is a tuple (tool names + parameters) or list (tool names only)
+        # Value and type checking for expected actions steps
+        if not expected_actions:
+            raise EvaluationException(
+                "expected_actions cannot be empty",
+                target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
+                category=ErrorCategory.INVALID_VALUE,
+                blame=ErrorBlame.USER_ERROR,
+            )
+
+        # Check if expected_actions is a tuple (tool names + parameters) or list (tool names only)
         use_parameter_matching = False
-        ground_truth_names = []
-        ground_truth_params_dict: Dict[str, Dict[str, Any]] = {}
+        expected_actions_names = []
+        expected_actions_params_dict: Dict[str, Dict[str, Any]] = {}
 
-        if isinstance(ground_truth, tuple) and len(ground_truth) == 2:
+        if isinstance(expected_actions, list) and all(isinstance(step, str) for step in expected_actions):
+            # List format: just tool names
+            expected_actions_names = [step.strip() for step in expected_actions]
+            use_parameter_matching = False
+        elif (
+            isinstance(expected_actions, tuple) or isinstance(expected_actions, list)
+        ) and len(expected_actions) == 2:
             # Tuple format: (tool_names, parameters_dict)
-            tool_names_list, params_dict = ground_truth
+            tool_names_list, params_dict = expected_actions
 
             if not isinstance(tool_names_list, list) or not all(isinstance(name, str) for name in tool_names_list):
-                raise TypeError("ground_truth tuple first element must be a list of strings (tool names)")
+                raise EvaluationException(
+                    "expected_actions tuple first element must be a list of strings (tool names)",
+                    target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    blame=ErrorBlame.USER_ERROR,
+                )
 
             if not isinstance(params_dict, dict):
-                raise TypeError(
-                    "ground_truth tuple second element must be a dictionary mapping tool names to parameters"
+                raise EvaluationException(
+                    "expected_actions tuple second element must be a dictionary mapping tool names to parameters",
+                    target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    blame=ErrorBlame.USER_ERROR,
                 )
 
             # Validate that all values in params_dict are dictionaries with string keys and values
             for tool_name, params in params_dict.items():
                 if not isinstance(tool_name, str):
-                    raise TypeError("ground_truth parameters dictionary keys must be strings (tool names)")
+                    raise EvaluationException(
+                        "expected_actions parameters dictionary keys must be strings (tool names)",
+                        target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        blame=ErrorBlame.USER_ERROR,
+                    )
                 if not isinstance(params, dict):
-                    raise TypeError(f"ground_truth parameters for tool '{tool_name}' must be a dictionary")
+                    raise EvaluationException(
+                        f"expected_actions parameters for tool '{tool_name}' must be a dictionary",
+                        target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        blame=ErrorBlame.USER_ERROR,
+                    )
                 for k, v in params.items():
                     if not isinstance(k, str):
-                        raise TypeError(f"ground_truth parameters for tool '{tool_name}' must have string keys")
+                        raise EvaluationException(
+                            f"expected_actions parameters for tool '{tool_name}' must have string keys",
+                            target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
+                            category=ErrorCategory.INVALID_VALUE,
+                            blame=ErrorBlame.USER_ERROR,
+                        )
                     try:
                         json.dumps(v)
                     except (TypeError, ValueError):
-                        raise TypeError(
-                            f"ground_truth parameters for tool '{tool_name}' must have JSON-serializable values "
-                            f"(got type {type(v)} for key '{k}')"
+                        raise EvaluationException(
+                            f"expected_actions parameters for tool '{tool_name}' must have JSON-serializable values "
+                            f"(got type {type(v)} for key '{k}')",
+                            target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
+                            category=ErrorCategory.INVALID_VALUE,
+                            blame=ErrorBlame.USER_ERROR,
                         )
 
-            ground_truth_names = [name.strip() for name in tool_names_list]
-            ground_truth_params_dict = params_dict
+            expected_actions_names = [name.strip() for name in tool_names_list]
+            expected_actions_params_dict = params_dict
             use_parameter_matching = True
-        elif isinstance(ground_truth, list) and all(isinstance(step, str) for step in ground_truth):
-            # List format: just tool names
-            ground_truth_names = [step.strip() for step in ground_truth]
-            use_parameter_matching = False
         else:
-            raise TypeError(
-                "ground_truth must be a list of strings or a tuple of (list[str], dict[str, dict[str, str]])"
+            raise EvaluationException(
+                "expected_actions must be a list of strings or a tuple of (list[str], dict[str, dict[str, str]])",
+                target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
+                category=ErrorCategory.INVALID_VALUE,
+                blame=ErrorBlame.USER_ERROR,
             )
 
-        # Extract tool information from the response
-        agent_tool_pairs = self._extract_tool_names_and_params_from_response(response)
+        # Extract tool information from the actions
+        agent_tool_pairs = self._extract_tool_names_and_params_from_actions(actions)
 
         # Prepare steps for comparison
-        agent_steps, ground_truth_steps = self._prepare_steps_for_comparison(
+        agent_steps, expected_actions_steps = self._prepare_steps_for_comparison(
             agent_tool_pairs,
-            ground_truth_names,
-            ground_truth_params_dict,
+            expected_actions_names,
+            expected_actions_params_dict,
             use_parameter_matching,
         )
 
         # Calculate precision, recall, and F1 scores
-        additional_properties_metrics = self._calculate_precision_recall_f1_scores(agent_steps, ground_truth_steps)
+        additional_properties_metrics = self._calculate_precision_recall_f1_scores(agent_steps, expected_actions_steps)
 
         # Convert metrics to floats, using nan for None or non-convertible values
         for metric, score in additional_properties_metrics.items():
@@ -459,13 +661,18 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         if self.matching_mode in self._TASK_NAVIGATION_EFFICIENCY_MATCHING_MODE_TO_FUNCTIONS:
             # Calculate binary match metrics
             match_result = self._TASK_NAVIGATION_EFFICIENCY_MATCHING_MODE_TO_FUNCTIONS[self.matching_mode](
-                self, agent_steps, ground_truth_steps
+                self, agent_steps, expected_actions_steps
             )
 
             return {
-                "task_navigation_efficiency_label": match_result,
+                "task_navigation_efficiency": float(match_result),
+                "task_navigation_efficiency_score": float(match_result),
                 "task_navigation_efficiency_result": EVALUATION_PASS_FAIL_MAPPING[match_result],
-                "task_navigation_efficiency_details": additional_properties_metrics,
+                "task_navigation_efficiency_passed": match_result,
+                "task_navigation_efficiency_reason": None,
+                "task_navigation_efficiency_status": "completed",
+                "task_navigation_efficiency_threshold": 1.0,
+                "task_navigation_efficiency_properties": additional_properties_metrics,
             }
         else:
             raise EvaluationException(
@@ -473,19 +680,20 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
                 internal_message=str(self.matching_mode),
                 target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
                 category=ErrorCategory.INVALID_VALUE,
+                blame=ErrorBlame.USER_ERROR,
             )
 
     @overload
     def __call__(  # type: ignore
-        self, *, response: Union[str, List[Dict[str, Any]]], ground_truth: List[str]
+        self, *, actions: Union[str, List[Dict[str, Any]]], expected_actions: List[str]
     ) -> Dict[str, Union[float, str, Dict[str, float]]]:
         """
         Evaluate the task navigation efficiency of an agent's action sequence.
 
-        :keyword response: The agent's response containing tool calls.
-        :paramtype response: Union[str, List[Dict[str, Any]]]
-        :keyword ground_truth: List of expected tool/action steps.
-        :paramtype ground_truth: List[str]
+        :keyword actions: The agent's actions containing tool calls.
+        :paramtype actions: Union[str, List[Dict[str, Any]]]
+        :keyword expected_actions: List of expected tool/action steps.
+        :paramtype expected_actions: List[str]
         :return: The task navigation efficiency scores and results.
         :rtype: Dict[str, Union[float, str, Dict[str, float]]]
         """
@@ -494,16 +702,16 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
     def __call__(  # type: ignore
         self,
         *,
-        response: Union[str, List[Dict[str, Any]]],
-        ground_truth: Tuple[List[str], Dict[str, Dict[str, str]]],
+        actions: Union[str, List[Dict[str, Any]]],
+        expected_actions: Tuple[List[str], Dict[str, Dict[str, str]]],
     ) -> Dict[str, Union[float, str, Dict[str, float]]]:
         """
         Evaluate the task navigation efficiency of an agent's action sequence with tool parameters.
 
-        :keyword response: The agent's response containing tool calls.
-        :paramtype response: Union[str, List[Dict[str, Any]]]
-        :keyword ground_truth: Tuple of (tool names list, parameters dict) where parameters must match exactly.
-        :paramtype ground_truth: Tuple[List[str], Dict[str, Dict[str, str]]]
+        :keyword actions: The agent's actions containing tool calls.
+        :paramtype actions: Union[str, List[Dict[str, Any]]]
+        :keyword expected_actions: Tuple of (tool names list, parameters dict) where parameters must match exactly.
+        :paramtype expected_actions: Tuple[List[str], Dict[str, Dict[str, str]]]
         :return: The task navigation efficiency scores and results.
         :rtype: Dict[str, Union[float, str, Dict[str, float]]]
         """
@@ -517,10 +725,10 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         """
         Evaluate task navigation efficiency.
 
-        :keyword response: The agent's response containing tool calls.
-        :paramtype response: Union[str, List[Dict[str, Any]]]
-        :keyword ground_truth: List of expected tool/action steps or tuple of (tool names, parameters dict).
-        :paramtype ground_truth: Union[List[str], Tuple[List[str], Dict[str, Dict[str, str]]]]
+        :keyword actions: The agent's actions containing tool calls.
+        :paramtype actions: Union[str, List[Dict[str, Any]]]
+        :keyword expected_actions: List of expected tool/action steps or tuple of (tool names, parameters dict).
+        :paramtype expected_actions: Union[List[str], Tuple[List[str], Dict[str, Dict[str, str]]]]
         :return: The task navigation efficiency scores and results.
         :rtype: Dict[str, Union[float, str, Dict[str, float]]]
         """

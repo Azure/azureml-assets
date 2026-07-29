@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.document_retrieval"
-version: 1
+version: 3
 displayName: "Document-Retrieval-Evaluator"
 description: "Checks how accurately relevant documents are retrieved. Higher scores mean better matching to user intent. Use this metric when assessing search engines, recommendation systems, or any system tasked with retrieving documents from a large dataset."
 evaluatorType: "builtin"
@@ -8,6 +8,7 @@ evaluatorSubType: "code"
 categories: ["quality"]
 tags:
   provider: "Microsoft"
+  enable_evaluation_ui: false
 initParameterSchema:
   type: "object"
   properties:
@@ -29,7 +30,7 @@ initParameterSchema:
       type: "integer"
     total_ground_truth_documents_threshold:
       type: "integer"
-  required: ["ground_truth_label_min", "ground_truth_label_max"]
+  required: []
 dataMappingSchema:
   type: "object"
   properties:
@@ -55,46 +56,9 @@ dataMappingSchema:
         required: ["document_id", "relevance_score"]
   required: ["retrieval_ground_truth", "retrieved_documents"]
 outputSchema:
-  ndcg@3:
+  document_retrieval:
     type: "continuous"
     desirable_direction: "increase"
     min_value: 0
     max_value: 1
-  xdcg@3:
-    type: "continuous"
-    desirable_direction: "increase"
-    min_value: 0
-    max_value: 1
-  fidelity:
-    type: "continuous"
-    desirable_direction: "increase"
-    min_value: 0
-    max_value: 1
-  top1_relevance:
-    type: "continuous"
-    desirable_direction: "increase"
-    min_value: 0
-    max_value: 1
-  top3_max_relevance:
-    type: "continuous"
-    desirable_direction: "increase"
-    min_value: 0
-    max_value: 1
-  holes:
-    type: "ordinal"
-    desirable_direction: "decrease"
-    min_value: 0
-  holes_ratio:
-    type: "continuous"
-    desirable_direction: "decrease"
-    min_value: 0
-    max_value: 1
-  total_retrieved_documents:
-    type: "ordinal"
-    desirable_direction: "increase"
-    min_value: 0
-  total_ground_truth_documents:
-    type: "ordinal"
-    desirable_direction: "increase"
-    min_value: 0
 path: ./evaluator

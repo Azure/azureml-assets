@@ -29,7 +29,7 @@ def list_assets(args: argparse.Namespace):
 
     # Write to file or stdout
     if args.output_file:
-        with open(args.output_file, "w") as f:
+        with open(args.output_file, "w", encoding='utf-8') as f:
             f.write("\n".join(asset_list))
     else:
         print("\n".join(asset_list))
@@ -48,7 +48,7 @@ def delete_assets(args: argparse.Namespace):
         args (argparse.Namespace): Args from argparse.
     """
     # Read retention file
-    with open(args.retention_file) as f:
+    with open(args.retention_file, encoding='utf-8') as f:
         retention_list = f.read().splitlines()
         print(f"Read {len(retention_list)} asset(s) from retention file")
 

@@ -1,0 +1,5 @@
+type: DataFrameDirectory
+extension: {}
+format: CSV
+data: MuSR_all.csv
+schema: schema/_schema.json

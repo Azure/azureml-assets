@@ -121,7 +121,7 @@ class GitHubLogger(Logger):
             value (str): Value.
         """
         output_filename = os.environ["GITHUB_OUTPUT"]
-        with _output_lock, open(output_filename, "a") as f:
+        with _output_lock, open(output_filename, "a", encoding='utf-8') as f:
             f.write(f"{name}={value}\n")
 
     def _log(self, log_level: str, message: str, title: str = None):

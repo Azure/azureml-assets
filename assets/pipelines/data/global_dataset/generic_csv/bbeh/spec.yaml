@@ -1,0 +1,8 @@
+$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
+name: "{{asset.name}}"
+version: "{{asset.version}}"
+tags:
+  azureml.Designer: false
+description: "BIG-Bench Extra Hard (BBEH) benchmark dataset - 4520 samples across 23 reasoning tasks"
+type: uri_folder
+path: sample_data/

@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-version: 0.0.21
+version: 0.0.22
 name: transformers_image_classification_model_import
 display_name: Image Classification HuggingFace Transformers Model Import
 description: Import PyTorch / MLflow model
 
 is_deterministic: True
 
-environment: azureml://registries/azureml/environments/acft-transformers-image-gpu/versions/58
+environment: azureml://registries/azureml/environments/acft-transformers-image-gpu/versions/73
 
 code: ../../../src/model_selector
 

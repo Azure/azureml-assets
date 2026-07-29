@@ -1,13 +1,14 @@
 type: "evaluator"
 name: "builtin.fluency"
-version: 1
+version: 10
 displayName: "Fluency-Evaluator"
 description: "Evaluates how natural and grammatically correct the response sounds. Higher scores indicate smoother and clearer language. It’s best used for generative business writing such as summarizing meeting notes, creating marketing materials, and drafting email."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
-categories: ["quality"]
+categories: ["quality", "agents"]
 tags:
   provider: "Microsoft"
+  is_continuous_scenario: "true"
 initParameterSchema:
   type: "object"
   properties:
@@ -22,13 +23,9 @@ initParameterSchema:
 dataMappingSchema:
   type: "object"
   properties:
-    query:
-      type: "string"
     response:
       type: "string"
-    conversation:
-      type: "object"
-  required: ["query", "response"]
+  required: ["response"]
 outputSchema:
   fluency:
     type: "ordinal"

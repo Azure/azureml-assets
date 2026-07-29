@@ -1,4 +1,4 @@
-This model is an optimized version of Qwen3-0.6B to enable local inference on CPUs. This model uses RTN quantization.
+This model is an optimized version of Qwen3-0.6B to enable local inference on CPUs. This model uses DiscQuant mixed-precision quantization.
 
 # Model Description
 - **Developed by:** Microsoft

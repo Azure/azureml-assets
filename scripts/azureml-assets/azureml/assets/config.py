@@ -44,8 +44,10 @@ class AssetType(Enum):
     PROMPT = 'prompt'
     AGENTBLUEPRINT = 'agentblueprint'
     EVALUATOR = 'evaluator'
+    BENCHMARKSPEC = 'benchmarkspec'
     AGENTMANIFEST = 'agentmanifest'
     APPTEMPLATE = 'apptemplate'
+    HUMANEVALUATIONTEMPLATE = 'humanevaluationtemplate'
 
 
 class ComponentType(Enum):
@@ -140,7 +142,7 @@ EXCLUDE_PREFIX = "!"
 FULL_ASSET_NAME_DELIMITER = "/"
 FULL_ASSET_NAME_TEMPLATE = "{type}/{name}/{version}"
 GENERIC_ASSET_TYPES = [AssetType.EVALUATIONRESULT, AssetType.PROMPT, AssetType.AGENTBLUEPRINT, AssetType.EVALUATOR,
-                       AssetType.APPTEMPLATE]
+                       AssetType.APPTEMPLATE, AssetType.BENCHMARKSPEC, AssetType.HUMANEVALUATIONTEMPLATE]
 OTHER_ASSET_TYPES = [AssetType.AGENTMANIFEST]
 PARTIAL_ASSET_NAME_TEMPLATE = "{type}/{name}"
 PUBLISH_LOCATION_HOSTNAMES = {PublishLocation.MCR: 'mcr.microsoft.com'}
@@ -158,7 +160,7 @@ class Config:
         Args:
             file_name (Path): Location of config file.
         """
-        with open(file_name) as f:
+        with open(file_name, encoding='utf-8') as f:
             self._yaml = YAML().load(f)
         self._file_name_with_path = file_name
         self._file_name = file_name.name
@@ -815,7 +817,7 @@ class ModelConfig(Config):
     def description(self) -> str:
         """Model description."""
         if self._description_file_path and not self._description:
-            with open(self._description_file_path) as f:
+            with open(self._description_file_path, encoding='utf-8') as f:
                 self._description = f.read()
         return self._description
 
@@ -936,7 +938,7 @@ class EnvironmentConfig(Config):
 
     def get_dockerfile_contents(self) -> str:
         """Dockerfile contents."""
-        with open(self.dockerfile_with_path, "r") as f:
+        with open(self.dockerfile_with_path, "r", encoding='utf-8') as f:
             return f.read()
 
     @property

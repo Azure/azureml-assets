@@ -11,6 +11,9 @@ update:
     environment1:
       - all_versions: true
         description: "Test description for environment1."
+        update_on_create:
+          enabled: true
+          clouds: ["public"]
         tags:
           add:
             AddMe: "Value"

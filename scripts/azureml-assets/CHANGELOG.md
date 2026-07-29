@@ -1,6 +1,54 @@
-## 1.17.0 (Unreleased)
+## 1.17.7 (2026-07-16)
 ### 🚀 New Features
+- [#5221](https://github.com/Azure/azureml-assets/pull/5221) Add `--duplicate-name-exceptions` option to `validate_assets` to allow listed models to have multiple versions in the repo
+
+## 1.17.6 (2026-06-17)
+### 🚀 New Features
+- [#5154](https://github.com/Azure/azureml-assets/pull/5154) Add isArchived to unsupported SDK fields list
+
+## 1.17.5 (2026-06-04)
 ### 🐛 Bugs Fixed
+- [#5111](https://github.com/Azure/azureml-assets/pull/5111) Use system_metadata equivalents for tags/properties in MLFlow model spec validation
+
+## 1.17.4 (2026-05-19)
+### 🚀 New Features
+- [#5036](https://github.com/Azure/azureml-assets/pull/5057) Update Trivy and Oras versions
+
+## 1.17.3 (2026-05-13)
+### 🚀 New Features
+- [#5036](https://github.com/Azure/azureml-assets/pull/5036) Add isArchived to unsupported SDK fields list
+
+## 1.17.2 (2026-04-17)
+### 🚀 New Features
+- [#4939](https://github.com/Azure/azureml-assets/pull/4939) Add HumanEvaluationTemplate AssetType
+
+## 1.17.1 (2026-04-14)
+### 🐛 Bugs Fixed
+- [#4929](https://github.com/Azure/azureml-assets/pull/4929) Add ACR throttle retry and submission delay for environment builds
+
+## 1.17.0 (2026-03-04)
+### 🚀 New Features
+- [#4830](https://github.com/Azure/azureml-assets/pull/4830) Add update_on_create settings for asset version updates
+
+## 1.16.102 (2026-01-23)
+### 🚀 New Features
+- [#4740](https://github.com/Azure/azureml-assets/pull/4740) Update media manifest headers list for registry/manifests call
+
+## 1.16.101 (2026-01-15)
+### 🚀 New Features
+- [#4731](https://github.com/Azure/azureml-assets/pull/4731) Add BenchmarkSpec to asset types
+
+## 1.16.100 (2026-01-06)
+### 🐛 Bugs Fixed
+- [#4714](https://github.com/Azure/azureml-assets/pull/4714) Fix AttributeError when updating metadata for asset types without _system_metadata attribute
+
+## 1.16.99 (2025-11-24)
+### 🐛 Bugs Fixed
+- [#4636](https://github.com/Azure/azureml-assets/pull/4636) Handle non-JSON content from Azure CLI responses
+
+## 1.16.98 (2025-11-19)
+### 🚀 New Features
+- [#4629](https://github.com/Azure/azureml-assets/pull/4629) Enforce encoding for file read and write operations
 
 ## 1.16.97 (2025-10-22)
 ### 🚀 New Features
@@ -517,4 +565,5 @@
 ## 1.0.0 (2023-05-16)
 ### 🚀 New Features
 - [#663](https://github.com/Azure/azureml-assets/pull/663) Initial release to PyPI
+
 

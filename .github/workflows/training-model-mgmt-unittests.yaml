@@ -1,26 +1,19 @@
 name: training-model-mgmt-unittests
 
 on:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - assets/training/model_management/**
-      - assets/common/components/register_model/**
-      - assets/common/src/model_registration/**
-      - assets/common/components/mlflow_model_local_validation/**
-      - assets/common/src/mlflow_model_local_validation/**
-      - .github/workflows/training-model-mgmt-unittests.yaml
+#   pull_request:
+#     branches:
+#       - main
+#     paths:
+#       - assets/common/components/register_model/**
+#       - assets/common/src/model_registration/**
+#       - assets/common/components/mlflow_model_local_validation/**
+#       - assets/common/src/mlflow_model_local_validation/**
+#       - .github/workflows/training-model-mgmt-unittests.yaml
   workflow_dispatch:
 
 env:
-  conda_env_prefix: /opt/conda/envs/model_mgmt
-  model_mgmt_root_dir: assets/training/model_management
-  model_mgmt_src_dir: assets/training/model_management/src/azureml/
-  model_mgmt_test_dir: assets/training/model_management/tests
-  model_mgmt_unittests_dir: assets/training/model_management/tests/unittests
-  model_mgmt_test_req: assets/training/model_management/tests/dev_requirements.txt
-  model_mgmt_conda_yaml: assets/training/model_management/tests/dev_conda_env.yaml
+
   pytest_reports: pytest-reports
 
 jobs:

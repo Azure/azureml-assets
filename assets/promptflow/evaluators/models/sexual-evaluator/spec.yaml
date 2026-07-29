@@ -1,9 +1,0 @@
-$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: Sexual-Content-Evaluator
-path: ./
-properties:
-  is-promptflow: true
-  is-evaluator: true
-tags:
-  Preview: ""
-version: 4

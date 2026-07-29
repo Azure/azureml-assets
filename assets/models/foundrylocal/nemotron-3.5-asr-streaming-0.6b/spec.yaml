@@ -1,0 +1,7 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: nemotron-3.5-asr-streaming-0.6b
+path: ./
+isArchived: true
+system_metadata:
+  foundryLocal: ''
+version: 1

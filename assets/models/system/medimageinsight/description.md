@@ -12,6 +12,8 @@ Please see https://aka.ms/medimageinsightpaper for more details.
 
 For documentation and example Jupyter Notebooks, visit: https://aka.ms/MedImageInsightDocs.
 
+For example code, usage demonstrations, and fine-tuning capabilities, visit the [Healthcare AI Examples repository](https://aka.ms/HealthcareAIExamples).
+
 [^1]: [2022.12.07.22283216v3.full.pdf (medrxiv.org)](https://www.medrxiv.org/content/10.1101/2022.12.07.22283216v3.full.pdf)
 
 ### Model Architecture
@@ -164,3 +166,9 @@ data =  {
   }
 ]
 ```
+
+## Version History
+
+| Version | Date | Description |
+|---------|------|-------------|
+| 12 | 2026-02-17 | - Initial version tracking <br>- Fixing deployment issues for fine-tuned classification models |

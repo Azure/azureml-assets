@@ -1,0 +1,6 @@
+name: slime-pytorch-2.9-cuda12.8
+version: auto
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml
+categories: ["PyTorch", "Training"]
