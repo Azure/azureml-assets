@@ -426,6 +426,31 @@ except ImportError:  # pragma: no cover
         ]
 
 
+_GROUNDEDNESS_ALLOWED_RESTRICTED_TOOLS = {
+    "azure_ai_search",
+    "azure_fabric",
+    "bing_custom_search",
+    "bing_grounding",
+    "openapi_call",
+    "sharepoint_grounding",
+}
+
+
+class GroundednessConversationValidatorPolicyOverride(GroundednessConversationValidator):
+    """Groundedness-specific tool support policy override.
+
+    Keep the validator's unsupported-tool enforcement behavior enabled, but
+    allow a curated subset of tool calls that now have stable grounding
+    semantics for this evaluator.
+    """
+
+    UNSUPPORTED_TOOLS: List[str] = [
+        tool
+        for tool in GroundednessConversationValidator.UNSUPPORTED_TOOLS
+        if tool not in _GROUNDEDNESS_ALLOWED_RESTRICTED_TOOLS
+    ]
+
+
 try:
     from azure.ai.evaluation._user_agent import UserAgentSingleton
 except ImportError:  # pragma: no cover
@@ -617,13 +642,13 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         )
 
         # Initialize input validators
-        self._validator = GroundednessConversationValidator(
+        self._validator = GroundednessConversationValidatorPolicyOverride(
             error_target=ErrorTarget.GROUNDEDNESS_EVALUATOR,
             requires_query=False,
             check_for_unsupported_tools=True
         )
 
-        self._validator_with_query = GroundednessConversationValidator(
+        self._validator_with_query = GroundednessConversationValidatorPolicyOverride(
             error_target=ErrorTarget.GROUNDEDNESS_EVALUATOR, requires_query=True,
             check_for_unsupported_tools=True
         )
