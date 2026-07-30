@@ -533,7 +533,7 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         # Initialize input validator
         self._validator = ToolDefinitionsValidator(
-            error_target=ExtendedErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR, optional_tool_definitions=False,
+            error_target=ExtendedErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR, optional_tool_definitions=True,
             check_for_unsupported_tools=False,
         )
 

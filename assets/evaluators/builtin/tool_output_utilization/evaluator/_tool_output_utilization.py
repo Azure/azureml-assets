@@ -315,7 +315,7 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         # Initialize input validator
         self._validator = ToolDefinitionsValidator(
             error_target=ErrorTarget.TOOL_OUTPUT_UTILIZATION_EVALUATOR,
-            optional_tool_definitions=False,
+            optional_tool_definitions=True,
             check_for_unsupported_tools=True,
         )
         # azure_ai_search, azure_fabric and sharepoint_grounding are supported by this
@@ -349,6 +349,14 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
         """
         self._validator.validate_eval_input(kwargs)
+        # tool_definitions are optional for this evaluator (optional_tool_definitions=True).
+        # Tool output utilization is assessed from the query/response messages and does not
+        # require tool schemas, so when tool_definitions are missing (None or absent) we
+        # normalize them to an empty list. This lets evaluation proceed exactly like the
+        # explicit empty-list case, instead of the base evaluator rejecting the inputs with
+        # "Either 'conversation' or individual inputs must be provided."
+        if not kwargs.get("tool_definitions"):
+            kwargs["tool_definitions"] = []
         return await self._the_super_real_call(**kwargs)
 
     async def _the_super_real_call(self, **kwargs):

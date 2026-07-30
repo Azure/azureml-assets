@@ -82,7 +82,9 @@ class TestToolInputAccuracyEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, Bas
     check_for_unsupported_tools = False
 
     # Test Configs
-    requires_tool_definitions = True
+    # tool_definitions are optional: when absent, the evaluator returns
+    # not_applicable instead of a MISSING_FIELD error (optional_tool_definitions=True).
+    requires_tool_definitions = False
 
     MINIMAL_RESPONSE = BaseToolsEvaluatorBehaviorTest.tool_calls_with_arguments
 
@@ -93,6 +95,28 @@ class TestToolInputAccuracyEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, Bas
     def test_intermediate_response_returns_not_applicable(self):
         """A response ending in an unresolved function_call is treated as not-applicable."""
         self.run_intermediate_response_not_applicable_test()
+
+    def test_tool_definitions_not_present(self):
+        """Missing tool_definitions is optional: returns not_applicable, not a MISSING_FIELD error."""
+        results = self._run_evaluation(
+            query=self.VALID_QUERY,
+            response=self.VALID_RESPONSE,
+            tool_calls=self.VALID_TOOL_CALLS,
+            tool_definitions=None,
+        )
+        result_data = self._extract_and_print_result(results, "Tool Definitions Not Present")
+        self.assert_not_applicable(result_data)
+
+    def test_tool_definitions_empty_list(self):
+        """Empty tool_definitions is optional: returns not_applicable, not a MISSING_FIELD error."""
+        results = self._run_evaluation(
+            query=self.VALID_QUERY,
+            response=self.VALID_RESPONSE,
+            tool_calls=self.VALID_TOOL_CALLS,
+            tool_definitions=self.EMPTY_LIST,
+        )
+        result_data = self._extract_and_print_result(results, "Tool Definitions Empty List")
+        self.assert_not_applicable(result_data)
 
     def test_zero_parameters_extraction_accuracy_is_100_percent(self):
         """Zero total parameters returns 100% accuracy without dividing by zero."""

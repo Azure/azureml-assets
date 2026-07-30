@@ -120,7 +120,11 @@ class TestToolOutputUtilizationEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest,
     check_for_unsupported_tools = True
 
     MINIMAL_RESPONSE = BaseEvaluatorBehaviorTest.VALID_RESPONSE
-    requires_tool_definitions = True
+    # tool_definitions are optional (optional_tool_definitions=True): tool output
+    # utilization is assessed from the query/response messages, so when they are
+    # absent evaluation proceeds normally (normalized to an empty list) instead of
+    # raising a MISSING_FIELD error.
+    requires_tool_definitions = False
 
     def test_skipped_llm_status_returns_not_applicable(self):
         """Flow output with status='skipped' yields a not-applicable result, not a crash."""
@@ -129,6 +133,11 @@ class TestToolOutputUtilizationEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest,
     def test_intermediate_response_returns_not_applicable(self):
         """A response ending in an unresolved function_call is treated as not-applicable."""
         self.run_intermediate_response_not_applicable_test()
+
+    # tool_definitions not-present / empty-list are covered by the base class:
+    # with requires_tool_definitions = False, tool output utilization is assessed
+    # from the query/response messages and evaluation proceeds normally (PASS)
+    # instead of raising a MISSING_FIELD error.
 
     # --- Phase 2 overrides: these three tools used to be unsupported but TOU now
     # accepts them, so we override the base-class tests (which still branch to
