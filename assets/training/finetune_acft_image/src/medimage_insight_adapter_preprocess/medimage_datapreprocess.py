@@ -31,8 +31,55 @@ logger = get_logger_app(
 Input Arguments:
     --image_tsv: Path to image TSV file.
     --mlflow_model_path: The path to the MLflow model.
-    --output_pkl: Output PKL file path.
+    --output_pkl: Output embeddings file path.
 """
+
+
+def resolve_mlflow_model_path(model_path: str) -> str:
+    """Resolve the directory that contains the MLflow MLmodel file."""
+    if os.path.isfile(os.path.join(model_path, "MLmodel")):
+        return model_path
+
+    for root, _, files in os.walk(model_path):
+        if "MLmodel" in files:
+            logger.info("Resolved MLflow model path from %s to %s", model_path, root)
+            return root
+
+    raise FileNotFoundError(f"No MLmodel file found under {model_path}")
+
+
+def load_local_mlflow_model(model_path: str):
+    """Load a mounted MLflow model without AzureML tracking/registry side effects."""
+    original_tracking_uri = os.environ.get("MLFLOW_TRACKING_URI")
+    original_registry_uri = os.environ.get("MLFLOW_REGISTRY_URI")
+    original_allow_file_store = os.environ.get("MLFLOW_ALLOW_FILE_STORE")
+    local_tracking_uri = "file:///tmp/mlruns"
+
+    try:
+        os.environ["MLFLOW_TRACKING_URI"] = local_tracking_uri
+        os.environ["MLFLOW_REGISTRY_URI"] = local_tracking_uri
+        os.environ["MLFLOW_ALLOW_FILE_STORE"] = "true"
+        mlflow.set_tracking_uri(local_tracking_uri)
+        mlflow.set_registry_uri(local_tracking_uri)
+        logger.info("Loading MLflow model from %s", model_path)
+        return mlflow.pyfunc.load_model(model_path)
+    finally:
+        if original_tracking_uri is None:
+            os.environ.pop("MLFLOW_TRACKING_URI", None)
+        else:
+            os.environ["MLFLOW_TRACKING_URI"] = original_tracking_uri
+            mlflow.set_tracking_uri(original_tracking_uri)
+
+        if original_registry_uri is None:
+            os.environ.pop("MLFLOW_REGISTRY_URI", None)
+        else:
+            os.environ["MLFLOW_REGISTRY_URI"] = original_registry_uri
+            mlflow.set_registry_uri(original_registry_uri)
+
+        if original_allow_file_store is None:
+            os.environ.pop("MLFLOW_ALLOW_FILE_STORE", None)
+        else:
+            os.environ["MLFLOW_ALLOW_FILE_STORE"] = original_allow_file_store
 
 
 def get_parser():
@@ -117,23 +164,27 @@ def save_dataframe(
     image_embeddings: pd.DataFrame,
     output_pkl_path: str,
 ) -> None:
-    """Save image embeddings DataFrame to a PKL file.
+    """Save image embeddings DataFrame to an embeddings file.
 
     This function saves the provided image embeddings DataFrame
-    to the specified PKL file path with the given file name. It also creates
+    to the specified output path with the given file name. It also creates
     the directory if it does not exist.
 
     Args:
         image_embeddings (pd.DataFrame): The DataFrame containing image embeddings to be saved.
-        output_pkl_path (str): The directory path where the PKL file will be saved.
+        output_pkl_path (str): The directory path where the embeddings file will be saved.
     Returns:
         None
     """
     os.makedirs(output_pkl_path, exist_ok=True)
 
-    image_embeddings.to_pickle(os.path.join(output_pkl_path, EMBEDDING_FILE_NAME))
+    image_embeddings.to_json(
+        os.path.join(output_pkl_path, EMBEDDING_FILE_NAME),
+        orient="records",
+        lines=True,
+    )
 
-    logger.info("Saved merged DataFrames to PKL files")
+    logger.info("Saved merged DataFrames to embeddings file")
 
 
 def process_embeddings(args):
@@ -147,7 +198,7 @@ def process_embeddings(args):
         args (Namespace): A namespace object containing the following attributes:
             - mlflow_model_path (str): The path to the MLflow model.
             - image_tsv (str): The path to the image TSV file.
-            - output_pkl (str): The path to save the output PKL file.
+            - output_pkl (str): The path to save the output embeddings file.
     Returns:
         None
     """
@@ -155,7 +206,10 @@ def process_embeddings(args):
     output_pkl = args.output_pkl
     image_tsv = args.image_tsv
 
-    mlflow_model = mlflow.pyfunc.load_model(model_path)
+    resolved_model_path = resolve_mlflow_model_path(model_path)
+    mlflow_model = load_local_mlflow_model(resolved_model_path)
+    if mlflow_model is None:
+        raise RuntimeError(f"mlflow.pyfunc.load_model returned None for {resolved_model_path}")
     image_embeddings = generate_embeddings(
         image_tsv,
         mlflow_model,

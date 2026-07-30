@@ -137,8 +137,7 @@ def load_opt_from_config_files(conf_files: List[str]) -> Dict[str, Any]:
     opt = {}
 
     with open(conf_files, encoding='utf-8') as f:
-        # config_dict = yaml.safe_load(f)
-        config_dict = yaml.unsafe_load(f)
+        config_dict = yaml.safe_load(f)
 
         load_config_dict_to_opt(opt, config_dict)
 
