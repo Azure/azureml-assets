@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: medimageinsight_adapter_finetune
-version: 0.0.2
+version: 0.0.4
 type: command
 
 is_deterministic: True
@@ -17,15 +17,15 @@ distribution:
 
 inputs:
   train_data_path:
-    type: uri_file
+    type: uri_folder
     optional: false
-    description: Path to the training data file.
+    description: Path to the training embeddings folder.
     mode: ro_mount
 
   validation_data_path:
-    type: uri_file
+    type: uri_folder
     optional: false
-    description: Path to the validation data file.
+    description: Path to the validation embeddings folder.
     mode: ro_mount
 
   validation_text_tsv:

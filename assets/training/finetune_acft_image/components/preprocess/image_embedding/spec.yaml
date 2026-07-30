@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: medimageinsight_embedding_generation
-version: 0.0.2
+version: 0.0.13
 type: command
 
 is_deterministic: True
@@ -39,10 +39,11 @@ inputs:
 outputs:
   output_pkl:
     type: uri_folder
-    description: Path to the output training PKL file.
+    description: Path to the output training embeddings file.
     mode: rw_mount
 
 command: >-
+  python -m pip install --no-cache-dir "transformers>=4.52.0,<4.56.0" &&
   python medimage_datapreprocess.py
   --task_name "MedEmbedding"
   --image_tsv "${{inputs.image_tsv}}"
