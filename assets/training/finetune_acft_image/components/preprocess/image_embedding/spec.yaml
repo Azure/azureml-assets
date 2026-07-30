@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: medimageinsight_embedding_generation
-version: 0.0.13
+version: 0.0.14
 type: command
 
 is_deterministic: True
@@ -43,7 +43,6 @@ outputs:
     mode: rw_mount
 
 command: >-
-  python -m pip install --no-cache-dir "transformers>=4.52.0,<4.56.0" &&
   python medimage_datapreprocess.py
   --task_name "MedEmbedding"
   --image_tsv "${{inputs.image_tsv}}"
