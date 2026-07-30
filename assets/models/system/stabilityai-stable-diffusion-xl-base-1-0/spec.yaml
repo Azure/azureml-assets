@@ -7,10 +7,9 @@ system_metadata:
   sharedComputeCapacityEnabled: true
   SKU:
     inferenceRecommendedSkus:
-    - Standard_ND40rs_v2
     - Standard_ND96amsr_A100_v4
     - Standard_ND96asr_v4
-    inferenceMinSkuSpec: 40|8|672|2900
+    inferenceMinSkuSpec: 96|8|900|2900
   publisher: Stability AI
   hiddenLayerScanned: true
   huggingFaceModelId: stabilityai/stable-diffusion-xl-base-1.0
@@ -20,7 +19,7 @@ system_metadata:
     - text-to-image
   supportedComputes:
     inferenceComputes:
-    - Standard_ND40rs_v2
     - Standard_ND96amsr_A100_v4
     - Standard_ND96asr_v4
-version: 7
+  inferenceEnvironmentAssetId: azureml://registries/azureml/environments/mlflow-model-inference/versions/21
+version: 8
