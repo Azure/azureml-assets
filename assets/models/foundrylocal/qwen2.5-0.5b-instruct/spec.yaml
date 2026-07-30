@@ -4,5 +4,5 @@ path: ./
 isArchived: true
 system_metadata:
   foundryLocal: ''
-  deploymentOption: 'Foundry Local on Devices'
+  deploymentOptions: 'Foundry Local on Devices'
 version: 1
