@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.jso
 type: command
 
 
-version: 0.0.3
+version: 0.0.2
 name: medimageinsight_classification_model
 display_name: MedImageInsight Classification Model
 
