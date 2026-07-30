@@ -34,6 +34,7 @@ class _MaliciousPayload:
 
 @pytest.fixture
 def signing_key(monkeypatch):
+    """Create an RSA signing key and configure its public key as trusted."""
     private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     public_key_pem = private_key.public_key().public_bytes(
         encoding=serialization.Encoding.PEM,
@@ -57,6 +58,7 @@ def _sign_model(model_path, private_key):
 
 
 def test_get_model_loads_valid_signed_pickle(tmp_path, signing_key):
+    """Load a pickle only when its detached signature is valid."""
     model_path = tmp_path / "model.pkl"
     expected_model = {"model": "trusted"}
     model_path.write_bytes(pickle.dumps(expected_model))
@@ -66,6 +68,7 @@ def test_get_model_loads_valid_signed_pickle(tmp_path, signing_key):
 
 
 def test_get_model_rejects_unsigned_pickle_without_deserializing(tmp_path):
+    """Reject an unsigned pickle without executing its payload."""
     global EXPLOIT_EXECUTED
     EXPLOIT_EXECUTED = False
     model_path = tmp_path / "model.pkl"
@@ -80,6 +83,7 @@ def test_get_model_rejects_unsigned_pickle_without_deserializing(tmp_path):
 def test_get_model_rejects_invalid_signature_without_deserializing(
     tmp_path, signing_key
 ):
+    """Reject a model changed after signing without executing its payload."""
     global EXPLOIT_EXECUTED
     EXPLOIT_EXECUTED = False
     model_path = tmp_path / "model.pkl"
@@ -94,6 +98,7 @@ def test_get_model_rejects_invalid_signature_without_deserializing(
 
 
 def test_get_model_requires_trusted_public_key(tmp_path, monkeypatch):
+    """Reject a signed model when no trusted public key is configured."""
     model_path = tmp_path / "model.pkl"
     model_path.write_bytes(pickle.dumps({"model": "unsigned"}))
     Path(f"{model_path}{model_loader.SIGNATURE_FILE_POSTFIX}").write_bytes(b"signature")
@@ -106,6 +111,7 @@ def test_get_model_requires_trusted_public_key(tmp_path, monkeypatch):
 
 
 def test_get_model_rejects_oversized_signature(tmp_path, signing_key):
+    """Reject a signature whose size does not match the trusted RSA key."""
     model_path = tmp_path / "model.pkl"
     model_path.write_bytes(pickle.dumps({"model": "trusted"}))
     signature_path = Path(
