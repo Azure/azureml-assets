@@ -3,7 +3,7 @@ $schema:
 type: command
 
 
-version: 0.0.1
+version: 0.0.2
 name: medimageinsight_classification_model
 display_name: MedImageInsight Classification Model
 
@@ -13,7 +13,7 @@ is_deterministic: true
 
 
 environment: 
-  azureml://registries/azureml/environments/acft-medimageinsight-embedding-generator/versions/9
+  azureml://registries/azureml/environments/acft-medimageinsight-embedding-generator/versions/31
 
 
 code: ../../../src/model_converters/medimage_embed_adapter_merge
