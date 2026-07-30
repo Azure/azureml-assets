@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: medimageinsight_embedding_generation
-version: 0.0.14
+version: 0.0.15
 type: command
 
 is_deterministic: True
@@ -39,7 +39,7 @@ inputs:
 outputs:
   output_pkl:
     type: uri_folder
-    description: Path to the output training embeddings file.
+    description: Path to the output training PKL file.
     mode: rw_mount
 
 command: >-
