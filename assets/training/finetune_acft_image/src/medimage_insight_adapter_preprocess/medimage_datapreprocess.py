@@ -4,41 +4,16 @@
 """File containing functions for embeddings generation from MedImageInsight."""
 
 import argparse
-import logging
-import importlib.metadata
-import platform
-import sys
-import traceback
+from azureml.acft.common_components import (
+    get_logger_app,
+    set_logging_parameters,
+    LoggingLiterals,
+)
 
-try:
-    from azureml.acft.common_components import (
-        get_logger_app,
-        set_logging_parameters,
-        LoggingLiterals,
-    )
-    from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
-    from azureml.acft.contrib.hf.nlp.constants.constants import (
-        LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
-    )
-except ImportError:
-    VERSION = "unknown"
-    PROJECT_NAME = "azureml-acft"
-    LOGS_TO_BE_FILTERED_IN_APPINSIGHTS = []
-
-    class LoggingLiterals:
-        """Fallback logging keys for environments without azureml-acft packages."""
-
-        PROJECT_NAME = "project_name"
-        PROJECT_VERSION_NUMBER = "project_version_number"
-        COMPONENT_NAME = "component_name"
-
-    def get_logger_app(name):
-        logging.basicConfig(level=logging.INFO)
-        return logging.getLogger(name)
-
-    def set_logging_parameters(*args, **kwargs):
-        return None
-
+from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
+from azureml.acft.contrib.hf.nlp.constants.constants import (
+    LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
+)
 import mlflow
 import pandas as pd
 import numpy as np
@@ -46,7 +21,7 @@ import os
 
 
 COMPONENT_NAME = "ACFT-MedImage-Embedding-Generator"
-EMBEDDING_FILE_NAME = "embeddings.json"
+EMBEDDING_FILE_NAME = "embeddings.pkl"
 
 
 logger = get_logger_app(
@@ -73,83 +48,6 @@ def resolve_mlflow_model_path(model_path: str) -> str:
     raise FileNotFoundError(f"No MLmodel file found under {model_path}")
 
 
-def _read_text_preview(path: str, max_chars: int = 4000) -> str:
-    try:
-        with open(path, encoding="utf-8", errors="replace") as handle:
-            return handle.read(max_chars)
-    except OSError as ex:
-        return f"<failed to read {path}: {ex}>"
-
-
-def _log_package_versions(package_names: list[str]) -> None:
-    for package_name in package_names:
-        try:
-            logger.info("Package %s version: %s", package_name, importlib.metadata.version(package_name))
-        except importlib.metadata.PackageNotFoundError:
-            logger.info("Package %s version: <not installed>", package_name)
-
-
-def log_mlflow_load_diagnostics(model_path: str) -> None:
-    """Log mounted model and runtime diagnostics without dumping large files."""
-    logger.info("Python executable: %s", sys.executable)
-    logger.info("Python version: %s", sys.version.replace("\n", " "))
-    logger.info("Platform: %s", platform.platform())
-    logger.info("Working directory: %s", os.getcwd())
-    logger.info("MLflow version: %s", getattr(mlflow, "__version__", "<unknown>"))
-    logger.info("MLflow module path: %s", getattr(mlflow, "__file__", "<unknown>"))
-    logger.info("MLflow tracking URI before load: %s", mlflow.get_tracking_uri())
-    logger.info("MLflow registry URI before load: %s", mlflow.get_registry_uri())
-    logger.info("MLFLOW_TRACKING_URI env: %s", os.environ.get("MLFLOW_TRACKING_URI"))
-    logger.info("MLFLOW_REGISTRY_URI env: %s", os.environ.get("MLFLOW_REGISTRY_URI"))
-    logger.info("MLFLOW_ALLOW_FILE_STORE env: %s", os.environ.get("MLFLOW_ALLOW_FILE_STORE"))
-    _log_package_versions(
-        [
-            "mlflow",
-            "cloudpickle",
-            "azure-ai-ml",
-            "azureml-core",
-            "azureml-dataset-runtime",
-            "azureml-ai-monitoring",
-            "timm",
-            "transformers",
-            "einops",
-            "mup",
-            "fvcore",
-            "sentencepiece",
-            "tenacity",
-            "ftfy",
-            "setuptools",
-        ]
-    )
-
-    logger.info("Resolved model path exists: %s is_dir=%s", os.path.exists(model_path), os.path.isdir(model_path))
-    for root, dirs, files in os.walk(model_path):
-        rel_root = os.path.relpath(root, model_path)
-        depth = 0 if rel_root == "." else rel_root.count(os.sep) + 1
-        if depth > 2:
-            dirs[:] = []
-            continue
-        logger.info(
-            "Model tree %s dirs=%s files=%s",
-            rel_root,
-            sorted(dirs)[:20],
-            sorted(files)[:20],
-        )
-
-    for file_name in ["MLmodel", "requirements.txt", "conda.yaml", "python_env.yaml"]:
-        file_path = os.path.join(model_path, file_name)
-        logger.info("%s exists: %s", file_name, os.path.isfile(file_path))
-        if os.path.isfile(file_path):
-            logger.info("%s preview:\n%s", file_name, _read_text_preview(file_path))
-
-    try:
-        model_config = mlflow.models.Model.load(model_path)
-        logger.info("MLflow Model.load flavors: %s", list(model_config.flavors.keys()))
-        logger.info("MLflow Model.load metadata: %s", model_config.metadata)
-    except Exception:
-        logger.error("MLflow Model.load failed:\n%s", traceback.format_exc())
-
-
 def load_local_mlflow_model(model_path: str):
     """Load a mounted MLflow model without AzureML tracking/registry side effects."""
     original_tracking_uri = os.environ.get("MLFLOW_TRACKING_URI")
@@ -164,15 +62,7 @@ def load_local_mlflow_model(model_path: str):
         mlflow.set_tracking_uri(local_tracking_uri)
         mlflow.set_registry_uri(local_tracking_uri)
         logger.info("Loading MLflow model from %s", model_path)
-        loaded_model = mlflow.pyfunc.load_model(model_path)
-        logger.info("mlflow.pyfunc.load_model returned: %r", loaded_model)
-        if loaded_model is not None:
-            logger.info("Loaded object class: %s.%s", type(loaded_model).__module__, type(loaded_model).__name__)
-            logger.info("Loaded object attributes: %s", sorted(dir(loaded_model))[:200])
-        return loaded_model
-    except Exception:
-        logger.error("mlflow.pyfunc.load_model raised:\n%s", traceback.format_exc())
-        raise
+        return mlflow.pyfunc.load_model(model_path)
     finally:
         if original_tracking_uri is None:
             os.environ.pop("MLFLOW_TRACKING_URI", None)
@@ -274,15 +164,15 @@ def save_dataframe(
     image_embeddings: pd.DataFrame,
     output_pkl_path: str,
 ) -> None:
-    """Save image embeddings DataFrame to a JSON file.
+    """Save image embeddings DataFrame to an embeddings file.
 
     This function saves the provided image embeddings DataFrame
-    to the specified JSON file path with the given file name. It also creates
+    to the specified output path with the given file name. It also creates
     the directory if it does not exist.
 
     Args:
         image_embeddings (pd.DataFrame): The DataFrame containing image embeddings to be saved.
-        output_pkl_path (str): The directory path where the JSON file will be saved.
+        output_pkl_path (str): The directory path where the embeddings file will be saved.
     Returns:
         None
     """
@@ -294,7 +184,7 @@ def save_dataframe(
         lines=True,
     )
 
-    logger.info("Saved merged DataFrames to JSON files")
+    logger.info("Saved merged DataFrames to embeddings file")
 
 
 def process_embeddings(args):
@@ -317,11 +207,9 @@ def process_embeddings(args):
     image_tsv = args.image_tsv
 
     resolved_model_path = resolve_mlflow_model_path(model_path)
-    log_mlflow_load_diagnostics(resolved_model_path)
     mlflow_model = load_local_mlflow_model(resolved_model_path)
     if mlflow_model is None:
         raise RuntimeError(f"mlflow.pyfunc.load_model returned None for {resolved_model_path}")
-    logger.info("Loaded MLflow model type: %s", type(mlflow_model).__name__)
     image_embeddings = generate_embeddings(
         image_tsv,
         mlflow_model,

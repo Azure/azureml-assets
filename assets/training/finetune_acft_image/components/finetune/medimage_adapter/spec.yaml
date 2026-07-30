@@ -17,15 +17,15 @@ distribution:
 
 inputs:
   train_data_path:
-    type: uri_folder
+    type: uri_file
     optional: false
-    description: Path to the training embeddings folder.
+    description: Path to the training data file.
     mode: ro_mount
 
   validation_data_path:
-    type: uri_folder
+    type: uri_file
     optional: false
-    description: Path to the validation embeddings folder.
+    description: Path to the validation data file.
     mode: ro_mount
 
   validation_text_tsv:

@@ -17,7 +17,7 @@ import training
 
 COMPONENT_NAME = "ACFT-MedImage-Classification-Training"
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.train.classification_adaptor_train")
-EMBEDDING_FILE_NAME = "embeddings.json"
+EMBEDDING_FILE_NAME = "embeddings.pkl"
 
 
 def get_parser():
@@ -140,8 +140,12 @@ def load_data(train_data_path: str, validation_data_path: str) -> tuple[pd.DataF
     Returns:
         tuple[pd.DataFrame, pd.DataFrame]: DataFrames containing the training and validation data.
     """
-    train_data_file = os.path.join(train_data_path, EMBEDDING_FILE_NAME)
-    validation_data_file = os.path.join(validation_data_path, EMBEDDING_FILE_NAME)
+    train_data_file = train_data_path if os.path.isfile(train_data_path) else os.path.join(train_data_path, EMBEDDING_FILE_NAME)
+    validation_data_file = (
+        validation_data_path
+        if os.path.isfile(validation_data_path)
+        else os.path.join(validation_data_path, EMBEDDING_FILE_NAME)
+    )
     train_data = pd.read_json(train_data_file, orient="records", lines=True)
     validation_data = pd.read_json(validation_data_file, orient="records", lines=True)
     train_data["features"] = train_data["features"].apply(np.asarray)
