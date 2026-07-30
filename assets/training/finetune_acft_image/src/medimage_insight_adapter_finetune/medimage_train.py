@@ -10,13 +10,14 @@ from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
 import pandas as pd
 import torch
+import numpy as np
 import os
 import training
 
 
 COMPONENT_NAME = "ACFT-MedImage-Classification-Training"
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.train.classification_adaptor_train")
-EMBEDDING_FILE_NAME = "embeddings.pkl"
+EMBEDDING_FILE_NAME = "embeddings.json"
 
 
 def get_parser():
@@ -141,8 +142,10 @@ def load_data(train_data_path: str, validation_data_path: str) -> tuple[pd.DataF
     """
     train_data_file = os.path.join(train_data_path, EMBEDDING_FILE_NAME)
     validation_data_file = os.path.join(validation_data_path, EMBEDDING_FILE_NAME)
-    train_data = pd.read_pickle(train_data_file)
-    validation_data = pd.read_pickle(validation_data_file)
+    train_data = pd.read_json(train_data_file, orient="records", lines=True)
+    validation_data = pd.read_json(validation_data_file, orient="records", lines=True)
+    train_data["features"] = train_data["features"].apply(np.asarray)
+    validation_data["features"] = validation_data["features"].apply(np.asarray)
     return train_data, validation_data
 
 
@@ -164,24 +167,29 @@ def merge_data_with_text(
     Returns:
         tuple[pd.DataFrame, pd.DataFrame]: Merged DataFrames for training and validation data.
     """
-    train_text_df = pd.read_csv(train_text_tsv, sep="\t", header=None)
+    train_text_df = pd.read_csv(train_text_tsv, sep="\t", header=None, escapechar="\\")
     train_text_df.columns = ["Name", "classification_json"]
-    validation_text_df = pd.read_csv(validation_text_tsv, sep="\t", header=None)
+    validation_text_df = pd.read_csv(validation_text_tsv, sep="\t", header=None, escapechar="\\")
     validation_text_df.columns = ["Name", "classification_json"]
 
     def extract_label_from_json(json_str):
         try:
             json_obj = json.loads(json_str)
-            return json_obj.get("class_id", -1)
-        except json.JSONDecodeError:
-            logger.error("Failed to decode JSON from text column")
-            return -1
+            label = json_obj["class_id"]
+            if not isinstance(label, int) or label < 0:
+                raise ValueError(f"Invalid class_id value: {label}")
+            return label
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as ex:
+            raise ValueError(f"Failed to parse class_id from classification JSON: {json_str!r}") from ex
 
     train_text_df["Label"] = train_text_df["classification_json"].apply(extract_label_from_json)
     validation_text_df["Label"] = validation_text_df["classification_json"].apply(extract_label_from_json)
 
     train_data = pd.merge(train_data, train_text_df, on="Name")[["Name", "features", "Label"]]
     validation_data = pd.merge(validation_data, validation_text_df, on="Name")[["Name", "features", "Label"]]
+
+    if train_data.empty or validation_data.empty:
+        raise ValueError("No rows remained after merging embeddings with text labels")
 
     return train_data, validation_data
 

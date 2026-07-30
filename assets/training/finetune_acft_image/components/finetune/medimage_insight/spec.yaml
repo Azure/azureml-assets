@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 
 name: medimageinsight_embedding_finetune
-version: 0.0.1
+version: 0.0.4
 
 
 type: command
@@ -11,7 +11,7 @@ is_deterministic: True
 display_name: MedImageInsight Embedding Finetune
 description: Component to finetune the model using the medical image data
 
-environment: azureml://registries/azureml/environments/acft-medimageinsight-embedding/versions/8
+environment: azureml://registries/azureml/environments/acft-medimageinsight-embedding/versions/38
 
 code: ../../../src/medimage_insight_embedding_finetune
 
@@ -20,7 +20,7 @@ distribution:
 
 inputs:
   mlflow_model_path:
-    type: uri_folder
+    type: mlflow_model
     optional: false
     description: Path to the MLflow model to be imported.
     mode: ro_mount
@@ -99,4 +99,3 @@ command: >-
   --conf_files "${{inputs.conf_files}}"
   --save_dir "${{outputs.save_dir}}"
   --mlflow_output_model_folder "${{outputs.mlflow_model_folder}}"
-

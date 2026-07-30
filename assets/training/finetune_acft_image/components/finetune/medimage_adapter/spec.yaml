@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: medimageinsight_adapter_finetune
-version: 0.0.1
+version: 0.0.4
 type: command
 
 is_deterministic: True
@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: MedImageInsight Adapter Finetune
 description: Component to finetune the model using the medical image data
 
-environment: azureml://registries/azureml/environments/acft-medimageinsight-adapter-finetune/versions/8
+environment: azureml://registries/azureml/environments/acft-medimageinsight-adapter-finetune/versions/34
 
 code: ../../../src/medimage_insight_adapter_finetune
 
@@ -17,15 +17,15 @@ distribution:
 
 inputs:
   train_data_path:
-    type: uri_file
+    type: uri_folder
     optional: false
-    description: Path to the training data file.
+    description: Path to the training embeddings folder.
     mode: ro_mount
 
   validation_data_path:
-    type: uri_file
+    type: uri_folder
     optional: false
-    description: Path to the validation data file.
+    description: Path to the validation embeddings folder.
     mode: ro_mount
 
   validation_text_tsv:
@@ -131,4 +131,3 @@ command: >-
   $[[--max_epochs "${{inputs.max_epochs}}"]]
   $[[--track_metric "${{inputs.track_metric}}"]]
   --output_model_path "${{outputs.output_model_path}}"
-
