@@ -140,7 +140,9 @@ def load_data(train_data_path: str, validation_data_path: str) -> tuple[pd.DataF
     Returns:
         tuple[pd.DataFrame, pd.DataFrame]: DataFrames containing the training and validation data.
     """
-    train_data_file = train_data_path if os.path.isfile(train_data_path) else os.path.join(train_data_path, EMBEDDING_FILE_NAME)
+    train_data_file = (
+        train_data_path if os.path.isfile(train_data_path) else os.path.join(train_data_path, EMBEDDING_FILE_NAME)
+    )
     validation_data_file = (
         validation_data_path
         if os.path.isfile(validation_data_path)
