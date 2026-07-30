@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: medimageinsight_embedding_generation
-version: 0.0.1
+version: 0.0.2
 type: command
 
 is_deterministic: True
@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: MedImageInsight Embedding Generation
 description: To generate embeddings for medical images.
 
-environment: azureml://registries/azureml/environments/acft-medimageinsight-embedding-generator/versions/9
+environment: azureml://registries/azureml/environments/acft-medimageinsight-embedding-generator/versions/31
 code: ../../../src/medimage_insight_adapter_preprocess
 
 inputs:
@@ -19,7 +19,7 @@ inputs:
     mode: ro_mount
 
   mlflow_model_path:
-    type: uri_folder
+    type: mlflow_model
     optional: false
     description: Path to the MLflow model to be imported.
     mode: ro_mount
