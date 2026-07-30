@@ -5,22 +5,14 @@
 import argparse
 import json
 import os
-import pickle
 
-import azureml.automl.core.shared.constants as automl_constants
 import numpy as np
 import pandas as pd
 from azureml._common._error_definition import AzureMLError, error_decorator
 from azureml._common._error_definition.user_error import BadArgument
 from azureml.automl.core.shared.forecasting_exception import ForecastingDataException
 from azureml.core import Run
-
-try:
-    import torch  # noqa: F401
-
-    _torch_present = True
-except ImportError:
-    _torch_present = False
+from model_loader import find_model, get_model
 
 
 class _ForecastModes:
@@ -36,8 +28,6 @@ _FORECAST_ORIGIN_COLUMN_NAME = "automl_forecast_origin"
 _PREDICTED_COLUMN_NAME = "automl_prediction"
 _ACTUAL_COLUMN_NAME = "automl_actual"
 _PI = "prediction_interval"
-_PTH_FILE_POSTFIX = ".pth"
-_PT_FILE_POSTFIX = ".pt"
 _CSV_POSTFIX = ".csv"
 _PARQ_POSTFIX = ".parquet"
 _CONDA_YAML_FILE_NAME = "conda.yaml"
@@ -65,10 +55,6 @@ _INVALID_ARG_QUANTILE_FORMAT = 'abc26505-87e4-4877-a855-7532473290a1'
 
 # ------------------------------------------
 # Util methods.
-def _map_location_cuda(storage, loc):
-    return storage.cuda()
-
-
 def _get_test_data(target_column_name, test_dataset):
     print("Loading test data.")
     test_df = None
@@ -98,49 +84,11 @@ def _get_test_data(target_column_name, test_dataset):
 
 
 def _get_model_fullpath(model_path):
-    model_fl_name = ""
-    for filename in os.listdir(model_path):
-        if filename == automl_constants.MODEL_FILENAME or filename == automl_constants.PT_MODEL_FILENAME:
-            model_fl_name = filename
-            break
-
-    model_full_path = ""
-    if model_fl_name:
-        model_full_path = os.path.join(model_path, model_fl_name)
-    else:
-        # Find the .pt or .pth pytorch model file in sub-folders:
-        for root, dirs, files in os.walk(model_path):
-            for filename in files:
-                if filename.endswith(_PT_FILE_POSTFIX) or filename.endswith(_PTH_FILE_POSTFIX):
-                    model_full_path = os.path.join(root, filename)
-                    break
-
-    if not model_full_path:
-        raise Exception(f"Unable to find any valid model in folder {model_path}!")
-
-    return model_full_path
+    return find_model(model_path)
 
 
 def _get_model(model_full_path):
-    fitted_model = None
-    print(f"Loading the model from path: {model_full_path}")
-    if model_full_path.endswith(_PT_FILE_POSTFIX) or model_full_path.endswith(_PTH_FILE_POSTFIX):
-        if not _torch_present:
-            raise Exception("Loading Forecasting TCN model requires torch to be installed in the environment.")
-
-        if torch.cuda.is_available():
-            map_location = _map_location_cuda
-        else:
-            map_location = "cpu"
-        with open(model_full_path, "rb") as fh:
-            fitted_model = torch.load(fh, map_location=map_location)
-    else:
-        # Load the sklearn pipeline.
-        with open(model_full_path, 'rb') as fp:
-            fitted_model = pickle.load(fp)
-
-    print("Model loading succeeded.")
-    return fitted_model
+    return get_model(model_full_path)
 
 
 # ------------------------------------------

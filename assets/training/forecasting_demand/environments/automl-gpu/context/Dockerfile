@@ -45,6 +45,15 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --upgrade --no-cach
     'pyarrow==23.0.1' \
     'torch==2.13.0'
 
+# azureml-automl-runtime requires numpy<=1.23.5, while skops 0.14 declares
+# numpy>=1.25. The skops.io paths used by this environment are validated against
+# numpy 1.23.5 below, so install skops without changing the supported AutoML stack.
+COPY skops_compatibility_test.py .
+RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --no-deps \
+    'skops==0.14.0' && \
+    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH python skops_compatibility_test.py && \
+    rm skops_compatibility_test.py
+
 RUN rm -rf /opt/miniconda/pkgs/
 
 # Avoid ImportError: /lib/x86_64-linux-gnu/libstdc++.so.6: version `GLIBCXX_3.4.29' not found
