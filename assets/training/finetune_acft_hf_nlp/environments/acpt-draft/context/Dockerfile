@@ -1,9 +1,15 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 USER root
 ENV PIP_PROGRESS_BAR=off
+ENV PIP_CONSTRAINT=/tmp/security-constraints.txt
 
 # Apply OS security updates inherited from the base image.
+# libpam packages are inherited from the base image; fixes USN-8601-1.
 RUN apt-get update && apt-get install -y --no-install-recommends \
+        libpam-runtime=1.4.0-11ubuntu2.7 \
+        libpam0g=1.4.0-11ubuntu2.7 \
+        libpam-modules=1.4.0-11ubuntu2.7 \
+        libpam-modules-bin=1.4.0-11ubuntu2.7 \
         libgnutls30 rsync \
         dotnet-host-8.0 dotnet-hostfxr-8.0 dotnet-runtime-8.0 \
         libgcrypt20 \
@@ -20,37 +26,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         openssh-client=1:8.9p1-3ubuntu0.16 \
  && rm -rf /var/lib/apt/lists/*
 
+COPY security-constraints.txt /tmp/security-constraints.txt
 COPY requirements.txt .
-RUN pip install -r requirements.txt --no-cache-dir
 # GHSA-jx93-g359-86wm, GHSA-hvwj-8w5g-28rg: sglang vulnerabilities; patched in >=0.5.10
 # specforge 0.1.0 pins sglang==0.5.5; override needed after specforge install.
-RUN pip install --no-cache-dir --force-reinstall "sglang>=0.5.10"
-
-RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
-RUN pip install numpy==2.2.5
-RUN pip install azureml-evaluate-mlflow=={{latest-pypi-version}}
-
-RUN pip install --no-cache-dir --force-reinstall "mlflow>=3.2.0,<4.0.0"
 # Upgrade wandb and remove its bundled wandb-core Go binary; the binary carries
 # vulnerable Go modules (stdlib/grpc/x/text) and wandb falls back to its Python backend.
-RUN pip install --no-cache-dir --upgrade "wandb>=0.28.1" \
- && find /opt/conda/envs/ptca -name 'wandb-core' -path '*/wandb/bin/*' -delete
 # torch is a transitive dep of SpecForge/sglang; this image's pip layers override the
 # base torch 2.8.0+cu126 and must stay above GHSA-rrmf-rvhw-rf47's patched floor.
-RUN pip install --no-cache-dir --upgrade "torch>=2.13.0"
 # GHSA-7rgv-gqhr-fxg3: xgrammar stack exhaustion DoS; patched in 0.1.32
-RUN pip install xgrammar==0.1.32
 # GHSA-69w3-r845-3855 (CVE-2026-1839): arbitrary code execution in Trainer class;
 # patched only in transformers>=5.0.0rc3. Upgrading to latest stable 5.x.
-RUN pip install transformers==5.5.4
 # GHSA-86qp-5c8j-p5mr: starlette vulnerability; patched in >=1.0.1 (ptca env).
-RUN pip install --no-cache-dir 'starlette>=1.0.1'
 # GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8: aiohttp vulnerabilities; patched in >=3.14.0.
-# Upgrade in both the base (Python 3.13) and ptca (Python 3.10) conda envs.
-RUN conda run -n base python -m pip install --no-cache-dir 'aiohttp>=3.14.0' \
- && pip install --no-cache-dir 'aiohttp>=3.14.0'
-# Python 3.13 conda env overrides for vulnerable preinstalled transitive deps
-# after checking latest parent metadata on 2026-05-25:
+# Upgrade in both the base (Python 3.14) and ptca (Python 3.10) conda envs.
+# Python 3.14 conda env overrides for vulnerable preinstalled transitive deps:
 #  - python-dotenv>=1.2.2 (GHSA-mf9w-mj56-hr94): metadata probes found
 #    pydantic-settings 2.14.2 requires only >=0.21.0, uvicorn 0.48.0 requires
 #    >=0.13 for [standard], and anaconda-auth 0.15.0 has no version floor.
@@ -74,14 +64,34 @@ RUN conda run -n base python -m pip install --no-cache-dir 'aiohttp>=3.14.0' \
 #  - pydantic-settings>=2.14.2 (GHSA-4xgf-cpjx-pc3j): pinned transitive dep of
 #    pydantic/Anaconda auth tooling; this image's pip layers can override the base env.
 #  - msgpack>=1.2.1 (GHSA-6v7p-g79w-8964): pinned transitive dep of MLflow/AzureML
-#    MLflow packages; this image's pip layers can override the base env.
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
+#    MLflow packages; remove stale conda records after pip upgrade.
+#  - setuptools>=83.0.0 (GHSA-h35f-9h28-mq5c): pinned transitive dep brought in
+#    by the base conda envs; remove stale conda records after pip upgrade.
+# Remove pip's vendored SBOM files after pip upgrades; they describe pip's vendored
+# sources, not installed runtime packages, and cause stale SCA package records.
+RUN pip install -r requirements.txt --no-cache-dir \
+ && pip install --no-cache-dir --force-reinstall "sglang>=0.5.10" \
+ && pip install --no-cache-dir azureml-acft-common-components=={{latest-pypi-version}} \
+ && pip install --no-cache-dir numpy==2.2.5 \
+ && pip install --no-cache-dir azureml-evaluate-mlflow=={{latest-pypi-version}} \
+ && pip install --no-cache-dir --force-reinstall "mlflow>=3.2.0,<4.0.0" \
+ && pip install --no-cache-dir --upgrade "wandb>=0.28.1" \
+ && find /opt/conda/envs/ptca -name 'wandb-core' -path '*/wandb/bin/*' -delete \
+ && pip install --no-cache-dir --upgrade "torch>=2.13.0" \
+ && pip install --no-cache-dir xgrammar==0.1.32 \
+ && pip install --no-cache-dir transformers==5.5.4 \
+ && pip install --no-cache-dir 'starlette>=1.0.1' \
+ && pip install --no-cache-dir 'aiohttp>=3.14.0' \
+ && conda run -n base python -m pip install --no-cache-dir 'aiohttp>=3.14.0' \
+ && conda run -n base python -m pip install --no-cache-dir --upgrade \
         'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'pip>=26.1' \
         'PyJWT>=2.13.0' 'py-rattler>=0.24.0' 'cryptography>=48.0.1' 'pydantic-settings>=2.14.2' 'msgpack>=1.2.1' \
- && pip install --no-cache-dir --upgrade 'pip>=26.1' 'PyJWT>=2.13.0' \
- && rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0.1-*.json \
-          /opt/conda/conda-meta/pip-26.0.1-*.json
-RUN rm -rf ~/.cache/pip
+        'setuptools>=83.0.0' \
+ && pip install --no-cache-dir --upgrade 'pip>=26.1' 'PyJWT>=2.13.0' 'msgpack>=1.2.1' 'setuptools>=83.0.0' \
+ && find /opt/conda /opt/conda/envs/ptca -path '*/conda-meta/pip-*.json' -delete \
+ && find /opt/conda /opt/conda/envs/ptca \( -path '*/conda-meta/setuptools-*.json' -o -path '*/conda-meta/msgpack-python-*.json' \) -delete \
+ && find /opt/conda /opt/conda/envs/ptca -path '*/site-packages/pip/_vendor/bom.cdx.json' -delete \
+ && rm -rf ~/.cache/pip /root/.cache/pip /tmp/pip-*
 COPY loss /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/core/loss.py
 COPY eagle3 /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/core/eagle3.py
 COPY parse /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/data/parse.py
