@@ -3,7 +3,9 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 ENV PIP_PROGRESS_BAR=off
 
 COPY requirements.txt .
-RUN pip install -r requirements.txt --no-cache-dir
+RUN pip install -r requirements.txt --no-cache-dir && \
+    pip install --upgrade --no-cache-dir \
+        'setuptools>=83.0.0' 'msgpack>=1.2.1'
 
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
@@ -26,6 +28,10 @@ RUN printf 'Acquire::Retries "5";\n' > /etc/apt/apt.conf.d/80-retries && \
     apt-get install -y --only-upgrade \
         curl \
         gzip \
+        libc-bin \
+        libc-dev-bin \
+        libc6 \
+        libc6-dev \
         libasound2 \
         libasound2-data \
         libcurl3-gnutls \
@@ -34,10 +40,15 @@ RUN printf 'Acquire::Retries "5";\n' > /etc/apt/apt.conf.d/80-retries && \
         libk5crypto3 \
         libkrb5-3 \
         libkrb5support0 \
+        libpam0g \
+        libpam-modules \
+        libpam-modules-bin \
+        libpam-runtime \
         libnghttp2-14 \
         libpython3.10-minimal \
         libpython3.10-stdlib \
         libsqlite3-0 \
+        locales \
         dotnet-host-8.0 \
         dotnet-hostfxr-8.0 \
         dotnet-runtime-8.0 \
@@ -60,12 +71,13 @@ RUN apt-get update && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Fix ptca conda env vulnerabilities (python 3.10, active).
-# torch==2.10.0+cu126: inherited from the ACPT torch280 base image; fixes
-# GHSA-vgrw-7cvw-pwgx and GHSA-qfhq-4f3w-5fph. torchvision and torchaudio
-# are upgraded with torch for CUDA compatibility.
-# pip>=26.1.1: GHSA-jp4c-xjxw-mgf9. pip is a root tool with no parent package,
-# and VCM reads the ptca conda-meta record, so conda must update it.
-# setuptools>=82.0.1: GHSA-58pv-8j8x-9vj2, GHSA-8rrh-rw8j-w5fx.
+# torch==2.13.0+cu126: inherited from the ACPT torch280 base image; fixes
+# GHSA-vgrw-7cvw-pwgx, GHSA-qfhq-4f3w-5fph, and GHSA-rrmf-rvhw-rf47.
+# torchvision and torchaudio are upgraded with torch for CUDA compatibility.
+# setuptools>=82.0.1: GHSA-58pv-8j8x-9vj2, GHSA-8rrh-rw8j-w5fx,
+# GHSA-h35f-9h28-mq5c.
+# msgpack>=1.2.1: transitive dep of azureml-mlflow -> mlflow-skinny; fixes
+# GHSA-6v7p-g79w-8964.
 # urllib3>=2.7.0: GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j.
 # idna>=3.15: GHSA-65pc-fj4g-8rjx.
 # aiohttp>=3.14.0: GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8.
@@ -74,15 +86,24 @@ RUN apt-get update && \
 # pyarrow>=23.0.1: transitive dep of azureml-dataset-runtime in the ptca env;
 #   azureml-dataset-runtime 1.62.0 caps pyarrow<21, so this post-install
 #   security override fixes GHSA-rgxp-2hwp-jwgg.
-RUN conda install -n ptca -c conda-forge -y 'pip>=26.1.1' 'setuptools>=82.0.1' && \
+RUN conda run -n ptca python -m pip install --upgrade --no-cache-dir \
+        'setuptools>=83.0.0' 'msgpack>=1.2.1' && \
+    find /opt/conda/envs/ptca -type d \( \
+        -name 'setuptools-70.3.0.dist-info' -o \
+        -name 'setuptools-70.3.0-py*.egg-info' -o \
+        -name 'setuptools-81.0.0.dist-info' -o \
+        -name 'setuptools-81.0.0-py*.egg-info' -o \
+        -name 'msgpack-1.1.2.dist-info' \
+    \) -prune -exec rm -rf {} + && \
     conda run -n ptca python -m pip install --upgrade --no-cache-dir \
         'urllib3>=2.7.0' 'idna>=3.15' 'aiohttp>=3.14.0' \
         'cryptography>=48.0.1' 'pyarrow>=23.0.1' && \
     conda run -n ptca python -m pip install --upgrade --no-cache-dir \
         --index-url https://download.pytorch.org/whl/cu126 \
-        'torch==2.10.0+cu126' \
-        'torchvision==0.25.0+cu126' \
-        'torchaudio==2.10.0+cu126'
+        'torch==2.13.0+cu126' \
+        torchvision \
+        torchaudio && \
+    conda clean -a -y && rm -rf /opt/conda/pkgs/
 
 # Fix base conda env vulnerabilities (python 3.13). Parent packages still expose
 # loose vulnerable floors, so these direct floors are required:
@@ -95,17 +116,25 @@ RUN conda install -n ptca -c conda-forge -y 'pip>=26.1.1' 'setuptools>=82.0.1' &
 # aiohttp>=3.14.0: GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8.
 # cryptography>=48.0.1: pinned transitive dep of the base image, fixes
 #   GHSA-537c-gmf6-5ccf.
+# msgpack>=1.2.1: transitive dep of azureml-mlflow -> mlflow-skinny; fixes
+#   GHSA-6v7p-g79w-8964.
 # PyJWT>=2.13.0: transitive dep from the base image; fixes GHSA-jq35-7prp-9v3f
 #   and GHSA-993g-76c3-p5m4.
 RUN conda run -n base python -m pip install --upgrade \
-    'setuptools>=82.0.1' 'python-dotenv>=1.2.2' \
+    'setuptools>=83.0.0' 'msgpack>=1.2.1' 'python-dotenv>=1.2.2' \
     'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.0' \
-    'cryptography>=48.0.1' 'PyJWT>=2.13.0'
+    'cryptography>=48.0.1' 'PyJWT>=2.13.0' && \
+    conda clean -a -y && rm -rf /opt/conda/pkgs/
 
-# pip>=26.1.1 in base env: GHSA-jp4c-xjxw-mgf9. pip is a root tool with no
-# parent package. py-rattler>=0.24.0: pinned transitive dep of conda; brought in
-# by the base image, fixes GHSA-q53q-5r4j-5729.
-RUN conda install -n base -c conda-forge -y \
-    'pip>=26.1.1' 'conda=26.3.2' 'py-rattler>=0.24.0'
+RUN find /opt/conda -type d \( \
+        -name 'setuptools-70.3.0.dist-info' -o \
+        -name 'setuptools-70.3.0-py*.egg-info' -o \
+        -name 'msgpack-1.1.2.dist-info' \
+    \) -prune -exec rm -rf {} + && \
+    conda run -n base python -m pip install --upgrade --no-cache-dir \
+        'setuptools>=83.0.0' 'msgpack>=1.2.1' && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir \
+        'setuptools>=83.0.0' 'msgpack>=1.2.1' && \
+    conda clean -a -y && rm -rf /opt/conda/pkgs/
 
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
