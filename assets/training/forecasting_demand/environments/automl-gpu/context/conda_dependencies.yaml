@@ -10,7 +10,7 @@ dependencies:
 - py-xgboost=1.7.6
 - 'psutil>=5.2.2,<6.0.0'
 - tqdm
-- setuptools=78.1.1
+- setuptools=83.0.0
 - wheel=0.46.2
 - pip:
   - inference-schema
@@ -33,5 +33,7 @@ dependencies:
   - cmdstanpy==1.0.4
   - spacy==3.7.4
   - prophet==1.1.4
-  - GitPython>=3.1.41
+  - GitPython>=3.1.55
+  - setuptools>=83.0.0
+  - msgpack>=1.2.1  # pinned transitive dep of distributed; fixes GHSA-6v7p-g79w-8964
   - py-cpuinfo==5.0.0
