@@ -107,8 +107,8 @@ RUN python /tmp/patch_automl_pandas2_sparse.py && \
         sed -i -E 's/setuptools \(70\.3\.0\)/setuptools (83.0.0)/g' {} + && \
     site_packages="$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages"; \
     rm -rf "$site_packages/pip/_vendor/msgpack" "$site_packages/pip/_vendor/pkg_resources"; \
-    cp -a "$site_packages/msgpack" "$site_packages/pip/_vendor/msgpack"; \
-    cp -a "$site_packages/pkg_resources" "$site_packages/pip/_vendor/pkg_resources"; \
+    if [ -d "$site_packages/msgpack" ]; then cp -a "$site_packages/msgpack" "$site_packages/pip/_vendor/msgpack"; fi; \
+    if [ -d "$site_packages/pkg_resources" ]; then cp -a "$site_packages/pkg_resources" "$site_packages/pip/_vendor/pkg_resources"; fi; \
     "$AZUREML_CONDA_ENVIRONMENT_PATH/bin/python" -m pip --version
 
 FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
@@ -116,7 +116,7 @@ FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
-COPY mlflow_resources/ /var/mlflow_resources/
+COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/ /var/mlflow_resources/
 
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 ENV ENABLE_METADATA=true
