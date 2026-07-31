@@ -29,7 +29,7 @@ system_metadata:
     - Standard_ND96amsr_A100_v4
   inferenceSupportedEnvs:
   - vllm
-  inferenceEnvironmentAssetId: azureml://registries/azureml/environments/mlflow-model-inference/versions/21
+  inferenceEnvironmentAssetId: azureml://registries/azureml/environments/foundation-model-inference/versions/94
   platformCapabilities:
     enableBatch: false
-version: 9
+version: 10
