@@ -87,14 +87,9 @@ RUN pip install --no-cache-dir --upgrade 'onnx>=1.21.0'
 # python-dotenv>=1.2.2: CVE-2026-28684 (GHSA-mf9w-mj56-hr94); transitive chain in inference layer:
 #   azureml-defaults -> azureml-inference-server-http -> pydantic-settings -> python-dotenv>=0.21.0;
 #   pydantic-settings (<=2.14.0) only requires >=0.21.0, no parent upgrade resolves this.
-# idna>=3.15 (GHSA-65pc-fj4g-8rjx): base has idna 3.11 from requests 2.32.4 (idna<4,>=2.5)
-# and yarl 1.22.0 (idna>=2.0). As of 2026-05-25, latest requests/yarl keep the same loose
-# idna ranges, so parent upgrades cannot force the fixed idna version.
-# click>=8.3.3 (GHSA-47fr-3ffg-hgmw): base has click 8.2.1 from anaconda-cli-base/typer
-# parents. As of 2026-05-25, latest anaconda-cli-base, typer, and python-dotenv still require
-# click without a >=8.3.3 floor, so direct override is required.
-# pip's vendored SBOM metadata still lists older vendored msgpack/setuptools versions; update/remove
-# that metadata after upgrading pip so image scanners do not report non-runtime vendored records.
+# idna>=3.15 and click>=8.3.3: parent dependency ranges permit vulnerable versions,
+# so direct floors are required.
+# Remove stale vendored dependency metadata after upgrading pip.
 RUN /opt/conda/bin/conda install -n base -c conda-forge 'pip>=26.1' -y && \
     /opt/conda/bin/pip install --no-cache-dir --upgrade 'requests>=2.33.0' 'urllib3>=2.7.0' 'aiohttp>=3.14.0' 'wheel>=0.46.2' \
     'setuptools>=83.0.0' 'cryptography>=46.0.7' 'PyJWT>=2.12.0' \
@@ -111,9 +106,7 @@ RUN /opt/conda/bin/conda install -n base -c conda-forge 'pip>=26.1' -y && \
 # Security: fix ptca conda env (python 3.10).
 # torch==2.13.0: pinned transitive dep from ACPT ptca env; fixes GHSA-rrmf-rvhw-rf47.
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade torch==2.13.0 torchvision==0.28.0
-# idna>=3.15 (GHSA-65pc-fj4g-8rjx): ptca has idna 3.11 from requests 2.32.5 (idna<4,>=2.5)
-# and yarl 1.22.0 (idna>=2.0). As of 2026-05-25, latest requests/yarl keep the same loose
-# idna ranges, so parent upgrades cannot force the fixed idna version.
+# idna>=3.15: parent dependency ranges permit vulnerable versions.
 RUN /opt/conda/bin/conda install -n ptca -c conda-forge 'pip>=26.1' -y && \
     /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'filelock>=3.20.3' \
     'wheel>=0.46.2' 'setuptools>=83.0.0' 'protobuf>=6.33.5' \

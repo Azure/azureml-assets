@@ -74,7 +74,7 @@ RUN apt-get update && \
 # torch==2.13.0+cu126: inherited from the ACPT torch280 base image; fixes
 # GHSA-vgrw-7cvw-pwgx, GHSA-qfhq-4f3w-5fph, and GHSA-rrmf-rvhw-rf47.
 # torchvision and torchaudio are upgraded with torch for CUDA compatibility.
-# setuptools>=82.0.1: GHSA-58pv-8j8x-9vj2, GHSA-8rrh-rw8j-w5fx,
+# setuptools>=83.0.0: GHSA-58pv-8j8x-9vj2, GHSA-8rrh-rw8j-w5fx,
 # GHSA-h35f-9h28-mq5c.
 # msgpack>=1.2.1: transitive dep of azureml-mlflow -> mlflow-skinny; fixes
 # GHSA-6v7p-g79w-8964.
@@ -107,7 +107,7 @@ RUN conda run -n ptca python -m pip install --upgrade --no-cache-dir \
 
 # Fix base conda env vulnerabilities (python 3.13). Parent packages still expose
 # loose vulnerable floors, so these direct floors are required:
-# setuptools>=82.0.1: conda 26.3.2 requires setuptools>=60.0.0 only.
+# setuptools>=83.0.0: conda requires setuptools>=60.0.0 only.
 # python-dotenv>=1.2.2: pydantic-settings 2.14.1 requires >=0.21.0.
 # urllib3>=2.7.0: requests 2.34.2 requires <3,>=1.26.
 # idna>=3.15: requests 2.34.2 requires <4,>=2.5.

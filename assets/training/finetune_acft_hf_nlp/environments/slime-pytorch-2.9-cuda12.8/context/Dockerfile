@@ -131,7 +131,7 @@ RUN LOG4J_VERSION=${LOG4J_VERSION} \
 
 COPY patch_ray_jackson.py /tmp/patch_ray_jackson.py
 # Ray vendors Jackson inside its fat jar; patch the embedded classes and Maven
-# metadata so scanners and runtime both see the fixed versions.
+# metadata so the embedded dependency is consistently upgraded.
 RUN JACKSON_CORE_VERSION=2.21.5 \
     JACKSON_CORE_JAR_SHA1=7ec0c8bf8402fa998f64b2009632d6566a42ceb7 \
     JACKSON_CORE_POM_SHA1=32a98918e6a365962063ac88abe54b1251f1c2d0 \
@@ -154,8 +154,7 @@ RUN python /tmp/patch_slime_rft_fixes.py && \
 RUN cd /opt/slime/slime/backends/megatron_utils/kernels/int4_qat && \
     python -m pip install --no-cache-dir . --no-build-isolation
 
-# Upgrade scanner-actionable Ubuntu packages that are still vulnerable in the
-# current base image or introduced by this image.
+# Upgrade vulnerable Ubuntu packages inherited from or installed by this image.
 RUN apt-get update && \
     apt-get install -y --no-install-recommends --only-upgrade \
         libgssapi-krb5-2 \
@@ -177,7 +176,7 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Upgrade Python packages with scanner-actionable vulnerabilities.
+# Upgrade vulnerable Python packages.
 RUN python -m pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cu128 \
         torch==2.10.0 \
         torchvision==0.25.0 \
@@ -196,16 +195,14 @@ RUN python -m pip install --no-cache-dir --index-url https://download.pytorch.or
         "cryptography>=49.0.0" \
         "setuptools>=83.0.0"
 
-# wandb 0.28.1 is the latest available release, but its optional service binary
-# still embeds vulnerable Go modules. Remove the binary so scanners and runtime
-# use the Python client path instead.
+# The optional wandb service binary embeds vulnerable Go modules; remove it so
+# runtime uses the Python client path instead.
 RUN WANDB_CORE="$(python -c 'import pathlib, wandb; print(pathlib.Path(wandb.__file__).resolve().parent / "bin" / "wandb-core")')" && \
     test -f "${WANDB_CORE}" && \
     rm "${WANDB_CORE}"
 
 COPY patch_ray_thirdparty.py /tmp/patch_ray_thirdparty.py
-# Upgrade vulnerable packages inside ray's vendored thirdparty_files directory and
-# remove the old dist-info so the vulnerability scanner no longer sees them.
+# Upgrade Ray's vendored Python packages and remove their obsolete metadata.
 RUN python -m pip install --no-cache-dir \
         "idna>=3.15" \
         "aiohttp>=3.14.0" \
