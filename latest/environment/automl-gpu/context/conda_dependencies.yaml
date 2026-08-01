@@ -24,7 +24,7 @@ dependencies:
   - azureml-automl-runtime==1.62.0.post1
   - azureml-train-automl-client==1.62.0
   - azureml-train-automl-runtime==1.62.0
-  - azureml-dataset-runtime==1.62.0
+  - azureml-dataset-runtime==1.62.0.post1
   - azureml-train-automl==1.62.0
   - azureml-contrib-automl-dnn-forecasting==1.62.0
   - https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz

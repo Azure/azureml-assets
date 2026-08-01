@@ -89,7 +89,7 @@ RUN pip install \
                 azureml-automl-runtime==1.62.0.post1 \
                 azureml-train-automl-client==1.62.0 \
                 azureml-train-automl-runtime==1.62.0 \
-                azureml-dataset-runtime==1.62.0 \
+                azureml-dataset-runtime==1.62.0.post1 \
                 'azureml-model-management-sdk==1.0.1b6.post1' \
                 'azure-identity>=1.25.1' \
                 'inference-schema' \

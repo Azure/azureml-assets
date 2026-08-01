@@ -80,7 +80,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
 # required by azureml-defaults to avoid resolving newer inference server extras.
 RUN pip install --no-cache-dir \
                 azureml-mlflow==1.62.0.post5 \
-                azureml-dataset-runtime==1.62.0 \
+                azureml-dataset-runtime==1.62.0.post1 \
                 azureml-telemetry==1.62.0 \
                 azureml-responsibleai==1.62.0 \
                 azureml-automl-core==1.62.0.post3 \
