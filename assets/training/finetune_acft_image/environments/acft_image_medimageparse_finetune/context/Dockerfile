@@ -70,25 +70,8 @@ RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade \
            /opt/conda/envs/ptca/lib/python3.10/site-packages/torchaudio-2.8*.dist-info \
            /opt/conda/envs/ptca/lib/python3.10/site-packages/torchaudio-2.10*.dist-info
 
-# Base conda env leaf overrides. Programmatic metadata checks on 2026-05-25
-# found no available parent package that tightens these vulnerable transitive
-# dependencies to the fixed floors:
-#   pip: preinstalled install tool; no Python parent package.
-#   python-dotenv: anaconda-auth (unversioned) and pydantic-settings>=0.21.0.
-#   urllib3: requests<3,>=1.26 and anaconda-client>=1.26.4.
-#   idna: requests<4,>=2.5, anyio>=2.8, httpx, and yarl>=2.0.
-#   click: anaconda-cli-base, typer>=8.2.1, and optional httpx/python-dotenv
-#   extras. Patch directly until those parents or the base env require fixed
-#   versions.
-#   py-rattler: pinned transitive dep of base conda/rattler tooling; brought in
-#   by the base image, fixes GHSA-q53q-5r4j-5729.
-#   aiohttp: no parent currently pins >=3.14.0 (GHSA-jg22-mg44-37j8 / GHSA-hg6j-4rv6-33pg).
-#   PyJWT: no parent currently pins >=2.13.0 (GHSA-jq35-7prp-9v3f / GHSA-993g-76c3-p5m4).
-#   pydantic-settings: pinned transitive dep of the base image, fixes GHSA-4xgf-cpjx-pc3j.
-#   msgpack: pinned transitive dep of mlflow-skinny/base image, fixes GHSA-6v7p-g79w-8964.
-#   cryptography: pinned transitive dep of the base Python stack; brought in by
-#   the base image, fixes GHSA-537c-gmf6-5ccf.
-#   setuptools: preinstalled build tool in base and ptca envs, fixes GHSA-h35f-9h28-mq5c.
+# Override vulnerable base-environment dependencies whose parent ranges permit
+# older versions. Patch the inherited tooling directly in both conda environments.
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade --progress-bar off --no-binary=cffi \
         'cryptography==48.0.1' && \
     rm -rf /opt/conda/lib/python*/site-packages/cryptography-46*.dist-info

@@ -39,36 +39,9 @@ COPY requirements.txt .
 # patched only in transformers>=5.0.0rc3. Upgrading to latest stable 5.x.
 # GHSA-86qp-5c8j-p5mr: starlette vulnerability; patched in >=1.0.1 (ptca env).
 # GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8: aiohttp vulnerabilities; patched in >=3.14.0.
-# Upgrade in both the base (Python 3.14) and ptca (Python 3.10) conda envs.
-# Python 3.14 conda env overrides for vulnerable preinstalled transitive deps:
-#  - python-dotenv>=1.2.2 (GHSA-mf9w-mj56-hr94): metadata probes found
-#    pydantic-settings 2.14.2 requires only >=0.21.0, uvicorn 0.48.0 requires
-#    >=0.13 for [standard], and anaconda-auth 0.15.0 has no version floor.
-#  - urllib3>=2.7.0 (GHSA-qccp-gfcp-xxvc / CVE-2026-44431, GHSA-mf9v-mfxr-j63j /
-#    CVE-2026-44432): requests 2.34.2 still permits urllib3<3,>=1.26.
-#  - idna>=3.15 (GHSA-65pc-fj4g-8rjx / CVE-2026-45409): metadata probes found
-#    requests 2.34.2, anyio 4.13.0, httpx 0.28.1, and yarl 1.24.2 all still
-#    permit idna below 3.15, so no parent upgrade forces the patched version.
-#  - click>=8.3.3 (GHSA-47fr-3ffg-hgmw / CVE-2026-7246): metadata probes found
-#    typer 0.25.1 requires only >=8.2.1 and anaconda-cli-base 0.8.2 has no floor.
-#  - pip>=26.1 (GHSA-jp4c-xjxw-mgf9 / CVE-2026-6357): shipped at 26.0.1 in both
-#    Python envs. Pip self-upgrade leaves a stale
-#    conda-meta/pip-26.0.1-*.json record that the SCA scanner still flags; remove
-#    it explicitly after the upgrade.
-#  - PyJWT>=2.13.0 (GHSA-993g-76c3-p5m4, GHSA-jq35-7prp-9v3f): two CVEs fixed in 2.13.0;
-#    installed as transitive dep at 2.12.1 in both Python envs.
-#  - py-rattler>=0.24.0 (GHSA-q53q-5r4j-5729): pinned transitive dep brought in by
-#    base image in the Python 3.13 conda env.
-#  - cryptography>=48.0.1 (GHSA-537c-gmf6-5ccf): pinned transitive dep brought in by
-#    the base image in the Python 3.13 conda env.
-#  - pydantic-settings>=2.14.2 (GHSA-4xgf-cpjx-pc3j): pinned transitive dep of
-#    pydantic/Anaconda auth tooling; this image's pip layers can override the base env.
-#  - msgpack>=1.2.1 (GHSA-6v7p-g79w-8964): pinned transitive dep of MLflow/AzureML
-#    MLflow packages; remove stale conda records after pip upgrade.
-#  - setuptools>=83.0.0 (GHSA-h35f-9h28-mq5c): pinned transitive dep brought in
-#    by the base conda envs; remove stale conda records after pip upgrade.
-# Remove pip's vendored SBOM files after pip upgrades; they describe pip's vendored
-# sources, not installed runtime packages, and cause stale SCA package records.
+# Override vulnerable transitive dependencies in the base (Python 3.14) and ptca
+# (Python 3.10) environments because parent ranges permit older versions.
+# Remove obsolete conda and vendored dependency metadata after upgrading.
 RUN pip install -r requirements.txt --no-cache-dir \
  && pip install --no-cache-dir --force-reinstall "sglang>=0.5.10" \
  && pip install --no-cache-dir azureml-acft-common-components=={{latest-pypi-version}} \
