@@ -9,7 +9,6 @@ ENV PIP_PROGRESS_BAR=off
 # cryptography>=48.0.1: pinned transitive dep present in the base image; fixes GHSA-537c-gmf6-5ccf.
 # pydantic-settings>=2.14.2: pinned transitive dep present in the base image; fixes GHSA-4xgf-cpjx-pc3j.
 # msgpack>=1.2.1: pinned transitive dep present in the base image; fixes GHSA-6v7p-g79w-8964.
-# torch==2.13.0+cu126: overrides vulnerable torch from the ACPT torch280 base image; fixes GHSA-rrmf-rvhw-rf47.
 RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' 'setuptools>=82.0.1' && \
     conda install -n base -c conda-forge -y 'pip>=26.1' 'setuptools>=82.0.1' && \
     conda run -n base python -m pip install --upgrade --no-cache-dir \
@@ -28,11 +27,6 @@ RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' 'setuptools>=82.0.1' && 
         'urllib3>=2.7.0' \
         'idna>=3.15' \
         'setuptools>=82.0.1' && \
-    conda run -n ptca python -m pip install --upgrade --no-cache-dir \
-        --index-url https://download.pytorch.org/whl/cu126 \
-        'torch==2.13.0+cu126' \
-        'torchvision==0.28.0+cu126' && \
-    conda run -n ptca python -m pip uninstall -y torchaudio && \
     conda clean -a -y && \
     rm -rf /opt/conda/pkgs
 
