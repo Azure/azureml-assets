@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04:{{latest-image-tag}} AS automl-env-builder
+FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04:{{latest-image-tag}}
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/automl
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
@@ -26,11 +26,6 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
         $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pip/_vendor/vendor.txt && \
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
     conda clean -a -y
-
-FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04:{{latest-image-tag}}
-
-ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/automl
-ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
 COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/ /var/mlflow_resources/
 
@@ -61,8 +56,6 @@ RUN apt-get update && \
         libc6=2.35-0ubuntu3.14 \
         libc-bin=2.35-0ubuntu3.14 && \
     rm -rf /var/lib/apt/lists/*
-
-COPY --from=automl-env-builder /azureml-envs/automl /azureml-envs/automl
 
 RUN rm -rf /opt/miniconda/pkgs/
 

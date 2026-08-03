@@ -10,7 +10,7 @@ FROM mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 AS inferencin
 
 # DisableDockerDetector "Preferred to use nvidia registry over MCR mirror"
 
-FROM nvcr.io/nvidia/cuda:12.8.1-cudnn-devel-ubuntu22.04 AS build
+FROM nvcr.io/nvidia/cuda:12.8.1-cudnn-devel-ubuntu22.04
 
 USER root:root
 
@@ -274,33 +274,3 @@ RUN /opt/miniconda/bin/pip install --upgrade \
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
 ENV TF_USE_LEGACY_KERAS=1
-
-# Squash the final filesystem so VCM does not flag stale Python package metadata
-# that was created and removed in intermediate conda/pip build layers.
-FROM scratch
-COPY --from=build / /
-
-USER root:root
-WORKDIR /
-
-ENV PATH=/azureml-envs/tensorflow-2.16-cuda12/bin:/opt/miniconda/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-ENV CUDA_VERSION=12.8.1
-ENV NVIDIA_VISIBLE_DEVICES=all
-ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
-ENV com.nvidia.cuda.version=12.8.1
-ENV com.nvidia.volumes.needed=nvidia_driver
-ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
-ENV DEBIAN_FRONTEND=noninteractive
-ENV LD_LIBRARY_PATH=/azureml-envs/tensorflow-2.16-cuda12/lib:/usr/local/cuda/lib64:/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64:/usr/local/nccl-rdma-sharp-plugins/lib
-ENV NCCL_DEBUG=INFO
-ENV HOROVOD_GPU_ALLREDUCE=NCCL
-ENV SVDIR=/var/runit
-ENV WORKER_TIMEOUT=300
-ENV MINICONDA_VERSION=py310_23.10.0-1
-ENV OPENMPI_VERSION=4.1.0
-ENV CONDA_PREFIX=/azureml-envs/tensorflow-2.16-cuda12
-ENV CONDA_DEFAULT_ENV=/azureml-envs/tensorflow-2.16-cuda12
-ENV TF_USE_LEGACY_KERAS=1
-
-EXPOSE 5001 8883 8888
-ENTRYPOINT ["/opt/nvidia/nvidia_entrypoint.sh"]

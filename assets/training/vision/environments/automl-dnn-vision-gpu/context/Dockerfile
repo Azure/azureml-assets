@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch271:{{latest-image-tag}} AS build
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch271:{{latest-image-tag}}
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-vision-gpu
 # Prepend path to AzureML conda environment
@@ -151,71 +151,3 @@ RUN rm -rf /opt/conda/pkgs/pip-*/site-packages/pip/_vendor/bom.cdx.json && \
     find /opt/conda/pkgs -path '*/site-packages/pip/_vendor/vendor.txt' -exec \
         sed -i -e 's/msgpack==1.1.2/msgpack==1.2.1/' -e 's/setuptools==70.3.0/setuptools==83.0.0/' {} +
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
-
-FROM scratch
-COPY --from=build / /
-
-ENV PATH=/azureml-envs/azureml-automl-dnn-vision-gpu/bin:/usr/local/mpi/bin:/usr/local/ucx/bin:/opt/conda/envs/ptca/bin:/opt/conda/bin:/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-ENV NVARCH=x86_64
-ENV NVIDIA_REQUIRE_CUDA="cuda>=11.8 brand=tesla,driver>=470,driver<471 brand=unknown,driver>=470,driver<471 brand=nvidia,driver>=470,driver<471 brand=nvidiartx,driver>=470,driver<471 brand=geforce,driver>=470,driver<471 brand=geforcertx,driver>=470,driver<471 brand=quadro,driver>=470,driver<471 brand=quadrortx,driver>=470,driver<471 brand=titan,driver>=470,driver<471 brand=titanrtx,driver>=470,driver<471"
-ENV NV_CUDA_CUDART_VERSION=11.8.89-1
-ENV NV_CUDA_COMPAT_PACKAGE=cuda-compat-11-8
-ENV CUDA_VERSION=11.8.0
-ENV LD_LIBRARY_PATH=/azureml-envs/azureml-automl-dnn-vision-gpu/lib:/opt/nccl-rdma-sharp-plugins/lib:/opt/hpcx/ompi/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64
-ENV NVIDIA_VISIBLE_DEVICES=all
-ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
-ENV NV_CUDA_LIB_VERSION=11.8.0-1
-ENV NV_NVTX_VERSION=11.8.86-1
-ENV NV_LIBNPP_VERSION=11.8.0.86-1
-ENV NV_LIBNPP_PACKAGE=libnpp-11-8=11.8.0.86-1
-ENV NV_LIBCUSPARSE_VERSION=11.7.5.86-1
-ENV NV_LIBCUBLAS_PACKAGE_NAME=libcublas-11-8
-ENV NV_LIBCUBLAS_VERSION=11.11.3.6-1
-ENV NV_LIBCUBLAS_PACKAGE=libcublas-11-8=11.11.3.6-1
-ENV NV_LIBNCCL_PACKAGE_NAME=libnccl2
-ENV NV_LIBNCCL_PACKAGE_VERSION=2.15.5-1
-ENV NCCL_VERSION=2.15.5-1
-ENV NV_LIBNCCL_PACKAGE=libnccl2=2.15.5-1+cuda11.8
-ENV NVIDIA_PRODUCT_NAME=CUDA
-ENV NV_CUDA_CUDART_DEV_VERSION=11.8.89-1
-ENV NV_NVML_DEV_VERSION=11.8.86-1
-ENV NV_LIBCUSPARSE_DEV_VERSION=11.7.5.86-1
-ENV NV_LIBNPP_DEV_VERSION=11.8.0.86-1
-ENV NV_LIBNPP_DEV_PACKAGE=libnpp-dev-11-8=11.8.0.86-1
-ENV NV_LIBCUBLAS_DEV_VERSION=11.11.3.6-1
-ENV NV_LIBCUBLAS_DEV_PACKAGE_NAME=libcublas-dev-11-8
-ENV NV_LIBCUBLAS_DEV_PACKAGE=libcublas-dev-11-8=11.11.3.6-1
-ENV NV_CUDA_NSIGHT_COMPUTE_VERSION=11.8.0-1
-ENV NV_CUDA_NSIGHT_COMPUTE_DEV_PACKAGE=cuda-nsight-compute-11-8=11.8.0-1
-ENV NV_NVPROF_VERSION=11.8.87-1
-ENV NV_NVPROF_DEV_PACKAGE=cuda-nvprof-11-8=11.8.87-1
-ENV NV_LIBNCCL_DEV_PACKAGE_NAME=libnccl-dev
-ENV NV_LIBNCCL_DEV_PACKAGE_VERSION=2.15.5-1
-ENV NV_LIBNCCL_DEV_PACKAGE=libnccl-dev=2.15.5-1+cuda11.8
-ENV LIBRARY_PATH=/usr/local/cuda/lib64/stubs
-ENV NV_CUDNN_VERSION=8.9.6.50
-ENV NV_CUDNN_PACKAGE_NAME=libcudnn8
-ENV NV_CUDNN_PACKAGE=libcudnn8=8.9.6.50-1+cuda11.8
-ENV NV_CUDNN_PACKAGE_DEV=libcudnn8-dev=8.9.6.50-1+cuda11.8
-ENV GPU_TYPE=cu118
-ENV OS_TYPE=ubuntu2204
-ENV PYTHON_VERSION=3.10
-ENV PYTORCH_BUILD_VERSION=2.7.1
-ENV DISTRIBUTED_BACKEND=nccl
-ENV INTERNAL_OR_PUBLIC=public
-ENV PYTORCH_TYPE=stable
-ENV DSVM=False
-ENV LANG=en_US.UTF-8
-ENV CONDA_PLUGINS_AUTO_ACCEPT_TOS=true
-ENV CONDA_ENVIRONMENT_PATH=/opt/conda/envs/ptca
-ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl-dnn-vision-gpu
-ENV CONDA_DEFAULT_ENV=ptca
-ENV CONDA_PREFIX=/opt/conda/envs/ptca
-ENV OPAL_PREFIX=/opt/hpcx/ompi
-ENV MLFLOW_MODEL_FOLDER=mlflow-model
-ENV SVDIR=/var/runit
-ENV WORKER_TIMEOUT=400
-ENV ENABLE_METADATA=true
-
-EXPOSE 5001 8883 8888
-ENTRYPOINT ["/opt/nvidia/nvidia_entrypoint.sh"]

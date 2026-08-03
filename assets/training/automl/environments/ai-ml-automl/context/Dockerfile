@@ -1,10 +1,31 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}} AS automl_env_builder
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
+
+COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/ /var/mlflow_resources/
+
+ENV MLFLOW_MODEL_FOLDER="mlflow-model"
+ENV ENABLE_METADATA=true
 ENV PYTHONIOENCODING=utf-8
 ENV PIP_NO_COLOR=1
 ENV PIP_PROGRESS_BAR=off
+
+# Upgrade vulnerable Ubuntu packages when this image variant includes them.
+RUN set -eux; \
+    apt-get update; \
+    os_security_packages="curl gzip libarchive13 libc-bin libc-dev-bin libc6 libc6-dev libasound2 libasound2-data libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libgssapi-krb5-2 libk5crypto3 libkrb5-3 libkrb5support0 libnghttp2-14 libnginx-mod-http-echo libnginx-mod-http-geoip2 libpam-modules libpam-modules-bin libpam-runtime libpam0g libpython3.10-minimal libpython3.10-stdlib libpython3.12-minimal libpython3.12-stdlib libsqlite3-0 libxml2 nginx nginx-common nginx-light openssh-client openssh-server openssh-sftp-server python3.10 python3.10-minimal python3.12 python3.12-minimal rsyslog tar wget"; \
+    installed_os_packages=""; \
+    for package in $os_security_packages; do \
+        if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
+            installed_os_packages="$installed_os_packages $package"; \
+        fi; \
+    done; \
+    if [ -n "$installed_os_packages" ]; then \
+        apt-get install -y --only-upgrade $installed_os_packages; \
+    fi; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*
 
 RUN conda create -q -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
@@ -74,8 +95,6 @@ RUN printf '%s\n' \
                 'distributed>=2026.1.0' \
                 'bokeh>=3.8.2' \
                 'cryptography>=48.0.1' \
-                'GitPython>=3.1.55' \
-                'msgpack>=1.2.1' \
                 'onnx>=1.21.0' \
                 'pillow>=12.3.0' \
                 'pydantic-settings>=2.14.2' \
@@ -110,37 +129,6 @@ RUN python /tmp/patch_automl_pandas2_sparse.py && \
     if [ -d "$site_packages/msgpack" ]; then cp -a "$site_packages/msgpack" "$site_packages/pip/_vendor/msgpack"; fi; \
     if [ -d "$site_packages/pkg_resources" ]; then cp -a "$site_packages/pkg_resources" "$site_packages/pip/_vendor/pkg_resources"; fi; \
     "$AZUREML_CONDA_ENVIRONMENT_PATH/bin/python" -m pip --version
-
-FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
-
-ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl
-ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
-
-COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/ /var/mlflow_resources/
-
-ENV MLFLOW_MODEL_FOLDER="mlflow-model"
-ENV ENABLE_METADATA=true
-ENV PYTHONIOENCODING=utf-8
-ENV PIP_NO_COLOR=1
-ENV PIP_PROGRESS_BAR=off
-
-# Upgrade vulnerable Ubuntu packages when this image variant includes them.
-RUN set -eux; \
-    apt-get update; \
-    os_security_packages="curl gzip libarchive13 libc-bin libc-dev-bin libc6 libc6-dev libasound2 libasound2-data libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libgssapi-krb5-2 libk5crypto3 libkrb5-3 libkrb5support0 libnghttp2-14 libnginx-mod-http-echo libnginx-mod-http-geoip2 libpam-modules libpam-modules-bin libpam-runtime libpam0g libpython3.10-minimal libpython3.10-stdlib libpython3.12-minimal libpython3.12-stdlib libsqlite3-0 libxml2 nginx nginx-common nginx-light openssh-client openssh-server openssh-sftp-server python3.10 python3.10-minimal python3.12 python3.12-minimal rsyslog tar wget"; \
-    installed_os_packages=""; \
-    for package in $os_security_packages; do \
-        if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
-            installed_os_packages="$installed_os_packages $package"; \
-        fi; \
-    done; \
-    if [ -n "$installed_os_packages" ]; then \
-        apt-get install -y --only-upgrade $installed_os_packages; \
-    fi; \
-    apt-get clean; \
-    rm -rf /var/lib/apt/lists/*
-
-COPY --from=automl_env_builder /azureml-envs/azureml-automl /azureml-envs/azureml-automl
 
 RUN set -eux; \
     find /azureml-envs -path '*/pip/_vendor/bom.cdx.json' -type f -delete; \
