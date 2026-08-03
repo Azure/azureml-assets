@@ -72,6 +72,12 @@ RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'aiohttp>=3
 # cryptography: pinned transitive dep of ACPT base image; brought in by base image, fixes GHSA-537c-gmf6-5ccf.
 RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade 'pyarrow>=23.0.1' 'cryptography==48.0.1'
 
+# setuptools: direct dependency in requirements.txt and inherited from ACPT base image; fixes CVE-2026-59890.
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'setuptools==83.0.0' && \
+    conda run -n ptca python -m pip install --no-cache-dir --upgrade 'setuptools==83.0.0' && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/setuptools-8[12]*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.10/site-packages/setuptools-8[12]*.dist-info
+
 # PyJWT: pinned transitive dep in base; brought in by base image, fixes GHSA-jq35-7prp-9v3f and GHSA-993g-76c3-p5m4.
 # cryptography: pinned transitive dep of ACPT base image; brought in by base image, fixes GHSA-537c-gmf6-5ccf.
 # pydantic-settings: pinned transitive dep of azureml-defaults -> azureml-inference-server-http, fixes GHSA-4xgf-cpjx-pc3j.
