@@ -1,0 +1,40 @@
+{
+  "columnAttributes": [
+    {
+      "name": "prompt_id",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "prompt",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "list",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "rubrics",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "list",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "example_tags",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "list",
+        "isNullable": true
+      }
+    }
+  ]
+}
