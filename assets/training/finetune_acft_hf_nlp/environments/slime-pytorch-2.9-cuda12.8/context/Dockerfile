@@ -14,8 +14,8 @@ ARG SGLANG_VERSION=0.5.11
 ARG MEGATRON_COMMIT=1dcf0dafa884ad52ffb243625717a3471643e087
 ARG MBRIDGE_COMMIT=89eb10887887bc74853f89a4de258c0702932a1c
 ARG LOG4J_VERSION=2.25.4
-ARG CAUSAL_CONV1D_REF=v1.5.0.post8
-ARG MAMBA_SSM_REF=v2.3.2.post1
+ARG CAUSAL_CONV1D_WHEEL=https://github.com/yeshsurya/causal-conv1d/releases/download/v1.5.0/causal_conv1d-1.5.0.post8-cp312-cp312-linux_x86_64.whl
+ARG MAMBA_SSM_WHEEL=https://github.com/yeshsurya/mamba/releases/download/v2.3.2/mamba_ssm-2.3.2.post1-cp312-cp312-linux_x86_64.whl
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PIP_NO_CACHE_DIR=1
@@ -68,20 +68,13 @@ RUN NVCC_APPEND_FLAGS="--threads 1" \
 # Mamba-2 CUDA kernels (causal-conv1d + mamba-ssm) back Megatron's MambaMixer, which
 # hybrid Mamba-2/MoE models such as Nemotron-H (model_type nemotron_h) require at
 # model-build time; without them MambaMixer aborts with "MambaSSM is not installed".
-# Build from the pinned git tags - the PyPI sdists ship without csrc/*.cpp, so the
-# ninja build fails with "missing and no known rule to make it". mamba-ssm 2.3.2.post1
-# imports the modern transformers.generation.GenerateDecoderOnlyOutput symbol and
-# guards its optional TileLang (Mamba-3 MIMO) import, so it loads cleanly on this
-# image's transformers and needs no source patch; --no-deps keeps the curated torch /
-# sglang / tilelang stack pinned. TORCH_CUDA_ARCH_LIST covers A100 (8.0) + H100 (9.0).
-RUN set -eux; \
-    export CAUSAL_CONV1D_FORCE_BUILD=TRUE MAMBA_FORCE_BUILD=TRUE TORCH_CUDA_ARCH_LIST="8.0;9.0"; \
-    python -m pip install --disable-pip-version-check --no-cache-dir \
-        --no-build-isolation --no-deps \
-        "git+https://github.com/Dao-AILab/causal-conv1d.git@${CAUSAL_CONV1D_REF}"; \
-    python -m pip install --disable-pip-version-check --no-cache-dir \
-        --no-build-isolation --no-deps \
-        "git+https://github.com/state-spaces/mamba.git@${MAMBA_SSM_REF}"
+# Install validated cp312/cu128 wheels instead of compiling from source in the
+# image build. The PyPI sdists ship without csrc/*.cpp, so source builds are slow
+# and can fail with "missing and no known rule to make it"; --no-deps keeps the
+# curated torch / sglang / tilelang stack pinned.
+RUN python -m pip install --disable-pip-version-check --no-cache-dir --no-deps \
+        "${CAUSAL_CONV1D_WHEEL}" \
+        "${MAMBA_SSM_WHEEL}"
 
 RUN git clone https://github.com/NVIDIA/Megatron-LM.git --recursive /opt/Megatron-LM && \
     cd /opt/Megatron-LM && \
