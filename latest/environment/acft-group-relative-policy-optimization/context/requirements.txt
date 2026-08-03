@@ -8,3 +8,5 @@ vllm==0.20.1
 peft==0.15.2
 mlflow==3.10.1
 numpy==2.2.5
+# Security floor for a transitive AzureML and MLflow dependency.
+msgpack>=1.2.1

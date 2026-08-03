@@ -58,14 +58,16 @@ RUN pip install --upgrade --no-cache-dir 'fastmcp>=3.2.0'
 #          not pull urllib3>=2.7.0; direct override required for GHSA-mf9v-mfxr-j63j, GHSA-qccp-gfcp-xxvc
 RUN pip install --upgrade --no-cache-dir pyasn1==0.6.4 'python-multipart>=0.0.26' 'Mako>=1.3.11' 'python-dotenv>=1.2.2' 'onnx>=1.21.0' 'skops>=0.13.0' 'urllib3>=2.7.0'
 
-# pip is the package manager in both base and ptca conda envs. defaults has no pip>=26.1.1 package,
-# while a normal conda-forge solve pulls unrelated conda updates and py-rattler. Install only the
-# patched pip package so conda-meta and site-packages both report the fixed version.
-RUN conda install -n base -c conda-forge --no-deps -y 'pip>=26.1.1' && \
-    conda install -n ptca -c conda-forge --no-deps -y 'pip>=26.1.1'
+# setuptools is inherited from the ACPT base image in both conda envs; override to fix GHSA-h35f-9h28-mq5c.
+RUN conda install -n base -c conda-forge --no-deps -y 'setuptools>=83.0.0' && \
+    conda install -n ptca -c conda-forge --no-deps -y 'setuptools>=83.0.0' && \
+    /opt/conda/bin/python -m pip install --upgrade --no-cache-dir 'setuptools==83.0.0' && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir 'setuptools==83.0.0' && \
+    rm -rf /opt/conda/lib/python*/site-packages/setuptools-8[0-2].*.dist-info \
+           /opt/conda/envs/*/lib/python*/site-packages/setuptools-8[0-2].*.dist-info
 
 # msgpack is inherited from the ACPT base image in the base conda env; override to fix GHSA-6v7p-g79w-8964.
-RUN python -m pip install --upgrade --no-cache-dir 'msgpack>=1.2.1' && \
+RUN /opt/conda/bin/python -m pip install --upgrade --no-cache-dir 'msgpack>=1.2.1' && \
     rm -rf /opt/conda/lib/python*/site-packages/msgpack-1.1*.dist-info
 
 # aiohttp and cryptography in ptca env (Python 3.10) are present in the base image; force upgrades here explicitly.

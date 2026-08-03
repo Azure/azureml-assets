@@ -4,7 +4,7 @@ description: AzureML ACFT MedImageInsight Adapter Image for Training
 
 
 name: "acft-medimageinsight-adapter-finetune"
-version: "34"
+version: "35"
 
 build:
   path: "context"

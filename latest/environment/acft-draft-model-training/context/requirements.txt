@@ -4,3 +4,6 @@ datasets==3.6.0
 pillow==12.1.1
 git+https://github.com/sgl-project/SpecForge.git@34b58831caabdd8a4862258b380f9e49fbfe1b54
 filelock>=3.20.1
+# Security floors for transitive AzureML and MLflow dependencies.
+setuptools>=83.0.0
+msgpack>=1.2.1

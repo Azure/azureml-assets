@@ -37,10 +37,12 @@ RUN pip install azureml-acft-common-components==0.0.91
 #                  which only constrain urllib3<3 (loose). No parent package pins urllib3>=2.7,
 #                  so direct override is the only remediation.
 # vllm:            GHSA-rwxx-mrjm-wc2m and related vLLM advisories require >=0.24.0.
+# gunicorn:        pinned transitive dep introduced by azureml evaluate/ACFT packages; fixes
+#                  CVE-2024-1135 and CVE-2024-6827.
 RUN pip install --upgrade 'protobuf>=6.33.5,<7' 'xgrammar>=0.1.32' \
     'nltk>=3.9.4' 'pyasn1>=0.6.3' 'python-multipart>=0.0.22' 'ray>=2.55.0' \
     'mlflow>=3.8.1,<4.0.0' 'vllm>=0.24.0' 'pyOpenSSL>=26.0.0' 'cryptography>=48.0.1' \
-    'urllib3>=2.7.0'
+    'urllib3>=2.7.0' 'gunicorn>=22.0.0'
 # torch: pinned transitive dep of vllm; vllm 0.24.0-0.26.0 pins torch==2.11.0,
 # so install the GHSA-rrmf-rvhw-rf47 security floor separately. transformers:
 # vllm requires transformers<5, so reinstall the scanner-required 5.x floor after vllm.
@@ -53,11 +55,18 @@ RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' 'starlette>=1.0.1' 'i
 # package installer itself - it has NO parent/transitive package that pulls it in
 # (it is bootstrapped by the conda/python distribution), so the only available
 # remediation is to upgrade pip directly in each conda environment.
-# Also remove stale conda metadata because `pip install --upgrade pip` does not
+# setuptools: GHSA-h35f-9h28-mq5c; fixed in 83.0.0. Like pip, setuptools is
+# bootstrapped by the conda/python distribution and must be upgraded directly.
+# msgpack: stale conda metadata from this image's pip-installed layers can remain after
+# later upgrades; fixes GHSA-6v7p-g79w-8964.
+# Also remove stale conda metadata because `pip install --upgrade` does not
 # update conda's metadata DB, and SBOM scanners read those records.
-RUN pip install --no-cache-dir --upgrade 'pip>=26.1.2' && \
+RUN pip install --no-cache-dir --upgrade 'pip>=26.1.2' 'setuptools>=83.0.0' 'msgpack>=1.2.1' && \
     rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0*.json \
-          /opt/conda/envs/ptca/conda-meta/pip-26.1.1-*.json
+          /opt/conda/envs/ptca/conda-meta/pip-26.1.1-*.json \
+          /opt/conda/envs/ptca/conda-meta/setuptools-70.3*.json \
+          /opt/conda/envs/ptca/conda-meta/setuptools-81.0*.json \
+          /opt/conda/envs/ptca/conda-meta/msgpack-1.1*.json
 RUN rm -rf ~/.cache/pip
 # python-dotenv in base conda env: GHSA-mf9w-mj56-hr94; base ships 1.2.1, need >=1.2.2
 #   parent packages: uvicorn (>=0.13), pydantic-settings (>=0.21.0) - both use loose floors
@@ -66,12 +75,17 @@ RUN rm -rf ~/.cache/pip
 # py-rattler: pinned transitive dep from base image conda tooling; fixes GHSA-q53q-5r4j-5729
 # cryptography: pinned transitive/base image package in base env; fixes GHSA-537c-gmf6-5ccf.
 # pydantic-settings: pinned transitive dep from base image conda tooling; fixes GHSA-4xgf-cpjx-pc3j
+# setuptools: see note above - bootstrap tool, must be upgraded directly in base env too.
+# msgpack: see note above - clean stale metadata in base env too.
 # Also clean stale conda-meta/pip-*.json (see ptca env note above for scanner detail).
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'pip>=26.1.2' 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' \
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'pip>=26.1.2' 'setuptools>=83.0.0' 'msgpack>=1.2.1' 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' \
         'aiohttp>=3.14.0' 'click>=8.3.3' 'idna>=3.15' \
         'PyJWT>=2.13.0' 'py-rattler>=0.24.0' 'cryptography>=48.0.1' 'pydantic-settings>=2.14.2' && \
         rm -f /opt/conda/conda-meta/pip-26.0*.json \
-              /opt/conda/conda-meta/pip-26.1.1-*.json
+              /opt/conda/conda-meta/pip-26.1.1-*.json \
+              /opt/conda/conda-meta/setuptools-70.3*.json \
+              /opt/conda/conda-meta/setuptools-82.0*.json \
+              /opt/conda/conda-meta/msgpack-1.1*.json
 # pyarrow: GHSA-rgxp-2hwp-jwgg (fix in >=23.0.1); ptca env ships 20.0.0 via vllm transitive dep.
 # PyJWT: GHSA-jq35-7prp-9v3f, GHSA-993g-76c3-p5m4 (fix in >=2.13.0); base env ships 2.12.1.
 RUN pip install --no-cache-dir --upgrade 'pyarrow>=23.0.1'
@@ -102,4 +116,7 @@ RUN JACKSON_ARTIFACT=jackson-core \
     JACKSON_POM_SHA1=e2f1e832d86886fc316342c59503090191645fb9 \
     python3 /tmp/patch_ray_jackson_databind.py && \
     rm -f /tmp/patch_ray_jackson_databind.py
-RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
+RUN find /opt/conda -type d \( -name 'setuptools-70.3.0.dist-info' -o -name 'msgpack-1.1.2.dist-info' \) -prune -exec rm -rf {} + && \
+    find /opt/conda -path '*/site-packages/pip/_vendor/bom.cdx.json' -delete && \
+    find /opt/conda -path '*/site-packages/pip/_vendor/vendor.txt' -exec sed -i -e '/^setuptools==70\.3\.0$/d' -e '/^msgpack==1\.1\.2$/d' {} + && \
+    conda clean -a -y && rm -rf /opt/conda/pkgs/ /opt/miniconda/pkgs/ /root/.cache/pip

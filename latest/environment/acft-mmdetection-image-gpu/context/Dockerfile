@@ -4,7 +4,7 @@ USER root
 
 # OS packages: pinned inherited deps from the ACPT base image; fixes
 # USN-8533-1, USN-8538-1, USN-8543-1, USN-8553-1, USN-8477-3,
-# USN-8565-1, USN-8572-1, and USN-8585-1.
+# USN-8565-1, USN-8572-1, USN-8585-1, USN-8601-1, and USN-8611-1.
 RUN apt-get update && apt-get install -y --no-install-recommends --only-upgrade \
     openssh-client=1:8.9p1-3ubuntu0.16 \
     libasound2=1.2.6.1-1ubuntu1.2 \
@@ -19,19 +19,31 @@ RUN apt-get update && apt-get install -y --no-install-recommends --only-upgrade 
     libgssapi-krb5-2=1.19.2-2ubuntu0.8 \
     libk5crypto3=1.19.2-2ubuntu0.8 \
     libkrb5-3=1.19.2-2ubuntu0.8 \
+    libpam-runtime=1.4.0-11ubuntu2.7 \
+    libpam0g=1.4.0-11ubuntu2.7 \
+    libpam-modules=1.4.0-11ubuntu2.7 \
+    libpam-modules-bin=1.4.0-11ubuntu2.7 \
+    libc-dev-bin=2.35-0ubuntu3.14 \
+    libc6-dev=2.35-0ubuntu3.14 \
+    locales=2.35-0ubuntu3.14 \
+    libc6=2.35-0ubuntu3.14 \
+    libc-bin=2.35-0ubuntu3.14 \
  && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 # openmim still imports pkg_resources, which is removed from setuptools>=82.
 # Keep a temporary compatibility pin for mim installation, then restore setuptools.
-RUN pip install --no-cache-dir 'setuptools<82'
+RUN /opt/conda/bin/python -m pip install --no-cache-dir 'setuptools<82' \
+ && conda run -n ptca python -m pip install --no-cache-dir 'setuptools<82'
 
 # Note: mmdet should be installed via mim to access the model zoo config folder.
 RUN mim install mmdet==3.3.0
 # Temporary workaround for https://github.com/open-mmlab/mmdetection/issues/11668 (when mmdet updated, remove lines below)
 RUN mim install mmcv==2.2.0 -f https://download.openmmlab.com/mmcv/dist/cu118/torch2.2/index.html --no-cache-dir
-RUN pip install --no-cache-dir --upgrade setuptools==82.0.0
+# setuptools: pinned inherited dep from the ACPT base image; fixes GHSA-h35f-9h28-mq5c.
+RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'setuptools==83.0.0' \
+ && conda run -n ptca python -m pip install --no-cache-dir --upgrade 'setuptools==83.0.0'
 RUN sed -i 's/2.2.0/2.3.0/' /opt/conda/envs/ptca/lib/python3.10/site-packages/mmdet/__init__.py
 
 # onnx-weekly: pinned transitive dep of azureml-acft-accelerator; it caps
