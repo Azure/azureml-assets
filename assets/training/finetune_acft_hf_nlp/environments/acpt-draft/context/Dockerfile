@@ -1,7 +1,6 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 USER root
 ENV PIP_PROGRESS_BAR=off
-ENV PIP_CONSTRAINT=/tmp/security-constraints.txt
 
 # Apply OS security updates inherited from the base image.
 # libpam packages are inherited from the base image; fixes USN-8601-1.
@@ -26,7 +25,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         openssh-client=1:8.9p1-3ubuntu0.16 \
  && rm -rf /var/lib/apt/lists/*
 
-COPY security-constraints.txt /tmp/security-constraints.txt
 COPY requirements.txt .
 # GHSA-jx93-g359-86wm, GHSA-hvwj-8w5g-28rg: sglang vulnerabilities; patched in >=0.5.10
 # specforge 0.1.0 pins sglang==0.5.5; override needed after specforge install.

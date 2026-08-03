@@ -2,10 +2,6 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 
 USER root
 ENV PIP_PROGRESS_BAR=off
-RUN printf '%s\n' \
-        'msgpack>=1.2.1' \
-        > /tmp/security-constraints.txt
-ENV PIP_CONSTRAINT=/tmp/security-constraints.txt
 # Pull in latest OS security updates on top of the base image, including explicit
 # floors for wget/tar/Kerberos/SQLite packages inherited from the base image.
 RUN apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get -y -qq upgrade && \
