@@ -17,6 +17,7 @@ import transformer_engine.pytorch as te
 
 
 LOG4J_ARTIFACTS = ("log4j-api", "log4j-core", "log4j-slf4j-impl")
+JACKSON_ARTIFACTS = ("jackson-core", "jackson-databind")
 RAY_DIST_NAMES = ("ray_dist.jar", "ray__dist.jar")
 EXPECTED_SLIME_ROOT = pathlib.Path("/opt/slime")
 
@@ -67,9 +68,9 @@ def assert_world_accessible(path: pathlib.Path) -> None:
 
 
 assert torch.cuda.is_available() or torch.version.cuda
-assert torch.__version__.startswith("2.9.1")
-assert Version(PIL.__version__) >= Version("12.2.0")
-assert Version(cryptography.__version__) >= Version("48.0.1")
+assert Version(torch.__version__.split("+", 1)[0]) >= Version("2.10.0")
+assert Version(PIL.__version__) >= Version("12.3.0")
+assert Version(cryptography.__version__) >= Version("49.0.0")
 assert Version(sglang.__version__) >= Version("0.5.11")
 assert sglang
 assert slime
@@ -104,5 +105,11 @@ for artifact in LOG4J_ARTIFACTS:
     with zipfile.ZipFile(ray_dist, "r") as jar:
         properties = jar.read(properties_name).decode("utf-8")
     assert "version=2.25.4" in properties, artifact
+
+for artifact in JACKSON_ARTIFACTS:
+    properties_name = f"META-INF/maven/com.fasterxml.jackson.core/{artifact}/pom.properties"
+    with zipfile.ZipFile(ray_dist, "r") as jar:
+        properties = jar.read(properties_name).decode("utf-8")
+    assert "version=2.21.5" in properties, artifact
 
 print("slime environment imports succeeded")

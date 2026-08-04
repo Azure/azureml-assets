@@ -10,7 +10,7 @@ dependencies:
 - py-xgboost=1.7.6
 - 'psutil>=5.2.2,<6.0.0'
 - tqdm
-- setuptools=78.1.1
+- setuptools=83.0.0
 - wheel=0.46.2
 - pip:
   - inference-schema
@@ -24,7 +24,9 @@ dependencies:
   - azureml-automl-runtime==1.62.0.post1
   - azureml-train-automl-client==1.62.0
   - azureml-train-automl-runtime==1.62.0
-  - azureml-dataset-runtime==1.62.0.post1
+  # 1.62.0.post1 requires pyarrow>=23.0.1, while train-automl-runtime requires pyarrow==17.0.0.
+  # PyArrow is upgraded to the patched version after this environment resolves.
+  - azureml-dataset-runtime==1.62.0
   - azureml-train-automl==1.62.0
   - azureml-contrib-automl-dnn-forecasting==1.62.0
   - https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz

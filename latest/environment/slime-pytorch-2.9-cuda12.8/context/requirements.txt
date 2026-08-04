@@ -2,20 +2,22 @@ accelerate
 blobfile
 datasets
 httpx[http2]
-mcp[cli]
+mcp[cli]>=1.28.1
 memray
 numba
 omegaconf
-pillow>=12.2.0
+pillow>=12.3.0
 pylatexenc
 pyyaml
 qwen_vl_utils
-ray[default]==2.55.1
+ray[default]>=2.56.0
 ring_flash_attn
 sglang-router>=0.2.3
 tensorboard
-transformers
-wandb
+transformers>=5.5.0
+wandb>=0.28.1
+pyasn1>=0.6.4  # pinned transitive dep of azureml-core/ray; fixes CVE-2026-59885/CVE-2026-59886
+GitPython>=3.1.55  # pinned transitive dep of wandb; fixes GHSA-2f96-g7mh-g2hx/GHSA-956x-8gvw-wg5v/GHSA-v396-v7q4-x2qj/GHSA-94p4-4cq8-9g67
 azureml-core==1.61.0.post4
 azureml-dataset-runtime==1.62.0.post1
 azureml-defaults==1.62.0

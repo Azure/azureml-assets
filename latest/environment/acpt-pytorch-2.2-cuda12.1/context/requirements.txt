@@ -9,6 +9,9 @@ azureml-inference-server-http
 # azureml-inference-server-http 1.5.1 pins opentelemetry-api/sdk==1.33.0
 # while newer exporter betas require newer OpenTelemetry and/or psutil>=5.9.
 azure-monitor-opentelemetry-exporter==1.0.0b23
+# GitPython: transitive dep of azureml-mlflow/mlflow; fixes GHSA-r9mr-m37c-5fr3,
+# GHSA-6p8h-3wgx-97gf, GHSA-fjr4-x663-mwxc, and GHSA-94p4-4cq8-9g67.
+GitPython>=3.1.55
 inference-schema
 MarkupSafe==2.1.2
 regex

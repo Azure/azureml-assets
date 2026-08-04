@@ -41,8 +41,8 @@ RUN printf 'Acquire::Retries "5";\n' > /etc/apt/apt.conf.d/80-retries && \
     git \
     wget \
     zlib1g-dev \
-	librdmacm-dev \
-	libibverbs-dev \
+    librdmacm-dev \
+    libibverbs-dev \
     dh-make && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/* 
@@ -84,6 +84,8 @@ ENV PATH /opt/miniconda/bin:$PATH
 RUN wget -qO /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh && \
     bash /tmp/miniconda.sh -bf -p /opt/miniconda > /tmp/miniconda-install.log 2>&1 || (cat /tmp/miniconda-install.log && false) && \
     conda update --all -c conda-forge -y -q && \
+    /opt/miniconda/bin/pip install --upgrade --no-cache-dir 'setuptools>=83.0.0' 'msgpack>=1.2.1' && \
+    find /opt/miniconda \( -iname '*setuptools*70.3.0*' -o -iname '*msgpack*1.1.2*' -o -path '*/pip/_vendor/bom.cdx.json' \) -exec rm -rf {} + && \
     conda clean -ay -q && \
     rm -rf /opt/miniconda/pkgs && \
     rm /tmp/miniconda.sh && \
@@ -153,7 +155,8 @@ RUN apt-get update && \
 
 # Upgrade vulnerable OS packages installed by the Ubuntu/CUDA/inferencing base layers:
 # OpenSSL (USN-8414-1), systemd (USN-8402-1), xz-utils (USN-8362-1),
-# libgcrypt (USN-8319-1), libarchive (USN-8292-1), and GnuTLS (USN-8284-1).
+# libgcrypt (USN-8319-1), libarchive (USN-8292-1), GnuTLS (USN-8284-1),
+# and PAM (USN-8601-1).
 RUN apt-get update && \
     apt-get install --only-upgrade -y --no-install-recommends \
         libarchive13 \
@@ -161,7 +164,11 @@ RUN apt-get update && \
         libgnutls30 \
         liblzma5 \
         libnss-systemd \
+        libpam-modules \
+        libpam-modules-bin \
+        libpam-runtime \
         libpam-systemd \
+        libpam0g \
         libssl-dev \
         libssl3 \
         libsystemd0 \
@@ -187,7 +194,8 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Upgrade current Ubuntu USN fixes for packages installed by the CUDA and inferencing layers.
+# Upgrade current Ubuntu USN fixes for packages installed by the CUDA and inferencing layers,
+# including rsyslog (USN-8598-1) installed by the inferencing layer above.
 RUN apt-get update && \
     apt-get install --only-upgrade -y --no-install-recommends \
         curl \
@@ -201,6 +209,7 @@ RUN apt-get update && \
         libxml2 \
         python3.10 \
         python3.10-minimal \
+        rsyslog \
         tar && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -209,6 +218,8 @@ RUN apt-get update && \
 COPY conda_dependencies.yaml .
 RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
+    conda run -p $CONDA_PREFIX pip install --upgrade --no-cache-dir 'setuptools>=83.0.0' 'msgpack>=1.2.1' && \
+    find $CONDA_PREFIX \( -iname '*setuptools*70.3.0*' -o -iname '*msgpack*1.1.2*' -o -path '*/pip/_vendor/bom.cdx.json' \) -exec rm -rf {} + && \
     conda run -p $CONDA_PREFIX pip cache purge && \
     conda clean -a -y
 
@@ -220,25 +231,30 @@ RUN conda run -p $CONDA_PREFIX conda install -c conda-forge openssl
 
 # Security vulnerability fixes in the conda env (azureml-mlflow pins cryptography<46; overridden for the CVE):
 # cryptography>=46.0.7 fixes GHSA-m959-cc7f-wv43 and GHSA-p423-j2cm-9vmq
-# setuptools>=82.0.1 fixes GHSA-58pv-8j8x-9vj2
+# setuptools>=83.0.0 fixes GHSA-58pv-8j8x-9vj2, GHSA-5rjg-fvgr-3xxf, and GHSA-h35f-9h28-mq5c
 # requests>=2.33.0 fixes GHSA-gc5v-m9x4-r6x2
 # pillow>=12.2.0 fixes GHSA-whj4-6x5x-4v2j
 # pip>=26.1 fixes GHSA-jp4c-xjxw-mgf9 / CVE-2026-6357 (bumped from >=26.0 which resolved to 26.0.1)
 # starlette>=1.0.1 (GHSA-86qp-5c8j-p5mr) / idna>=3.15 (GHSA-65pc-fj4g-8rjx): transitive via fastapi / requests; drop when parent bumps
+# msgpack>=1.2.1: pinned transitive dep of azureml packages; fixes GHSA-6v7p-g79w-8964
 # PyJWT>=2.13.0 fixes GHSA-993g-76c3-p5m4 and GHSA-jq35-7prp-9v3f
 # pyarrow>=23.0.1 fixes GHSA-rgxp-2hwp-jwgg
-RUN conda run -p $CONDA_PREFIX pip install --upgrade 'pip>=26.1' 'cryptography>=46.0.7' 'setuptools>=82.0.1' 'protobuf>=5.29.6' 'requests>=2.33.0' 'pillow>=12.2.0' 'starlette>=1.0.1' 'idna>=3.15' 'PyJWT>=2.13.0' 'pyarrow>=23.0.1'
+RUN conda run -p $CONDA_PREFIX pip install --upgrade 'pip>=26.1' 'cryptography>=46.0.7' 'setuptools>=83.0.0' 'protobuf>=5.29.6' 'requests>=2.33.0' 'pillow>=12.2.0' 'starlette>=1.0.1' 'idna>=3.15' 'msgpack>=1.2.1' 'PyJWT>=2.13.0' 'pyarrow>=23.0.1' && \
+    find $CONDA_PREFIX \( -iname '*setuptools*70.3.0*' -o -iname '*msgpack*1.1.2*' -o -path '*/pip/_vendor/bom.cdx.json' \) -exec rm -rf {} +
 
 # Upgrade vulnerable packages in the base miniconda env (python3.10)
 # Use the absolute path to /opt/miniconda's pip because $CONDA_PREFIX/bin precedes /opt/miniconda/bin in PATH.
 # pip>=26.1 fixes GHSA-jp4c-xjxw-mgf9 / CVE-2026-6357 in the base miniconda env install path.
+# setuptools>=83.0.0 and msgpack>=1.2.1 remove stale vulnerable metadata from the base Miniconda env.
 # py-rattler is a transitive dep of conda-rattler-solver in the Miniconda base env; remove it after
 # build-time conda use because the current wheel embeds vulnerable pyo3 (GHSA-36hh-v3qg-5jq4/GHSA-chgr-c6px-7xpp).
 RUN /opt/miniconda/bin/pip install --upgrade \
         'pip>=26.1' \
         'cryptography>=46.0.7' \
+        'setuptools>=83.0.0' \
         'requests>=2.33.0' \
-        'idna>=3.15' && \
+        'idna>=3.15' \
+        'msgpack>=1.2.1' && \
     conda config --system --set solver classic && \
     /opt/miniconda/bin/pip uninstall -y py-rattler conda-rattler-solver && \
     rm -rf /opt/miniconda/lib/python3.10/site-packages/rattler* \
@@ -247,6 +263,7 @@ RUN /opt/miniconda/bin/pip install --upgrade \
            /opt/miniconda/lib/python3.10/site-packages/py_rattler* \
            /opt/miniconda/conda-meta/py-rattler-*.json \
            /opt/miniconda/conda-meta/conda-rattler-solver-*.json && \
+    find /opt/miniconda \( -iname '*setuptools*70.3.0*' -o -iname '*msgpack*1.1.2*' -o -path '*/pip/_vendor/bom.cdx.json' \) -exec rm -rf {} + && \
     # Remove the conda pkgs cache — conda env create / conda install repopulate it with
     # pip-26.0.1-pyh8b19718__0 which still ships vulnerable pip 26.0.1 metadata
     # (scanned at opt/miniconda/pkgs/pip-26.0.1-pyh8b19718__0/site-packages/pip-26.0.1.dist-info).
