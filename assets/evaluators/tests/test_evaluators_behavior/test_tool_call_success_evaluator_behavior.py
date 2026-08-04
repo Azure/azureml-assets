@@ -85,10 +85,6 @@ class TestToolCallSuccessEvaluatorBehavior(
         "tool_definitions": data.MCP_TCS_EXPECTED_FLOW_TOOL_DEFINITIONS,
     }
 
-    # Phase 2: azure_ai_search, sharepoint_grounding, and azure_fabric are now
-    # accepted by the TCS validator. The base class branches to NOT_APPLICABLE for
-    # these tests whenever check_for_unsupported_tools is True, so we override the
-    # three tests below to assert PASS instead.
     test_azure_ai_search_expected_flow_inputs = {
         "response": data.AZURE_AI_SEARCH_TCS_EXPECTED_FLOW_RESPONSE,
         "tool_calls": data.AZURE_AI_SEARCH_TCS_EXPECTED_FLOW_TOOL_CALLS,
@@ -110,10 +106,6 @@ class TestToolCallSuccessEvaluatorBehavior(
 
     evaluator_type = ToolCallSuccessEvaluator
 
-    # Phase 1 shipped only the prompty-level [STATUS] pass-through (asset version 8).
-    # Phase 2 (this PR) flips the validator for the non-Bing restricted tools
-    # (azure_ai_search, azure_fabric, sharepoint_grounding) so those three are now
-    # accepted; bing_grounding and bing_custom_search remain rejected by the converter.
     check_for_unsupported_tools = True
 
     # Test Configs
@@ -129,12 +121,34 @@ class TestToolCallSuccessEvaluatorBehavior(
         """A response ending in an unresolved function_call is treated as not-applicable."""
         self.run_intermediate_response_not_applicable_test()
 
-    # --- Phase 2 overrides: these three tools used to be unsupported but TCS now
-    # accepts them, so we override the base-class tests (which still branch to
-    # NOT_APPLICABLE when check_for_unsupported_tools is True) to assert PASS.
+    # Override the base-class expectations for evaluator-enabled restricted tools.
+
+    def test_bing_grounding(self):
+        """Bing Grounding is supported by Tool Call Success."""
+        self._run_tool_type_test(
+            test_label="Bing Grounding",
+            evaluation_inputs={
+                "query": data.BING_GROUNDING_QUERY,
+                "response": data.BING_GROUNDING_RESPONSE,
+                "tool_definitions": data.BING_GROUNDING_TOOL_DEFINITIONS,
+            },
+            assert_type=self.AssertType.PASS,
+        )
+
+    def test_bing_custom_search(self):
+        """Bing Custom Search is supported by Tool Call Success."""
+        self._run_tool_type_test(
+            test_label="Bing Custom Search",
+            evaluation_inputs={
+                "query": data.BING_CUSTOM_SEARCH_QUERY,
+                "response": data.BING_CUSTOM_SEARCH_RESPONSE,
+                "tool_definitions": data.BING_CUSTOM_SEARCH_TOOL_DEFINITIONS,
+            },
+            assert_type=self.AssertType.PASS,
+        )
 
     def test_azure_ai_search(self):
-        """Azure AI Search tool with azure_ai_search type - now supported in Phase 2."""
+        """Azure AI Search is supported by Tool Call Success."""
         self._run_tool_type_test(
             test_label="Azure AI Search",
             evaluation_inputs={
@@ -147,7 +161,7 @@ class TestToolCallSuccessEvaluatorBehavior(
         )
 
     def test_sharepoint_grounding(self):
-        """Test SharePoint grounding tool with sharepoint_grounding type - now supported in Phase 2."""
+        """SharePoint Grounding is supported by Tool Call Success."""
         self._run_tool_type_test(
             test_label="SharePoint Grounding",
             evaluation_inputs={
@@ -160,7 +174,7 @@ class TestToolCallSuccessEvaluatorBehavior(
         )
 
     def test_fabric_data_agent(self):
-        """Fabric data agent tool with azure_fabric type - now supported in Phase 2."""
+        """Fabric Data Agent is supported by Tool Call Success."""
         self._run_tool_type_test(
             test_label="Fabric Data Agent",
             evaluation_inputs={
@@ -170,6 +184,30 @@ class TestToolCallSuccessEvaluatorBehavior(
             },
             assert_type=self.AssertType.PASS,
             expected_flow_inputs=self.test_fabric_data_agent_expected_flow_inputs,
+        )
+
+    def test_openapi(self):
+        """OpenAPI is supported by Tool Call Success."""
+        self._run_tool_type_test(
+            test_label="OpenAPI",
+            evaluation_inputs={
+                "query": data.OPENAPI_QUERY,
+                "response": data.OPENAPI_RESPONSE,
+                "tool_definitions": data.OPENAPI_TOOL_DEFINITIONS,
+            },
+            assert_type=self.AssertType.PASS,
+        )
+
+    def test_web_search(self):
+        """Web Search is supported by Tool Call Success."""
+        self._run_tool_type_test(
+            test_label="Web Search",
+            evaluation_inputs={
+                "query": data.WEB_SEARCH_QUERY,
+                "response": data.WEB_SEARCH_RESPONSE,
+                "tool_definitions": data.WEB_SEARCH_TOOL_DEFINITIONS,
+            },
+            assert_type=self.AssertType.PASS,
         )
 
 
@@ -508,17 +546,17 @@ class TestGetToolCallsResultsNoStatusForward:
 NEWLY_ENABLED_TOOLS = [
     "azure_ai_search",
     "azure_fabric",
+    "bing_custom_search",
+    "bing_grounding",
+    "openapi_call",
     "sharepoint_grounding",
+    "web_search",
 ]
 
 STILL_UNSUPPORTED_TOOLS = [
-    "bing_grounding",
-    "bing_custom_search",
     "browser_automation",
     "code_interpreter_call",
     "computer_call",
-    "openapi_call",
-    "web_search",
 ]
 
 
@@ -546,38 +584,34 @@ def _make_tcs_unit_eval_input(tool_name, *, query=None):
 
 @pytest.mark.unittest
 class TestUnsupportedToolsList:
-    """The hard-coded UNSUPPORTED_TOOLS list controls service-side gating."""
+    """The evaluator-specific unsupported list controls service-side gating."""
 
     def test_newly_enabled_tools_are_not_in_unsupported_list(self):
         """Newly enabled tools must be absent from the unsupported list."""
+        evaluator = create_mocked_evaluator(ToolCallSuccessEvaluator, "tool_call_success")
         for tool_name in NEWLY_ENABLED_TOOLS:
-            assert tool_name not in ConversationValidator.UNSUPPORTED_TOOLS
+            assert tool_name not in evaluator._validator.UNSUPPORTED_TOOLS
 
     def test_still_unsupported_tools_remain_in_list(self):
         """Still-unsupported tools must remain in the unsupported list."""
+        evaluator = create_mocked_evaluator(ToolCallSuccessEvaluator, "tool_call_success")
         for tool_name in STILL_UNSUPPORTED_TOOLS:
-            assert tool_name in ConversationValidator.UNSUPPORTED_TOOLS
+            assert tool_name in evaluator._validator.UNSUPPORTED_TOOLS
 
     def test_unsupported_list_contains_no_unexpected_tools(self):
         """Unsupported list must match the expected set exactly."""
-        # Defensive: keep the list explicit so future additions are
-        # reviewed against this test.
-        assert set(ConversationValidator.UNSUPPORTED_TOOLS) == set(STILL_UNSUPPORTED_TOOLS)
+        evaluator = create_mocked_evaluator(ToolCallSuccessEvaluator, "tool_call_success")
+        assert set(evaluator._validator.UNSUPPORTED_TOOLS) == set(STILL_UNSUPPORTED_TOOLS)
 
 
 @pytest.mark.unittest
 class TestValidatorAcceptsNewlyEnabledTools:
-    """Verify SP / AAIS / Fabric tool calls now pass validation."""
+    """Verify every enabled tool type passes validation."""
 
     @pytest.mark.parametrize("tool_name", NEWLY_ENABLED_TOOLS)
     def test_assistant_message_accepts_tool(self, tool_name):
         """Assistant-message validation accepts each newly enabled tool."""
-        validator = ToolDefinitionsValidator(
-            error_target=ExtendedErrorTarget.TOOL_CALL_SUCCESS_EVALUATOR,
-            requires_query=False,
-            optional_tool_definitions=True,
-            check_for_unsupported_tools=True,
-        )
+        validator = create_mocked_evaluator(ToolCallSuccessEvaluator, "tool_call_success")._validator
         # _validate_assistant_message returns None on success.
         result = validator._validate_assistant_message(_make_tcs_unit_eval_input(tool_name)["response"][0])
         assert result is None
@@ -585,12 +619,7 @@ class TestValidatorAcceptsNewlyEnabledTools:
     @pytest.mark.parametrize("tool_name", NEWLY_ENABLED_TOOLS)
     def test_validate_eval_input_accepts_tool(self, tool_name):
         """Full eval-input validation accepts each newly enabled tool."""
-        validator = ToolDefinitionsValidator(
-            error_target=ExtendedErrorTarget.TOOL_CALL_SUCCESS_EVALUATOR,
-            requires_query=False,
-            optional_tool_definitions=True,
-            check_for_unsupported_tools=True,
-        )
+        validator = create_mocked_evaluator(ToolCallSuccessEvaluator, "tool_call_success")._validator
         assert validator.validate_eval_input(_make_tcs_unit_eval_input(tool_name)) is True
 
 
@@ -601,12 +630,7 @@ class TestValidatorRejectsStillUnsupportedTools:
     @pytest.mark.parametrize("tool_name", STILL_UNSUPPORTED_TOOLS)
     def test_validate_eval_input_rejects_tool(self, tool_name):
         """Eval-input validation still rejects each still-unsupported tool."""
-        validator = ToolDefinitionsValidator(
-            error_target=ExtendedErrorTarget.TOOL_CALL_SUCCESS_EVALUATOR,
-            requires_query=False,
-            optional_tool_definitions=True,
-            check_for_unsupported_tools=True,
-        )
+        validator = create_mocked_evaluator(ToolCallSuccessEvaluator, "tool_call_success")._validator
         with pytest.raises(EvaluationException) as exc_info:
             validator.validate_eval_input(_make_tcs_unit_eval_input(tool_name))
         assert "currently not supported" in str(exc_info.value)
