@@ -881,7 +881,11 @@ class TestGroundednessInternalBranches:
             ("azure_ai_search", {"documents": [{"title": "Hotel", "content": "Pool and WiFi"}]}, "Pool and WiFi"),
             ("openapi_call", {"body": {"temperature": 26}}, '"temperature": 26'),
             ("bing_grounding", {"results": [{"title": "News", "snippet": "Current headline"}]}, "Current headline"),
-            ("bing_custom_search", {"items": [{"name": "Docs", "description": "Official guidance"}]}, "Official guidance"),
+            (
+                "bing_custom_search",
+                {"items": [{"name": "Docs", "description": "Official guidance"}]},
+                "Official guidance",
+            ),
             ("sharepoint_grounding", {"documents": [{"title": "Policy", "text": "Retention is 30 days"}]}, "30 days"),
             ("web_search", {"results": [{"title": "Weather", "summary": "Partly cloudy"}]}, "Partly cloudy"),
             ("azure_fabric", {"rows": [{"average_income": 7071.43}]}, "7071.43"),
