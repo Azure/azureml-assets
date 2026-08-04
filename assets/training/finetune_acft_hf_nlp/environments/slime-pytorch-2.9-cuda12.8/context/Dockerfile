@@ -17,6 +17,7 @@ ARG LOG4J_VERSION=2.25.4
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PIP_NO_CACHE_DIR=1
+ENV PIP_PROGRESS_BAR=off
 ENV PYTHONUNBUFFERED=1
 ENV MAX_JOBS=1
 ENV PYTHONPATH=/opt/Megatron-LM:${PYTHONPATH}
@@ -44,9 +45,9 @@ RUN set -eux; \
     rm -rf /var/lib/apt/lists/*
 
 RUN python -m pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cu128 \
-        torch==2.9.1 \
-        torchvision==0.24.1 \
-        torchaudio==2.9.1
+        torch==2.10.0 \
+        torchvision==0.25.0 \
+        torchaudio==2.10.0
 
 RUN python -m pip install --no-cache-dir \
         flash-linear-attention==0.4.1 \
@@ -119,17 +120,26 @@ RUN python /tmp/patch_sglang_cve_2026_5760.py && \
     rm /tmp/patch_sglang_cve_2026_5760.py
 
 COPY patch_ray_log4j.py /tmp/patch_ray_log4j.py
-# Ray vendors Log4j inside ray_dist.jar as expanded fat-jar contents plus
-# Maven metadata. Installing newer Log4j jars beside Ray would not change the
-# classes or package metadata that runtime and vulnerability scanners observe,
-# so overlay the fixed Log4j artifacts directly into Ray's fat jar until Ray
-# publishes a wheel with the patched dependency.
+# Ray vendors Log4j inside its fat jar, so overlay the fixed artifacts directly
+# into the jar until Ray publishes a wheel with the patched dependency.
 RUN LOG4J_VERSION=${LOG4J_VERSION} \
     LOG4J_API_SHA1=89ff2217b193fb187b134aa6ebcbfa8a28b018a9 \
     LOG4J_CORE_SHA1=b963c3d6bfdf05c61ad47a74e9f9295131607df2 \
     LOG4J_SLF4J_IMPL_SHA1=07c27f97ecedecf58341d4d4467bc3a58fbad73f \
     python /tmp/patch_ray_log4j.py && \
     rm /tmp/patch_ray_log4j.py
+
+COPY patch_ray_jackson.py /tmp/patch_ray_jackson.py
+# Ray vendors Jackson inside its fat jar; patch the embedded classes and Maven
+# metadata so the embedded dependency is consistently upgraded.
+RUN JACKSON_CORE_VERSION=2.21.5 \
+    JACKSON_CORE_JAR_SHA1=7ec0c8bf8402fa998f64b2009632d6566a42ceb7 \
+    JACKSON_CORE_POM_SHA1=32a98918e6a365962063ac88abe54b1251f1c2d0 \
+    JACKSON_DATABIND_VERSION=2.21.5 \
+    JACKSON_DATABIND_JAR_SHA1=84924990b468233a28214ae2c505a9ec24cd6ea6 \
+    JACKSON_DATABIND_POM_SHA1=f85e75bea42ea3f61307a3dd9ba27ca33962be68 \
+    python /tmp/patch_ray_jackson.py && \
+    rm /tmp/patch_ray_jackson.py
 
 RUN cd /opt/slime && \
     python -m pip install --no-cache-dir -e . --no-deps
@@ -144,43 +154,55 @@ RUN python /tmp/patch_slime_rft_fixes.py && \
 RUN cd /opt/slime/slime/backends/megatron_utils/kernels/int4_qat && \
     python -m pip install --no-cache-dir . --no-build-isolation
 
-# Security: upgrade system packages with known vulnerabilities
-# (rsync USN-8283-1, libgnutls30t64 USN-8284-1, bind9 USN-8293-1,
-#  libarchive13t64 USN-8292-1, nginx USN-8354-1, xz-utils USN-8362-1,
-#  libgcrypt20 USN-8319-1)
+# Upgrade vulnerable Ubuntu packages inherited from or installed by this image.
 RUN apt-get update && \
     apt-get install -y --no-install-recommends --only-upgrade \
-        rsync \
-        libgnutls30t64 \
-        bind9-host \
-        bind9-dnsutils \
-        bind9-libs \
+        libgssapi-krb5-2 \
+        libk5crypto3 \
+        libkrb5-3 \
+        libkrb5support0 \
         libarchive13t64 \
+        libpam-modules \
+        libpam-modules-bin \
+        libpam-runtime \
+        libpam0g \
+        libsqlite3-0 \
         nginx \
         nginx-common \
         nginx-light \
-        xz-utils \
-        liblzma5 \
-        libgcrypt20 && \
+        rsyslog \
+        tar \
+        wget && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Security: upgrade Python packages with known vulnerabilities
-# (aiohttp GHSA-jg22-mg44-37j8 / GHSA-hg6j-4rv6-33pg, starlette GHSA-86qp-5c8j-p5mr,
-#  idna GHSA-65pc-fj4g-8rjx in main site-packages and ray's vendored thirdparty copy;
-#  pyarrow GHSA-rgxp-2hwp-jwgg / CVE-2026-25087 use-after-free in Apache Arrow C++)
-RUN python -m pip install --no-cache-dir \
+# Upgrade vulnerable Python packages.
+RUN python -m pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cu128 \
+        torch==2.10.0 \
+        torchvision==0.25.0 \
+        torchaudio==2.10.0 && \
+    python -m pip install --no-cache-dir \
         "aiohttp>=3.14.0" \
         "starlette>=1.0.1" \
         "idna>=3.15" \
-        "pyarrow>=23.0.1"
+        "pyarrow>=23.0.1" \
+        "pyasn1>=0.6.4" \
+        "pillow>=12.3.0" \
+        "transformers>=5.5.0,<=5.6.0" \
+        "mcp[cli]>=1.28.1" \
+        "wandb>=0.28.1" \
+        "GitPython>=3.1.55" \
+        "cryptography>=49.0.0" \
+        "setuptools>=83.0.0"
 
-# pinned transitive dep of base image; fixes GHSA-537c-gmf6-5ccf
-RUN python -m pip install --no-cache-dir "cryptography==48.0.1"
+# The optional wandb service binary embeds vulnerable Go modules; remove it so
+# runtime uses the Python client path instead.
+RUN WANDB_CORE="$(python -c 'import pathlib, wandb; print(pathlib.Path(wandb.__file__).resolve().parent / "bin" / "wandb-core")')" && \
+    test -f "${WANDB_CORE}" && \
+    rm "${WANDB_CORE}"
 
 COPY patch_ray_thirdparty.py /tmp/patch_ray_thirdparty.py
-# Upgrade vulnerable packages inside ray's vendored thirdparty_files directory and
-# remove the old dist-info so the vulnerability scanner no longer sees them.
+# Upgrade Ray's vendored Python packages and remove their obsolete metadata.
 RUN python -m pip install --no-cache-dir \
         "idna>=3.15" \
         "aiohttp>=3.14.0" \
