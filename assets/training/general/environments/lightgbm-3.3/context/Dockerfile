@@ -12,7 +12,8 @@ ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 # Upgrade OS packages to pull current Ubuntu security patches.
 # The current openmpi5.0-ubuntu24.04 base already contains the required fixes for
 # curl/libcurl* (USN-8487-1), libnghttp2-14 (USN-8495-1), libsqlite3-0
-# (USN-8480-1), and tar (USN-8477-1), so no package pins are needed here.
+# (USN-8480-1), tar (USN-8477-1), rsyslog (USN-8598-1), and PAM
+# (USN-8601-1), so no package pins are needed here.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get clean && \

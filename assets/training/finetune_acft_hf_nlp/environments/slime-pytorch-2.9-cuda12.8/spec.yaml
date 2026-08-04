@@ -26,3 +26,4 @@ tags:
   SGLang: "0.5.11"
   FlashAttention: "4"
   Megatron: "dev"
+  Mamba: "2"

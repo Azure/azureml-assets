@@ -6,7 +6,9 @@
 import importlib.util
 import pathlib
 import zipfile
+import causal_conv1d
 import cryptography
+import mamba_ssm
 from packaging.version import Version
 import PIL
 import ray
@@ -14,9 +16,19 @@ import sglang
 import slime
 import torch
 import transformer_engine.pytorch as te
+from causal_conv1d import causal_conv1d_fn, causal_conv1d_update  # noqa: F401
+from mamba_ssm.ops.triton.layernorm_gated import RMSNorm as _MambaRMSNorm  # noqa: F401
+from mamba_ssm.ops.triton.selective_state_update import (  # noqa: F401
+    selective_state_update,
+)
+from mamba_ssm.ops.triton.ssd_combined import (  # noqa: F401
+    mamba_chunk_scan_combined,
+    mamba_split_conv1d_scan_combined,
+)
 
 
 LOG4J_ARTIFACTS = ("log4j-api", "log4j-core", "log4j-slf4j-impl")
+JACKSON_ARTIFACTS = ("jackson-core", "jackson-databind")
 RAY_DIST_NAMES = ("ray_dist.jar", "ray__dist.jar")
 EXPECTED_SLIME_ROOT = pathlib.Path("/opt/slime")
 
@@ -67,13 +79,16 @@ def assert_world_accessible(path: pathlib.Path) -> None:
 
 
 assert torch.cuda.is_available() or torch.version.cuda
-assert torch.__version__.startswith("2.9.1")
-assert Version(PIL.__version__) >= Version("12.2.0")
-assert Version(cryptography.__version__) >= Version("48.0.1")
+assert Version(torch.__version__.split("+", 1)[0]) >= Version("2.10.0")
+assert Version(PIL.__version__) >= Version("12.3.0")
+assert Version(cryptography.__version__) >= Version("49.0.0")
 assert Version(sglang.__version__) >= Version("0.5.11")
 assert sglang
 assert slime
 assert te
+# Mamba-2 kernels required by Megatron's MambaMixer for hybrid models (Nemotron-H).
+assert Version(mamba_ssm.__version__) >= Version("2.3.2")
+assert causal_conv1d
 
 # AML/Singularity jobs run as uid 9000 (aiscuser); /root is mode 700 so
 # slime must be editable-installed from a non-/root location. Pin the
@@ -104,5 +119,11 @@ for artifact in LOG4J_ARTIFACTS:
     with zipfile.ZipFile(ray_dist, "r") as jar:
         properties = jar.read(properties_name).decode("utf-8")
     assert "version=2.25.4" in properties, artifact
+
+for artifact in JACKSON_ARTIFACTS:
+    properties_name = f"META-INF/maven/com.fasterxml.jackson.core/{artifact}/pom.properties"
+    with zipfile.ZipFile(ray_dist, "r") as jar:
+        properties = jar.read(properties_name).decode("utf-8")
+    assert "version=2.21.5" in properties, artifact
 
 print("slime environment imports succeeded")

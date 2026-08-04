@@ -32,8 +32,12 @@ RUN apt-get update && \
         libgssapi-krb5-2=1.19.2-2ubuntu0.8 \
         libk5crypto3=1.19.2-2ubuntu0.8 \
         libkrb5-3=1.19.2-2ubuntu0.8 \
+        libpam-runtime=1.4.0-11ubuntu2.7 \
+        libpam0g=1.4.0-11ubuntu2.7 \
+        libpam-modules=1.4.0-11ubuntu2.7 \
+        libpam-modules-bin=1.4.0-11ubuntu2.7 \
         psmisc \
-        rsyslog \
+        rsyslog=8.2112.0-2ubuntu2.4 \
         runit \
         unzip && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
@@ -52,7 +56,16 @@ ENV ENABLE_METADATA=true
 COPY conda_dependencies.yaml .
 RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
-    conda clean -afy
+    conda clean -afy && \
+    find $AZUREML_CONDA_ENVIRONMENT_PATH /root -type d \( -name 'setuptools-70.3.0.dist-info' -o -name 'msgpack-1.1.2.dist-info' \) -prune -exec rm -rf {} + && \
+    rm -f $AZUREML_CONDA_ENVIRONMENT_PATH/conda-meta/setuptools-70*.json \
+          $AZUREML_CONDA_ENVIRONMENT_PATH/conda-meta/msgpack-python-1.1*.json \
+          $AZUREML_CONDA_ENVIRONMENT_PATH/conda-meta/msgpack-1.1*.json \
+          $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pip/_vendor/bom.cdx.json && \
+    if [ -f $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pip/_vendor/vendor.txt ]; then \
+        sed -i -e 's/msgpack==1.1.2/msgpack==1.2.1/' -e 's/setuptools==70.3.0/setuptools==83.0.0/' \
+            $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pip/_vendor/vendor.txt; \
+    fi
 
 # Install packages with torch packages separately to reduce layer size
 RUN pip install --no-cache-dir \
@@ -74,45 +87,67 @@ RUN pip install --no-cache-dir --upgrade 'onnx>=1.21.0'
 # python-dotenv>=1.2.2: CVE-2026-28684 (GHSA-mf9w-mj56-hr94); transitive chain in inference layer:
 #   azureml-defaults -> azureml-inference-server-http -> pydantic-settings -> python-dotenv>=0.21.0;
 #   pydantic-settings (<=2.14.0) only requires >=0.21.0, no parent upgrade resolves this.
-# idna>=3.15 (GHSA-65pc-fj4g-8rjx): base has idna 3.11 from requests 2.32.4 (idna<4,>=2.5)
-# and yarl 1.22.0 (idna>=2.0). As of 2026-05-25, latest requests/yarl keep the same loose
-# idna ranges, so parent upgrades cannot force the fixed idna version.
-# click>=8.3.3 (GHSA-47fr-3ffg-hgmw): base has click 8.2.1 from anaconda-cli-base/typer
-# parents. As of 2026-05-25, latest anaconda-cli-base, typer, and python-dotenv still require
-# click without a >=8.3.3 floor, so direct override is required.
+# idna>=3.15 and click>=8.3.3: parent dependency ranges permit vulnerable versions,
+# so direct floors are required.
+# Remove stale vendored dependency metadata after upgrading pip.
 RUN /opt/conda/bin/conda install -n base -c conda-forge 'pip>=26.1' -y && \
     /opt/conda/bin/pip install --no-cache-dir --upgrade 'requests>=2.33.0' 'urllib3>=2.7.0' 'aiohttp>=3.14.0' 'wheel>=0.46.2' \
-    'setuptools>=82.0.1' 'cryptography>=46.0.7' 'PyJWT>=2.12.0' \
-    'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3' 'pydantic-settings>=2.14.2' 'msgpack>=1.2.1'
+    'setuptools>=83.0.0' 'cryptography>=46.0.7' 'PyJWT>=2.12.0' \
+    'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3' 'pydantic-settings>=2.14.2' 'msgpack>=1.2.1' && \
+    find /opt/conda /root -type d \( -name 'setuptools-70.3.0.dist-info' -o -name 'msgpack-1.1.2.dist-info' \) -prune -exec rm -rf {} + && \
+    rm -f /opt/conda/conda-meta/setuptools-70*.json \
+          /opt/conda/conda-meta/msgpack-python-1.1*.json \
+          /opt/conda/conda-meta/msgpack-1.1*.json \
+          /opt/conda/lib/python3.13/site-packages/pip/_vendor/bom.cdx.json && \
+    if [ -f /opt/conda/lib/python3.13/site-packages/pip/_vendor/vendor.txt ]; then \
+        sed -i -e 's/msgpack==1.1.2/msgpack==1.2.1/' -e 's/setuptools==70.3.0/setuptools==83.0.0/' \
+            /opt/conda/lib/python3.13/site-packages/pip/_vendor/vendor.txt; \
+    fi
 # Security: fix ptca conda env (python 3.10).
 # torch==2.13.0: pinned transitive dep from ACPT ptca env; fixes GHSA-rrmf-rvhw-rf47.
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade torch==2.13.0 torchvision==0.28.0
-# idna>=3.15 (GHSA-65pc-fj4g-8rjx): ptca has idna 3.11 from requests 2.32.5 (idna<4,>=2.5)
-# and yarl 1.22.0 (idna>=2.0). As of 2026-05-25, latest requests/yarl keep the same loose
-# idna ranges, so parent upgrades cannot force the fixed idna version.
+# idna>=3.15: parent dependency ranges permit vulnerable versions.
 RUN /opt/conda/bin/conda install -n ptca -c conda-forge 'pip>=26.1' -y && \
     /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'filelock>=3.20.3' \
-    'wheel>=0.46.2' 'setuptools>=82.0.1' 'protobuf>=6.33.5' \
+    'wheel>=0.46.2' 'setuptools>=83.0.0' 'protobuf>=6.33.5' \
     'pillow>=12.2.0' 'onnx>=1.21.0' 'requests>=2.33.0' 'urllib3>=2.7.0' \
-    'aiohttp>=3.14.0' 'pytest>=9.0.3' 'idna>=3.15'
+    'aiohttp>=3.14.0' 'pytest>=9.0.3' 'idna>=3.15' 'msgpack>=1.2.1' && \
+    find /opt/conda/envs/ptca /root -type d \( -name 'setuptools-70.3.0.dist-info' -o -name 'msgpack-1.1.2.dist-info' \) -prune -exec rm -rf {} + && \
+    rm -f /opt/conda/envs/ptca/conda-meta/setuptools-70*.json \
+          /opt/conda/envs/ptca/conda-meta/msgpack-python-1.1*.json \
+          /opt/conda/envs/ptca/conda-meta/msgpack-1.1*.json \
+          /opt/conda/envs/ptca/lib/python3.10/site-packages/pip/_vendor/bom.cdx.json && \
+    if [ -f /opt/conda/envs/ptca/lib/python3.10/site-packages/pip/_vendor/vendor.txt ]; then \
+        sed -i -e 's/msgpack==1.1.2/msgpack==1.2.1/' -e 's/setuptools==70.3.0/setuptools==83.0.0/' \
+            /opt/conda/envs/ptca/lib/python3.10/site-packages/pip/_vendor/vendor.txt; \
+    fi
 
 # Fix security vulnerabilities in active conda env (azureml-automl-dnn-vision-gpu, python 3.10)
-# aiohttp, bokeh, distributed, protobuf, cryptography, filelock, setuptools, PyJWT, urllib3, pillow, onnx, pyarrow,
-# requests, python-dotenv — all transitive deps of azureml SDK packages pinned with template
+# aiohttp, bokeh, distributed, protobuf, cryptography, filelock, setuptools, PyJWT, urllib3, pillow,
+# onnx, pyarrow, requests, python-dotenv, GitPython — all transitive deps of azureml SDK packages pinned with template
 # versions (cannot upgrade parent during template rendering).
+# setuptools>=83.0.0: fixes GHSA-5rjg-fvgr-3xxf and GHSA-h35f-9h28-mq5c.
 # cryptography>=46.0.7: azure-identity (via azureml-dataprep) only requires cryptography>=2.5.
 # pyarrow>=23.0.1: pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg / CVE-2026-25087.
 # python-dotenv>=1.2.2: CVE-2026-28684; pydantic-settings (<=2.14.0) requires >=0.21.0 only.
+# GitPython>=3.1.55: pinned transitive dep of mlflow-skinny/azureml-mlflow; fixes GitPython GHSA findings.
+# msgpack>=1.2.1: pinned transitive dep of azureml SDK packages; fixes GHSA-6v7p-g79w-8964.
 # idna>=3.15 and click>=8.3.3 are direct overrides because requests/yarl/dask parents keep
 # loose dependency ranges that allow vulnerable versions.
 RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' 'distributed>=2026.1.0' 'protobuf>=6.33.5' 'cryptography>=46.0.7' \
-    'filelock>=3.20.3' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'urllib3>=2.7.0' 'pillow>=12.2.0' \
+    'filelock>=3.20.3' 'setuptools>=83.0.0' 'PyJWT>=2.12.0' 'urllib3>=2.7.0' 'pillow>=12.2.0' \
     'onnx>=1.21.0' 'requests>=2.33.0' 'python-dotenv>=1.2.2' \
-    'bokeh>=3.8.2' 'idna>=3.15' 'click>=8.3.3' 'pyarrow>=23.0.1'
-# Remove stale vendored metadata that scanners pick up
-RUN rm -rf /opt/conda/lib/python3.13/site-packages/setuptools/__vendor/jaraco.context-5.3.0.dist-info \
-    /opt/conda/lib/python3.13/site-packages/setuptools/__vendor/wheel-0.45.1.dist-info \
-    /opt/conda/envs/ptca/lib/python3.10/site-packages/setuptools/__vendor/jaraco.context-5.3.0.dist-info \
-    /opt/conda/envs/ptca/lib/python3.10/site-packages/setuptools/__vendor/wheel-0.45.1.dist-info \
-    /opt/conda/envs/ptca/lib/python3.10/site-packages/wheel-0.41.2.dist-info
+    'bokeh>=3.8.2' 'idna>=3.15' 'click>=8.3.3' 'pyarrow>=23.0.1' 'GitPython>=3.1.55' 'msgpack>=1.2.1' && \
+    rm -f $AZUREML_CONDA_ENVIRONMENT_PATH/conda-meta/setuptools-70*.json \
+          $AZUREML_CONDA_ENVIRONMENT_PATH/conda-meta/msgpack-python-1.1*.json \
+          $AZUREML_CONDA_ENVIRONMENT_PATH/conda-meta/msgpack-1.1*.json \
+          $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pip/_vendor/bom.cdx.json && \
+    if [ -f $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pip/_vendor/vendor.txt ]; then \
+        sed -i -e 's/msgpack==1.1.2/msgpack==1.2.1/' -e 's/setuptools==70.3.0/setuptools==83.0.0/' \
+            $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pip/_vendor/vendor.txt; \
+    fi
+RUN rm -rf /opt/conda/pkgs/pip-*/site-packages/pip/_vendor/bom.cdx.json && \
+    find /opt/conda/pkgs /root -type d \( -name 'setuptools-70.3.0.dist-info' -o -name 'msgpack-1.1.2.dist-info' \) -prune -exec rm -rf {} + && \
+    find /opt/conda/pkgs -path '*/site-packages/pip/_vendor/vendor.txt' -exec \
+        sed -i -e 's/msgpack==1.1.2/msgpack==1.2.1/' -e 's/setuptools==70.3.0/setuptools==83.0.0/' {} +
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
