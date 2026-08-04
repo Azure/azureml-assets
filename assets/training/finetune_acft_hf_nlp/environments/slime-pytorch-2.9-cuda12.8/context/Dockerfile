@@ -14,6 +14,8 @@ ARG SGLANG_VERSION=0.5.11
 ARG MEGATRON_COMMIT=1dcf0dafa884ad52ffb243625717a3471643e087
 ARG MBRIDGE_COMMIT=89eb10887887bc74853f89a4de258c0702932a1c
 ARG LOG4J_VERSION=2.25.4
+ARG CAUSAL_CONV1D_WHEEL=https://github.com/yeshsurya/causal-conv1d/releases/download/v1.5.0/causal_conv1d-1.5.0.post8-cp312-cp312-linux_x86_64.whl
+ARG MAMBA_SSM_WHEEL=https://github.com/yeshsurya/mamba/releases/download/v2.3.2/mamba_ssm-2.3.2.post1-cp312-cp312-linux_x86_64.whl
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PIP_NO_CACHE_DIR=1
@@ -62,6 +64,17 @@ RUN NVCC_APPEND_FLAGS="--threads 1" \
         --no-build-isolation \
         --config-settings "--build-option=--cpp_ext --cuda_ext --parallel 1" \
         git+https://github.com/NVIDIA/apex.git@10417aceddd7d5d05d7cbf7b0fc2daad1105f8b4
+
+# Mamba-2 CUDA kernels (causal-conv1d + mamba-ssm) back Megatron's MambaMixer, which
+# hybrid Mamba-2/MoE models such as Nemotron-H (model_type nemotron_h) require at
+# model-build time; without them MambaMixer aborts with "MambaSSM is not installed".
+# Install validated cp312/cu128 wheels instead of compiling from source in the
+# image build. The PyPI sdists ship without csrc/*.cpp, so source builds are slow
+# and can fail with "missing and no known rule to make it"; --no-deps keeps the
+# curated torch / sglang / tilelang stack pinned.
+RUN python -m pip install --disable-pip-version-check --no-cache-dir --no-deps \
+        "${CAUSAL_CONV1D_WHEEL}" \
+        "${MAMBA_SSM_WHEEL}"
 
 RUN git clone https://github.com/NVIDIA/Megatron-LM.git --recursive /opt/Megatron-LM && \
     cd /opt/Megatron-LM && \
