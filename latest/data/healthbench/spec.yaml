@@ -1,0 +1,9 @@
+$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
+name: "healthbench"
+version: "1"
+tags:
+  azureml.Designer: false
+description: "HealthBench - 5000 multi-turn healthcare conversations with physician-written
+  evaluation rubrics"
+type: uri_folder
+path: sample_data/

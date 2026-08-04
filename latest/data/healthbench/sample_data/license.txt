@@ -1,0 +1,5 @@
+HealthBench dataset from OpenAI simple-evals.
+
+Dataset sourced from https://openaipublic.blob.core.windows.net/simple-evals/healthbench/
+
+Licensed under MIT License. Copyright (c) 2025 OpenAI.
