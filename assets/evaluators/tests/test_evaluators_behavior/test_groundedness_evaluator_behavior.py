@@ -63,8 +63,12 @@ class TestGroundednessEvaluatorBehavior(
 
     test_file_search_expected_flow_inputs = {
         "query": data.FILE_SEARCH_GROUNDEDNESS_EXPECTED_FLOW_QUERY,
-        "response": data.FILE_SEARCH_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE,
-        "context": data.GROUNDEDNESS_NO_CONTEXT,
+        "response": [
+            message
+            for message in data.FILE_SEARCH_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE
+            if message.get("role") != "tool"
+        ],
+        "context": "# Le Jardin de Paris\n# Trattoria Bella Notte",
     }
 
     test_image_generation_expected_flow_inputs = {
@@ -870,6 +874,170 @@ class TestGroundednessInternalBranches:
         )
         context = ev._get_context_from_agent_response([{"role": "assistant"}], None)
         assert "hello" in context
+
+    @pytest.mark.parametrize(
+        ("tool_name", "tool_result", "expected"),
+        [
+            ("azure_ai_search", {"documents": [{"title": "Hotel", "content": "Pool and WiFi"}]}, "Pool and WiFi"),
+            ("openapi_call", {"body": {"temperature": 26}}, '"temperature": 26'),
+            ("bing_grounding", {"results": [{"title": "News", "snippet": "Current headline"}]}, "Current headline"),
+            ("bing_custom_search", {"items": [{"name": "Docs", "description": "Official guidance"}]}, "Official guidance"),
+            ("sharepoint_grounding", {"documents": [{"title": "Policy", "text": "Retention is 30 days"}]}, "30 days"),
+            ("web_search", {"results": [{"title": "Weather", "summary": "Partly cloudy"}]}, "Partly cloudy"),
+            ("azure_fabric", {"rows": [{"average_income": 7071.43}]}, "7071.43"),
+        ],
+    )
+    def test_extract_tool_context_supports_allowed_tools(self, tool_name, tool_result, expected):
+        """Each allowed tool's structured output produces grounding context."""
+        ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
+        assert expected in ev._extract_tool_context(tool_name, tool_result)
+
+    def test_get_context_from_agent_response_extracts_span_tool_response(self):
+        """Span-normalized Bing citation snippets become grounding context."""
+        ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
+        ev._parse_tools_from_response = MagicMock(return_value=[])
+        response = [
+            {
+                "role": "tool",
+                "parts": [
+                    {
+                        "type": "tool_call_response",
+                        "id": "call_1",
+                        "response": (
+                            "[Search citations]\n"
+                            "[1] Latest Sports News - https://example.com\n"
+                            "    Snippet: Today's major sports headlines."
+                        ),
+                    }
+                ],
+            }
+        ]
+
+        context = ev._get_context_from_agent_response(response, None)
+
+        assert "Latest Sports News" in context
+        assert "Today's major sports headlines." in context
+
+    def test_convert_kwargs_filters_extracted_span_tool_response(self):
+        """Span tool evidence is passed as context and removed from the response."""
+        ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
+        ev._parse_tools_from_response = MagicMock(return_value=[])
+        tool_message = {
+            "role": "tool",
+            "parts": [
+                {
+                    "type": "tool_call_response",
+                    "response": "[Search citations]\n[1] News\n    Snippet: Headline",
+                }
+            ],
+        }
+        response = [tool_message, {"role": "assistant", "content": "Headline summary"}]
+
+        eval_input = ev._convert_kwargs_to_eval_input(query="What happened?", response=response)[0]
+
+        assert "Snippet: Headline" in eval_input["context"]
+        assert tool_message not in eval_input["response"]
+
+    def test_get_context_from_agent_response_resolves_openapi_operation_name(self):
+        """OpenAPI operation names are resolved through their tool definition."""
+        ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
+        ev._parse_tools_from_response = MagicMock(
+            return_value=[
+                {
+                    "type": "tool_call",
+                    "name": "weather_GetCurrentWeather",
+                    "tool_result": [{"body": {"temperature": 26}}],
+                }
+            ]
+        )
+
+        context = ev._get_context_from_agent_response(
+            [{"role": "assistant"}],
+            [{"name": "weather_GetCurrentWeather", "type": "openapi"}],
+        )
+
+        assert '"temperature": 26' in context
+
+    def test_get_context_from_agent_response_normalizes_openapi_messages(self):
+        """Raw OpenAPI call/output blocks are normalized before context extraction."""
+        ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
+        response = [
+            {
+                "role": "assistant",
+                "content": [
+                    {
+                        "type": "openapi_call",
+                        "tool_call_id": "call_1",
+                        "name": "weather_GetCurrentWeather",
+                        "arguments": {"location": "Cairo"},
+                    }
+                ],
+            },
+            {
+                "role": "tool",
+                "tool_call_id": "call_1",
+                "content": [
+                    {
+                        "type": "openapi_call_output",
+                        "openapi_call_output": {"body": {"temperature": 26}},
+                    }
+                ],
+            },
+        ]
+
+        context = ev._get_context_from_agent_response(
+            response,
+            [{"name": "weather_GetCurrentWeather", "type": "openapi"}],
+        )
+
+        assert '"temperature": 26' in context
+
+    def test_get_context_from_agent_response_merges_parsed_and_span_context(self):
+        """Parsed tool evidence and span citation evidence are both preserved."""
+        ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
+        ev._parse_tools_from_response = MagicMock(
+            return_value=[
+                {
+                    "type": "tool_call",
+                    "name": "file_search",
+                    "tool_result": [{"text": "File evidence"}],
+                }
+            ]
+        )
+        response = [
+            {
+                "role": "tool",
+                "parts": [
+                    {
+                        "type": "tool_call_response",
+                        "response": "[Search citations]\n[1] News\n    Snippet: Search evidence",
+                    }
+                ],
+            }
+        ]
+
+        context = ev._get_context_from_agent_response(response, None)
+
+        assert "File evidence" in context
+        assert "Search evidence" in context
+
+    def test_span_fallback_ignores_non_grounding_tool_response(self):
+        """Arbitrary span tool responses are not treated as grounding evidence."""
+        ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
+        ev._parse_tools_from_response = MagicMock(return_value=[])
+        response = [
+            {
+                "role": "tool",
+                "parts": [{"type": "tool_call_response", "response": '{"stdout": "invented answer"}'}],
+            }
+        ]
+
+        assert ev._get_context_from_agent_response(response, None) == "<>"
+
+    def test_extract_tool_context_supports_string_results(self):
+        """Plain string tool results are preserved as grounding evidence."""
+        ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
+        assert ev._extract_tool_context("bing_grounding", "  citation snippets  ") == "citation snippets"
 
     def test_get_context_from_agent_response_skips_non_tool_call_entries(self):
         """Parsed entries that are not tool_calls are skipped, yielding no context."""

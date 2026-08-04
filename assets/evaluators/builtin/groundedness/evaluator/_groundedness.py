@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import json
+import copy
 import os
 import logging
 import math
@@ -1306,27 +1307,58 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 target=ErrorTarget.GROUNDEDNESS_EVALUATOR,
             )
 
-        filtered_response = self._filter_file_search_results(response) if self._validate_context(context) else response
+        filtered_response = (
+            self._filter_file_search_results(response, tool_definitions)
+            if self._validate_context(context)
+            else response
+        )
         return super()._convert_kwargs_to_eval_input(response=filtered_response, context=context, query=query)
 
-    def _filter_file_search_results(self, messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Filter out file_search tool results from the messages."""
-        file_search_ids = self._get_file_search_tool_call_ids(messages)
+    def _filter_file_search_results(
+        self, messages: List[Dict[str, Any]], tool_definitions=None
+    ) -> List[Dict[str, Any]]:
+        """Filter out tool results from supported grounding tools from the messages.
+
+        This removes tool results for all supported tools (file_search, azure_ai_search, etc.)
+        from the conversation to avoid redundancy, since the context is extracted and
+        passed separately to the evaluator.
+        """
+        supported_tool_ids = self._get_supported_tool_call_ids(messages, tool_definitions)
         return [
-            msg for msg in messages if not (msg.get("role") == "tool" and msg.get("tool_call_id") in file_search_ids)
+            msg
+            for msg in messages
+            if not (
+                msg.get("role") == "tool"
+                and (
+                    msg.get("tool_call_id") in supported_tool_ids
+                    or self._is_span_grounding_tool_message(msg)
+                )
+            )
         ]
 
     def _get_context_from_agent_response(self, response, tool_definitions):
-        """Extract context text from file_search tool results in the agent response."""
+        """Extract context text from built-in tool results in the agent response.
+
+        Supports context extraction from:
+        - file_search: Direct file content extraction
+        - azure_ai_search: Search result documents
+        - openapi_call: API response content
+        - bing_grounding, bing_custom_search: Search results
+        - sharepoint_grounding: SharePoint document content
+        - web_search: Web search results
+        - azure_fabric: Fabric data results
+        """
         NO_CONTEXT = "<>"
         context = ""
         try:
             logger.debug("Extracting context from response")
-            tool_calls = self._parse_tools_from_response(response=response)
+            response_for_parsing = (
+                _preprocess_messages(copy.deepcopy(response))
+                if isinstance(response, list)
+                else response
+            )
+            tool_calls = self._parse_tools_from_response(response=response_for_parsing)
             logger.debug("Tool calls parsed successfully: count=%d", len(tool_calls) if tool_calls else 0)
-
-            if not tool_calls:
-                return NO_CONTEXT
 
             context_lines = []
             for tool_call in tool_calls:
@@ -1334,18 +1366,34 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                     continue
 
                 tool_name = tool_call.get("name")
-                if tool_name != "file_search":
+                tool_type = self._resolve_tool_type(tool_name, tool_definitions)
+                if tool_type not in {
+                    "file_search",
+                    "file_search_call",
+                    "azure_ai_search",
+                    "openapi_call",
+                    "bing_grounding",
+                    "bing_custom_search",
+                    "sharepoint_grounding",
+                    "web_search",
+                    "azure_fabric",
+                }:
                     continue
 
-                # Extract tool results
-                for result in tool_call.get("tool_result", []):
+                # Extract tool results based on tool type
+                tool_results = tool_call.get("tool_result", [])
+                if not isinstance(tool_results, list):
+                    tool_results = [tool_results]
+                for result in tool_results:
                     results = result if isinstance(result, list) else [result]
                     for r in results:
-                        file_name = r.get("file_name", "Unknown file name")
-                        for content in r.get("content", []):
-                            text = content.get("text")
-                            if text:
-                                context_lines.append(f"{file_name}:\n- {text}---\n\n")
+                        context_text = self._extract_tool_context(tool_type, r)
+                        if context_text:
+                            context_lines.append(context_text)
+
+            for span_context in self._extract_direct_tool_response_context(response):
+                if span_context not in context_lines:
+                    context_lines.append(span_context)
 
             context = "\n".join(context_lines) if len(context_lines) > 0 else None
 
@@ -1356,7 +1404,293 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         context = context if context else NO_CONTEXT
         return context
 
+    def _extract_direct_tool_response_context(self, response: List[Dict[str, Any]]) -> List[str]:
+        """Extract evidence from tool messages that are not linked by the response parser."""
+        context_lines = []
+        if not isinstance(response, list):
+            return context_lines
+
+        for message in response:
+            if not self._is_span_grounding_tool_message(message):
+                continue
+
+            blocks = message.get("parts", [])
+            for block in blocks:
+                value = block.get("response")
+                context = self._stringify_tool_context(value)
+                if context:
+                    context_lines.append(context)
+
+        return context_lines
+
+    @staticmethod
+    def _is_span_grounding_tool_message(message: Dict[str, Any]) -> bool:
+        """Return whether a span-normalized tool message contains search citation evidence."""
+        if not isinstance(message, dict) or message.get("role") != "tool":
+            return False
+        parts = message.get("parts", [])
+        if not isinstance(parts, list):
+            return False
+        return any(
+            isinstance(part, dict)
+            and part.get("type") == "tool_call_response"
+            and isinstance(part.get("response"), str)
+            and part["response"].lstrip().startswith("[Search citations]")
+            for part in parts
+        )
+
+    @staticmethod
+    def _resolve_tool_type(tool_name: str, tool_definitions) -> str:
+        """Resolve operation-specific tool names to their evaluator tool type."""
+        if isinstance(tool_definitions, dict):
+            tool_definitions = [tool_definitions]
+        if isinstance(tool_definitions, list):
+            for tool_definition in tool_definitions:
+                if not isinstance(tool_definition, dict) or tool_definition.get("name") != tool_name:
+                    continue
+                definition_type = tool_definition.get("type")
+                if definition_type == "openapi":
+                    return "openapi_call"
+                if definition_type == "file_search":
+                    return "file_search"
+        return tool_name
+
+    @staticmethod
+    def _stringify_tool_context(value: Any) -> str:
+        """Convert a tool result into judge-readable grounding context."""
+        if isinstance(value, str):
+            return value.strip()
+        if isinstance(value, (dict, list)):
+            return json.dumps(value, indent=2)
+        return ""
+
+    def _extract_tool_context(self, tool_name: str, tool_result: Any) -> str:
+        """Extract grounding context from a tool result based on tool type.
+
+        :param tool_name: Name of the tool (e.g., 'file_search', 'azure_ai_search')
+        :param tool_result: The tool result
+        :return: Formatted context string or empty string if no context found
+        """
+        if isinstance(tool_result, str):
+            return tool_result.strip()
+        if isinstance(tool_result, list):
+            return "\n".join(
+                context
+                for item in tool_result
+                if (context := self._extract_tool_context(tool_name, item))
+            )
+        if not isinstance(tool_result, dict):
+            return ""
+
+        try:
+            if tool_name in ("file_search", "file_search_call"):
+                return self._extract_file_search_context(tool_result)
+            elif tool_name == "azure_ai_search":
+                return self._extract_azure_ai_search_context(tool_result)
+            elif tool_name == "openapi_call":
+                return self._extract_openapi_context(tool_result)
+            elif tool_name in ("bing_grounding", "bing_custom_search"):
+                return self._extract_bing_context(tool_result)
+            elif tool_name == "sharepoint_grounding":
+                return self._extract_sharepoint_context(tool_result)
+            elif tool_name == "web_search":
+                return self._extract_web_search_context(tool_result)
+            elif tool_name == "azure_fabric":
+                return self._extract_fabric_context(tool_result)
+            else:
+                # For unknown tools, try generic extraction
+                return self._extract_generic_context(tool_result)
+        except Exception as ex:
+            logger.debug(f"Error extracting context from {tool_name}: {str(ex)}")
+            return ""
+
+    def _extract_file_search_context(self, tool_result: Dict[str, Any]) -> str:
+        """Extract context from file_search tool result."""
+        context_lines = []
+        file_name = tool_result.get("file_name") or tool_result.get("filename", "Unknown file name")
+        text = tool_result.get("text")
+        if text:
+            return str(text)
+
+        for content in tool_result.get("content", []):
+            if isinstance(content, dict):
+                text = content.get("text")
+            else:
+                text = str(content)
+            if text:
+                context_lines.append(f"{file_name}:\n- {text}---\n\n")
+        return "".join(context_lines)
+
+    def _extract_azure_ai_search_context(self, tool_result: Dict[str, Any]) -> str:
+        """Extract context from azure_ai_search tool result."""
+        context_lines = []
+
+        # Handle both direct content and search results
+        if "documents" in tool_result:
+            for doc in tool_result.get("documents", []):
+                if isinstance(doc, dict):
+                    # Extract main content
+                    content = doc.get("content") or doc.get("text") or doc.get("body", "")
+                    if content:
+                        title = doc.get("title", doc.get("name", "Document"))
+                        context_lines.append(f"{title}:\n{content}\n\n")
+        elif "content" in tool_result:
+            content = tool_result.get("content", "")
+            if content:
+                context_lines.append(f"{content}\n\n")
+
+        return "".join(context_lines)
+
+    def _extract_openapi_context(self, tool_result: Dict[str, Any]) -> str:
+        """Extract context from openapi_call tool result."""
+        context_lines = []
+
+        # Handle OpenAPI response content
+        if "body" in tool_result:
+            body = tool_result.get("body")
+            if isinstance(body, dict):
+                # Format dictionary content
+                context_lines.append(json.dumps(body, indent=2))
+            elif isinstance(body, list):
+                # Format list content
+                context_lines.append(json.dumps(body, indent=2))
+            else:
+                context_lines.append(str(body))
+        elif "content" in tool_result:
+            content = tool_result.get("content", "")
+            if content:
+                context_lines.append(str(content))
+        elif "result" in tool_result:
+            result = tool_result.get("result", "")
+            if result:
+                context_lines.append(str(result))
+
+        return "\n".join(context_lines) if context_lines else ""
+
+    def _extract_bing_context(self, tool_result: Dict[str, Any]) -> str:
+        """Extract context from bing_grounding or bing_custom_search tool result."""
+        context_lines = []
+
+        # Handle search results
+        for key in ("webPages", "web_pages", "results", "items"):
+            pages = tool_result.get(key, [])
+            if pages:
+                for page in pages:
+                    if isinstance(page, dict):
+                        title = page.get("name") or page.get("title", "")
+                        snippet = page.get("snippet") or page.get("description", "")
+                        if title or snippet:
+                            if title:
+                                context_lines.append(f"{title}:\n")
+                            if snippet:
+                                context_lines.append(f"{snippet}\n\n")
+
+        return "".join(context_lines)
+
+    def _extract_sharepoint_context(self, tool_result: Dict[str, Any]) -> str:
+        """Extract context from sharepoint_grounding tool result."""
+        context_lines = []
+
+        # Handle SharePoint document results
+        for key in ("documents", "items", "results"):
+            items = tool_result.get(key, [])
+            if items:
+                for item in items:
+                    if isinstance(item, dict):
+                        title = item.get("title") or item.get("name", "Document")
+                        content = item.get("content") or item.get("body") or item.get("text", "")
+                        if content:
+                            context_lines.append(f"{title}:\n{content}\n\n")
+
+        # Fallback: extract any content directly
+        if not context_lines and "content" in tool_result:
+            context_lines.append(str(tool_result.get("content", "")))
+
+        return "".join(context_lines)
+
+    def _extract_web_search_context(self, tool_result: Dict[str, Any]) -> str:
+        """Extract context from web_search tool result."""
+        context_lines = []
+
+        # Handle web search results (similar to Bing)
+        for key in ("results", "items", "webPages", "pages"):
+            results = tool_result.get(key, [])
+            if results:
+                for item in results:
+                    if isinstance(item, dict):
+                        title = item.get("title") or item.get("name", "")
+                        snippet = item.get("snippet") or item.get("description") or item.get("summary", "")
+                        if title or snippet:
+                            if title:
+                                context_lines.append(f"{title}:\n")
+                            if snippet:
+                                context_lines.append(f"{snippet}\n\n")
+
+        return "".join(context_lines)
+
+    def _extract_fabric_context(self, tool_result: Dict[str, Any]) -> str:
+        """Extract context from azure_fabric tool result."""
+        context_lines = []
+
+        # Handle Fabric data results
+        for key in ("data", "results", "rows", "items", "documents"):
+            data = tool_result.get(key, [])
+            if data:
+                if isinstance(data, (list, dict)):
+                    context_lines.append(json.dumps(data, indent=2))
+                else:
+                    context_lines.append(str(data))
+                break
+
+        # Fallback: include any content
+        if not context_lines:
+            content = tool_result.get("content") or tool_result.get("body", "")
+            if content:
+                context_lines.append(str(content))
+
+        return "\n".join(context_lines) if context_lines else ""
+
+    def _extract_generic_context(self, tool_result: Dict[str, Any]) -> str:
+        """Extract context from unknown tool result using generic keys."""
+        context_lines = []
+
+        # Try common content/result keys
+        for key in ("content", "body", "text", "result", "results", "data", "documents"):
+            if key in tool_result:
+                value = tool_result[key]
+                if value:
+                    if isinstance(value, (dict, list)):
+                        context_lines.append(json.dumps(value, indent=2))
+                    else:
+                        context_lines.append(str(value))
+                    break
+
+        return "\n".join(context_lines) if context_lines else ""
+
+    def _get_supported_tool_call_ids(self, query_or_response, tool_definitions=None):
+        """Return tool_call_ids for all supported grounding tools."""
+        supported_tools = {
+            "file_search",
+            "file_search_call",
+            "azure_ai_search",
+            "openapi_call",
+            "bing_grounding",
+            "bing_custom_search",
+            "sharepoint_grounding",
+            "web_search",
+            "azure_fabric",
+        }
+        tool_calls = self._parse_tools_from_response(query_or_response)
+        return [
+            tool_call.get("tool_call_id")
+            for tool_call in tool_calls
+            if self._resolve_tool_type(tool_call.get("name"), tool_definitions) in supported_tools
+        ]
+
     def _get_file_search_tool_call_ids(self, query_or_response):
-        """Return a list of tool_call_ids for file search tool calls."""
+        """Return a list of tool_call_ids for file search tool calls.
+
+        Deprecated: Use _get_supported_tool_call_ids for multi-tool support.
+        """
         tool_calls = self._parse_tools_from_response(query_or_response)
         return [tc.get("tool_call_id") for tc in tool_calls if tc.get("name") == "file_search"]
