@@ -26,19 +26,12 @@ from .base_validator_unit_test import (
 )
 from . import common_tool_test_data as data
 from ...builtin.tool_output_utilization.evaluator._tool_output_utilization import (
-    ConversationValidator,
-    ToolDefinitionsValidator,
     ToolOutputUtilizationEvaluator,
     _filter_to_used_tools,
     _get_agent_response,
     _get_conversation_history,
     _stringify_tool_result,
     reformat_tool_definitions,
-)
-# ErrorTarget is rebuilt by the module at import time so it carries the
-# evaluator-specific TOOL_OUTPUT_UTILIZATION_EVALUATOR member.
-from ...builtin.tool_output_utilization.evaluator._tool_output_utilization import (  # noqa: E402
-    ErrorTarget,
 )
 from ..common.evaluator_mock_config import create_mocked_evaluator
 
