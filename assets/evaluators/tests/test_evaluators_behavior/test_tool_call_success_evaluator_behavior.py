@@ -158,7 +158,7 @@ class TestToolCallSuccessEvaluatorBehavior(
         )
 
     def test_sharepoint_grounding(self):
-        """SharePoint Grounding is supported by Tool Call Success."""
+        """Validate SharePoint Grounding support in Tool Call Success."""
         self._run_tool_type_test(
             test_label="SharePoint Grounding",
             evaluation_inputs={
@@ -184,7 +184,7 @@ class TestToolCallSuccessEvaluatorBehavior(
         )
 
     def test_openapi(self):
-        """OpenAPI is supported by Tool Call Success."""
+        """Validate OpenAPI support in Tool Call Success."""
         self._run_tool_type_test(
             test_label="OpenAPI",
             evaluation_inputs={
