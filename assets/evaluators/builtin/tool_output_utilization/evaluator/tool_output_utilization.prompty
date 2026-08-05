@@ -40,10 +40,6 @@ Key constraints:
 INPUT
 =====
 
-CONVERSATION_HISTORY: {{query}}
-AGENT_RESPONSE: {{response}}
-TOOL_DEFINITIONS: {{tool_definitions}}
-
 > `CONVERSATION_HISTORY` includes all prior turns and any tool results.  
 > `AGENT_RESPONSE` is the model's latest message.  
 > `TOOL_DEFINITIONS` describe the tool schemas used.
@@ -236,3 +232,9 @@ FINAL NOTES:
 - Output must be exactly one JSON object and must follow the key order: `properties`, `reason`, `score`, `status`.
 
 # Output
+
+
+# Data
+TOOL_DEFINITIONS: {{tool_definitions}}
+CONVERSATION_HISTORY: {{query}}
+AGENT_RESPONSE: {{response}}

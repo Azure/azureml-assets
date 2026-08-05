@@ -141,12 +141,6 @@ Structure your reasoning as follows:
 4. **Check parameter grounding** - Ensure all parameters are grounded from the CONVERSATION section and are not hallucinated.
 5. **Determine the appropriate level** - Be VERY precise and follow the level definitions exactly.
 
-# Data
-CONVERSATION : {{query}}
-TOOL CALLS TO BE EVALUATED: {{tool_calls}}
-TOOL DEFINITIONS: {{tool_definitions}}
-
-
 # Tasks
 ## Please provide your evaluation for the assistant RESPONSE in relation to the user QUERY and tool definitions based on the Definitions and examples above.
 Your output should consist only of a JSON object that has the following keys:
@@ -177,3 +171,9 @@ Your output should consist only of a JSON object that has the following keys:
               - missing_count: number of missing calls for this query
 
 # Output
+
+
+# Data
+TOOL DEFINITIONS: {{tool_definitions}}
+CONVERSATION : {{query}}
+TOOL CALLS TO BE EVALUATED: {{tool_calls}}

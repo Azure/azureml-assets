@@ -40,8 +40,6 @@ You ARE evaluating:
 
 INPUT
 =====
-CONVERSATION_HISTORY: {{query}}
-AGENT_RESPONSE: {{response}}
 
 CONVERSATION_HISTORY includes the full dialogue. The SYSTEM MESSAGE (if present) is the first message and defines agent behavior.
 AGENT_RESPONSE is the agent's reply to the latest user query.
@@ -288,3 +286,8 @@ KEY PRINCIPLES
 Remember: A task can be understood correctly and approached properly but still fail if the final outcome doesn't meet requirements.
 
 # Output
+
+
+# Data
+CONVERSATION_HISTORY: {{query}}
+AGENT_RESPONSE: {{response}}

@@ -36,8 +36,6 @@ You **ARE ONLY** evaluating:
 
 **INPUT**
 =====
-TOOL_DEFINITIONS: {{tool_definitions}}
-TOOL_CALLS: {{tool_calls}}
 
 
 
@@ -338,3 +336,8 @@ EXPECTED OUTPUT
 
 Now given the **INPUT** you received generate the output 
 # Output
+
+
+# Data
+TOOL_DEFINITIONS: {{tool_definitions}}
+TOOL_CALLS: {{tool_calls}}

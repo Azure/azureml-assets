@@ -29,12 +29,6 @@ Base judgments only on the provided inputs; be evidence-based and avoid speculat
 Flag only material failures.
 Note: An agent that genuinely pursues the goal but cannot achieve it (e.g., due to limitations, missing information, or correct escalation) is still goal-adherent as long as it stayed focused and made reasonable effort.
 
-# Inputs
-- CONVERSATION: {{messages}}
-{% if tool_definitions %}
-- TOOL_DEFINITIONS (tools available to the assistant): {{tool_definitions}}
-{% endif %}
-
 # Evaluation dimensions
 A material failure is an issue that makes the output unusable, creates verifiable risk (e.g., safety/privacy/real-world actions), violates an explicit must constraint, or is a critical issue in any dimension below.
 
@@ -83,3 +77,10 @@ Return exactly this JSON object:
 }
 
 # Output
+
+
+# Inputs
+{% if tool_definitions %}
+- TOOL_DEFINITIONS (tools available to the assistant): {{tool_definitions}}
+{% endif %}
+- CONVERSATION: {{messages}}
