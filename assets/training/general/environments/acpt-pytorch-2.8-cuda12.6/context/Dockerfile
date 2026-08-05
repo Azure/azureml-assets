@@ -71,6 +71,9 @@ RUN apt-get update && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Fix ptca conda env vulnerabilities (python 3.10, active).
+# torch==2.13.0+cu126: inherited from the ACPT torch280 base image; fixes
+# GHSA-vgrw-7cvw-pwgx, GHSA-qfhq-4f3w-5fph, and GHSA-rrmf-rvhw-rf47.
+# torchvision and torchaudio are upgraded with torch for CUDA compatibility.
 # setuptools>=83.0.0: GHSA-58pv-8j8x-9vj2, GHSA-8rrh-rw8j-w5fx,
 # GHSA-h35f-9h28-mq5c.
 # msgpack>=1.2.1: transitive dep of azureml-mlflow -> mlflow-skinny; fixes
@@ -95,6 +98,16 @@ RUN conda run -n ptca python -m pip install --upgrade --no-cache-dir \
     conda run -n ptca python -m pip install --upgrade --no-cache-dir \
         'urllib3>=2.7.0' 'idna>=3.15' 'aiohttp>=3.14.0' \
         'cryptography>=48.0.1' 'pyarrow>=23.0.1' && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.13.0+cu126' \
+        torchvision \
+        torchaudio && \
+    find /opt/conda/envs/ptca -type d \( \
+        -name 'torch-2.8.0+cu126.dist-info' -o \
+        -name 'torchaudio-2.8.0+cu126.dist-info' -o \
+        -name 'torchvision-0.23.0+cu126.dist-info' \
+    \) -prune -exec rm -rf {} + && \
     conda clean -a -y && rm -rf /opt/conda/pkgs/
 
 # Fix base conda env vulnerabilities (python 3.13). Parent packages still expose
