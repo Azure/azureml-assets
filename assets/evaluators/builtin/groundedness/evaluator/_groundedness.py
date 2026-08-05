@@ -1315,7 +1315,9 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         return super()._convert_kwargs_to_eval_input(response=filtered_response, context=context, query=query)
 
     def _filter_file_search_results(
-        self, messages: List[Dict[str, Any]], tool_definitions=None
+        self,
+        messages: List[Dict[str, Any]],
+        tool_definitions: Optional[Union[dict, List[dict]]] = None,
     ) -> List[Dict[str, Any]]:
         """Filter out tool results from supported grounding tools from the messages.
 
