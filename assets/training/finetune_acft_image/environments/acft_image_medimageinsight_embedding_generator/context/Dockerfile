@@ -3,7 +3,23 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 USER root
 
 # Install unzip and upgrade OS packages to fix vulnerabilities.
-RUN apt-get -y update && apt-get -y upgrade && apt-get -y install unzip && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get -y update && \
+    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
+    apt-get install -y --only-upgrade \
+        curl \
+        gzip \
+        libcurl3-gnutls \
+        libcurl4 \
+        libpython3.10-minimal \
+        libpython3.10-stdlib \
+        libsqlite3-0 \
+        openssh-client \
+        python3.10 \
+        python3.10-minimal \
+        tar \
+        wget && \
+    apt-get install -y --no-install-recommends unzip && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # pip 26.0.1 -> 26.1.1 in both envs to fix GHSA-jp4c-xjxw-mgf9 (bootstrap installer, no parent
 # to bump). Installed from PyPI; stale conda-meta JSON removed so the SBOM scanner doesn't
