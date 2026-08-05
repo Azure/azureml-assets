@@ -943,7 +943,7 @@ class TestGroundednessInternalBranches:
         assert tool_message not in eval_input["response"]
 
     def test_get_context_from_agent_response_resolves_openapi_operation_name(self):
-        """OpenAPI operation names are resolved through their tool definition."""
+        """Validate resolution of OpenAPI operation names through tool definitions."""
         ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
         ev._parse_tools_from_response = MagicMock(
             return_value=[
@@ -1042,6 +1042,59 @@ class TestGroundednessInternalBranches:
         """Plain string tool results are preserved as grounding evidence."""
         ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
         assert ev._extract_tool_context("bing_grounding", "  citation snippets  ") == "citation snippets"
+
+    def test_tool_context_helpers_handle_alternate_input_shapes(self):
+        """Tool context helpers support valid alternate shapes and reject invalid ones."""
+        ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
+
+        assert ev._extract_direct_tool_response_context({}) == []
+        assert ev._is_span_grounding_tool_message({"role": "tool", "parts": {}}) is False
+        assert ev._resolve_tool_type(
+            "weather_GetCurrentWeather",
+            {"name": "weather_GetCurrentWeather", "type": "openapi"},
+        ) == "openapi_call"
+        assert '"value": 1' in ev._stringify_tool_context({"value": 1})
+        assert ev._stringify_tool_context(1) == ""
+        assert ev._extract_tool_context("openapi_call", [{"body": [1]}, None]) == "[\n  1\n]"
+
+    @pytest.mark.parametrize(
+        ("tool_name", "tool_result", "expected"),
+        [
+            ("file_search", {"filename": "notes.txt", "content": ["Evidence"]}, "Evidence"),
+            ("azure_ai_search", {"content": "Search evidence"}, "Search evidence"),
+            ("openapi_call", {"body": "Body evidence"}, "Body evidence"),
+            ("openapi_call", {"content": "Content evidence"}, "Content evidence"),
+            ("openapi_call", {"result": "Result evidence"}, "Result evidence"),
+            ("sharepoint_grounding", {"content": "SharePoint evidence"}, "SharePoint evidence"),
+            ("azure_fabric", {"data": "Fabric evidence"}, "Fabric evidence"),
+            ("azure_fabric", {"body": "Fallback evidence"}, "Fallback evidence"),
+            ("custom_tool", {"data": {"value": 1}}, '"value": 1'),
+            ("custom_tool", {"text": "Generic evidence"}, "Generic evidence"),
+        ],
+    )
+    def test_extract_tool_context_supports_alternate_result_shapes(self, tool_name, tool_result, expected):
+        """Alternate result shapes produce grounding context."""
+        ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
+        assert expected in ev._extract_tool_context(tool_name, tool_result)
+
+    def test_extract_tool_context_handles_extractor_exception(self):
+        """Extractor exceptions return empty context."""
+        ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
+        ev._extract_file_search_context = MagicMock(side_effect=ValueError("boom"))
+
+        assert ev._extract_tool_context("file_search", {}) == ""
+
+    def test_get_file_search_tool_call_ids_keeps_only_file_search(self):
+        """The compatibility helper returns only file-search call IDs."""
+        ev = create_mocked_evaluator(GroundednessEvaluator, "groundedness")
+        ev._parse_tools_from_response = MagicMock(
+            return_value=[
+                {"name": "file_search", "tool_call_id": "file"},
+                {"name": "web_search", "tool_call_id": "web"},
+            ]
+        )
+
+        assert ev._get_file_search_tool_call_ids([]) == ["file"]
 
     def test_get_context_from_agent_response_skips_non_tool_call_entries(self):
         """Parsed entries that are not tool_calls are skipped, yielding no context."""
