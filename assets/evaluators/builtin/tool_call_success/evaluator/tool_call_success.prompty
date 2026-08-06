@@ -34,11 +34,6 @@ You are NOT evaluating:
 You **ARE ONLY** evaluating:
 -Whether tool results indicate the presence of a technical error
 
-**INPUT**
-=====
-
-
-
 TOOL_CALLS is a list of tool calls that were produced by the AI agent. It includes calls together with the result of every tool call.
 TOOL_DEFINITIONS is a list of definitions for the tools that were called. This definition can contain a description of functionality provided by the tool, the parameters that the tool accepts and the expected return of the tool. This definition can contribute to the assessment of whether a tool call succeeded or failed. 
 
@@ -334,7 +329,6 @@ EXPECTED OUTPUT
 
 
 
-Now given the **INPUT** you received generate the output 
 # Output
 
 
