@@ -13,8 +13,20 @@ ENV ENABLE_METADATA=true
 RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
 
 # Upgrade OS packages to pick up current Ubuntu security errata.
+# Temporary base-image remediation for PAM/glibc (USN-8601-1 and USN-8611-1).
+# Remove the explicit upgrades once the base image includes the patched packages.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
+    apt-get install -y --only-upgrade \
+        libpam-runtime \
+        libpam0g \
+        libpam-modules \
+        libpam-modules-bin \
+        libc-bin \
+        libc-dev-bin \
+        libc6 \
+        libc6-dev \
+        locales && \
     apt-get install -y --no-install-recommends \
         cmake \
         libboost-dev \
