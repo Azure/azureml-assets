@@ -4,14 +4,17 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly
 USER root
 RUN apt-get -y update \
  && apt-get install -y --only-upgrade \
-    tar wget libsqlite3-0 \
-    libkrb5support0 libgssapi-krb5-2 libk5crypto3 libkrb5-3 \
+    libc-dev-bin libc6-dev locales libc6 libc-bin \
     libpam-runtime libpam0g libpam-modules libpam-modules-bin \
+    libkrb5support0 libgssapi-krb5-2 libk5crypto3 libkrb5-3 \
+    tar wget libsqlite3-0 \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install required packages from pypi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
+
+# setuptools: pinned from the base conda env; fixes GHSA-h35f-9h28-mq5c.
+RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'setuptools>=83.0.0'
 
 # transformers: fix GHSA-69w3-r845-3855 (CVE-2026-1839, arbitrary code execution in Trainer).
 # --no-deps keeps the pinned HF stack intact (transformers is a direct requirements.txt pin).
