@@ -101,13 +101,14 @@ RUN printf '%s\n' \
                 azureml-responsibleai=={{latest-pypi-version}} \
                 azureml-automl-core=={{latest-pypi-version}} \
                 azureml-automl-runtime=={{latest-pypi-version}} \
-                azureml-dataset-runtime=={{latest-pypi-version}} \
-                'azure-identity>=1.25.1' \
+                azureml-dataset-runtime==1.62.0 \
                 'inference-schema' \
                 'xgboost==3.2.0' \
                 'GitPython>=3.1.55' \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz' \
                 'py-cpuinfo==5.0.0' 
+
+RUN pip install --no-cache-dir --upgrade --no-deps 'azure-identity>=1.25.1'
 
 # Install packages with torch packages separately to reduce layer size
 RUN pip install --no-cache-dir -c /tmp/security-constraints.txt \

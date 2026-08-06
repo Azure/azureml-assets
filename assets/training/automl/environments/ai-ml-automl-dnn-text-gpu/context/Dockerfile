@@ -122,7 +122,8 @@ RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.1'
 # azureml-automl-dnn-nlp in this AzureML env; upgrade both for GHSA-rrmf-rvhw-rf47,
 # GHSA-vgrw-7cvw-pwgx, and GHSA-qfhq-4f3w-5fph while keeping CUDA 12.6 wheels.
 RUN pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 'torch==2.13.0+cu126'
-RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 'torch==2.13.0+cu126' 'setuptools>=83.0.0'
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 'torch==2.13.0+cu126'
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'setuptools>=83.0.0'
 
 # Apply the same setuptools security fix in the AzureML and base conda envs.
 RUN pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==83.0.0'

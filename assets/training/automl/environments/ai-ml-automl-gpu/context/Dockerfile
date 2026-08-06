@@ -101,13 +101,14 @@ RUN pip install \
                 azureml-automl-runtime=={{latest-pypi-version}} \
                 azureml-train-automl-client=={{latest-pypi-version}} \
                 azureml-train-automl-runtime=={{latest-pypi-version}} \
-                azureml-dataset-runtime=={{latest-pypi-version}} \
+                azureml-dataset-runtime==1.62.0 \
                 'azureml-model-management-sdk==1.0.1b6.post1' \
-                'azure-identity>=1.25.1' \
                 'inference-schema' \
                 'py-cpuinfo==5.0.0' \
                 'cmdstanpy==1.0.4' \
                 'prophet==1.1.4'
+
+RUN pip install --no-cache-dir --upgrade --no-deps 'azure-identity>=1.25.1'
                 # end pypi dependencies
 
 # ============================

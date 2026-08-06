@@ -91,11 +91,12 @@ RUN pip install \
                 azureml-automl-runtime=={{latest-pypi-version}} \
                 azureml-train-automl-client=={{latest-pypi-version}} \
                 azureml-train-automl-runtime=={{latest-pypi-version}} \
-                azureml-dataset-runtime=={{latest-pypi-version}} \
+                azureml-dataset-runtime==1.62.0 \
                 azureml-mlflow=={{latest-pypi-version}} \
                 'azureml-model-management-sdk==1.0.1b6.post1' \
-                'mlflow-skinny==2.15.1' \
-                'azure-identity>=1.25.1' --no-cache-dir
+                'mlflow-skinny==2.15.1' --no-cache-dir
+
+RUN pip install --no-cache-dir --upgrade --no-deps 'azure-identity>=1.25.1'
 
 RUN pip install \
                 'inference-schema' \
