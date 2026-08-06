@@ -91,7 +91,7 @@ RUN pip install \
                 azureml-automl-runtime=={{latest-pypi-version}} \
                 azureml-train-automl-client=={{latest-pypi-version}} \
                 azureml-train-automl-runtime=={{latest-pypi-version}} \
-                azureml-dataset-runtime==1.62.0 \
+                azureml-dataset-runtime=={{latest-pypi-version}} \
                 azureml-mlflow=={{latest-pypi-version}} \
                 'azureml-model-management-sdk==1.0.1b6.post1' \
                 'mlflow-skinny==2.15.1' --no-cache-dir

@@ -101,7 +101,7 @@ RUN printf '%s\n' \
                 azureml-responsibleai=={{latest-pypi-version}} \
                 azureml-automl-core=={{latest-pypi-version}} \
                 azureml-automl-runtime=={{latest-pypi-version}} \
-                azureml-dataset-runtime==1.62.0 \
+                azureml-dataset-runtime=={{latest-pypi-version}} \
                 'inference-schema' \
                 'xgboost==3.2.0' \
                 'GitPython>=3.1.55' \
