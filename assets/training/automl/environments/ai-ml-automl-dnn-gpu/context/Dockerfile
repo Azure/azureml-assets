@@ -34,6 +34,11 @@ RUN apt-get update && \
         libboost-filesystem-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# msgpack is inherited in the base Miniconda environment; fixes GHSA-6v7p-g79w-8964.
+RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'msgpack>=1.2.1' && \
+    find /opt/miniconda -type d -name 'msgpack-1.1.2.dist-info' -prune -exec rm -rf {} + && \
+    /opt/miniconda/bin/python -c "import msgpack; assert msgpack.version >= (1, 2, 1), msgpack.version"
+
 # pip remediated to >=26.1 (GHSA-jp4c-xjxw-mgf9 / CVE-2026-6357).
 # Why a two-step install instead of a single `conda create ... pip=26.1`:
 #   The Anaconda defaults channel currently ships only pip 26.0.1; pip 26.1 lives
