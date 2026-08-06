@@ -3,16 +3,16 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 ENV PIP_PROGRESS_BAR=off
 
 # Conda env security floors.
-# setuptools>=83.0.0: fixes GHSA-h35f-9h28-mq5c.
+# setuptools>=82.0.1: fixes GHSA-h35f-9h28-mq5c.
 # PyJWT>=2.13.0: pinned transitive dep brought in by the base image; fixes GHSA-jq35-7prp-9v3f and GHSA-993g-76c3-p5m4.
 # py-rattler>=0.24.0: pinned transitive dep of base conda tooling; brought in by base image, fixes GHSA-q53q-5r4j-5729.
 # cryptography>=48.0.1: pinned transitive dep present in the base image; fixes GHSA-537c-gmf6-5ccf.
 # pydantic-settings>=2.14.2: pinned transitive dep present in the base image; fixes GHSA-4xgf-cpjx-pc3j.
 # msgpack>=1.2.1: pinned transitive dep present in the base image; fixes GHSA-6v7p-g79w-8964.
-RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' 'setuptools>=83.0.0' && \
-    conda install -n base -c conda-forge -y 'pip>=26.1' 'setuptools>=83.0.0' && \
+RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' 'setuptools>=82.0.1' && \
+    conda install -n base -c conda-forge -y 'pip>=26.1' 'setuptools>=82.0.1' && \
     conda run -n base python -m pip install --upgrade --no-cache-dir \
-        'setuptools>=83.0.0' \
+        'setuptools>=82.0.1' \
         'python-dotenv>=1.2.2' \
         'urllib3>=2.7.0' \
         'idna>=3.15' \
@@ -26,17 +26,9 @@ RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' 'setuptools>=83.0.0' && 
     conda run -n ptca python -m pip install --upgrade --no-cache-dir \
         'urllib3>=2.7.0' \
         'idna>=3.15' \
-        'setuptools>=83.0.0' && \
+        'setuptools>=82.0.1' && \
     conda clean -a -y && \
     rm -rf /opt/conda/pkgs
-
-# torch==2.13.0+cu126: pinned transitive dep inherited from the ACPT base image; fixes GHSA-rrmf-rvhw-rf47.
-# torchvision and torchaudio are upgraded with torch to keep the CUDA stack compatible.
-RUN conda run -n ptca python -m pip install --upgrade --no-cache-dir \
-        --index-url https://download.pytorch.org/whl/cu126 \
-        'torch==2.13.0+cu126' \
-        torchvision \
-        torchaudio
 
 # Install pip dependencies (runs in default PTCA conda env)
 COPY requirements.txt .
@@ -59,16 +51,11 @@ RUN apt-get update && \
         libk5crypto3 \
         libkrb5-3 \
         libkrb5support0 \
-        libc-bin \
-        libc-dev-bin \
-        libc6 \
-        libc6-dev \
         libpam-modules \
         libpam-modules-bin \
         libpam-runtime \
         libpam0g \
         libsqlite3-0 \
-        locales \
         tar \
         wget && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
