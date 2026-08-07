@@ -17,8 +17,20 @@ ENV ENABLE_METADATA=true
 RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
 
 # Pull current Ubuntu security errata; install build deps for LightGBM/XGBoost.
+# Temporary base-image remediation for PAM/glibc (USN-8601-1 and USN-8611-1).
+# Remove the explicit upgrades once the base image includes the patched packages.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
+    apt-get install -y --only-upgrade \
+        libpam-runtime \
+        libpam0g \
+        libpam-modules \
+        libpam-modules-bin \
+        libc-bin \
+        libc-dev-bin \
+        libc6 \
+        libc6-dev \
+        locales && \
     apt-get install -y --no-install-recommends \
         cmake \
         libboost-dev \
@@ -87,15 +99,18 @@ RUN pip install \
                 azureml-responsibleai=={{latest-pypi-version}} \
                 azureml-automl-core=={{latest-pypi-version}} \
                 azureml-automl-runtime=={{latest-pypi-version}} \
-                azureml-train-automl-client=={{latest-pypi-version}} \
-                azureml-train-automl-runtime=={{latest-pypi-version}} \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
                 'azureml-model-management-sdk==1.0.1b6.post1' \
-                'azure-identity>=1.25.1' \
                 'inference-schema' \
                 'py-cpuinfo==5.0.0' \
                 'cmdstanpy==1.0.4' \
                 'prophet==1.1.4'
+
+RUN pip install --no-cache-dir \
+                azureml-train-automl-client=={{latest-pypi-version}} \
+                azureml-train-automl-runtime=={{latest-pypi-version}}
+
+RUN pip install --no-cache-dir --upgrade --no-deps 'azure-identity>=1.25.1'
                 # end pypi dependencies
 
 # ============================
