@@ -63,6 +63,9 @@ D. You are required to return your **output** in the following format:
     "score": <1 if all tool calls succeeded, 0 if any tool call failed>,
     "status": "completed"
   }
+  The "status" field must be one of:
+    - "completed": the evaluation was performed normally.
+    - "skipped": the evaluation was not performed, as described in case E below. When skipped, set score to null.
 E. If no tool calls found at all , the TOOL_CALLS input is empty or the TOOL_CALLS input is not passed , return status "skipped" immediately without scoring:
   {
     "reason": "<explain why evaluation was skipped>",
@@ -329,9 +332,9 @@ EXPECTED OUTPUT
 
 
 
-# Output
-
-
 # Data
 TOOL_DEFINITIONS: {{tool_definitions}}
 TOOL_CALLS: {{tool_calls}}
+
+
+# Output

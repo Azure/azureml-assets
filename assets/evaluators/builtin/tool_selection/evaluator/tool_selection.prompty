@@ -111,10 +111,10 @@ Your output should consist only of a JSON object with the following fields:
       - "completed": tool calls were present, tool definitions were available, and evaluation was performed.
       - "skipped": evaluation was not performed because there were no tool calls to evaluate, or tool definitions were missing, or no conversation was provided. When skipped, set score to null and properties to null.
 
-# Output
-
-
 # Data
 TOOL DEFINITIONS: {{tool_definitions}}
 CONVERSATION: {{query}}
 TOOL CALLS MADE BY AGENT: {{tool_calls}}
+
+
+# Output

@@ -76,11 +76,11 @@ Return exactly this JSON object:
   "status": "skipped"
 }
 
-# Output
-
-
 # Inputs
 {% if tool_definitions %}
 - TOOL_DEFINITIONS (tools available to the assistant): {{tool_definitions}}
 {% endif %}
 - CONVERSATION: {{messages}}
+
+
+# Output

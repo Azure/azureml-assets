@@ -194,8 +194,8 @@ KEY PRINCIPLES
 
 Remember: Predict what a typical customer would feel about this entire interaction, considering all turns together.
 
-# Output
-
-
 # Data
 CONVERSATION: {{conversation}}
+
+
+# Output

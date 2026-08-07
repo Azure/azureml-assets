@@ -179,12 +179,12 @@ Before scoring, follow this procedure:
   "status": "skipped"
 }
 
-# Output
-
-
 # Data
 {% if tool_definitions %}
 TOOL_DEFINITIONS: {{tool_definitions}}
 {% endif %}
 
 CONVERSATION: {{messages}}
+
+
+# Output

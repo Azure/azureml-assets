@@ -163,8 +163,8 @@ For `properties` in completed evaluations, include:
 
 Return valid JSON only. No markdown. No extra keys.
 
-# Output
-
-
 # Data
 CONVERSATION: {{messages}}
+
+
+# Output

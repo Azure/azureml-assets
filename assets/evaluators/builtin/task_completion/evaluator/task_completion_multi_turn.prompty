@@ -156,12 +156,12 @@ KEY PRINCIPLES
 
 Remember: A task can be understood correctly and approached properly but still fail if the final outcome doesn't meet requirements. Evaluate the cumulative result, not individual turn quality.
 
-# Output
-
-
 # Data
 {% if tool_definitions %}
 TOOL_DEFINITIONS: {{tool_definitions}}
 {% endif %}
 
 CONVERSATION: {{messages}}
+
+
+# Output

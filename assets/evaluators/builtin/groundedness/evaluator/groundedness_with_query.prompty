@@ -110,10 +110,10 @@ Your output must be a valid JSON object with exactly these keys:
       - "completed": evaluation was performed normally.
       - "skipped": evaluation was not performed because the CONTEXT, QUERY, or RESPONSE is empty or not provided. When skipped, set score to null.
 
-# Output
-
-
 # Data
 CONTEXT: {{context}}
 QUERY: {{query}}
 RESPONSE: {{response}}
+
+
+# Output

@@ -170,10 +170,10 @@ Your output should consist only of a JSON object that has the following keys:
               - tool_name: name of the tool
               - missing_count: number of missing calls for this query
 
-# Output
-
-
 # Data
 TOOL DEFINITIONS: {{tool_definitions}}
 CONVERSATION : {{query}}
 TOOL CALLS TO BE EVALUATED: {{tool_calls}}
+
+
+# Output

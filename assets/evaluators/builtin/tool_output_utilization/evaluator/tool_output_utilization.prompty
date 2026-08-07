@@ -231,10 +231,10 @@ FINAL NOTES:
 
 - Output must be exactly one JSON object and must follow the key order: `properties`, `reason`, `score`, `status`.
 
-# Output
-
-
 # Data
 TOOL_DEFINITIONS: {{tool_definitions}}
 CONVERSATION_HISTORY: {{query}}
 AGENT_RESPONSE: {{response}}
+
+
+# Output

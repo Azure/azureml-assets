@@ -160,9 +160,9 @@ OUTPUT:
   "status": "completed"
 }
 
-# Output
-
-
 # Data
 USER QUERY: {{query}}
 AGENT RESPONSE: {{response}}
+
+
+# Output
