@@ -1,0 +1,15 @@
+This model is an optimized version of Gemma 4 E2B IT for local inference on WebGPU-capable devices. This optimized model is published here in ONNX format to run with the WebGPU execution provider, with the precision best suited to this target.
+
+# ONNX Models
+Here are some of the optimized configurations we have added:
+1. ONNX model for WebGPU using RTN quantization.
+
+# Model Description
+- **Developed by:** Google DeepMind
+- **Model type:** ONNX
+- **License:** apache-2.0
+- **Model Description:** This is a conversion of Gemma 4 E2B IT for local inference.
+- **Disclaimer:** Model is only an optimization of the base model, any risk associated with the model is the responsibility of the user of the model. Please verify and test for your scenarios. There may be a slight difference in output from the base model with the optimizations applied. Note that optimizations applied are distinct from fine tuning and thus do not alter the intended uses or capabilities of the model.
+
+# Base Model Information
+See Hugging Face model [Gemma 4 E2B IT](https://huggingface.co/google/gemma-4-e2b-it) for details.
