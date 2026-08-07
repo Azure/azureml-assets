@@ -91,7 +91,7 @@ RUN printf '%s\n' \
                 'pydantic-settings>=2.14.2' \
                 'pyasn1>=0.6.4' \
                 'setuptools>=83.0.0' && \
-    pip install --no-cache-dir --progress-bar off --upgrade -c /tmp/security-constraints.txt \
+    pip install --no-cache-dir --progress-bar off --upgrade --use-deprecated=legacy-resolver -c /tmp/security-constraints.txt \
                 'distributed>=2026.1.0' \
                 'bokeh>=3.8.2' \
                 'cryptography>=48.0.1' \
