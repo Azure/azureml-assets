@@ -9,7 +9,7 @@ tags:
 system_metadata:
   alias: qwen3.5-2b
   publisher: Microsoft
-  directoryPath: v2
+  directoryPath: v3
   foundryLocal: ''
   inputModalities:
   - text
@@ -46,9 +46,9 @@ variantInfo:
     - RTN
     device: cpu
     executionProvider: CPUExecutionProvider
-    fileSizeBytes: 2251117020
-    vRamFootprintBytes: 2251117020
-version: 2
+    fileSizeBytes: 1877016577
+    vRamFootprintBytes: 1877016577
+version: 3
 description: |
   This model is an optimized version of Qwen3.5-2B to enable local inference on CPUs. This model uses RTN quantization.
 
