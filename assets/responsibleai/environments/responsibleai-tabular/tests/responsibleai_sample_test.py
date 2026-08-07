@@ -90,10 +90,6 @@ def test_responsibleai():
     verify_if_command_job_completed(ml_client, returned_job)
 
 
-# NOTE: The current AzureML AutoML curated environment (ai-ml-automl) is broken —
-# azureml-train-automl-runtime requires bokeh<3.0.0, which conflicts with the
-# bokeh>=3.8.2 security pin in that environment's Dockerfile, causing
-# ResolutionImpossible pip errors when this test submits an AutoML job.
 def test_responsibleai_automl_regression():
     """Tests a sample automl job using responsibleai image as the environment."""
     this_dir = Path(__file__).parent
@@ -170,10 +166,6 @@ def test_responsibleai_automl_regression():
     verify_if_command_job_completed(ml_client, returned_job)
 
 
-# NOTE: The current AzureML AutoML curated environment (ai-ml-automl) is broken —
-# azureml-train-automl-runtime requires bokeh<3.0.0, which conflicts with the
-# bokeh>=3.8.2 security pin in that environment's Dockerfile, causing
-# ResolutionImpossible pip errors when this test submits an AutoML job.
 def test_responsibleai_automl_classification():
     """Tests a sample automl job using responsibleai image as the environment."""
     this_dir = Path(__file__).parent
