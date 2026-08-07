@@ -13,14 +13,31 @@ ENV ENABLE_METADATA=true
 RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
 
 # Upgrade OS packages to pick up current Ubuntu security errata.
+# Temporary base-image remediation for PAM/glibc (USN-8601-1 and USN-8611-1).
+# Remove the explicit upgrades once the base image includes the patched packages.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
+    apt-get install -y --only-upgrade \
+        libpam-runtime \
+        libpam0g \
+        libpam-modules \
+        libpam-modules-bin \
+        libc-bin \
+        libc-dev-bin \
+        libc6 \
+        libc6-dev \
+        locales && \
     apt-get install -y --no-install-recommends \
         cmake \
         libboost-dev \
         libboost-system-dev \
         libboost-filesystem-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# msgpack is inherited in the base Miniconda environment; fixes GHSA-6v7p-g79w-8964.
+RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'msgpack>=1.2.1' && \
+    find /opt/miniconda -type d -name 'msgpack-1.1.2.dist-info' -prune -exec rm -rf {} + && \
+    /opt/miniconda/bin/python -c "import msgpack; assert msgpack.version >= (1, 2, 1), msgpack.version"
 
 # pip remediated to >=26.1 (GHSA-jp4c-xjxw-mgf9 / CVE-2026-6357).
 # Why a two-step install instead of a single `conda create ... pip=26.1`:
@@ -72,13 +89,16 @@ RUN pip install \
                 azureml-responsibleai=={{latest-pypi-version}} \
                 azureml-automl-core=={{latest-pypi-version}} \
                 azureml-automl-runtime=={{latest-pypi-version}} \
-                azureml-train-automl-client=={{latest-pypi-version}} \
-                azureml-train-automl-runtime=={{latest-pypi-version}} \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
                 azureml-mlflow=={{latest-pypi-version}} \
                 'azureml-model-management-sdk==1.0.1b6.post1' \
-                'mlflow-skinny==2.15.1' \
-                'azure-identity>=1.25.1' --no-cache-dir
+                'mlflow-skinny==2.15.1' --no-cache-dir
+
+RUN pip install --no-cache-dir \
+                azureml-train-automl-client=={{latest-pypi-version}} \
+                azureml-train-automl-runtime=={{latest-pypi-version}}
+
+RUN pip install --no-cache-dir --upgrade --no-deps 'azure-identity>=1.25.1'
 
 RUN pip install \
                 'inference-schema' \

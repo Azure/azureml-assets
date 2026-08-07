@@ -6,6 +6,9 @@ ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/ /var/mlflow_resources/
 
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
+ENV PYTHONIOENCODING=utf-8
+ENV PIP_NO_COLOR=1
+ENV PIP_PROGRESS_BAR=off
 
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 /artifacts /var/
@@ -24,6 +27,17 @@ RUN apt-get update && \
         rsyslog \
         runit \
         unzip && \
+    apt-get install -y --only-upgrade \
+        libc-bin \
+        libc-dev-bin \
+        libc6 \
+        libc6-dev \
+        libpam-modules \
+        libpam-modules-bin \
+        libpam-runtime \
+        libpam0g \
+        locales \
+        rsyslog && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
     cp /var/configuration/nginx.conf /etc/nginx/sites-available/app && \
@@ -46,7 +60,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     numpy~=1.23.5\
     scikit-learn=1.5.1 \
     pandas~=1.5.3 \
-    setuptools=82.0.1 \
+    'setuptools>=83.0.0' \
     wheel=0.46.3 \
     scipy=1.10.1 \
     pybind11=2.10.1 \
@@ -105,13 +119,15 @@ RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=48.0.1' 'bokeh>
 RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.1'
 
 # torch is pinned by the ACPT base image in the ptca env and by
-# azureml-automl-dnn-nlp in this AzureML env; upgrade both for GHSA-vgrw-7cvw-pwgx
-# and GHSA-qfhq-4f3w-5fph while keeping CUDA 12.6 wheels.
-RUN pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 'torch==2.10.0+cu126'
-RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 'torch==2.10.0+cu126'
+# azureml-automl-dnn-nlp in this AzureML env; upgrade both for GHSA-rrmf-rvhw-rf47,
+# GHSA-vgrw-7cvw-pwgx, and GHSA-qfhq-4f3w-5fph while keeping CUDA 12.6 wheels.
+RUN pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 'torch==2.13.0+cu126'
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 'torch==2.13.0+cu126'
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'setuptools>=83.0.0'
 
-# Apply the same setuptools vendored-dependency fix in the AzureML conda env.
-RUN pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
+# Apply the same setuptools security fix in the AzureML and base conda envs.
+RUN pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==83.0.0'
+RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'setuptools>=83.0.0'
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  export CUDACXX=/usr/local/cuda/bin/nvcc && \
@@ -123,4 +139,12 @@ RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d"
 
 RUN rm -rf /opt/conda/pkgs/
+
+# Remove stale pip vendored dependency metadata that scanners otherwise report
+# as setuptools 70.3.0 and msgpack 1.1.2 after the real packages are patched.
+RUN set -eux; \
+    find / -xdev -path '*/site-packages/pip/_vendor/bom.cdx.json' -type f -delete; \
+    find /opt /azureml-envs /root -type d \( -name 'setuptools-70.3.0.dist-info' -o -name 'msgpack-1.1.2.dist-info' \) -prune -exec rm -rf {} +; \
+    find /opt /azureml-envs /root -path '*/_vendor/vendor.txt' -type f -exec \
+        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +
 # end pip install
