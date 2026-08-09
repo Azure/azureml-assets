@@ -44,6 +44,9 @@ RUN pip install -r requirements.txt --no-cache-dir && \
     find /opt/conda \( -path '*/pip/_vendor/vendor.txt' -o -path '*/pip/_vendor/bom.cdx.json' \) -delete
 
 # Inference requirements.
+# krb5 runtime libs: USN-8585-1. nginx packages: USN-8563-1 -- nginx-light and the
+# nginx modules are installed below, but nginx-common can already be present in the
+# base image, so an explicit --only-upgrade pass is needed to force it forward.
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade --no-install-recommends \
@@ -51,11 +54,15 @@ RUN apt-get update && \
         libk5crypto3 \
         libkrb5-3 \
         libkrb5support0 \
+        libnginx-mod-http-echo \
+        libnginx-mod-http-geoip2 \
         libpam-modules \
         libpam-modules-bin \
         libpam-runtime \
         libpam0g \
         libsqlite3-0 \
+        nginx-common \
+        nginx-light \
         tar \
         wget && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
