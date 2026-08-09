@@ -47,9 +47,6 @@ RUN pip install 'pyarrow>=14.0.1'
 # To resolve vulnerability issue regarding cryptography
 RUN pip install 'cryptography>=46.0.5'
 
-# To resolve vulnerability issue regarding setuptools (GHSA-5rjg-fvgr-3xxf)
-RUN pip install 'setuptools>=78.1.1'
-
 # TODO: remove rai-core-flask pin with next raiwidgets release
 RUN pip install 'rai-core-flask==0.7.6'
 
@@ -68,7 +65,8 @@ RUN pip install --no-deps 'skops>=0.13.0'
 # Drop pip's vendored-dependency SBOM. Modern pip ships pip/_vendor/bom.cdx.json (a CycloneDX
 # file) that scanners ingest, surfacing pip's internal vendored setuptools (70.3.0,
 # CVE-2025-47273) as an image finding even though it's a pip internal, not an installed
-# package (our actual setuptools is upgraded above). Safe to remove; pip doesn't use it at runtime.
+# package (our actual setuptools is 83.0.0, provided by conda-forge). Safe to remove;
+# pip doesn't use it at runtime.
 RUN find "$CONDA_PREFIX" -path '*/pip/_vendor/bom.cdx.json' -delete
 
 # clean conda and pip caches
