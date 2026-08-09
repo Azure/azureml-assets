@@ -121,6 +121,9 @@ RUN pip install --no-cache-dir --use-deprecated=legacy-resolver \
 # NOTE: pillow==12.3.0 fixes GHSA-8v84-f9pq-wr9x, GHSA-9hw9-ch79-4vh6,
 #       GHSA-vjc4-5qp5-m44j, GHSA-pg7v-jwj7-p798, GHSA-45hq-cxwh-f6vc,
 #       GHSA-phj9-mv4w-65pm, GHSA-62p4-gmf7-7g93, and GHSA-5x94-69rx-g8h2.
+# NOTE: pyasn1>=0.6.4 (GHSA-8ppf-4f7h-5ppj, GHSA-hm4w-wwcw-mr6r): pyasn1 0.6.3
+#       is installed transitively via azureml-core / azure-identity -> msal.
+#       No parent declares the patched floor, so an explicit override is required.
 RUN pip install --no-cache-dir --upgrade \
                 'cryptography>=48.0.1' \
                 'distributed>=2026.1.0' \
@@ -129,6 +132,7 @@ RUN pip install --no-cache-dir --upgrade \
                 'GitPython>=3.1.55' \
                 'msgpack>=1.2.1' \
                 'pillow==12.3.0' \
+                'pyasn1>=0.6.4' \
                 'onnx>=1.21.0' \
                 'requests>=2.33.0' \
                 'idna>=3.15' \

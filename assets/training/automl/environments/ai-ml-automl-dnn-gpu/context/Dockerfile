@@ -117,7 +117,14 @@ RUN pip install \
 # distributed>=2026.1.0: CVE-2026-23528 (via azureml-train-automl-runtime -> dask[complete] -> distributed)
 # mlflow-skinny>=2.16.0: security fixes (via azureml-mlflow -> mlflow-skinny, also installed directly)
 # protobuf>=5.29.6: CVE-2026-0994 DoS recursion (via mlflow-skinny -> protobuf, azureml-automl-runtime -> onnx/onnxruntime)
-# pillow>=12.1.1: CVE-2026-25990 heap buffer overflow (via torchvision -> pillow, prophet -> matplotlib -> pillow)
+# pillow>=12.3.0: CVE-2026-25990 heap buffer overflow plus GHSA-62p4-gmf7-7g93 (CRITICAL),
+#   GHSA-45hq-cxwh-f6vc, GHSA-5x94-69rx-g8h2, GHSA-8v84-f9pq-wr9x, GHSA-9hw9-ch79-4vh6,
+#   GHSA-pg7v-jwj7-p798, GHSA-phj9-mv4w-65pm, GHSA-vjc4-5qp5-m44j
+#   (via torchvision -> pillow, prophet -> matplotlib -> pillow). The prior 12.1.1
+#   floor predates all eight advisories.
+# pyasn1>=0.6.4: GHSA-8ppf-4f7h-5ppj, GHSA-hm4w-wwcw-mr6r. Resolved version is 0.6.3
+#   via azureml-core / azure-identity -> msal -> pyasn1; no parent declares the
+#   patched floor, so a direct override is required.
 # bokeh>=3.8.2: GHSA-793v-589g-574v CSWSH (overrides azureml-train-automl-runtime's bokeh<3.0.0 cap)
 # onnx>=1.21.0: GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6, GHSA-538c-55jv-c5g9,
 #   GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m (overrides azureml-automl-runtime's onnx<=1.17.0 cap)
@@ -125,10 +132,11 @@ RUN pip install \
 # pyarrow>=23.0.1: GHSA-rgxp-2hwp-jwgg / CVE-2026-25087 use-after-free (via azureml-dataset-runtime)
 RUN pip install --upgrade torchvision==0.23.0 torch==2.8.0 --no-cache-dir
 RUN pip install --upgrade 'distributed>=2026.1.0' 'mlflow-skinny>=2.16.0' \
-                          'protobuf>=5.29.6' 'pillow>=12.1.1' \
+                          'protobuf>=5.29.6' 'pillow>=12.3.0' \
                           'bokeh>=3.8.2' \
                           'onnx>=1.21.0' \
                           'starlette>=1.0.1' \
+                          'pyasn1>=0.6.4' \
                           'pyarrow>=23.0.1'  # pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg / CVE-2026-25087
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \

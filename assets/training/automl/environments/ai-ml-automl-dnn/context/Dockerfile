@@ -81,7 +81,8 @@ RUN pip install \
                 'pytorch-transformers==1.0.0' \
                 'GitPython>=3.1.50' \
                 'spacy==3.7.4' \
-                'pillow>=12.1.1' \
+                'pillow>=12.3.0' \
+                'pyasn1>=0.6.4' \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz'
 
 # Fix vulnerabilities - security overrides for transitive dependencies.
@@ -133,12 +134,29 @@ RUN pip install \
 #                          azureml-train-automl-runtime resolves torch 2.8.0,
 #                          so the DNN environment direct pin must be re-applied
 #                          after AzureML package installation.
+#
+# pillow>=12.3.0           GHSA-62p4-gmf7-7g93 (CRITICAL), GHSA-45hq-cxwh-f6vc,
+#                          GHSA-5x94-69rx-g8h2, GHSA-8v84-f9pq-wr9x,
+#                          GHSA-9hw9-ch79-4vh6, GHSA-pg7v-jwj7-p798,
+#                          GHSA-phj9-mv4w-65pm, GHSA-vjc4-5qp5-m44j.
+#                          The prior 12.1.1 floor predates all eight advisories,
+#                          so it must be re-applied here after the AzureML
+#                          packages resolve their own pillow.
+#                          Chain (L1): prophet -> matplotlib -> pillow and
+#                          pytorch-transformers -> torch/torchvision -> pillow.
+#
+# pyasn1>=0.6.4            GHSA-8ppf-4f7h-5ppj, GHSA-hm4w-wwcw-mr6r
+#                          Resolved version is 0.6.3. Chain (L1): azureml-core /
+#                          azure-identity -> msal -> pyasn1. No parent declares
+#                          the patched floor, so a direct override is required.
 RUN pip install --no-cache-dir --upgrade 'distributed>=2026.1.0' 'protobuf>=5.29.6' 'cryptography>=46.0.5' \
     'bokeh>=3.8.2' \
     'onnx>=1.21.0' \
     'urllib3>=2.7.0' \
     'ujson>=5.12.1' \
     'pyarrow>=23.0.1' \
+    'pillow>=12.3.0' \
+    'pyasn1>=0.6.4' \
     'torch==2.13.0'
 RUN rm -rf /opt/miniconda/pkgs/
 

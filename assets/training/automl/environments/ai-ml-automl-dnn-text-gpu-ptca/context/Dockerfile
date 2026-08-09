@@ -57,6 +57,12 @@ RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.5
 #   transitive dep of azureml-automl-dnn-nlp via AzureML dataset/runtime packages.
 # cryptography 46.0.7 -> >=48.0.1 (GHSA-537c-gmf6-5ccf): pinned transitive dep
 #   brought in by the ACPT base image ptca conda environment.
+# pillow -> >=12.3.0 (GHSA-62p4-gmf7-7g93 CRITICAL, GHSA-45hq-cxwh-f6vc,
+#   GHSA-5x94-69rx-g8h2, GHSA-8v84-f9pq-wr9x, GHSA-9hw9-ch79-4vh6,
+#   GHSA-pg7v-jwj7-p798, GHSA-phj9-mv4w-65pm, GHSA-vjc4-5qp5-m44j): pulled in by
+#   the ACPT base image torch/torchvision stack; no parent pins the patched floor.
+# pyasn1 0.6.3 -> >=0.6.4 (GHSA-8ppf-4f7h-5ppj, GHSA-hm4w-wwcw-mr6r): pinned
+#   transitive dep via azureml-core / azure-identity -> msal -> pyasn1.
 RUN conda install -p /opt/conda/envs/ptca -c conda-forge -y 'pip>=26.1.2' && \
     /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
     'setuptools>=82.0.1' \
@@ -66,6 +72,8 @@ RUN conda install -p /opt/conda/envs/ptca -c conda-forge -y 'pip>=26.1.2' && \
     'distributed>=2026.1.0' \
     'aiohttp>=3.14.0' \
     'pyarrow>=23.0.1' \
+    'pillow>=12.3.0' \
+    'pyasn1>=0.6.4' \
     'cryptography>=48.0.1' && \
     rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0.1-*.json \
           /opt/conda/envs/ptca/conda-meta/pip-26.1.1-*.json

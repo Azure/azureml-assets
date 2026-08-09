@@ -154,11 +154,22 @@ RUN pip install --no-cache-dir --upgrade --no-deps 'azure-identity>=1.25.1'
 #
 # starlette>=1.0.1 — GHSA-86qp-5c8j-p5mr; transitive via fastapi (loose floor), drop when parent bumps
 # idna>=3.15 — GHSA-65pc-fj4g-8rjx; transitive via requests/yarl (loose floor), drop when parent bumps
+#
+# pillow>=12.3.0 — GHSA-62p4-gmf7-7g93 (CRITICAL), GHSA-45hq-cxwh-f6vc,
+#   GHSA-5x94-69rx-g8h2, GHSA-8v84-f9pq-wr9x, GHSA-9hw9-ch79-4vh6,
+#   GHSA-pg7v-jwj7-p798, GHSA-phj9-mv4w-65pm, GHSA-vjc4-5qp5-m44j
+#   Chain: prophet -> matplotlib -> pillow. No parent pins the patched floor.
+#
+# pyasn1>=0.6.4 — GHSA-8ppf-4f7h-5ppj, GHSA-hm4w-wwcw-mr6r
+#   Resolved version is 0.6.3. Chain: azureml-core / azure-identity -> msal ->
+#   pyasn1. No parent declares the patched floor, so an override is required.
 RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0' \
     'bokeh>=3.8.2' \
     'onnx>=1.21.0' \
     'pyarrow>=23.0.1' \
     'starlette>=1.0.1' \
-    'idna>=3.15'
+    'idna>=3.15' \
+    'pillow>=12.3.0' \
+    'pyasn1>=0.6.4'
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH

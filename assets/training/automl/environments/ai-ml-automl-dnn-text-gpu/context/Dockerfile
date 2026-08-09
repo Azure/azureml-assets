@@ -112,7 +112,14 @@ RUN pip install --no-cache-dir --upgrade 'pip>=26.1.2'
 # NOTE: AzureML packages do not force the fixed cryptography floor; use >=48.0.1.
 # Override onnx to fix GHSA-cmw6-hcpp-c6jp, GHSA-538c-55jv-c5g9, GHSA-q56x-g2fj-4rj6, GHSA-p433-9wv8-28xj, GHSA-3r9x-f23j-gc73, GHSA-hqmj-h5c6-369m, and GHSA-x4hj-rm42-cggg
 # Root cause: azureml-automl-runtime==1.62.0 (latest) pins onnx<=1.17.0; cannot upgrade parent
-RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=48.0.1' 'bokeh>=3.8.2' 'onnx>=1.22.0'
+# pillow>=12.3.0 fixes GHSA-62p4-gmf7-7g93 (CRITICAL), GHSA-45hq-cxwh-f6vc,
+#   GHSA-5x94-69rx-g8h2, GHSA-8v84-f9pq-wr9x, GHSA-9hw9-ch79-4vh6,
+#   GHSA-pg7v-jwj7-p798, GHSA-phj9-mv4w-65pm, and GHSA-vjc4-5qp5-m44j.
+#   Pulled in transitively via torch/torchvision; no parent pins the patched floor.
+# pyasn1>=0.6.4 fixes GHSA-8ppf-4f7h-5ppj and GHSA-hm4w-wwcw-mr6r.
+#   Chain: azureml-core / azure-identity -> msal -> pyasn1 (resolves 0.6.3).
+RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=48.0.1' 'bokeh>=3.8.2' 'onnx>=1.22.0' \
+                'pillow>=12.3.0' 'pyasn1>=0.6.4'
 
 # Security: upgrade aiohttp to fix GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8,
 # and follow-up aiohttp advisories requiring >=3.14.1 in the AzureML conda env.
@@ -123,7 +130,9 @@ RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.1'
 # GHSA-vgrw-7cvw-pwgx, and GHSA-qfhq-4f3w-5fph while keeping CUDA 12.6 wheels.
 RUN pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 'torch==2.13.0+cu126'
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 'torch==2.13.0+cu126'
-RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'setuptools>=83.0.0'
+# setuptools and pillow are inherited from the ACPT base image ptca env.
+# pillow>=12.3.0 fixes the same eight Pillow GHSAs patched in the AzureML env above.
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'setuptools>=83.0.0' 'pillow>=12.3.0'
 
 # Apply the same setuptools security fix in the AzureML and base conda envs.
 RUN pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==83.0.0'
