@@ -166,7 +166,7 @@ RUN pip install --no-cache-dir --upgrade --no-deps 'azure-identity>=1.25.1'
 RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0' \
     'bokeh>=3.8.2' \
     'onnx>=1.21.0' \
-    'pyarrow>=23.0.1' \
+    'pyarrow>=23.0.1,<24.0.0' \
     'starlette>=1.0.1' \
     'idna>=3.15' \
     'pillow>=12.3.0' \

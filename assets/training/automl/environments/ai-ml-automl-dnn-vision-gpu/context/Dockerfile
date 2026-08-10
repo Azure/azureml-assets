@@ -139,7 +139,7 @@ RUN pip install --no-cache-dir --upgrade \
                 'pyOpenSSL>=26.0.0' \
                 'wheel>=0.46.2' \
                 'starlette>=1.0.1' \
-                'pyarrow>=23.0.1' \
+                'pyarrow>=23.0.1,<24.0.0' \
                 'torch>=2.10.0'
 
 # Vulnerability patches for ptca environment

@@ -135,7 +135,7 @@ RUN pip install --no-cache-dir --upgrade -c /tmp/security-constraints.txt \
                           'pillow>=12.3.0' \
                           'bokeh>=3.8.2' \
                           'onnx>=1.21.0' \
-                          'pyarrow>=23.0.1'
+                          'pyarrow>=23.0.1,<24.0.0'
 
 # torch pinned for azureml-contrib-automl-dnn-forecasting; fixes GHSA-rrmf-rvhw-rf47,
 # GHSA-vgrw-7cvw-pwgx, and GHSA-qfhq-4f3w-5fph.

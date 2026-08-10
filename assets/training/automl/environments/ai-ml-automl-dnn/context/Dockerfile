@@ -154,7 +154,7 @@ RUN pip install --no-cache-dir --upgrade 'distributed>=2026.1.0' 'protobuf>=5.29
     'onnx>=1.21.0' \
     'urllib3>=2.7.0' \
     'ujson>=5.12.1' \
-    'pyarrow>=23.0.1' \
+    'pyarrow>=23.0.1,<24.0.0' \
     'pillow>=12.3.0' \
     'pyasn1>=0.6.4' \
     'torch==2.13.0'

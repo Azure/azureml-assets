@@ -101,7 +101,7 @@ RUN printf '%s\n' \
                 'pyasn1>=0.6.4' \
                 'setuptools>=83.0.0' \
                 'python-dotenv>=1.2.2' \
-                'pyarrow>=23.0.1' && \
+                'pyarrow>=23.0.1,<24.0.0' && \
     conda clean -q -a -y && \
     rm -rf /root/.cache/pip /tmp/pip-* /opt/conda/pkgs /opt/miniconda/pkgs /tmp/security-constraints.txt
 

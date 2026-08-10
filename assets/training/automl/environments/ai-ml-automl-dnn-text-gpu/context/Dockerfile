@@ -96,7 +96,13 @@ RUN pip install --no-cache-dir \
 # Doing it  separately from pip install above to avoid conflict with other packages
 # We should aim for this list to be empty with new and patched releases
 # by fixing dependencies in the base packages
-RUN pip install pyarrow==14.0.2 \
+# pyarrow>=23.0.1,<24.0.0 fixes GHSA-rgxp-2hwp-jwgg / CVE-2026-25087 use-after-free.
+#   The previous pyarrow==14.0.2 hard pin was both vulnerable and unsatisfiable
+#   against azureml-dataset-runtime, which is pulled in transitively here via
+#   azureml-train-automl-client and azureml-automl-runtime and requires
+#   pyarrow<24.0.0,>=23.0.1. The upper bound is required: pyarrow 25.x exists on
+#   PyPI but violates that constraint, so an unbounded floor would break the env.
+RUN pip install 'pyarrow>=23.0.1,<24.0.0' \
                 accelerate==1.12.0 
 
 # Override transformers to fix GHSA-69w3-r845-3855
