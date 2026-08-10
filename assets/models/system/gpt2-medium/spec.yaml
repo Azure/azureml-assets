@@ -164,6 +164,7 @@ system_metadata:
     - Standard_ND96amsr_A100_v4
     - Standard_ND40rs_v2
     finetuneComputes:
+    - Standard_NC24rs_v3
     - Standard_NC4as_T4_v3
     - Standard_NC8as_T4_v3
     - Standard_NC16as_T4_v3
