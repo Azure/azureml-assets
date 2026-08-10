@@ -5,12 +5,13 @@
 
 import pickle
 import sys
-import zipfile
 from pathlib import Path
-from unittest.mock import Mock
 
+import numpy as np
 import pytest
 import skops.io as skops_io
+from sklearn.linear_model import LinearRegression
+from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 
@@ -38,14 +39,21 @@ class _UntrustedModel:
 
 
 def test_get_model_loads_trusted_skops_model(tmp_path):
-    """Load a skops model containing only trusted sklearn types."""
+    """Load a trusted regression pipeline without changing its predictions."""
     model_path = tmp_path / "model.skops"
-    model = StandardScaler().fit([[0.0], [1.0], [2.0]])
+    features = np.array([[0.0], [1.0], [2.0], [3.0]])
+    labels = np.array([1.0, 3.0, 5.0, 7.0])
+    model = Pipeline(
+        [
+            ("scaler", StandardScaler()),
+            ("regressor", LinearRegression()),
+        ]
+    ).fit(features, labels)
     skops_io.dump(model, model_path)
 
     loaded_model = model_loader.get_model(str(model_path))
 
-    assert loaded_model.mean_ == pytest.approx(model.mean_)
+    assert loaded_model.predict(features) == pytest.approx(model.predict(features))
 
 
 def test_get_model_rejects_untrusted_skops_types(tmp_path):
@@ -64,29 +72,14 @@ def test_get_model_rejects_malicious_pickle_without_deserializing(tmp_path):
     model_path = tmp_path / "model.skops"
     model_path.write_bytes(pickle.dumps(_MaliciousPayload()))
 
-    with pytest.raises(zipfile.BadZipFile):
+    with pytest.raises(ValueError, match="not a valid ZIP archive"):
         model_loader.get_model(str(model_path))
 
     assert not EXPLOIT_EXECUTED
 
 
-def test_get_model_uses_weights_only_for_pytorch(tmp_path, monkeypatch):
-    """Load PyTorch artifacts with arbitrary object construction disabled."""
-    model_path = tmp_path / "model.pt"
-    model_path.write_bytes(b"weights")
-    torch_mock = Mock()
-    torch_mock.cuda.is_available.return_value = False
-    torch_mock.load.return_value = {"weight": 1}
-    monkeypatch.setattr(model_loader, "torch", torch_mock)
-    monkeypatch.setattr(model_loader, "_torch_present", True)
-
-    assert model_loader.get_model(str(model_path)) == {"weight": 1}
-    torch_mock.load.assert_called_once()
-    assert torch_mock.load.call_args.kwargs["weights_only"] is True
-
-
-def test_find_model_ignores_pickle_files(tmp_path):
-    """Discover safe formats without falling back to pickle artifacts."""
+def test_find_model_selects_safe_model_alongside_legacy_model(tmp_path):
+    """Select the safe sibling while retaining backward-compatible artifacts."""
     (tmp_path / "model.pkl").write_bytes(b"pickle")
     safe_model = tmp_path / "model.skops"
     safe_model.write_bytes(b"skops")
@@ -98,5 +91,41 @@ def test_find_model_rejects_directory_with_only_pickle(tmp_path):
     """Reject a model directory that contains only an unsafe pickle."""
     (tmp_path / "model.pkl").write_bytes(b"pickle")
 
-    with pytest.raises(ValueError, match="supported safe model"):
+    with pytest.raises(ValueError, match="Unsafe legacy model artifacts"):
         model_loader.find_model(str(tmp_path))
+
+
+@pytest.mark.parametrize("postfix", [".pt", ".pth"])
+def test_find_model_rejects_legacy_pytorch_artifacts(tmp_path, postfix):
+    """Reject full-object PyTorch models until trusted reconstruction exists."""
+    (tmp_path / f"model{postfix}").write_bytes(b"pytorch")
+
+    with pytest.raises(ValueError, match="Unsafe legacy model artifacts"):
+        model_loader.find_model(str(tmp_path))
+
+
+def test_find_model_rejects_ambiguous_safe_models(tmp_path):
+    """Reject directories containing more than one candidate model."""
+    (tmp_path / "first.skops").write_bytes(b"first")
+    (tmp_path / "second.skops").write_bytes(b"second")
+
+    with pytest.raises(ValueError, match="Expected exactly one"):
+        model_loader.find_model(str(tmp_path))
+
+
+def test_get_model_rejects_unsupported_extension(tmp_path):
+    """Reject direct attempts to load a legacy model format."""
+    model_path = tmp_path / "model.pkl"
+    model_path.write_bytes(b"pickle")
+
+    with pytest.raises(ValueError, match="Unsupported model format"):
+        model_loader.get_model(str(model_path))
+
+
+def test_find_model_rejects_non_directory_path(tmp_path):
+    """Reject a file passed where a model directory is required."""
+    model_path = tmp_path / "model.skops"
+    model_path.write_bytes(b"skops")
+
+    with pytest.raises(ValueError, match="regular directory"):
+        model_loader.find_model(str(model_path))

@@ -9,7 +9,7 @@ from pathlib import Path
 
 import numpy as np
 import skops.io as skops_io
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
@@ -25,11 +25,11 @@ def main():
     model = Pipeline(
         [
             ("scaler", StandardScaler()),
-            ("classifier", LogisticRegression()),
+            ("regressor", LinearRegression()),
         ]
     )
     features = np.array([[0.0], [1.0], [2.0], [3.0]])
-    labels = np.array([0, 0, 1, 1])
+    labels = np.array([1.0, 3.0, 5.0, 7.0])
     model.fit(features, labels)
 
     with tempfile.TemporaryDirectory() as temporary_directory:

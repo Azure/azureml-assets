@@ -13,8 +13,9 @@ inputs:
     type: mlflow_model
     description: >-
       A safely serialized AutoML Forecasting MLflow model. Sklearn models must
-      use the .skops format and contain only types trusted by skops. PyTorch
-      artifacts must be compatible with weights-only loading.
+      be exported directly to a single .skops artifact and contain only types
+      trusted by skops. Legacy pickle and full-object PyTorch artifacts are not
+      supported by this component version.
   target_column_name:
     type: string
     description: "The name of the target column."

@@ -8,6 +8,7 @@ COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:2025
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 ENV ENABLE_METADATA=true
+ENV AUTOML_ENABLE_SAFE_FORECASTING_MODEL_EXPORT=true
 
 RUN apt-get update && \
     apt-get install --only-upgrade -y --no-install-recommends \

@@ -35,4 +35,4 @@ dependencies:
   - prophet==1.1.4
   - GitPython>=3.1.41
   - py-cpuinfo==5.0.0
-  - prettytable>=3.9
+  - prettytable==3.16.0
