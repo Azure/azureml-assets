@@ -1,0 +1,68 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: gemma-4-e2b-it-generic-cpu
+path: ./
+isArchived: true
+tags:
+  capabilities: reasoning,tool-calling
+  supportsReasoning: 'true'
+  contextLength: 131072
+system_metadata:
+  alias: gemma-4-e2b-it
+  publisher: Microsoft
+  directoryPath: v1
+  foundryLocal: 'test'
+  inputModalities:
+  - text
+  - image
+  - audio
+  license: apache-2.0
+  licenseDescription: This model is provided under the License Terms available 
+    at <https://www.apache.org/licenses/LICENSE-2.0.html>.
+  maxOutputTokens: 8192
+  outputModalities:
+  - text
+  promptTemplate: '{"system": "<|turn>system\n{Content}<turn|>\n", "user": "<|turn>user\n{Content}<turn|>\n",
+    "assistant": "<|turn>model\n{Content}<turn|>\n", "prompt": "<|turn>user\n{Content}<turn|>\n<|turn>model\n"}'
+  supportsToolCalling: true
+  toolCallEnd: <tool_call|>
+  toolCallStart: <|tool_call>
+  toolRegisterEnd: <tool|>
+  toolRegisterStart: <|tool>
+  toolResponseEnd: <tool_response|>
+  toolResponseStart: <|tool_response>
+  tasks:
+    inferenceTasks:
+    - vision-language-chat
+  platformCapabilities:
+    enableMaap: false
+  reasoningStart: '<|channel>thought\n'
+  reasoningEnd: '<|channel|>'
+  minFLVersion: 1.2.1
+variantInfo:
+  parents:
+  - assetId: azureml://registries/azureml/models/gemma-4-e2b-it/versions/1
+  variantMetadata:
+    modelType: ONNX
+    quantization:
+    - RTN
+    device: cpu
+    executionProvider: CPUExecutionProvider
+    fileSizeBytes: 6324928641
+    vRamFootprintBytes: 6324928641
+version: 1
+description: |-
+  This model is an optimized version of Gemma 4 E2B IT for local inference on CPU and mobile devices. This optimized model is published here in ONNX format to run on CPU and mobile targets, with the precision best suited to this target.
+
+  # ONNX Models
+  Here are some of the optimized configurations we have added:
+  1. ONNX model for CPU and mobile using RTN quantization.
+
+  # Model Description
+  - **Developed by:** Google DeepMind
+  - **Model type:** ONNX
+  - **License:** apache-2.0
+  - **Model Description:** This is a conversion of Gemma 4 E2B IT for local inference.
+  - **Disclaimer:** Model is only an optimization of the base model, any risk associated with the model is the responsibility of the user of the model. Please verify and test for your scenarios. There may be a slight difference in output from the base model with the optimizations applied. Note that optimizations applied are distinct from fine tuning and thus do not alter the intended uses or capabilities of the model.
+
+  # Base Model Information
+  See Hugging Face model [Gemma 4 E2B IT](https://huggingface.co/google/gemma-4-e2b-it) for details.
