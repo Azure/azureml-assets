@@ -9,7 +9,7 @@ tags:
 system_metadata:
   alias: qwen3.5-4b
   publisher: Microsoft
-  directoryPath: v2
+  directoryPath: v3
   foundryLocal: ''
   inputModalities:
   - text
@@ -44,6 +44,6 @@ variantInfo:
     - RTN
     device: cpu
     executionProvider: CPUExecutionProvider
-    fileSizeBytes: 4599784965
-    vRamFootprintBytes: 4599784965
-version: 2
+    fileSizeBytes: 3235313264
+    vRamFootprintBytes: 3235313264
+version: 3

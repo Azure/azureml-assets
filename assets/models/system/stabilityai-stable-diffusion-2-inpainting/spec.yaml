@@ -23,4 +23,5 @@ system_metadata:
     inferenceComputes:
     - Standard_ND96amsr_A100_v4
     - Standard_ND96asr_v4
-version: 11
+  inferenceEnvironmentAssetId: azureml://registries/azureml/environments/foundation-model-inference/versions/94
+version: 12

@@ -96,12 +96,26 @@ RUN pip install --upgrade 'cryptography>=48.0.1' 'pydantic-settings>=2.14.2' 'fa
 #   >=2.13.0 in published releases. Direct override is the only remediation.
 # msgpack>=1.2.1 (base env, py3.13): GHSA-6v7p-g79w-8964 / VCM 5014304.
 #   msgpack is pulled transitively by distributed runtime packages with loose floors.
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'cryptography>=48.0.1' 'python-dotenv>=1.2.2' 'pip>=26.1.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'PyJWT>=2.13.0' 'msgpack>=1.2.1' && \
-    rm -f /opt/conda/conda-meta/pip-26.0*.json /opt/conda/conda-meta/pip-26.1.1*.json
+# setuptools>=83.0.0 (base env, py3.14): GHSA-h35f-9h28-mq5c / VCM 5016030.
+#   setuptools is bootstrapped by the base conda image, so patch it directly.
+# Remove obsolete vendored dependency metadata after upgrading pip.
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'cryptography>=48.0.1' 'python-dotenv>=1.2.2' 'pip>=26.1.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'PyJWT>=2.13.0' 'msgpack>=1.2.1' 'setuptools>=83.0.0' && \
+    rm -f /opt/conda/conda-meta/pip-26.0*.json /opt/conda/conda-meta/pip-26.1.1*.json \
+          /opt/conda/conda-meta/setuptools-70*.json /opt/conda/conda-meta/setuptools-81*.json /opt/conda/conda-meta/setuptools-82*.json \
+          /opt/conda/conda-meta/msgpack-python-1.1*.json /opt/conda/conda-meta/msgpack-1.1*.json && \
+    rm -f /opt/conda/lib/python3.14/site-packages/pip/_vendor/bom.cdx.json && \
+    sed -i -e 's/msgpack==1.1.2/msgpack==1.2.1/' -e 's/setuptools==70.3.0/setuptools==83.0.0/' \
+          /opt/conda/lib/python3.14/site-packages/pip/_vendor/vendor.txt
 # GHSA-65pc-fj4g-8rjx: idna>=3.15 for ptca env (base env covered above)
 # GHSA-993g-76c3-p5m4, GHSA-jq35-7prp-9v3f: PyJWT>=2.13.0 for ptca env (base env covered above)
-RUN pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.1.2' 'idna>=3.15' 'PyJWT>=2.13.0' && \
-    rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0*.json /opt/conda/envs/ptca/conda-meta/pip-26.1.1*.json
+# GHSA-h35f-9h28-mq5c: setuptools>=83.0.0 for ptca env (base env covered above)
+RUN pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.1.2' 'idna>=3.15' 'PyJWT>=2.13.0' 'setuptools>=83.0.0' && \
+    rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0*.json /opt/conda/envs/ptca/conda-meta/pip-26.1.1*.json \
+          /opt/conda/envs/ptca/conda-meta/setuptools-70*.json /opt/conda/envs/ptca/conda-meta/setuptools-81*.json /opt/conda/envs/ptca/conda-meta/setuptools-82*.json \
+          /opt/conda/envs/ptca/conda-meta/msgpack-python-1.1*.json /opt/conda/envs/ptca/conda-meta/msgpack-1.1*.json && \
+        rm -f /opt/conda/envs/ptca/lib/python3.10/site-packages/pip/_vendor/bom.cdx.json && \
+    sed -i -e 's/msgpack==1.1.2/msgpack==1.2.1/' -e 's/setuptools==70.3.0/setuptools==83.0.0/' \
+            /opt/conda/envs/ptca/lib/python3.10/site-packages/pip/_vendor/vendor.txt
 # ray vendors its own copies of aiohttp and idna inside thirdparty_files/ for the runtime_env
 # agent; those vendored copies are not upgraded by the pip installs above. Patching all copies
 # in-place (aiohttp>=3.14.0 closes GHSA-hg6j-4rv6-33pg/GHSA-jg22-mg44-37j8; idna>=3.15 closes CVE-2026-45409 / VCM 5012909).

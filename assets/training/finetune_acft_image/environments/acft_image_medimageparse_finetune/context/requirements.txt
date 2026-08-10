@@ -22,7 +22,7 @@ pydicom>=2.4.5
 SimpleITK==2.4.0
 scikit-image==0.24.0 
 arrow==1.3.0 
-nltk==3.9.4 
+nltk==3.10.0 
 dotmap==1.3.30
 h5py==3.14.0
 appdirs==1.4.4
@@ -30,8 +30,7 @@ ffmpeg==1.4
 lightning==2.5.5
 azureml-acft-image-components[mip]=={{latest-pypi-version}}
 filelock>=3.20.1
-# GitPython: GHSA-mv93-w799-cj2w (fixed in 3.1.50). Programmatic PyPI metadata
-# checks on 2026-05-25 show mlflow-skinny still declares gitpython<4,>=3.1.9
-# in the pinned version and latest available release, so a parent-only upgrade
-# cannot force the fixed floor.
-GitPython>=3.1.50
+# GitPython: GHSA-r9mr-m37c-5fr3, GHSA-6p8h-3wgx-97gf,
+# GHSA-fjr4-x663-mwxc, and GHSA-94p4-4cq8-9g67 (fixed in 3.1.55).
+# mlflow-skinny permits older GitPython versions, so a direct floor is required.
+GitPython>=3.1.55

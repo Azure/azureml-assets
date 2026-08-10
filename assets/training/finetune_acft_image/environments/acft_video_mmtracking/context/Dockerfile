@@ -3,12 +3,18 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 
 USER root
 RUN apt-get -y update \
- && apt-get install -y --only-upgrade tar wget libsqlite3-0 libkrb5support0 libgssapi-krb5-2 libk5crypto3 libkrb5-3 \
+ && apt-get install -y --only-upgrade \
+    libc-dev-bin libc6-dev locales libc6 libc-bin \
+    libpam-runtime libpam0g libpam-modules libpam-modules-bin \
+    libkrb5support0 libgssapi-krb5-2 libk5crypto3 libkrb5-3 \
+    tar wget libsqlite3-0 \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install required packages from pypi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
+
+# setuptools: pinned from the base conda env; fixes GHSA-h35f-9h28-mq5c.
+RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'setuptools>=83.0.0'
 
 # transformers: fix GHSA-69w3-r845-3855 (CVE-2026-1839, arbitrary code execution in Trainer).
 # --no-deps keeps the pinned HF stack intact (transformers is a direct requirements.txt pin).
@@ -23,6 +29,9 @@ RUN pip install --no-cache-dir --upgrade 'onnx==1.22.0'
 
 # cryptography: pinned transitive dep of azureml-core/pyOpenSSL; fixes GHSA-537c-gmf6-5ccf.
 RUN pip install --no-cache-dir --upgrade 'cryptography>=48.0.1,<49'
+
+# GitPython: pinned transitive dep of azureml-core; fixes GHSA-94p4-4cq8-9g67, GHSA-fjr4-x663-mwxc, GHSA-6p8h-3wgx-97gf, and GHSA-r9mr-m37c-5fr3.
+RUN pip install --no-cache-dir --upgrade 'GitPython>=3.1.55,<4'
 
 # It is recommended to upgrade to numpy version 1.23.5 to address the numpy.core.multiarray issue
 RUN pip install numpy==1.23.5

@@ -47,6 +47,9 @@ RUN pip install 'pyarrow>=14.0.1'
 # To resolve vulnerability issue regarding cryptography
 RUN pip install 'cryptography>=46.0.5'
 
+# To resolve vulnerability issue regarding setuptools (GHSA-5rjg-fvgr-3xxf)
+RUN pip install 'setuptools>=78.1.1'
+
 # TODO: remove rai-core-flask pin with next raiwidgets release
 RUN pip install 'rai-core-flask==0.7.6'
 

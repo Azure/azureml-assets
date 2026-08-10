@@ -9,13 +9,22 @@ RUN apt-get update && \
         gzip \
         libcurl3-gnutls \
         libcurl4 \
+        libgssapi-krb5-2 \
+        libk5crypto3 \
+        libkrb5-3 \
+        libkrb5support0 \
         libnghttp2-14 \
+        libpam-modules \
+        libpam-modules-bin \
+        libpam-runtime \
+        libpam0g \
         libpython3.10-minimal \
         libpython3.10-stdlib \
         libsqlite3-0 \
         python3.10 \
         python3.10-minimal \
-        tar && \
+        tar \
+        wget && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -46,42 +55,30 @@ RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade --pr
            /opt/conda/envs/ptca/lib/python3.10/site-packages/pydantic_settings-2.14.1.dist-info
 
 # ptca env (python 3.10): torch is inherited from the torch280 base image;
-# pin the patched CUDA build for GHSA-vgrw-7cvw-pwgx and GHSA-qfhq-4f3w-5fph,
+# pin the patched CUDA build for GHSA-rrmf-rvhw-rf47,
 # and keep torchvision/torchaudio aligned with the torch ABI.
 RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade \
         --progress-bar off \
         --index-url https://download.pytorch.org/whl/cu126 \
-        'torch==2.10.0+cu126' \
-        'torchvision==0.25.0+cu126' \
-        'torchaudio==2.10.0+cu126' && \
+        'torch==2.13.0+cu126' \
+        'torchvision==0.28.0+cu126' \
+        'torchaudio==2.11.0+cu126' && \
     rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/torch-2.8*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.10/site-packages/torch-2.10*.dist-info \
            /opt/conda/envs/ptca/lib/python3.10/site-packages/torchvision-0.23*.dist-info \
-           /opt/conda/envs/ptca/lib/python3.10/site-packages/torchaudio-2.8*.dist-info
+           /opt/conda/envs/ptca/lib/python3.10/site-packages/torchvision-0.25*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.10/site-packages/torchaudio-2.8*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.10/site-packages/torchaudio-2.10*.dist-info
 
-# Base conda env leaf overrides. Programmatic metadata checks on 2026-05-25
-# found no available parent package that tightens these vulnerable transitive
-# dependencies to the fixed floors:
-#   pip: preinstalled install tool; no Python parent package.
-#   python-dotenv: anaconda-auth (unversioned) and pydantic-settings>=0.21.0.
-#   urllib3: requests<3,>=1.26 and anaconda-client>=1.26.4.
-#   idna: requests<4,>=2.5, anyio>=2.8, httpx, and yarl>=2.0.
-#   click: anaconda-cli-base, typer>=8.2.1, and optional httpx/python-dotenv
-#   extras. Patch directly until those parents or the base env require fixed
-#   versions.
-#   py-rattler: pinned transitive dep of base conda/rattler tooling; brought in
-#   by the base image, fixes GHSA-q53q-5r4j-5729.
-#   aiohttp: no parent currently pins >=3.14.0 (GHSA-jg22-mg44-37j8 / GHSA-hg6j-4rv6-33pg).
-#   PyJWT: no parent currently pins >=2.13.0 (GHSA-jq35-7prp-9v3f / GHSA-993g-76c3-p5m4).
-#   pydantic-settings: pinned transitive dep of the base image, fixes GHSA-4xgf-cpjx-pc3j.
-#   msgpack: pinned transitive dep of mlflow-skinny/base image, fixes GHSA-6v7p-g79w-8964.
-#   cryptography: pinned transitive dep of the base Python stack; brought in by
-#   the base image, fixes GHSA-537c-gmf6-5ccf.
+# Override vulnerable base-environment dependencies whose parent ranges permit
+# older versions. Patch the inherited tooling directly in both conda environments.
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade --progress-bar off --no-binary=cffi \
         'cryptography==48.0.1' && \
     rm -rf /opt/conda/lib/python*/site-packages/cryptography-46*.dist-info
 
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade --progress-bar off \
         'pip==26.1.2' \
+        'setuptools>=83.0.0' \
         'py-rattler>=0.24.0' \
         'python-dotenv>=1.2.2' \
         'urllib3>=2.7.0' \
@@ -93,6 +90,7 @@ RUN conda run -n base python -m pip install --no-cache-dir --upgrade --progress-
         'msgpack>=1.2.1' && \
     rm -rf /opt/conda/lib/python*/site-packages/pip-26.0*.dist-info \
            /opt/conda/lib/python*/site-packages/pip-26.1.1.dist-info \
+           /opt/conda/lib/python*/site-packages/setuptools-8[12]*.dist-info \
            /opt/conda/lib/python*/site-packages/py__rattler-0.23*.dist-info \
            /opt/conda/lib/python*/site-packages/python__dotenv-1.2.1.dist-info \
            /opt/conda/lib/python*/site-packages/urllib3-2.6*.dist-info \
@@ -102,6 +100,10 @@ RUN conda run -n base python -m pip install --no-cache-dir --upgrade --progress-
            /opt/conda/lib/python*/site-packages/PyJWT-2.12*.dist-info \
            /opt/conda/lib/python*/site-packages/pydantic_settings-2.12*.dist-info \
            /opt/conda/lib/python*/site-packages/msgpack-1.1*.dist-info
+
+RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade --progress-bar off \
+        'setuptools>=83.0.0' && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/setuptools-81*.dist-info
 
 COPY requirements.txt .
 RUN pip install --progress-bar off -r requirements.txt

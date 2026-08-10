@@ -318,15 +318,21 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             optional_tool_definitions=False,
             check_for_unsupported_tools=True,
         )
-        # azure_ai_search, azure_fabric and sharepoint_grounding are supported by this
-        # evaluator. They were removed from the SDK's UNSUPPORTED_TOOLS list in
-        # azure-ai-evaluation >= 1.18.1 but are still listed on 1.17.x, so we drop them
-        # from this validator instance to keep the behavior consistent across SDK
-        # versions. This override can be removed once 1.17.x is no longer supported.
+        # These tools are supported by this evaluator. Some remain in the SDK's
+        # UNSUPPORTED_TOOLS list, so remove them from this validator instance.
         self._validator.UNSUPPORTED_TOOLS = [
             tool
             for tool in self._validator.UNSUPPORTED_TOOLS
-            if tool not in ("azure_ai_search", "azure_fabric", "sharepoint_grounding")
+            if tool
+            not in (
+                "azure_ai_search",
+                "azure_fabric",
+                "bing_custom_search",
+                "bing_grounding",
+                "openapi_call",
+                "sharepoint_grounding",
+                "web_search",
+            )
         ]
 
         super().__init__(
