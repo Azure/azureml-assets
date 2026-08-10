@@ -93,7 +93,7 @@ Output a JSON object with these keys:
 }
 
 **Status: Skipped**
-If the CONVERSATION is empty or not provided, or doesn't end with the agent response, return status "skipped" immediately without scoring:
+If the CONVERSATION is empty or not provided, return status "skipped" immediately without scoring:
 ```json
 {"reason": "<explain why evaluation was skipped>", "properties": null, "score": null, "status": "skipped"}
 ```
