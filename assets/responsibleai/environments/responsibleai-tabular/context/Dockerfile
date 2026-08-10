@@ -47,9 +47,6 @@ RUN pip install 'pyarrow>=14.0.1'
 # To resolve vulnerability issue regarding cryptography
 RUN pip install 'cryptography>=46.0.5'
 
-# To resolve vulnerability issue regarding setuptools (GHSA-5rjg-fvgr-3xxf)
-RUN pip install 'setuptools>=78.1.1'
-
 # TODO: remove rai-core-flask pin with next raiwidgets release
 RUN pip install 'rai-core-flask==0.7.6'
 
@@ -64,6 +61,13 @@ RUN pip install 'mcp>=1.23.0'
 # vulnerability fixes for skops (GHSA-m7f4-hrc6-fwg3, GHSA-4v6w-xpmh-gfgp, GHSA-378x-6p4f-8jgm)
 # --no-deps to prevent skops from upgrading numpy (skops>=0.13.0 requires numpy>=1.25 but we pin numpy<1.24)
 RUN pip install --no-deps 'skops>=0.13.0'
+
+# Drop pip's vendored-dependency SBOM. Modern pip ships pip/_vendor/bom.cdx.json (a CycloneDX
+# file) that scanners ingest, surfacing pip's internal vendored setuptools (70.3.0,
+# CVE-2025-47273) as an image finding even though it's a pip internal, not an installed
+# package (our actual setuptools is 83.0.0, provided by conda-forge). Safe to remove;
+# pip doesn't use it at runtime.
+RUN find "$CONDA_PREFIX" -path '*/pip/_vendor/bom.cdx.json' -delete
 
 # clean conda and pip caches
 RUN conda run -p $CONDA_PREFIX pip cache purge && \
