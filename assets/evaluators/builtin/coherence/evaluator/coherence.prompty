@@ -83,11 +83,6 @@ user:
   **Response:** The Monroe Doctrine was a pivotal policy declared in 1823 that asserted U.S. opposition to European colonization in the Americas. By stating that any intervention by external powers in the Western Hemisphere would be viewed as a hostile act, it established the U.S. as a protector of the region. This doctrine shaped U.S. foreign policy by promoting isolation from European conflicts while justifying American influence and expansion in the hemisphere. Its long-term significance lies in its enduring influence on international relations and its role in defining the U.S. position in global affairs.
 
 
-# Data
-QUERY: {{query}}
-RESPONSE: {{response}}
-
-
 # Tasks
 ## Please provide your assessment for the previous RESPONSE in relation to the QUERY based on the Definitions above.
 Your output must be a valid JSON object with exactly these keys:
@@ -96,5 +91,10 @@ Your output must be a valid JSON object with exactly these keys:
   - status: a string indicating the evaluation status. Must be one of:
       - "completed": evaluation was performed normally.
       - "skipped": evaluation was not performed because the QUERY or RESPONSE is empty or not provided. When skipped, set score to null.
+
+# Data
+QUERY: {{query}}
+RESPONSE: {{response}}
+
 
 # Output

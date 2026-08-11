@@ -34,13 +34,6 @@ You are NOT evaluating:
 You **ARE ONLY** evaluating:
 -Whether tool results indicate the presence of a technical error
 
-**INPUT**
-=====
-TOOL_DEFINITIONS: {{tool_definitions}}
-TOOL_CALLS: {{tool_calls}}
-
-
-
 TOOL_CALLS is a list of tool calls that were produced by the AI agent. It includes calls together with the result of every tool call.
 TOOL_DEFINITIONS is a list of definitions for the tools that were called. This definition can contain a description of functionality provided by the tool, the parameters that the tool accepts and the expected return of the tool. This definition can contribute to the assessment of whether a tool call succeeded or failed. 
 
@@ -70,6 +63,9 @@ D. You are required to return your **output** in the following format:
     "score": <1 if all tool calls succeeded, 0 if any tool call failed>,
     "status": "completed"
   }
+  The "status" field must be one of:
+    - "completed": the evaluation was performed normally.
+    - "skipped": the evaluation was not performed, as described in case E below. When skipped, set score to null.
 E. If no tool calls found at all , the TOOL_CALLS input is empty or the TOOL_CALLS input is not passed , return status "skipped" immediately without scoring:
   {
     "reason": "<explain why evaluation was skipped>",
@@ -336,5 +332,9 @@ EXPECTED OUTPUT
 
 
 
-Now given the **INPUT** you received generate the output 
+# Data
+TOOL_DEFINITIONS: {{tool_definitions}}
+TOOL_CALLS: {{tool_calls}}
+
+
 # Output
