@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/models/qwen3.5-4b/onnx/webgpu/v3
+  container_path: foundrylocal/models/gemma-4-e2b-it/onnx/cuda/v1
   storage_name: foundrylocalassetdata
   type: azureblob
 publish:
