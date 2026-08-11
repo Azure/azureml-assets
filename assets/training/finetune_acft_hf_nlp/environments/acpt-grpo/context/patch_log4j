@@ -10,7 +10,7 @@ import glob
 import urllib.request
 import tempfile
 
-LOG4J_VER = sys.argv[1] if len(sys.argv) > 1 else "2.25.4"
+LOG4J_VER = sys.argv[1] if len(sys.argv) > 1 else "2.25.5"
 RAY_JARS = "/opt/conda/envs/ptca/lib/python3.10/site-packages/ray/jars"
 MAVEN_BASE = "https://repo1.maven.org/maven2/org/apache/logging/log4j"
 ARTIFACTS = ["log4j-core", "log4j-api", "log4j-slf4j-impl"]
