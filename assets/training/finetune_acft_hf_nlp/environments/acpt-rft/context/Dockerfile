@@ -116,21 +116,20 @@ RUN pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.1.2' 'i
         rm -f /opt/conda/envs/ptca/lib/python3.10/site-packages/pip/_vendor/bom.cdx.json && \
     sed -i -e 's/msgpack==1.1.2/msgpack==1.2.1/' -e 's/setuptools==70.3.0/setuptools==83.0.0/' \
             /opt/conda/envs/ptca/lib/python3.10/site-packages/pip/_vendor/vendor.txt
-# ray vendors its own copies of aiohttp and idna inside thirdparty_files/ for the runtime_env
-# agent; those vendored copies are not upgraded by the pip installs above. Patching all copies
-# in-place (aiohttp>=3.14.0 closes GHSA-hg6j-4rv6-33pg/GHSA-jg22-mg44-37j8; idna>=3.15 closes CVE-2026-45409 / VCM 5012909).
-# Also upgrade aiohttp in base (py3.13) and ptca (py3.10) envs to >=3.14.0.
-# GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8: aiohttp vulnerabilities; patched in >=3.14.0.
-RUN conda run -n base python -m pip install --no-cache-dir 'aiohttp>=3.14.0' && \
-    pip install --no-cache-dir 'aiohttp>=3.14.0'
+# Ray vendors its own copies of aiohttp and idna inside thirdparty_files/ for the runtime_env
+# agent; those vendored copies are not upgraded by the pip installs above.
+# aiohttp>=3.14.3 closes GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, and GHSA-mfx4-hv73-q22v.
+RUN conda run -n base python -m pip install --no-cache-dir 'aiohttp>=3.14.3' && \
+    pip install --no-cache-dir 'aiohttp>=3.14.3'
 RUN find /opt/conda/envs/ptca/lib/python3.10/site-packages/ray -type d -name 'thirdparty_files' | while read dir; do \
       rm -rf "$dir"/aiohttp* "$dir"/idna*; \
-      pip install --no-cache-dir --target "$dir" 'aiohttp>=3.14.0' 'idna>=3.15'; \
+      pip install --no-cache-dir --target "$dir" 'aiohttp>=3.14.3' 'idna>=3.15'; \
     done
 # Ray's distribution jar shades vulnerable Maven artifacts that pip cannot upgrade.
 # Patch jackson-databind/core, vendored by ray, for GHSA-5jmj-h7xm-6q6v,
 # GHSA-5gvw-p9qm-jgwh, GHSA-mhm7-754m-9p8w, and GHSA-r7wm-3cxj-wff9; patch
-# log4j-core for GHSA-445c-vh5m-36rj, GHSA-6hg6-v5c8-fphq, and GHSA-3pxv-7cmr-fjr4.
+# log4j-api/core for CVE-2026-49844, GHSA-445c-vh5m-36rj,
+# GHSA-6hg6-v5c8-fphq, and GHSA-3pxv-7cmr-fjr4.
 COPY patch_ray_jackson_databind.py /tmp/patch_ray_jackson_databind.py
 RUN JACKSON_DATABIND_VERSION=2.21.5 \
     JACKSON_DATABIND_JAR_SHA1=84924990b468233a28214ae2c505a9ec24cd6ea6 \
@@ -138,9 +137,12 @@ RUN JACKSON_DATABIND_VERSION=2.21.5 \
     JACKSON_CORE_VERSION=2.18.8 \
     JACKSON_CORE_JAR_SHA1=459eb2c4bb30bd6898eb9bbe9d7a4c4140529b8b \
     JACKSON_CORE_POM_SHA1=90813471a8fd344b176d7459ab2ee310dacb607f \
-    LOG4J_CORE_VERSION=2.25.4 \
-    LOG4J_CORE_JAR_SHA1=b963c3d6bfdf05c61ad47a74e9f9295131607df2 \
-    LOG4J_CORE_POM_SHA1=1362e4668f513608d467924a2698677869b524f6 \
+    LOG4J_API_VERSION=2.25.5 \
+    LOG4J_API_JAR_SHA1=6c80ea65e41f7858f7e15cb390c98c36167c7b3a \
+    LOG4J_API_POM_SHA1=214797155b00469cc53ffb33ca76055f0b2bc755 \
+    LOG4J_CORE_VERSION=2.25.5 \
+    LOG4J_CORE_JAR_SHA1=c194a13e18b0a36014e867d2d323b989bf212151 \
+    LOG4J_CORE_POM_SHA1=1f76ca57995fe0e588dc92ff3aa9f26d45af79ba \
     /opt/conda/envs/ptca/bin/python /tmp/patch_ray_jackson_databind.py && \
     rm -f /tmp/patch_ray_jackson_databind.py
 COPY vllm_rollout /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/workers/rollout/vllm_rollout/vllm_rollout.py
