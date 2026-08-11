@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260727.v1
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260810.v1
 
 # Upgrade base-image OS packages that are still vulnerable in the rendered base image.
 RUN apt-get update \

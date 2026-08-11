@@ -2,7 +2,7 @@
 # AML training infra reads $AZUREML_CONDA_ENVIRONMENT_PATH at startup, so this
 # env-path layout is required for curated envs.
 
-FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.6-ubuntu24.04:20260727.v1
+FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.6-ubuntu24.04:20260810.v1
 
 USER root
 
