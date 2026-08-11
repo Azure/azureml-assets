@@ -129,9 +129,6 @@ AGENT responses are consistently logical and seamless across turns, preserving c
 ## Conversation examples by coherence score
 Use these examples to anchor scoring after skip gating passes.
 
-# Data
-CONVERSATION: {{messages}}
-
 # Tasks
 Return ONLY a JSON object with:
 - `score`: integer 1-5 if completed, or null if skipped
@@ -165,5 +162,9 @@ For `properties` in completed evaluations, include:
 }
 
 Return valid JSON only. No markdown. No extra keys.
+
+# Data
+CONVERSATION: {{messages}}
+
 
 # Output

@@ -41,11 +41,6 @@ You ARE evaluating:
 
 INPUT
 =====
-CONVERSATION: {{messages}}
-
-{% if tool_definitions %}
-TOOL_DEFINITIONS: {{tool_definitions}}
-{% endif %}
 
 CONVERSATION includes the full multi-turn dialogue between the user and the agent, including system messages, user queries, assistant responses, tool calls, and tool results.
 Tool calls and tool results are part of the agent's working process. The user only sees the agent's text responses.
@@ -160,5 +155,13 @@ KEY PRINCIPLES
 8. **No Satisfaction Inference**: Do not assume completeness because the user appears satisfied or says "thanks" — evaluate whether each request was actually fulfilled
 
 Remember: A task can be understood correctly and approached properly but still fail if the final outcome doesn't meet requirements. Evaluate the cumulative result, not individual turn quality.
+
+# Data
+{% if tool_definitions %}
+TOOL_DEFINITIONS: {{tool_definitions}}
+{% endif %}
+
+CONVERSATION: {{messages}}
+
 
 # Output
