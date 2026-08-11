@@ -37,6 +37,11 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --pr
     'msgpack>=1.2.1' \
     'setuptools>=83.0.0'
 
+# aiohttp>=3.14.3 is pinned in the base-image conda prefix; fixes GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, and GHSA-mfx4-hv73-q22v.
+RUN if [ -x /opt/conda/bin/python ]; then \
+        /opt/conda/bin/python -m pip install --no-cache-dir --progress-bar off --upgrade 'aiohttp>=3.14.3'; \
+    fi
+
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --progress-bar off \
     'py-cpuinfo==5.0.0' \
     'joblib==1.2.0' \
@@ -145,10 +150,11 @@ RUN set -eux; \
 # setuptools>=83.0.0 fixes GHSA-h35f-9h28-mq5c in Python prefixes that carry older setuptools.
 # torch==2.13.0 fixes GHSA-rrmf-rvhw-rf47, GHSA-vgrw-7cvw-pwgx, and
 #   GHSA-qfhq-4f3w-5fph in inherited PTCA environments.
+# aiohttp>=3.14.3 fixes GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, and GHSA-mfx4-hv73-q22v in inherited PTCA environments.
 RUN set -eux; \
     if [ -d /opt/conda/envs/ptca ]; then \
         conda install -p /opt/conda/envs/ptca -c conda-forge -y 'pip>=26.1.2'; \
-        conda run -p /opt/conda/envs/ptca python -m pip install --no-cache-dir --progress-bar off --upgrade 'torch==2.13.0' 'msgpack>=1.2.1' 'setuptools>=83.0.0'; \
+        conda run -p /opt/conda/envs/ptca python -m pip install --no-cache-dir --progress-bar off --upgrade 'torch==2.13.0' 'aiohttp>=3.14.3' 'msgpack>=1.2.1' 'setuptools>=83.0.0'; \
     fi; \
     find /opt /root /tmp -path '*/_vendor/vendor.txt' -type f -exec \
         sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +; \
