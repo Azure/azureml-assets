@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
 name: "healthbench"
-version: "1"
+version: "2"
 tags:
   azureml.Designer: false
 description: "HealthBench - 5000 multi-turn healthcare conversations with physician-written
