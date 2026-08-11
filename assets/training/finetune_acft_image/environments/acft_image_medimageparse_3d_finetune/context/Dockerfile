@@ -53,6 +53,6 @@ COPY requirements.txt .
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir -r requirements.txt
 
 # cryptography is pinned as a transitive dep of azureml-mlflow/AzureML SDK;
-# azureml-mlflow metadata caps it below the patched release, fixes GHSA-537c-gmf6-5ccf.
+# azureml-mlflow metadata caps it below the patched release, fixes GHSA-g6cj-pr64-35w5.
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --no-deps --upgrade \
-        "cryptography==48.0.1"
+        "cryptography==50.0.0"
