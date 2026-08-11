@@ -77,9 +77,11 @@ RUN apt-get update && \
 # GHSA-6v7p-g79w-8964.
 # urllib3>=2.7.0: GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j.
 # idna>=3.15: GHSA-65pc-fj4g-8rjx.
-# aiohttp>=3.14.0: GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8.
-# cryptography>=48.0.1: pinned transitive dep of azureml-core; brought in by
-#   base image and AzureML SDK dependencies, fixes GHSA-537c-gmf6-5ccf.
+# aiohttp>=3.14.3: GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8,
+#   GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, GHSA-mfx4-hv73-q22v.
+# cryptography>=50.0.0: pinned transitive dep of azureml-core; brought in by
+#   base image and AzureML SDK dependencies, fixes GHSA-537c-gmf6-5ccf and
+#   GHSA-g6cj-pr64-35w5.
 # pyarrow>=23.0.1: transitive dep of azureml-dataset-runtime in the ptca env;
 #   azureml-dataset-runtime 1.62.0 caps pyarrow<21, so this post-install
 #   security override fixes GHSA-rgxp-2hwp-jwgg.
@@ -93,11 +95,11 @@ RUN conda run -n ptca python -m pip install --upgrade --no-cache-dir \
         -name 'msgpack-1.1.2.dist-info' \
     \) -prune -exec rm -rf {} + && \
     conda run -n ptca python -m pip install --upgrade --no-cache-dir \
-        'urllib3>=2.7.0' 'idna>=3.15' 'aiohttp>=3.14.0' \
-        'cryptography>=48.0.1' 'pyarrow>=23.0.1' && \
+        'urllib3>=2.7.0' 'idna>=3.15' 'aiohttp>=3.14.3' \
+        'cryptography>=50.0.0' 'pyarrow>=23.0.1' && \
     conda clean -a -y && rm -rf /opt/conda/pkgs/
 
-# Fix base conda env vulnerabilities (python 3.13). Parent packages still expose
+# Fix base conda env vulnerabilities (python 3.14). Parent packages still expose
 # loose vulnerable floors, so these direct floors are required:
 # setuptools>=83.0.0: conda requires setuptools>=60.0.0 only.
 # python-dotenv>=1.2.2: pydantic-settings 2.14.1 requires >=0.21.0.
@@ -105,17 +107,18 @@ RUN conda run -n ptca python -m pip install --upgrade --no-cache-dir \
 # idna>=3.15: requests 2.34.2 requires <4,>=2.5.
 # click>=8.3.3: typer 0.25.1 requires >=8.2.1; mlflow-skinny 3.12.0 requires
 #   <9,>=7.0.
-# aiohttp>=3.14.0: GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8.
-# cryptography>=48.0.1: pinned transitive dep of the base image, fixes
-#   GHSA-537c-gmf6-5ccf.
+# aiohttp>=3.14.3: GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8,
+#   GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, GHSA-mfx4-hv73-q22v.
+# cryptography>=50.0.0: pinned transitive dep of the base image, fixes
+#   GHSA-537c-gmf6-5ccf and GHSA-g6cj-pr64-35w5.
 # msgpack>=1.2.1: transitive dep of azureml-mlflow -> mlflow-skinny; fixes
 #   GHSA-6v7p-g79w-8964.
 # PyJWT>=2.13.0: transitive dep from the base image; fixes GHSA-jq35-7prp-9v3f
 #   and GHSA-993g-76c3-p5m4.
 RUN conda run -n base python -m pip install --upgrade \
     'setuptools>=83.0.0' 'msgpack>=1.2.1' 'python-dotenv>=1.2.2' \
-    'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.0' \
-    'cryptography>=48.0.1' 'PyJWT>=2.13.0' && \
+    'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.3' \
+    'cryptography>=50.0.0' 'PyJWT>=2.13.0' && \
     conda clean -a -y && rm -rf /opt/conda/pkgs/
 
 RUN find /opt/conda -type d \( \
