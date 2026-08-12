@@ -46,7 +46,19 @@ ENV CONDA_PREFIX=${AZUREML_CONDA_ENVIRONMENT_PATH}
 WORKDIR /
 
 # When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference==0.2.58 --no-cache-dir
+RUN pip install llm-optimized-inference==0.2.59 --no-cache-dir
+
+# vllm==0.27.0 hard-pins flashinfer-python==0.6.16.post3, whose fd_exchange.py
+# annotates a return type with array.array[int] — unsupported on Python 3.10,
+# raising TypeError at model-load time. 0.6.16.post4 carries the upstream fix
+# (from __future__ import annotations); install with --no-deps to avoid
+# reopening vllm's exact-pin resolution.
+RUN pip install --no-cache-dir --no-deps flashinfer-python==0.6.16.post4
+
+# pip ships an internal bom.cdx.json documenting old vendored msgpack/setuptools
+# versions (unrelated to installed site-packages); strip it so scanners don't
+# flag it as a live vulnerable package.
+RUN find / -path "*/pip/_vendor/bom.cdx.json" -delete 2>/dev/null || true
 
 # Remove unwanted services if present
 RUN rm -rf /var/runit/gunicorn \
