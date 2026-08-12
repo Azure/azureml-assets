@@ -39,7 +39,6 @@ RUN pip install -r requirements.txt --no-cache-dir && \
         'pyarrow>=23.0.1' \
         'cryptography>=50.0.0' \
         'setuptools>=83.0.0' && \
-    conda run -n base python -m pip install --upgrade --no-cache-dir --no-deps 'setuptools>=83.0.0' && \
     rm -rf /opt/conda/lib/python3.14/site-packages/setuptools-82.0.0.dist-info && \
     find /opt/conda \( -path '*/pip/_vendor/vendor.txt' -o -path '*/pip/_vendor/bom.cdx.json' \) -delete
 
