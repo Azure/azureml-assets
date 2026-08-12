@@ -144,9 +144,9 @@ RUN pip install --upgrade --no-cache-dir \
 
 # The base Miniconda prefix carries its own copies of these packages, which the
 # AzureML conda environment above never touches, so patch them explicitly.
+# msgpack is already upgraded in this same prefix earlier in the file.
 RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade \
                           'cryptography>=50.0.0' \
-                          'msgpack>=1.2.1' \
                           'pydantic-settings>=2.14.2' \
                           'setuptools>=83.0.0'
 
