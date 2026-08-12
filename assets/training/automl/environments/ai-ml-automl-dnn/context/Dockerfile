@@ -69,7 +69,6 @@ RUN pip install \
                 azureml-automl-runtime=={{latest-pypi-version}} \
                 azureml-train-automl-client=={{latest-pypi-version}} \
                 azureml-train-automl-runtime=={{latest-pypi-version}} \
-                azureml-dataset-runtime=={{latest-pypi-version}} \
                 azureml-defaults=={{latest-pypi-version}} \
                 'inference-schema' \
                 'mlflow-skinny>=2.16.0' \
@@ -82,6 +81,13 @@ RUN pip install \
                 'spacy==3.7.4' \
                 'pillow>=12.1.1' \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz'
+
+# azureml-dataset-runtime is resolved in its own pip invocation, as the other
+# AutoML environments already do. Its current release requires pyarrow>=23.0.1
+# while azureml-train-automl-runtime pins pyarrow==17.0.0, so resolving both in a
+# single invocation is impossible. The pyarrow security floor below is applied
+# afterwards regardless.
+RUN pip install azureml-dataset-runtime=={{latest-pypi-version}}
 
 # Fix vulnerabilities - security overrides for transitive dependencies.
 # Each floor is required because the current parent packages still allow the
