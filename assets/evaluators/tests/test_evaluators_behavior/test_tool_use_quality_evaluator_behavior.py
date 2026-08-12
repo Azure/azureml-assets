@@ -114,7 +114,7 @@ class TestToolUseQualityEvaluatorsBehavior:
         evaluator._multi_turn_flow.assert_not_called()
 
     def test_messages_uses_multi_turn_flow(self):
-        """messages input routes to the multi-turn prompty flow."""
+        """Messages input routes to the multi-turn prompty flow."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
         evaluator(messages=VALID_MESSAGES, tool_definitions=VALID_TOOL_DEFINITIONS)
         evaluator._multi_turn_flow.assert_called_once()
@@ -194,6 +194,7 @@ class TestToolUseQualityEvaluatorsBehavior:
 
     @pytest.mark.parametrize("score", [True, 6])
     def test_invalid_member_score_raises(self, score):
+        """Boolean and out-of-range member scores raise evaluation exceptions."""
         evaluator = _mock_flows(
             _make_evaluator(),
             _all_completed_llm_output(score_overrides={"tool_call_accuracy": score}),
@@ -324,11 +325,13 @@ class TestToolUseQualityEvaluatorsBehavior:
         assert result["tool_use_quality_evaluators"]["tool_call_accuracy"]["status"] == "completed"
 
     def test_do_eval_missing_query_or_response_raises(self):
+        """The direct evaluation path requires both query and response."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
         with pytest.raises(EvaluationException):
             asyncio.run(evaluator._do_eval({"response": VALID_RESPONSE}))
 
     def test_super_real_call_handles_empty_multiple_and_conversion_errors(self):
+        """The shared call path handles empty, multiple, and invalid converted inputs."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
         evaluator._convert_kwargs_to_eval_input = MagicMock(return_value=[])
         assert asyncio.run(evaluator._the_super_real_call()) == {}

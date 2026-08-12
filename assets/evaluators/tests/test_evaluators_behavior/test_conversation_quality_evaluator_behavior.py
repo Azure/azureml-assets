@@ -80,12 +80,14 @@ class TestConversationQualityEvaluatorsBehavior:
     # region routing
 
     def test_query_response_uses_single_turn_flow(self):
+        """Query/response input routes to the single-turn flow."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
         evaluator(query=VALID_QUERY, response=VALID_RESPONSE, tool_definitions=VALID_TOOL_DEFINITIONS)
         evaluator._flow.assert_called_once()
         evaluator._multi_turn_flow.assert_not_called()
 
     def test_response_only_uses_single_turn_flow(self):
+        """A response-only input evaluates with an empty query."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
         evaluator(response=VALID_RESPONSE)
         evaluator._flow.assert_called_once()
@@ -93,24 +95,28 @@ class TestConversationQualityEvaluatorsBehavior:
         assert evaluator._flow.call_args.kwargs["query"] == []
 
     def test_messages_uses_multi_turn_flow(self):
+        """Message input routes to the multi-turn flow."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
         evaluator(messages=VALID_MESSAGES, tool_definitions=VALID_TOOL_DEFINITIONS)
         evaluator._multi_turn_flow.assert_called_once()
         evaluator._flow.assert_not_called()
 
     def test_evaluation_level_forces_conversation(self):
+        """Conversation evaluation level routes query/response input to the multi-turn flow."""
         evaluator = _mock_flows(_make_evaluator(evaluation_level="conversation"), _all_completed_llm_output())
         evaluator(query=VALID_QUERY, response=VALID_RESPONSE, tool_definitions=VALID_TOOL_DEFINITIONS)
         evaluator._multi_turn_flow.assert_called_once()
         evaluator._flow.assert_not_called()
 
     def test_evaluation_level_forces_turn(self):
+        """Turn evaluation level routes message input to the single-turn flow."""
         evaluator = _mock_flows(_make_evaluator(evaluation_level="turn"), _all_completed_llm_output())
         evaluator(messages=VALID_MESSAGES, tool_definitions=VALID_TOOL_DEFINITIONS)
         evaluator._flow.assert_called_once()
         evaluator._multi_turn_flow.assert_not_called()
 
     def test_turn_level_uses_assistant_only_messages_as_response(self):
+        """Turn evaluation treats assistant-only messages as a response with an empty query."""
         evaluator = _mock_flows(_make_evaluator(evaluation_level="turn"), _all_completed_llm_output())
         assistant_messages = [
             {"role": "assistant", "content": [{"type": "text", "text": VALID_RESPONSE}]},
@@ -119,6 +125,7 @@ class TestConversationQualityEvaluatorsBehavior:
         assert evaluator._flow.call_args.kwargs["query"] == []
 
     def test_invalid_evaluation_level_raises(self):
+        """An invalid evaluation level raises an evaluation exception."""
         with pytest.raises(EvaluationException):
             _make_evaluator(evaluation_level="not_a_level")
 
@@ -127,6 +134,7 @@ class TestConversationQualityEvaluatorsBehavior:
     # region output shape and aggregation
 
     def test_primary_score_and_raw_evaluator_objects_are_nested(self):
+        """Aggregate output keeps raw member results only in the nested evaluator map."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
         result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE)
         assert result["conversation_quality"] == 1
@@ -139,12 +147,14 @@ class TestConversationQualityEvaluatorsBehavior:
             assert evaluators[name]["status"] == "completed"
 
     def test_multi_turn_raw_failed_turn_is_preserved(self):
+        """Multi-turn raw evaluator results preserve their failed-turn metadata."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output(failed_turn=1))
         result = evaluator(messages=VALID_MESSAGES)
         for name in _EVALUATOR_NAMES:
             assert result["conversation_quality_evaluators"][name]["failed_turn"] == 1
 
     def test_default_thresholds_match_member_defaults(self):
+        """Default aggregate thresholds match the member evaluator defaults."""
         evaluator = _make_evaluator()
         assert evaluator._threshold == {
             "fluency": 3,
@@ -156,12 +166,14 @@ class TestConversationQualityEvaluatorsBehavior:
         }
 
     def test_custom_threshold_partial_override(self):
+        """A partial threshold override preserves defaults for other members."""
         evaluator = _make_evaluator(threshold={"fluency": 4, "task_completion": 0})
         assert evaluator._threshold["fluency"] == 4
         assert evaluator._threshold["task_completion"] == 0
         assert evaluator._threshold["groundedness"] == 3
 
     def test_any_member_below_threshold_fails_primary_score(self):
+        """A member below its threshold fails the aggregate result."""
         evaluator = _mock_flows(
             _make_evaluator(threshold={"fluency": 4}),
             _all_completed_llm_output(score_overrides={"fluency": 3}),
@@ -178,6 +190,7 @@ class TestConversationQualityEvaluatorsBehavior:
     # region skipped/not-applicable handling
 
     def test_all_members_skipped_returns_not_applicable(self):
+        """An all-skipped member result returns an aggregate not-applicable result."""
         evaluator = _mock_flows(_make_evaluator(), _all_skipped_llm_output())
         result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE)
         assert result["conversation_quality"] is None
@@ -188,6 +201,7 @@ class TestConversationQualityEvaluatorsBehavior:
             assert result["conversation_quality_evaluators"][name]["status"] == "skipped"
 
     def test_intermediate_response_returns_not_applicable(self):
+        """An intermediate function-call response is skipped without invoking the LLM."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
         intermediate_response = [
             {
@@ -208,6 +222,7 @@ class TestConversationQualityEvaluatorsBehavior:
         evaluator._flow.assert_not_called()
 
     def test_mixed_skipped_and_completed_members_pass(self):
+        """Completed members pass when another member is skipped."""
         llm_output = _all_completed_llm_output()
         llm_output["llm_output"]["groundedness"] = {
             "score": None,
@@ -221,6 +236,7 @@ class TestConversationQualityEvaluatorsBehavior:
         assert result["conversation_quality_evaluators"]["fluency"]["status"] == "completed"
 
     def test_missing_member_output_is_treated_as_skipped(self):
+        """An omitted member output is represented as a skipped evaluator."""
         llm_output = _all_completed_llm_output()
         del llm_output["llm_output"]["task_completion"]
         evaluator = _mock_flows(_make_evaluator(), llm_output)
@@ -234,26 +250,31 @@ class TestConversationQualityEvaluatorsBehavior:
     # region validation and malformed outputs
 
     def test_missing_response_raises(self):
+        """A query without a response raises an evaluation exception."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
         with pytest.raises(EvaluationException):
             evaluator(query=VALID_QUERY)
 
     def test_empty_messages_raises(self):
+        """An empty messages list raises an evaluation exception."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
         with pytest.raises(EvaluationException):
             evaluator(messages=[])
 
     def test_messages_missing_role_raises(self):
+        """A message without a role raises an evaluation exception."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
         with pytest.raises(EvaluationException):
             evaluator(messages=[{"content": "hi"}])
 
     def test_non_dict_llm_output_raises(self):
+        """A non-dictionary LLM payload raises an evaluation exception."""
         evaluator = _mock_flows(_make_evaluator(), {"llm_output": "not a dict"})
         with pytest.raises(EvaluationException):
             evaluator(query=VALID_QUERY, response=VALID_RESPONSE)
 
     def test_out_of_range_member_score_raises(self):
+        """An out-of-range member score raises an evaluation exception."""
         evaluator = _mock_flows(
             _make_evaluator(),
             _all_completed_llm_output(score_overrides={"fluency": 6}),
@@ -262,6 +283,7 @@ class TestConversationQualityEvaluatorsBehavior:
             evaluator(query=VALID_QUERY, response=VALID_RESPONSE)
 
     def test_boolean_member_score_raises(self):
+        """A boolean member score raises an evaluation exception."""
         evaluator = _mock_flows(
             _make_evaluator(),
             _all_completed_llm_output(score_overrides={"fluency": True}),
@@ -270,11 +292,13 @@ class TestConversationQualityEvaluatorsBehavior:
             evaluator(query=VALID_QUERY, response=VALID_RESPONSE)
 
     def test_do_eval_missing_response_raises(self):
+        """The direct evaluation path requires a response."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
         with pytest.raises(EvaluationException):
             asyncio.run(evaluator._do_eval({"query": VALID_QUERY}))
 
     def test_do_eval_normalizes_missing_query_and_message_lists(self):
+        """The direct evaluation path normalizes missing queries and message lists."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
         asyncio.run(
             evaluator._do_eval(
@@ -287,6 +311,7 @@ class TestConversationQualityEvaluatorsBehavior:
         assert evaluator._flow.call_args.kwargs["query"] == []
 
     def test_super_real_call_handles_empty_multiple_and_conversion_errors(self):
+        """The shared call path handles empty, multiple, and invalid converted inputs."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
         evaluator._convert_kwargs_to_eval_input = MagicMock(return_value=[])
         assert asyncio.run(evaluator._the_super_real_call()) == {}
