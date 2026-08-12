@@ -27,6 +27,19 @@ RUN set -eux; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
 
+# Patch vulnerable Python packages inherited in the base Miniconda prefix.
+# These are transitive base-image packages, not direct dependencies of this image:
+# cryptography fixes GHSA-g6cj-pr64-35w5; h2 fixes GHSA-6hr6-w5qg-qmwg;
+# msgpack, pydantic-settings, and setuptools fix the GHSA findings listed in tracking.
+RUN if [ -x /opt/miniconda/bin/python ]; then \
+        /opt/miniconda/bin/python -m pip install --no-cache-dir --progress-bar off --upgrade \
+            'cryptography>=50.0.0' \
+            'h2>=4.4.1' \
+            'msgpack>=1.2.1' \
+            'pydantic-settings>=2.14.2' \
+            'setuptools>=83.0.0'; \
+    fi
+
 RUN conda create -q -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
     -c conda-forge && \
@@ -36,11 +49,6 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --pr
     'pip>=26.1.2' \
     'msgpack>=1.2.1' \
     'setuptools>=83.0.0'
-
-# aiohttp>=3.14.3 is pinned in the base-image conda prefix; fixes GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, and GHSA-mfx4-hv73-q22v.
-RUN if [ -x /opt/conda/bin/python ]; then \
-        /opt/conda/bin/python -m pip install --no-cache-dir --progress-bar off --upgrade 'aiohttp>=3.14.3'; \
-    fi
 
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --progress-bar off \
     'py-cpuinfo==5.0.0' \
@@ -54,7 +62,7 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --pr
 # Install pip dependencies, then apply security overrides for vulnerable transitive packages.
 # distributed and bokeh are pinned transitive deps of azureml-train-automl-runtime; fix CVE-2026-23528 and GHSA-793v-589g-574v.
 # cryptography>=50.0.0 is pinned as a transitive dep of AzureML/MLflow; fixes GHSA-g6cj-pr64-35w5.
-# GitPython>=3.1.57 is pinned as a transitive dep of azureml-mlflow; fixes GitPython GHSA findings.
+# GitPython>=3.1.58 is pinned as a transitive dep of azureml-mlflow; fixes GitPython GHSA findings.
 # pydantic-settings and pyasn1 are pinned as transitive deps of AzureML/MLflow; fix GHSA findings.
 # msgpack is pinned as a transitive dep of the AzureML AutoML Dask stack; fixes GHSA-6v7p-g79w-8964.
 # onnx is pinned because azureml-automl-runtime constrains onnx<=1.17.0; fixes ONNX GHSA findings.
@@ -62,7 +70,7 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --pr
 # setuptools is kept above vulnerable versions in Python prefixes; fixes GHSA-5rjg-fvgr-3xxf and GHSA-h35f-9h28-mq5c.
 RUN printf '%s\n' \
                 'cryptography>=50.0.0' \
-                'GitPython>=3.1.57' \
+                'GitPython>=3.1.58' \
                 'msgpack>=1.2.1' \
                 'pillow>=12.3.0' \
                 'pydantic-settings>=2.14.2' \
@@ -92,7 +100,7 @@ RUN printf '%s\n' \
                 'inference-schema' \
                 'mltable>=1.0.0' \
                 'cryptography>=50.0.0' \
-                'GitPython>=3.1.57' \
+                'GitPython>=3.1.58' \
                 'msgpack>=1.2.1' \
                 'pillow==12.3.0' \
                 'pydantic-settings>=2.14.2' \
@@ -150,11 +158,10 @@ RUN set -eux; \
 # setuptools>=83.0.0 fixes GHSA-h35f-9h28-mq5c in Python prefixes that carry older setuptools.
 # torch==2.13.0 fixes GHSA-rrmf-rvhw-rf47, GHSA-vgrw-7cvw-pwgx, and
 #   GHSA-qfhq-4f3w-5fph in inherited PTCA environments.
-# aiohttp>=3.14.3 fixes GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, and GHSA-mfx4-hv73-q22v in inherited PTCA environments.
 RUN set -eux; \
     if [ -d /opt/conda/envs/ptca ]; then \
         conda install -p /opt/conda/envs/ptca -c conda-forge -y 'pip>=26.1.2'; \
-        conda run -p /opt/conda/envs/ptca python -m pip install --no-cache-dir --progress-bar off --upgrade 'torch==2.13.0' 'aiohttp>=3.14.3' 'msgpack>=1.2.1' 'setuptools>=83.0.0'; \
+        conda run -p /opt/conda/envs/ptca python -m pip install --no-cache-dir --progress-bar off --upgrade 'torch==2.13.0' 'msgpack>=1.2.1' 'setuptools>=83.0.0'; \
     fi; \
     find /opt /root /tmp -path '*/_vendor/vendor.txt' -type f -exec \
         sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +; \
