@@ -3,12 +3,17 @@ USER root
 ENV PIP_PROGRESS_BAR=off
 
 # Apply OS security updates inherited from the base image.
-# libpam packages are inherited from the base image; fixes USN-8601-1.
+# libpam and glibc packages are inherited from the base image; fixes USN-8601-1 and USN-8611-1.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libpam-runtime=1.4.0-11ubuntu2.7 \
         libpam0g=1.4.0-11ubuntu2.7 \
         libpam-modules=1.4.0-11ubuntu2.7 \
         libpam-modules-bin=1.4.0-11ubuntu2.7 \
+        libc-bin=2.35-0ubuntu3.14 \
+        libc-dev-bin=2.35-0ubuntu3.14 \
+        libc6=2.35-0ubuntu3.14 \
+        libc6-dev=2.35-0ubuntu3.14 \
+        locales=2.35-0ubuntu3.14 \
         libgnutls30 rsync \
         dotnet-host-8.0 dotnet-hostfxr-8.0 dotnet-runtime-8.0 \
         libgcrypt20 \

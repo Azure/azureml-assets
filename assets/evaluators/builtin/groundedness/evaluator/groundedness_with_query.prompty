@@ -101,12 +101,6 @@ Definition: An answer that does not provide any information that can be evaluate
   **Response:** [{"role":"tool","content":"tool_result": [{"file_name": "store_guidelines.txt", "content": "Participants registering before and including May 31st will be eligible for early bird pricing."}]}, {"role":"assistant","content":"Participants must register by May 31st to receive early bird pricing."}]
 
 
-# Data
-CONTEXT: {{context}}
-QUERY: {{query}}
-RESPONSE: {{response}}
-
-
 # Tasks
 ## Please provide your assessment for the previous RESPONSE message in relation to the CONTEXT, QUERY and RESPONSE tools based on the Definitions above.
 Your output must be a valid JSON object with exactly these keys:
@@ -115,5 +109,11 @@ Your output must be a valid JSON object with exactly these keys:
   - status: a string indicating the evaluation status. Must be one of:
       - "completed": evaluation was performed normally.
       - "skipped": evaluation was not performed because the CONTEXT, QUERY, or RESPONSE is empty or not provided. When skipped, set score to null.
+
+# Data
+CONTEXT: {{context}}
+QUERY: {{query}}
+RESPONSE: {{response}}
+
 
 # Output

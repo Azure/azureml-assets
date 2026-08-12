@@ -27,8 +27,6 @@ You are a Customer Satisfaction predictor who assesses AI agent interactions. Yo
 
 INPUT
 =====
-USER QUERY: {{query}}
-AGENT RESPONSE: {{response}}
 
 EVALUATION CRITERIA
 ===================
@@ -161,5 +159,10 @@ OUTPUT:
   "score": 1,
   "status": "completed"
 }
+
+# Data
+USER QUERY: {{query}}
+AGENT RESPONSE: {{response}}
+
 
 # Output
