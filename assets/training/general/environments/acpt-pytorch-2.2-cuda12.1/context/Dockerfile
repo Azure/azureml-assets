@@ -45,6 +45,9 @@ RUN pip install -r requirements.txt --no-cache-dir && \
 
 # Inference requirements.
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
+# The --only-upgrade packages below are inherited unpatched from the ACPT base image, whose
+# tag lags the Ubuntu 22.04 security archive. Remove that list once the base image ships the
+# fixed versions on its own.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade --no-install-recommends \
         dotnet-host-8.0 \
