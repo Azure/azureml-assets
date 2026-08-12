@@ -3,16 +3,38 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 USER root
 
 # Install unzip and upgrade OS packages to fix vulnerabilities.
+# The glibc, krb5, PAM, ALSA, nghttp2 and dotnet entries below are inherited unpatched from
+# the ACPT base image, whose tag lags the Ubuntu 22.04 security archive. Remove them from this
+# --only-upgrade list once the base image ships the fixed versions on its own.
 RUN apt-get -y update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get install -y --only-upgrade \
         curl \
+        dotnet-host-8.0 \
+        dotnet-hostfxr-8.0 \
+        dotnet-runtime-8.0 \
         gzip \
+        libasound2 \
+        libasound2-data \
+        libc-bin \
+        libc-dev-bin \
+        libc6 \
+        libc6-dev \
         libcurl3-gnutls \
         libcurl4 \
+        libgssapi-krb5-2 \
+        libk5crypto3 \
+        libkrb5-3 \
+        libkrb5support0 \
+        libnghttp2-14 \
+        libpam-modules \
+        libpam-modules-bin \
+        libpam-runtime \
+        libpam0g \
         libpython3.10-minimal \
         libpython3.10-stdlib \
         libsqlite3-0 \
+        locales \
         openssh-client \
         python3.10 \
         python3.10-minimal \
@@ -24,10 +46,10 @@ RUN apt-get -y update && \
 # Upgrade pip to the patched 26.1 line in both envs to fix GHSA-jp4c-xjxw-mgf9 (bootstrap
 # installer, no parent to bump). Installed from PyPI; stale conda-meta JSON removed so the
 # SBOM scanner doesn't re-flag it. Done before requirements so later installs use patched pip.
-RUN pip install --no-cache-dir --upgrade 'pip>=26.1,<27' && \
-    rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0*.json && \
-    /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'pip>=26.1,<27' && \
-    rm -f /opt/conda/conda-meta/pip-26.0*.json
+RUN pip install --no-cache-dir --upgrade 'pip>=26.1.2,<27' && \
+    rm -f /opt/conda/envs/ptca/conda-meta/pip-*.json && \
+    /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'pip>=26.1.2,<27' && \
+    rm -f /opt/conda/conda-meta/pip-*.json
 
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
@@ -63,4 +85,16 @@ RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.58' 'pyt
 # pydantic-settings: pinned transitive dep of ACPT base image; brought in by base image, fixes GHSA-4xgf-cpjx-pc3j.
 # pyasn1: transitive dep of mlflow -> databricks-sdk -> google-auth; fixes GHSA-hm4w-wwcw-mr6r and GHSA-8ppf-4f7h-5ppj.
 # setuptools: bootstrapped by the ACPT base conda image; fixes GHSA-h35f-9h28-mq5c.
-RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.3' 'PyJWT>=2.13.0' 'py-rattler>=0.24.0' 'cryptography>=50.0.0' 'pydantic-settings>=2.14.2' 'pyasn1>=0.6.4' 'setuptools>=83.0.0'
+# msgpack: the base conda prefix carries its own copy that the ptca pin above never reaches;
+#   fixes GHSA-6v7p-g79w-8964.
+RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.3' 'PyJWT>=2.13.0' 'py-rattler>=0.24.0' 'cryptography>=50.0.0' 'pydantic-settings>=2.14.2' 'pyasn1>=0.6.4' 'setuptools>=83.0.0' 'msgpack>=1.2.1'
+
+# pip vendors its own copies of setuptools and msgpack and declares them in
+# pip/_vendor/bom.cdx.json, which the scanner reports as setuptools 70.3.0
+# (GHSA-5rjg-fvgr-3xxf) and msgpack 1.1.2 (GHSA-6v7p-g79w-8964) even though the
+# real packages above are patched. Drop the stale metadata.
+RUN set -eux; \
+    find / -xdev -path '*/site-packages/pip/_vendor/bom.cdx.json' -type f -delete; \
+    find /opt /root -type d \( -name 'setuptools-70.3.0.dist-info' -o -name 'msgpack-1.1.2.dist-info' \) -prune -exec rm -rf {} +; \
+    find /opt /root -path '*/_vendor/vendor.txt' -type f -exec \
+        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +
