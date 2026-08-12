@@ -3,8 +3,9 @@
 
 """Behavioral tests for the Conversation Quality Evaluators meta-evaluator."""
 
+import asyncio
 import os
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from azure.ai.evaluation import AzureOpenAIModelConfiguration
@@ -109,6 +110,14 @@ class TestConversationQualityEvaluatorsBehavior:
         evaluator._flow.assert_called_once()
         evaluator._multi_turn_flow.assert_not_called()
 
+    def test_turn_level_uses_assistant_only_messages_as_response(self):
+        evaluator = _mock_flows(_make_evaluator(evaluation_level="turn"), _all_completed_llm_output())
+        assistant_messages = [
+            {"role": "assistant", "content": [{"type": "text", "text": VALID_RESPONSE}]},
+        ]
+        evaluator(messages=assistant_messages)
+        assert evaluator._flow.call_args.kwargs["query"] == []
+
     def test_invalid_evaluation_level_raises(self):
         with pytest.raises(EvaluationException):
             _make_evaluator(evaluation_level="not_a_level")
@@ -178,6 +187,26 @@ class TestConversationQualityEvaluatorsBehavior:
             assert result["conversation_quality_evaluators"][name]["score"] is None
             assert result["conversation_quality_evaluators"][name]["status"] == "skipped"
 
+    def test_intermediate_response_returns_not_applicable(self):
+        evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
+        intermediate_response = [
+            {
+                "role": "assistant",
+                "content": [
+                    {
+                        "type": "function_call",
+                        "tool_call_id": "call_1",
+                        "name": "lookup_account",
+                        "arguments": {"account_id": "123"},
+                    }
+                ],
+            }
+        ]
+        result = evaluator(query=VALID_QUERY, response=intermediate_response)
+        assert result["conversation_quality"] is None
+        assert result["conversation_quality_status"] == "skipped"
+        evaluator._flow.assert_not_called()
+
     def test_mixed_skipped_and_completed_members_pass(self):
         llm_output = _all_completed_llm_output()
         llm_output["llm_output"]["groundedness"] = {
@@ -231,5 +260,44 @@ class TestConversationQualityEvaluatorsBehavior:
         )
         with pytest.raises(EvaluationException):
             evaluator(query=VALID_QUERY, response=VALID_RESPONSE)
+
+    def test_boolean_member_score_raises(self):
+        evaluator = _mock_flows(
+            _make_evaluator(),
+            _all_completed_llm_output(score_overrides={"fluency": True}),
+        )
+        with pytest.raises(EvaluationException):
+            evaluator(query=VALID_QUERY, response=VALID_RESPONSE)
+
+    def test_do_eval_missing_response_raises(self):
+        evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({"query": VALID_QUERY}))
+
+    def test_do_eval_normalizes_missing_query_and_message_lists(self):
+        evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
+        asyncio.run(
+            evaluator._do_eval(
+                {
+                    "query": None,
+                    "response": [{"role": "assistant", "content": [{"type": "text", "text": VALID_RESPONSE}]}],
+                }
+            )
+        )
+        assert evaluator._flow.call_args.kwargs["query"] == []
+
+    def test_super_real_call_handles_empty_multiple_and_conversion_errors(self):
+        evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
+        evaluator._convert_kwargs_to_eval_input = MagicMock(return_value=[])
+        assert asyncio.run(evaluator._the_super_real_call()) == {}
+
+        evaluator._convert_kwargs_to_eval_input = MagicMock(return_value=[{"response": VALID_RESPONSE}] * 2)
+        evaluator._do_eval = AsyncMock(return_value={"conversation_quality": 1})
+        evaluator._aggregate_results = MagicMock(return_value={"conversation_quality": 1})
+        assert asyncio.run(evaluator._the_super_real_call()) == {"conversation_quality": 1}
+
+        evaluator._convert_kwargs_to_eval_input = MagicMock(side_effect=ValueError("invalid input"))
+        with pytest.raises(ValueError, match="invalid input"):
+            asyncio.run(evaluator._the_super_real_call())
 
     # endregion

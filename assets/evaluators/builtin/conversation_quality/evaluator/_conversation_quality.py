@@ -107,7 +107,7 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
         )
         if latest_user_index == -1:
             raise ValueError("messages must contain at least one message with role 'user'.")
-        return messages[: latest_user_index + 1], messages[latest_user_index + 1 :]
+        return messages[:latest_user_index + 1], messages[latest_user_index + 1:]
 
     def _wrap_string_messages(query: str, response: str) -> Tuple[List[dict], List[dict]]:
         """Wrap string query/response into separate message lists."""
@@ -167,7 +167,10 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
 
             if role in (MessageRole.SYSTEM, MessageRole.DEVELOPER):
                 content = msg.get("content", "")
-                system_message = "\n".join(_extract_text_from_content(content)) if isinstance(content, list) else content
+                if isinstance(content, list):
+                    system_message = "\n".join(_extract_text_from_content(content))
+                else:
+                    system_message = content
             elif role == MessageRole.USER and "content" in msg:
                 if cur_agent_response:
                     formatted = _get_agent_response(cur_agent_response, include_tool_messages=True)
@@ -223,6 +226,7 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
             *,
             enforce_tool_definitions: bool = False,
         ):
+            """Initialize the messages or query/response input validator."""
             super().__init__(error_target, requires_query, optional_tool_definitions, check_for_unsupported_tools)
             self.enforce_tool_definitions = enforce_tool_definitions
 

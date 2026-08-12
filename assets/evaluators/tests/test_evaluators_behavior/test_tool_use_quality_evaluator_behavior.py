@@ -13,8 +13,9 @@ from the single-evaluator shape assumed by the shared ``BaseToolsEvaluatorBehavi
 the multi-evaluator output shape instead of reusing that shared infrastructure.
 """
 
+import asyncio
 import os
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from azure.ai.evaluation import AzureOpenAIModelConfiguration
@@ -191,6 +192,15 @@ class TestToolUseQualityEvaluatorsBehavior:
         assert result["tool_use_quality_evaluators"]["tool_call_accuracy"]["score"] == 3
         assert result["tool_use_quality_evaluators"]["tool_selection"]["score"] == 1
 
+    @pytest.mark.parametrize("score", [True, 6])
+    def test_invalid_member_score_raises(self, score):
+        evaluator = _mock_flows(
+            _make_evaluator(),
+            _all_completed_llm_output(score_overrides={"tool_call_accuracy": score}),
+        )
+        with pytest.raises(EvaluationException):
+            evaluator(query=VALID_QUERY, response=VALID_RESPONSE, tool_definitions=VALID_TOOL_DEFINITIONS)
+
     # endregion
 
     # region skip / not-applicable handling
@@ -312,5 +322,24 @@ class TestToolUseQualityEvaluatorsBehavior:
         assert result["tool_use_quality_evaluators"]["tool_selection"]["score"] is None
         assert result["tool_use_quality_evaluators"]["tool_selection"]["status"] == "skipped"
         assert result["tool_use_quality_evaluators"]["tool_call_accuracy"]["status"] == "completed"
+
+    def test_do_eval_missing_query_or_response_raises(self):
+        evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({"response": VALID_RESPONSE}))
+
+    def test_super_real_call_handles_empty_multiple_and_conversion_errors(self):
+        evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
+        evaluator._convert_kwargs_to_eval_input = MagicMock(return_value=[])
+        assert asyncio.run(evaluator._the_super_real_call()) == {}
+
+        evaluator._convert_kwargs_to_eval_input = MagicMock(return_value=[{"response": VALID_RESPONSE}] * 2)
+        evaluator._do_eval = AsyncMock(return_value={"tool_use_quality": 1})
+        evaluator._aggregate_results = MagicMock(return_value={"tool_use_quality": 1})
+        assert asyncio.run(evaluator._the_super_real_call()) == {"tool_use_quality": 1}
+
+        evaluator._convert_kwargs_to_eval_input = MagicMock(side_effect=ValueError("invalid input"))
+        with pytest.raises(ValueError, match="invalid input"):
+            asyncio.run(evaluator._the_super_real_call())
 
     # endregion
