@@ -30,7 +30,8 @@ RUN set -eux; \
 # Patch vulnerable Python packages inherited in the base Miniconda prefix.
 # These are transitive base-image packages, not direct dependencies of this image:
 # cryptography fixes GHSA-g6cj-pr64-35w5; h2 fixes GHSA-6hr6-w5qg-qmwg;
-# msgpack, pydantic-settings, and setuptools fix the GHSA findings listed in tracking.
+# msgpack fixes GHSA-6v7p-g79w-8964; pydantic-settings fixes GHSA-4xgf-cpjx-pc3j;
+# setuptools fixes GHSA-5rjg-fvgr-3xxf and GHSA-h35f-9h28-mq5c.
 RUN if [ -x /opt/miniconda/bin/python ]; then \
         /opt/miniconda/bin/python -m pip install --no-cache-dir --progress-bar off --upgrade \
             'cryptography>=50.0.0' \
