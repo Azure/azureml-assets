@@ -34,19 +34,19 @@ def _make_real_evaluator() -> ToolUseQualityEvaluators:
 
 
 def _assert_evaluator_passed(result, name: str):
-    evaluator = result[name]
+    evaluator = result["tool_use_quality_evaluators"][name]
     assert evaluator["status"] == "completed", f"{name} should be completed, got {evaluator.get('status')}"
     assert evaluator["score"] is not None, f"{name} expected a score, reason: {evaluator.get('reason')}"
 
 
 def _assert_evaluator_failed(result, name: str):
-    evaluator = result[name]
+    evaluator = result["tool_use_quality_evaluators"][name]
     assert evaluator["status"] == "completed", f"{name} should be completed, got {evaluator.get('status')}"
     assert evaluator["score"] is not None, f"{name} expected a score, reason: {evaluator.get('reason')}"
 
 
 def _assert_evaluator_skipped(result, name: str):
-    evaluator = result[name]
+    evaluator = result["tool_use_quality_evaluators"][name]
     assert evaluator["status"] == "skipped", f"{name} expected skipped, got {evaluator.get('status')}"
     assert evaluator["score"] is None
 
@@ -110,7 +110,7 @@ class TestToolUseQualityEvaluatorsQuality:
         ):
             _assert_evaluator_passed(result, name)
         assert result["tool_use_quality"] == 1
-        assert result["tool_call_accuracy"]["score"] == 5
+        assert result["tool_use_quality_evaluators"]["tool_call_accuracy"]["score"] == 5
 
     def test_tool_input_accuracy_fails_on_fabricated_parameter(self):
         """A tool call with a fabricated parameter (not present in the conversation) fails tool_input_accuracy."""

@@ -117,22 +117,23 @@ class TestConversationQualityEvaluatorsBehavior:
 
     # region output shape and aggregation
 
-    def test_primary_score_and_raw_evaluator_objects_are_present(self):
+    def test_primary_score_and_raw_evaluator_objects_are_nested(self):
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
         result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE)
         assert result["conversation_quality"] == 1
         assert result["conversation_quality_result"] == "pass"
         assert result["conversation_quality_passed"] is True
-        assert "conversation_quality_evaluators" in result
+        evaluators = result["conversation_quality_evaluators"]
+        assert "evaluators" not in result["conversation_quality_properties"]
         for name in _EVALUATOR_NAMES:
-            assert result[name]["status"] == "completed"
-            assert result["conversation_quality_evaluators"][name] is result[name]
+            assert name not in result
+            assert evaluators[name]["status"] == "completed"
 
     def test_multi_turn_raw_failed_turn_is_preserved(self):
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output(failed_turn=1))
         result = evaluator(messages=VALID_MESSAGES)
         for name in _EVALUATOR_NAMES:
-            assert result[name]["failed_turn"] == 1
+            assert result["conversation_quality_evaluators"][name]["failed_turn"] == 1
 
     def test_default_thresholds_match_member_defaults(self):
         evaluator = _make_evaluator()
@@ -160,8 +161,8 @@ class TestConversationQualityEvaluatorsBehavior:
         assert result["conversation_quality"] == 0
         assert result["conversation_quality_result"] == "fail"
         assert result["conversation_quality_passed"] is False
-        assert result["fluency"]["score"] == 3
-        assert result["coherence"]["score"] == 5
+        assert result["conversation_quality_evaluators"]["fluency"]["score"] == 3
+        assert result["conversation_quality_evaluators"]["coherence"]["score"] == 5
 
     # endregion
 
@@ -174,8 +175,8 @@ class TestConversationQualityEvaluatorsBehavior:
         assert result["conversation_quality_result"] == "not_applicable"
         assert result["conversation_quality_status"] == "skipped"
         for name in _EVALUATOR_NAMES:
-            assert result[name]["score"] is None
-            assert result[name]["status"] == "skipped"
+            assert result["conversation_quality_evaluators"][name]["score"] is None
+            assert result["conversation_quality_evaluators"][name]["status"] == "skipped"
 
     def test_mixed_skipped_and_completed_members_pass(self):
         llm_output = _all_completed_llm_output()
@@ -187,17 +188,17 @@ class TestConversationQualityEvaluatorsBehavior:
         evaluator = _mock_flows(_make_evaluator(), llm_output)
         result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE)
         assert result["conversation_quality"] == 1
-        assert result["groundedness"]["status"] == "skipped"
-        assert result["fluency"]["status"] == "completed"
+        assert result["conversation_quality_evaluators"]["groundedness"]["status"] == "skipped"
+        assert result["conversation_quality_evaluators"]["fluency"]["status"] == "completed"
 
     def test_missing_member_output_is_treated_as_skipped(self):
         llm_output = _all_completed_llm_output()
         del llm_output["llm_output"]["task_completion"]
         evaluator = _mock_flows(_make_evaluator(), llm_output)
         result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE)
-        assert result["task_completion"]["score"] is None
-        assert result["task_completion"]["status"] == "skipped"
-        assert result["fluency"]["status"] == "completed"
+        assert result["conversation_quality_evaluators"]["task_completion"]["score"] is None
+        assert result["conversation_quality_evaluators"]["task_completion"]["status"] == "skipped"
+        assert result["conversation_quality_evaluators"]["fluency"]["status"] == "completed"
 
     # endregion
 

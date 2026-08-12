@@ -343,10 +343,10 @@ _EVALUATORS: Tuple[Dict[str, Union[str, int]], ...] = (
 class ConversationQualityEvaluators(PromptyEvaluatorBase[Union[str, int]]):
     """Batch six conversation-quality evaluators into one LLM call.
 
-    The evaluator preserves each member evaluator's raw LLM result under its own
-    result key and groups the same objects under ``conversation_quality_evaluators``.
-    The primary ``conversation_quality`` result is an any-fail aggregate: it passes
-    only when every evaluated member meets its configured threshold.
+    The evaluator preserves the member evaluators' raw LLM results exclusively under
+    ``conversation_quality_evaluators``. The primary ``conversation_quality`` result
+    is an any-fail aggregate: it passes only when every evaluated member meets its
+    configured threshold.
     """
 
     _PROMPTY_FILE = "conversation_quality.prompty"
@@ -496,7 +496,6 @@ class ConversationQualityEvaluators(PromptyEvaluatorBase[Union[str, int]]):
         aggregate_properties = dict(token_metadata)
         aggregate_properties["failed_evaluators"] = failed_evaluators
         aggregate_properties["skipped_evaluators"] = skipped_evaluators
-        aggregate_properties["evaluators"] = evaluators
         result: Dict[str, Union[str, int, float, Dict, None]] = {
             self._RESULT_KEY: aggregate_score,
             f"{self._RESULT_KEY}_score": aggregate_score,
@@ -509,7 +508,6 @@ class ConversationQualityEvaluators(PromptyEvaluatorBase[Union[str, int]]):
             f"{self._RESULT_KEY}_evaluators": evaluators,
         }
         result.update({f"{self._RESULT_KEY}_{key}": value for key, value in token_metadata.items()})
-        result.update(evaluators)
         return result
 
     def _return_not_applicable_result(self, error_message: str) -> Dict[str, Union[str, float, Dict, None]]:

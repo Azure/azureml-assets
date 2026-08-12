@@ -30,13 +30,13 @@ def _make_real_evaluator() -> ToolUseQualityEvaluators:
 
 
 def _assert_evaluator_passed(result, name: str):
-    evaluator = result[name]
+    evaluator = result["tool_use_quality_evaluators"][name]
     assert evaluator["status"] == "completed", f"{name} should be completed, got {evaluator.get('status')}"
     assert evaluator["score"] is not None, f"{name} expected a score, reason: {evaluator.get('reason')}"
 
 
 def _assert_evaluator_failed(result, name: str):
-    evaluator = result[name]
+    evaluator = result["tool_use_quality_evaluators"][name]
     assert evaluator["status"] == "completed", f"{name} should be completed, got {evaluator.get('status')}"
     assert evaluator["score"] is not None, f"{name} expected a score, reason: {evaluator.get('reason')}"
 
@@ -127,7 +127,7 @@ class TestToolUseQualityEvaluatorsQualityMultiTurn:
             "tool_selection",
         ):
             _assert_evaluator_passed(result, name)
-            assert result[name]["failed_turn"] is None
+            assert result["tool_use_quality_evaluators"][name]["failed_turn"] is None
         assert result["tool_use_quality"] == 1
 
     def test_tool_output_utilization_fails_and_localizes_failed_turn(self):
@@ -185,5 +185,5 @@ class TestToolUseQualityEvaluatorsQualityMultiTurn:
         ]
         result = evaluator(messages=messages, tool_definitions=FLIGHT_TOOL_DEFINITIONS)
         _assert_evaluator_failed(result, "tool_output_utilization")
-        assert result["tool_output_utilization"]["failed_turn"] == 1
+        assert result["tool_use_quality_evaluators"]["tool_output_utilization"]["failed_turn"] == 1
         assert result["tool_use_quality"] == 0

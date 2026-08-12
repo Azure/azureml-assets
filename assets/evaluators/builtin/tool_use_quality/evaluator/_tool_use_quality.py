@@ -442,9 +442,9 @@ class ToolUseQualityEvaluators(PromptyEvaluatorBase[Union[str, int]]):
     ``tool_input_accuracy``, ``tool_output_utilization``, ``tool_selection``) so this evaluator's
     output can be used as a drop-in replacement for running the five evaluators separately.
 
-    The primary ``tool_use_quality`` result is an any-fail aggregate. Each evaluator key contains the
-    raw object returned by the LLM (including ``failed_turn`` for multi-turn evaluations), and the
-    same objects are grouped under ``tool_use_quality_evaluators``.
+    The primary ``tool_use_quality`` result is an any-fail aggregate. Raw evaluator
+    objects (including ``failed_turn`` for multi-turn evaluations) are available
+    exclusively under ``tool_use_quality_evaluators``.
 
     :param model_config: Configuration for the Azure OpenAI model.
     :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
@@ -690,7 +690,6 @@ class ToolUseQualityEvaluators(PromptyEvaluatorBase[Union[str, int]]):
         aggregate_properties = dict(token_metadata)
         aggregate_properties["failed_evaluators"] = failed_evaluators
         aggregate_properties["skipped_evaluators"] = skipped_evaluators
-        aggregate_properties["evaluators"] = evaluators
         result: Dict[str, Union[str, int, float, Dict, None]] = {
             self._RESULT_KEY: aggregate_score,
             f"{self._RESULT_KEY}_score": aggregate_score,
@@ -703,9 +702,6 @@ class ToolUseQualityEvaluators(PromptyEvaluatorBase[Union[str, int]]):
             f"{self._RESULT_KEY}_evaluators": evaluators,
         }
         result.update({f"{self._RESULT_KEY}_{key}": value for key, value in token_metadata.items()})
-        # Keep each evaluator available by its evaluator name, with the exact object
-        # returned by the LLM rather than a transformed score-only representation.
-        result.update(evaluators)
         return result
 
     def _return_not_applicable_result(self, error_message: str) -> Dict[str, Union[str, float, Dict, None]]:
@@ -863,9 +859,9 @@ class ToolUseQualityEvaluators(PromptyEvaluatorBase[Union[str, int]]):
     ) -> Dict[str, Union[int, str]]:
         """Parse the prompty output into an aggregate result with raw evaluator results.
 
-        The five evaluator objects are preserved exactly under their evaluator names and
-        under ``tool_use_quality_evaluators``. The primary ``tool_use_quality`` score
-        is an any-fail score derived from those raw objects.
+        The five evaluator objects are preserved exactly under
+        ``tool_use_quality_evaluators``. The primary ``tool_use_quality`` score is an
+        any-fail score derived from those raw objects.
 
         :param prompty_output_dict: Raw output from the prompty flow.
         :type prompty_output_dict: Dict

@@ -142,28 +142,29 @@ class TestToolUseQualityEvaluatorsBehavior:
 
     # region output shape
 
-    def test_all_five_evaluators_present_query_response(self):
-        """The primary score and all five raw evaluator objects are present for query/response input."""
+    def test_all_five_evaluators_are_nested_for_query_response(self):
+        """The primary score and all five raw evaluator objects are present under the aggregate result."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
         result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE, tool_definitions=VALID_TOOL_DEFINITIONS)
         assert result["tool_use_quality"] == 1
         assert result["tool_use_quality_result"] == "pass"
         assert result["tool_use_quality_passed"] is True
-        assert "tool_use_quality_evaluators" in result
+        evaluators = result["tool_use_quality_evaluators"]
+        assert "evaluators" not in result["tool_use_quality_properties"]
         for name in _EVALUATOR_NAMES:
-            assert result[name]["score"] == next(
+            assert name not in result
+            assert evaluators[name]["score"] == next(
                 evaluator["max"] for evaluator in _EVALUATORS if evaluator["name"] == name
             )
-            assert result[name]["status"] == "completed"
-            assert result["tool_use_quality_evaluators"][name] is result[name]
+            assert evaluators[name]["status"] == "completed"
 
     def test_all_five_evaluators_present_messages(self):
-        """All five evaluator result keys are present for messages (multi-turn) input."""
+        """All five evaluator result objects are nested for messages (multi-turn) input."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
         result = evaluator(messages=VALID_MESSAGES, tool_definitions=VALID_TOOL_DEFINITIONS)
         for name in _EVALUATOR_NAMES:
-            assert result[name] is not None
-        assert result["tool_call_accuracy"]["failed_turn"] is None
+            assert result["tool_use_quality_evaluators"][name] is not None
+        assert result["tool_use_quality_evaluators"]["tool_call_accuracy"]["failed_turn"] is None
 
     def test_thresholds_default_to_standalone_evaluator_defaults(self):
         """Default thresholds match each standalone evaluator's default."""
@@ -187,8 +188,8 @@ class TestToolUseQualityEvaluatorsBehavior:
         result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE, tool_definitions=VALID_TOOL_DEFINITIONS)
         assert result["tool_use_quality"] == 0
         assert result["tool_use_quality_result"] == "fail"
-        assert result["tool_call_accuracy"]["score"] == 3
-        assert result["tool_selection"]["score"] == 1
+        assert result["tool_use_quality_evaluators"]["tool_call_accuracy"]["score"] == 3
+        assert result["tool_use_quality_evaluators"]["tool_selection"]["score"] == 1
 
     # endregion
 
@@ -201,8 +202,8 @@ class TestToolUseQualityEvaluatorsBehavior:
         assert result["tool_use_quality"] is None
         assert result["tool_use_quality_result"] == "not_applicable"
         for name in _EVALUATOR_NAMES:
-            assert result[name]["score"] is None
-            assert result[name]["status"] == "skipped"
+            assert result["tool_use_quality_evaluators"][name]["score"] is None
+            assert result["tool_use_quality_evaluators"][name]["status"] == "skipped"
 
     def test_mixed_skip_and_completed_evaluators(self):
         """One evaluator can be skipped while the others are completed, independently."""
@@ -215,10 +216,10 @@ class TestToolUseQualityEvaluatorsBehavior:
         evaluator = _mock_flows(_make_evaluator(), llm_output)
         result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE, tool_definitions=VALID_TOOL_DEFINITIONS)
         assert result["tool_use_quality"] == 1
-        assert result["tool_output_utilization"]["score"] is None
-        assert result["tool_output_utilization"]["status"] == "skipped"
-        assert result["tool_call_accuracy"]["status"] == "completed"
-        assert result["tool_call_accuracy"]["score"] == 5
+        assert result["tool_use_quality_evaluators"]["tool_output_utilization"]["score"] is None
+        assert result["tool_use_quality_evaluators"]["tool_output_utilization"]["status"] == "skipped"
+        assert result["tool_use_quality_evaluators"]["tool_call_accuracy"]["status"] == "completed"
+        assert result["tool_use_quality_evaluators"]["tool_call_accuracy"]["score"] == 5
 
     def test_intermediate_response_returns_not_applicable_for_all_evaluators(self):
         """An intermediate function-call-only response skips all evaluators without calling the LLM."""
@@ -239,8 +240,8 @@ class TestToolUseQualityEvaluatorsBehavior:
         result = evaluator(query=VALID_QUERY, response=intermediate_response, tool_definitions=VALID_TOOL_DEFINITIONS)
         assert result["tool_use_quality"] is None
         for name in _EVALUATOR_NAMES:
-            assert result[name]["score"] is None
-            assert result[name]["status"] == "skipped"
+            assert result["tool_use_quality_evaluators"][name]["score"] is None
+            assert result["tool_use_quality_evaluators"][name]["status"] == "skipped"
         evaluator._flow.assert_not_called()
 
     # endregion
@@ -308,8 +309,8 @@ class TestToolUseQualityEvaluatorsBehavior:
         del llm_output["llm_output"]["tool_selection"]
         evaluator = _mock_flows(_make_evaluator(), llm_output)
         result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE, tool_definitions=VALID_TOOL_DEFINITIONS)
-        assert result["tool_selection"]["score"] is None
-        assert result["tool_selection"]["status"] == "skipped"
-        assert result["tool_call_accuracy"]["status"] == "completed"
+        assert result["tool_use_quality_evaluators"]["tool_selection"]["score"] is None
+        assert result["tool_use_quality_evaluators"]["tool_selection"]["status"] == "skipped"
+        assert result["tool_use_quality_evaluators"]["tool_call_accuracy"]["status"] == "completed"
 
     # endregion
