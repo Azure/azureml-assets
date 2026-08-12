@@ -259,11 +259,17 @@ class TestToolUseQualityEvaluatorsBehavior:
         with pytest.raises(EvaluationException):
             evaluator(response=VALID_RESPONSE, tool_definitions=VALID_TOOL_DEFINITIONS)
 
-    def test_tool_definitions_optional_for_query_response(self):
-        """tool_definitions is optional; omitting it does not raise."""
+    def test_tool_definitions_required_for_query_response(self):
+        """Omitting tool_definitions raises because tool definitions are required for tool-use quality."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
-        result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE)
-        assert result["tool_call_accuracy"]["score"] == 5
+        with pytest.raises(EvaluationException):
+            evaluator(query=VALID_QUERY, response=VALID_RESPONSE)
+
+    def test_tool_definitions_required_for_messages(self):
+        """Omitting tool_definitions raises for multi-turn tool-use quality as well."""
+        evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
+        with pytest.raises(EvaluationException):
+            evaluator(messages=VALID_MESSAGES)
 
     def test_tool_definitions_invalid_format_raises(self):
         """Malformed tool_definitions (missing required 'name') raises EvaluationException."""

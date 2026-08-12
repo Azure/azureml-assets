@@ -1,15 +1,15 @@
 type: "evaluator"
-name: "builtin.tool_use_quality"
+name: "builtin.conversation_quality"
 version: 1
-displayName: "Tool-Use-Quality-Evaluators-(Preview)"
-description: "A meta-evaluator that batches the tool_call_accuracy, tool_call_success, tool_input_accuracy, tool_output_utilization, and tool_selection evaluators into a single LLM call. The primary tool_use_quality score fails when any evaluated evaluator fails, while the evaluator keys preserve the raw LLM results. Supports both single-turn (query/response) and multi-turn (messages) agent interactions."
+displayName: "Conversation-Quality-Evaluators-(Preview)"
+description: "A meta-evaluator that batches fluency, coherence, intent_resolution, task_adherence, groundedness, and task_completion into a single LLM call. The primary conversation_quality score fails when any evaluated evaluator fails, while the evaluator keys preserve the raw LLM results. Supports single-turn query/response and multi-turn messages inputs, including response-only fluency evaluation."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
-categories: ["agents"]
+categories: ["quality", "agents"]
+supportedEvaluationLevels: ["conversation", "turn"]
 tags:
   provider: "Microsoft"
   is_continuous_scenario: "true"
-supportedEvaluationLevels: ["conversation", "turn"]
 initParameterSchema:
   type: "object"
   properties:
@@ -20,27 +20,32 @@ initParameterSchema:
     threshold:
       type: "object"
       properties:
-        tool_call_accuracy:
+        fluency:
           type: "number"
           minimum: 1
           maximum: 5
           multipleOf: 1
-        tool_call_success:
+        coherence:
+          type: "number"
+          minimum: 1
+          maximum: 5
+          multipleOf: 1
+        intent_resolution:
+          type: "number"
+          minimum: 1
+          maximum: 5
+          multipleOf: 1
+        task_adherence:
           type: "number"
           minimum: 0
           maximum: 1
           multipleOf: 1
-        tool_input_accuracy:
+        groundedness:
           type: "number"
-          minimum: 0
-          maximum: 1
+          minimum: 1
+          maximum: 5
           multipleOf: 1
-        tool_output_utilization:
-          type: "number"
-          minimum: 0
-          maximum: 1
-          multipleOf: 1
-        tool_selection:
+        task_completion:
           type: "number"
           minimum: 0
           maximum: 1
@@ -72,35 +77,40 @@ dataMappingSchema:
           items:
             type: "object"
   anyOf:
-    - required: ["query", "response", "tool_definitions"]
-    - required: ["messages", "tool_definitions"]
+    - required: ["query", "response"]
+    - required: ["messages"]
 outputSchema:
-  tool_use_quality:
+  conversation_quality:
     type: "boolean"
     desirable_direction: "increase"
     min_value: 0
     max_value: 1
-  tool_call_accuracy:
+  fluency:
     type: "ordinal"
     desirable_direction: "increase"
     min_value: 1
     max_value: 5
-  tool_call_success:
+  coherence:
+    type: "ordinal"
+    desirable_direction: "increase"
+    min_value: 1
+    max_value: 5
+  intent_resolution:
+    type: "ordinal"
+    desirable_direction: "increase"
+    min_value: 1
+    max_value: 5
+  task_adherence:
     type: "boolean"
     desirable_direction: "increase"
     min_value: 0
     max_value: 1
-  tool_input_accuracy:
-    type: "boolean"
+  groundedness:
+    type: "ordinal"
     desirable_direction: "increase"
-    min_value: 0
-    max_value: 1
-  tool_output_utilization:
-    type: "boolean"
-    desirable_direction: "increase"
-    min_value: 0
-    max_value: 1
-  tool_selection:
+    min_value: 1
+    max_value: 5
+  task_completion:
     type: "boolean"
     desirable_direction: "increase"
     min_value: 0
