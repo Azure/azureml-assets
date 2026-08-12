@@ -2,6 +2,9 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 USER root
+# These packages are inherited unpatched from the ACPT base image, whose tag lags the
+# Ubuntu 22.04 security archive. Remove this --only-upgrade list once the base image
+# ships the fixed versions on its own.
 RUN apt-get -y update \
  && apt-get install -y --only-upgrade \
     libc-dev-bin libc6-dev locales libc6 libc-bin \
