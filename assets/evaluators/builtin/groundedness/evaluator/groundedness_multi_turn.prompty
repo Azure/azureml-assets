@@ -148,13 +148,6 @@ Before scoring, follow this procedure:
   User turn 2: Can I visit on Saturday afternoon at 1 PM?
   Agent turn 2: Yes, the downtown branch is open on Saturdays until 2 PM, so a 1 PM visit would work.
 
-# Data
-CONVERSATION: {{messages}}
-
-{% if tool_definitions %}
-TOOL_DEFINITIONS: {{tool_definitions}}
-{% endif %}
-
 # Tasks
 ## Please provide your assessment Score for the previous CONVERSATION based on the Definitions above. Evaluate groundedness across ALL turns, not just the last response. Your output should be a JSON object with the following information:
 - **score**: An integer score (1-5) based on the levels of the definitions.
@@ -185,5 +178,13 @@ TOOL_DEFINITIONS: {{tool_definitions}}
   "score": null,
   "status": "skipped"
 }
+
+# Data
+{% if tool_definitions %}
+TOOL_DEFINITIONS: {{tool_definitions}}
+{% endif %}
+
+CONVERSATION: {{messages}}
+
 
 # Output

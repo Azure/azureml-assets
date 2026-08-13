@@ -77,11 +77,6 @@ user:
   **Ground Truth:** "Amazon River"
 
 
-# Data
-Response: {{response}}
-Ground Truth: {{ground_truth}}
-
-
 # Tasks
 ## Please provide your assessment for the previous RESPONSE in relation to the GROUND TRUTH based on the Definitions above.
 Your output must be a valid JSON object with exactly these keys:
@@ -90,5 +85,10 @@ Your output must be a valid JSON object with exactly these keys:
   - status: a string indicating the evaluation status. Must be one of:
       - "completed": evaluation was performed normally.
       - "skipped": evaluation was not performed because the Response or Ground Truth is empty or not provided. When skipped, set score to null.
+
+# Data
+Response: {{response}}
+Ground Truth: {{ground_truth}}
+
 
 # Output

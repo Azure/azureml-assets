@@ -29,8 +29,6 @@ You are a Relevance Evaluator. Your task is to judge how relevant a RESPONSE is 
 
 INPUT
 =====
-CONVERSATION_HISTORY: {{query}}
-RESPONSE: {{response}}
 
 CONVERSATION_HISTORY is the full dialogue between the user and the agent up to the user's latest message. For single-turn interactions, this will be just the user's query.
 RESPONSE is the agent's reply to the user's latest message.
@@ -213,3 +211,8 @@ Expected Output:
     "score": 5,
   "status": "completed"
 }
+
+
+# Data
+CONVERSATION_HISTORY: {{query}}
+RESPONSE: {{response}}

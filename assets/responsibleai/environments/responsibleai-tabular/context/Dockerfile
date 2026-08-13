@@ -62,6 +62,13 @@ RUN pip install 'mcp>=1.23.0'
 # --no-deps to prevent skops from upgrading numpy (skops>=0.13.0 requires numpy>=1.25 but we pin numpy<1.24)
 RUN pip install --no-deps 'skops>=0.13.0'
 
+# Drop pip's vendored-dependency SBOM. Modern pip ships pip/_vendor/bom.cdx.json (a CycloneDX
+# file) that scanners ingest, surfacing pip's internal vendored setuptools (70.3.0,
+# CVE-2025-47273) as an image finding even though it's a pip internal, not an installed
+# package (our actual setuptools is 83.0.0, provided by conda-forge). Safe to remove;
+# pip doesn't use it at runtime.
+RUN find "$CONDA_PREFIX" -path '*/pip/_vendor/bom.cdx.json' -delete
+
 # clean conda and pip caches
 RUN conda run -p $CONDA_PREFIX pip cache purge && \
     conda clean -a -y
