@@ -45,6 +45,11 @@ COPY . .
 RUN python3.12 -m pip install -e ./ --no-cache-dir && \
     rm -rf ~/.cache/pip
 
+# pip ships an internal bom.cdx.json documenting old vendored msgpack/setuptools
+# versions (unrelated to installed site-packages); strip it so scanners don't
+# flag it as a live vulnerable package.
+RUN find / -path "*/pip/_vendor/bom.cdx.json" -delete 2>/dev/null || true
+
 # The MCR base ships its AzureML scoring services (gunicorn/nginx/rsyslog)
 # under /var/runit; remove them so only our api_server is supervised.
 RUN rm -rf /var/runit/gunicorn /var/runit/nginx /var/runit/rsyslog
