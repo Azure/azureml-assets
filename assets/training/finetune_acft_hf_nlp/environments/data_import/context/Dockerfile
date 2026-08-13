@@ -56,35 +56,44 @@ apt-get install -y --only-upgrade \
 # in the base, making this a no-op for newer bases.
 # idna (GHSA-65pc-fj4g-8rjx): bump to >=3.15 in base miniconda (Python 3.12 env)
 # since the scanner reports idna from opt/miniconda regardless of the conda env below.
-RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'pip>=26.1' 'idna>=3.15' && rm -rf /root/.cache/pip
+# cryptography (GHSA-g6cj-pr64-35w5): the base miniconda ships its own copy that the
+# Python 3.10 env created below never touches, and the scanner reports it separately,
+# so it needs a direct override here as well.
+# Remove pip's informational vendored-version manifests because VCM reports stale
+# setuptools/msgpack entries from them even when the installed packages are fixed.
+# pip>=26.1 ships bom.cdx.json in addition to vendor.txt, so both must be deleted.
+RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'pip>=26.1' 'idna>=3.15' 'cryptography>=50.0.0' && \
+    find /opt/miniconda \( -path '*/pip/_vendor/vendor.txt' -o -path '*/pip/_vendor/bom.cdx.json' \) -delete && \
+    rm -rf /root/.cache/pip
 
-# Provision the Python 3.10 conda env. We don't constrain pip here because the
-# `defaults` conda channel may not yet have pip 26.1+; we upgrade with `pip install
-# --upgrade pip>=26.1` immediately after env creation (next RUN below).
+# Provision the Python 3.10 conda env. The conda channel now provides a patched
+# pip, so no post-create pip upgrade is needed.
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 pip -y && \
+    find $AZUREML_CONDA_ENVIRONMENT_PATH \( -path '*/pip/_vendor/vendor.txt' -o -path '*/pip/_vendor/bom.cdx.json' \) -delete && \
     conda clean -afy
 
 COPY requirements.txt .
 
-# Security: upgrade pip in the new Python 3.10 env to fix CVE-2026-6357
-# (GHSA-jp4c-xjxw-mgf9). PATH is already prepended with the new env, so `pip`
-# resolves to $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip.
-RUN pip install --no-cache-dir --upgrade 'pip>=26.1'
-
-RUN pip install -r requirements.txt --no-cache-dir
-
-# setuptools==82.0.1, wheel==0.46.3, urllib3==2.6.3, h2==4.3.0 are already
+# wheel==0.46.3, urllib3==2.6.3, h2==4.3.0 are already
 # at fixed versions in the openmpi base image. The override below only targets
 # packages NOT fixed in base or pulled in vulnerable by requirements.txt.
 # aiohttp (GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8): transitive dep of azure-core/datasets; bumped floor
 #   to >=3.14.0 to resolve USN-reported CVEs (previous floor >=3.13.4 was insufficient).
 # requests (GHSA-gc5v-m9x4-r6x2): transitive dep of many packages; parents use loose floors.
+# setuptools (GHSA-5rjg-fvgr-3xxf, GHSA-h35f-9h28-mq5c): transitive dep of azureml_acft_common_components/
+#   azureml-acft-contrib-hf-nlp; requirements install can downgrade the Python 3.10 env.
+# msgpack (GHSA-6v7p-g79w-8964): transitive dep of azureml_acft_common_components/azureml-acft-contrib-hf-nlp.
 # scikit-learn: explicit pin removed — azureml-acft-contrib-hf-nlp 0.0.89 already
 #   pins `scikit-learn<1.6.0,>=1.5.1`, so the parent enforces the secure floor (>=1.5.1
 #   ships the CVE-2024-5206 fix the historical pin protected against). Pip resolves to 1.5.2.
 # pyarrow (GHSA-rgxp-2hwp-jwgg): transitive dep; bump to >=23.0.1 to fix the CVE.
-# cryptography: pinned transitive dep pulled by azureml-acft-contrib-hf-nlp/base image; fixes GHSA-537c-gmf6-5ccf.
-RUN pip install --no-cache-dir 'aiohttp>=3.14.0' 'requests>=2.33.0' 'cryptography>=48.0.1' 'pyarrow>=23.0.1' && rm -rf /root/.cache/pip
+# cryptography: pinned transitive dep of azureml-acft-contrib-hf-nlp; fixes GHSA-g6cj-pr64-35w5.
+# Remove pip's informational vendored-version manifest after installation; VCM
+# reports its stale setuptools/msgpack entries even though the installed packages
+# are patched by the constraints above.
+RUN pip install --no-cache-dir -r requirements.txt 'aiohttp>=3.14.0' 'requests>=2.33.0' 'setuptools>=83.0.0' 'msgpack>=1.2.1' 'cryptography>=50.0.0' 'pyarrow>=23.0.1' && \
+    find $AZUREML_CONDA_ENVIRONMENT_PATH \( -path '*/pip/_vendor/vendor.txt' -o -path '*/pip/_vendor/bom.cdx.json' \) -delete && \
+    rm -rf /root/.cache/pip
 
 # The below file is required for baking the code into the environment
 COPY data_import_run.py /azureml/data_import/run.py
