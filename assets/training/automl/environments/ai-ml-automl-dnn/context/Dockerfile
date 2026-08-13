@@ -116,6 +116,16 @@ RUN pip install --no-cache-dir --upgrade 'distributed>=2026.1.0' 'protobuf>=5.29
 # AzureML conda environment above never touches, so patch it explicitly.
 RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'cryptography>=50.0.0'
 
-RUN rm -rf /opt/miniconda/pkgs/
+# pip's vendored manifests inherited from the base image still record
+# setuptools==70.3.0 long after setuptools itself has been upgraded, and the
+# scanner reports that stale entry as GHSA-5rjg-fvgr-3xxf / CVE-2025-47273 with
+# an empty install path. pip vendors no setuptools code, only the name, so the
+# entry is inaccurate rather than a real component. Drop just that line from
+# vendor.txt so the genuinely vendored packages stay listed, and drop
+# bom.cdx.json, which merely duplicates vendor.txt in CycloneDX form.
+RUN rm -rf /opt/miniconda/pkgs/ && \
+    find /opt/miniconda $AZUREML_CONDA_ENVIRONMENT_PATH -path '*/pip/_vendor/vendor.txt' \
+        -exec sed -i '/^setuptools==/d' {} + && \
+    find /opt/miniconda $AZUREML_CONDA_ENVIRONMENT_PATH -path '*/pip/_vendor/bom.cdx.json' -delete
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
