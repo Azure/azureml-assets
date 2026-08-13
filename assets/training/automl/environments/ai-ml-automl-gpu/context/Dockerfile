@@ -114,51 +114,42 @@ RUN pip install --no-cache-dir --upgrade --no-deps 'azure-identity>=1.25.1'
                 # end pypi dependencies
 
 # ============================
-# Vulnerability security fixes — transitive dependency overrides
+# Vulnerability security fixes - transitive dependency overrides
 # ============================
-# distributed>=2026.1.0 — CVE-2024-10096 (pickle deserialization RCE, CVSS 9.8)
-#   Chain: azureml-train-automl-runtime -> dask[complete]<=2023.2.0 -> distributed==2023.2.0
-#
-# cryptography>=46.0.5 — CVE-2026-26007 (EC subgroup validation flaw, CVSS 8.2)
-#   Chain L1: azureml-mlflow -> cryptography<47.0.0
-#   Chain L1: azure-identity -> cryptography>=2.5
-#   Chain L2: azureml-core -> msal/paramiko/pyopenssl/secretstorage/adal -> cryptography
-#   Chain L2: azureml-mlflow -> azure-storage-blob -> cryptography
-#
-# setuptools>=82.0.1 — CVE-2025-47273 (PackageIndex path traversal RCE)
-#   Chain: azureml-automl-runtime -> pmdarima -> setuptools
-#
-# mlflow-skinny>=2.16.0 — CVE-2024-37059 (unsafe deserialization, CVSS 8.8),
-#                          CVE-2025-11201 (directory traversal RCE, CVSS 9.8)
-#   Chain L1: azureml-mlflow==1.62.0.post2 (latest) -> mlflow-skinny<=3.9.0
-#   Chain L2: azureml-train-automl-runtime -> azureml-mlflow -> mlflow-skinny
-#   Override required: even the latest azureml-mlflow does not auto-pull a
-#   patched mlflow-skinny.
-#
-# bokeh>=3.8.2 — GHSA-793v-589g-574v (WebSocket origin validation bypass, CVSS 5.4)
-#   conda env installs 2.4.3, pip can't auto-upgrade
-#   Chain L1: azureml-train-automl-runtime -> bokeh<3.0.0
-#   Chain L2: azureml-train-automl-runtime -> dask[complete] -> bokeh (via [diagnostics] extra)
-#
-# onnx>=1.21.0 — GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6,
-#                GHSA-538c-55jv-c5g9, GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m
-#   Parent packages cap onnx<=1.17.0; upgrading the parent is not possible because
-#   both azureml-automl-runtime==1.62.0 and azureml-train-automl-runtime==1.62.0
-#   (the latest releases) still enforce onnx<=1.17.0,>=1.16.1.
-#   Override is required to remediate the vulnerability.
-#   Chain: azureml-automl-runtime / azureml-train-automl-runtime -> onnx<=1.17.0
-#
-# pyarrow>=23.0.1 — GHSA-rgxp-2hwp-jwgg
-#   Pinned transitive dep of azureml-dataset-runtime; fixes the vulnerable
-#   pyarrow 17.0.0 resolved in this image.
-#
-# starlette>=1.0.1 — GHSA-86qp-5c8j-p5mr; transitive via fastapi (loose floor), drop when parent bumps
-# idna>=3.15 — GHSA-65pc-fj4g-8rjx; transitive via requests/yarl (loose floor), drop when parent bumps
-RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0' \
+# Every floor below is required because the parent package still resolves a
+# vulnerable version, so upgrading the parent alone does not remediate.
+# distributed>=2026.1.0  CVE-2024-10096; azureml-train-automl-runtime -> dask[complete] -> distributed
+# mlflow-skinny>=2.16.0  CVE-2024-37059, CVE-2025-11201; azureml-mlflow -> mlflow-skinny
+# bokeh>=3.8.2           GHSA-793v-589g-574v; parent caps bokeh<3.0.0
+# onnx>=1.21.0           GHSA-3r9x-f23j-gc73 and 5 related; parent caps onnx<=1.17.0
+# pyarrow>=23.0.1        GHSA-rgxp-2hwp-jwgg; azureml-dataset-runtime -> pyarrow
+# starlette>=1.0.1       GHSA-86qp-5c8j-p5mr; fastapi -> starlette
+# idna>=3.15             GHSA-65pc-fj4g-8rjx; requests/yarl -> idna
+# cryptography>=50.0.0   GHSA-537c-gmf6-5ccf, GHSA-g6cj-pr64-35w5; azureml-core/azure-identity -> cryptography
+# setuptools>=83.0.0     GHSA-5rjg-fvgr-3xxf, GHSA-h35f-9h28-mq5c; azureml-automl-runtime -> pmdarima -> setuptools
+# GitPython>=3.1.57      mlflow-skinny -> databricks-sdk -> gitpython keeps a loose floor
+# pillow>=12.3.0         image-decoder findings via prophet -> matplotlib -> pillow
+# pyasn1>=0.6.4          GHSA-hm4w-wwcw-mr6r, GHSA-8ppf-4f7h-5ppj; google-auth -> pyasn1
+RUN pip install --no-cache-dir --upgrade \
+    'distributed>=2026.1.0' \
+    'mlflow-skinny>=2.16.0' \
     'bokeh>=3.8.2' \
     'onnx>=1.21.0' \
     'pyarrow>=23.0.1' \
     'starlette>=1.0.1' \
-    'idna>=3.15'
+    'idna>=3.15' \
+    'cryptography>=50.0.0' \
+    'setuptools>=83.0.0' \
+    'GitPython>=3.1.57' \
+    'pillow>=12.3.0' \
+    'pyasn1>=0.6.4'
+
+# The base Miniconda prefix carries its own copies of these packages, which the
+# AzureML conda environment above never touches, so patch them explicitly.
+RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade \
+    'cryptography>=50.0.0' \
+    'msgpack>=1.2.1' \
+    'pydantic-settings>=2.14.2' \
+    'setuptools>=83.0.0'
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH

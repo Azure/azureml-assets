@@ -20,7 +20,7 @@ import site
 from packaging.version import Version
 
 MIN_VERSIONS = {
-    "aiohttp": Version("3.14.0"),
+    "aiohttp": Version("3.14.3"),
     "idna": Version("3.15"),
 }
 
