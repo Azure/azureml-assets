@@ -41,7 +41,10 @@ COPY requirements.txt .
 # GHSA-69w3-r845-3855 (CVE-2026-1839): arbitrary code execution in Trainer class;
 # patched only in transformers>=5.0.0rc3. Upgrading to latest stable 5.x.
 # GHSA-86qp-5c8j-p5mr: starlette vulnerability; patched in >=1.0.1 (ptca env).
-# GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8: aiohttp vulnerabilities; patched in >=3.14.0.
+# aiohttp is a transitive dependency from the base Python 3.14 env and AzureML/MLflow stack;
+# pinned to fix GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, and GHSA-mfx4-hv73-q22v.
+# cryptography is a transitive dependency in the ptca env from the AzureML/MLflow stack;
+# pinned to fix GHSA-g6cj-pr64-35w5.
 # Override vulnerable transitive dependencies in the base (Python 3.14) and ptca
 # (Python 3.10) environments because parent ranges permit older versions.
 # Remove obsolete conda and vendored dependency metadata after upgrading.
@@ -57,11 +60,11 @@ RUN pip install -r requirements.txt --no-cache-dir \
  && pip install --no-cache-dir xgrammar==0.1.32 \
  && pip install --no-cache-dir transformers==5.5.4 \
  && pip install --no-cache-dir 'starlette>=1.0.1' \
- && pip install --no-cache-dir 'aiohttp>=3.14.0' \
- && conda run -n base python -m pip install --no-cache-dir 'aiohttp>=3.14.0' \
+ && pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3' 'cryptography>=50.0.0' \
+ && conda run -n base python -m pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3' \
  && conda run -n base python -m pip install --no-cache-dir --upgrade \
         'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'pip>=26.1' \
-        'PyJWT>=2.13.0' 'py-rattler>=0.24.0' 'cryptography>=48.0.1' 'pydantic-settings>=2.14.2' 'msgpack>=1.2.1' \
+        'PyJWT>=2.13.0' 'py-rattler>=0.24.0' 'cryptography>=50.0.0' 'pydantic-settings>=2.14.2' 'msgpack>=1.2.1' \
         'setuptools>=83.0.0' \
  && pip install --no-cache-dir --upgrade 'pip>=26.1' 'PyJWT>=2.13.0' 'msgpack>=1.2.1' 'setuptools>=83.0.0' \
  && find /opt/conda /opt/conda/envs/ptca -path '*/conda-meta/pip-*.json' -delete \

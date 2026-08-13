@@ -22,7 +22,7 @@ pylatexenc==2.10
 qwen-vl-utils==0.0.10
 # ray[default] from PyPI: >=2.56.0 resolves GHSA-hhrp-gw25-jr43 and the wheel ships
 # the prebuilt dashboard frontend, so no separate dashboard build is needed.
-# NOTE: Ray vendors Jackson artifacts inside ray/jars/ray_dist.jar, so the jar is patched in
+# NOTE: Ray vendors Jackson and Log4j artifacts inside ray/jars/ray_dist.jar, so the jar is patched in
 # place by context/patch_ray_jackson_databind.py in the Dockerfile.
 ray[default]==2.56.0
 tensorboard==2.20.0

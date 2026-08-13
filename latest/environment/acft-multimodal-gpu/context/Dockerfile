@@ -61,11 +61,13 @@ RUN pip install --no-cache-dir --upgrade 'setuptools>=82.0.1' 'nltk>=3.9.4' 'tra
 #   fixes GHSA-q53q-5r4j-5729. Use pip here because the scanner records root-env
 #   dist-info metadata, and conda solving the root env can change unrelated
 #   solver packages.
+# cryptography>=50.0.0: pinned transitive dep of the ACPT base image; fixes
+#   GHSA-537c-gmf6-5ccf and GHSA-g6cj-pr64-35w5.
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
     'setuptools>=82.0.1' 'pyOpenSSL>=26.0.0' 'urllib3>=2.7.0' \
     'python-dotenv>=1.2.2' 'pip>=26.1.1' 'idna>=3.15' 'click>=8.3.3' \
     'aiohttp>=3.14.0' 'PyJWT>=2.13.0' 'pydantic-settings>=2.14.2' \
-    'msgpack>=1.2.1' 'py-rattler>=0.24.0'
+    'msgpack>=1.2.1' 'py-rattler>=0.24.0' 'cryptography>=50.0.0'
 
 # ptca-env overrides for packages not yet pinned to fixed versions by their
 # parents inside the ptca conda environment.
@@ -73,11 +75,13 @@ RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
 # - aiohttp>=3.14.0 patches GHSA-hg6j-4rv6-33pg and GHSA-jg22-mg44-37j8
 #   (request smuggling / header-injection vulnerabilities).
 # - PyJWT>=2.13.0 patches GHSA-993g-76c3-p5m4.
+# - cryptography>=50.0.0 patches GHSA-537c-gmf6-5ccf and GHSA-g6cj-pr64-35w5;
+#   it is pinned by the ACPT base image, so no parent floors the fixed release.
 # - torch==2.13.0+cu126 overrides the ACPT base image's vulnerable PyTorch
 #   package; fixes GHSA-rrmf-rvhw-rf47. torchvision is upgraded with torch to
 #   keep the CUDA vision stack compatible.
 RUN conda run -n ptca pip install --no-cache-dir --upgrade \
-    'idna>=3.15' 'aiohttp>=3.14.0' 'PyJWT>=2.13.0' && \
+    'idna>=3.15' 'aiohttp>=3.14.0' 'PyJWT>=2.13.0' 'cryptography>=50.0.0' && \
     conda run -n ptca pip install --no-cache-dir --upgrade \
     --index-url https://download.pytorch.org/whl/cu126 \
     'torch==2.13.0+cu126' 'torchvision==0.28.0+cu126'

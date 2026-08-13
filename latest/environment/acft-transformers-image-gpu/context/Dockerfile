@@ -80,19 +80,19 @@ RUN conda install -n ptca -y -c conda-forge --freeze-installed 'pip=26.1.2' \
 # PyJWT: base image ships 2.12.1 which has GHSA-jq35-7prp-9v3f and GHSA-993g-76c3-p5m4;
 #   no parent package to upgrade — explicit override required (>=2.13.0).
 # cryptography in base conda env: pinned transitive/base-image dep brought in by the base ACPT image;
-#   base ships 46.0.7 which has GHSA-537c-gmf6-5ccf; override to 48.0.1.
+#   prior override installed 48.0.1, which has GHSA-g6cj-pr64-35w5; override to >=50.0.0.
 # pydantic-settings in base conda env: pinned transitive/base-image dep brought in by the base ACPT image;
 #   base ships 2.12.0 which has GHSA-4xgf-cpjx-pc3j; override to >=2.14.2.
 # setuptools in base conda env: base image ships 82.0.0 which has GHSA-h35f-9h28-mq5c;
 #   override to >=83.0.0.
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'aiohttp>=3.14.0' 'click>=8.3.3' 'idna>=3.15' 'PyJWT>=2.13.0' 'cryptography==48.0.1' 'pydantic-settings>=2.14.2' 'setuptools>=83.0.0'
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'aiohttp>=3.14.0' 'click>=8.3.3' 'idna>=3.15' 'PyJWT>=2.13.0' 'cryptography>=50.0.0' 'pydantic-settings>=2.14.2' 'setuptools>=83.0.0'
 # aiohttp in ptca env: same CVEs as base env — GHSA-jg22-mg44-37j8 and GHSA-hg6j-4rv6-33pg.
 # pyarrow in ptca env: ships 20.0.0 which has GHSA-rgxp-2hwp-jwgg; override to >=23.0.1.
 # cryptography in ptca env: pinned transitive/base-image dep brought in by the base ACPT image;
-#   ptca ships 46.0.7 which has GHSA-537c-gmf6-5ccf; override to 48.0.1.
+#   prior override installed 48.0.1, which has GHSA-g6cj-pr64-35w5; override to >=50.0.0.
 # setuptools in ptca env: direct requirement below covers GHSA-h35f-9h28-mq5c;
 #   keep both conda envs consistent.
-RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' 'pyarrow>=23.0.1' 'cryptography==48.0.1' 'setuptools>=83.0.0'
+RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' 'pyarrow>=23.0.1' 'cryptography>=50.0.0' 'setuptools>=83.0.0'
 # torch in ptca env: inherited from the ACPT torch 2.8 CUDA 12.6 base image and
 #   flagged by GHSA-vgrw-7cvw-pwgx, GHSA-qfhq-4f3w-5fph, and GHSA-rrmf-rvhw-rf47.
 RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 'torch>=2.13.0'

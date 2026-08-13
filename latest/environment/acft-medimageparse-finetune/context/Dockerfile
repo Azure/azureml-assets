@@ -72,9 +72,10 @@ RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade \
 
 # Override vulnerable base-environment dependencies whose parent ranges permit
 # older versions. Patch the inherited tooling directly in both conda environments.
+# cryptography: pinned transitive dep of the base image, fixes GHSA-g6cj-pr64-35w5.
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade --progress-bar off --no-binary=cffi \
-        'cryptography==48.0.1' && \
-    rm -rf /opt/conda/lib/python*/site-packages/cryptography-46*.dist-info
+        'cryptography==50.0.0' && \
+    rm -rf /opt/conda/lib/python*/site-packages/cryptography-4[68]*.dist-info
 
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade --progress-bar off \
         'pip==26.1.2' \

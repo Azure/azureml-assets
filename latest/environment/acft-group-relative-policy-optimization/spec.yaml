@@ -4,7 +4,7 @@ description: >-
   Environment used by Group Relative Policy Optimization component
 
 name: "acft-group-relative-policy-optimization"
-version: "26"
+version: "27"
 
 build:
   path: "context"

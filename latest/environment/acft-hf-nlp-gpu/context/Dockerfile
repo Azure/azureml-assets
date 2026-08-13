@@ -70,9 +70,10 @@ RUN conda install -n base -c conda-forge --no-deps -y 'setuptools>=83.0.0' && \
 RUN /opt/conda/bin/python -m pip install --upgrade --no-cache-dir 'msgpack>=1.2.1' && \
     rm -rf /opt/conda/lib/python*/site-packages/msgpack-1.1*.dist-info
 
-# aiohttp and cryptography in ptca env (Python 3.10) are present in the base image; force upgrades here explicitly.
-# cryptography is pinned as a transitive/base image package to fix GHSA-537c-gmf6-5ccf.
-RUN conda run -n ptca python -m pip install --upgrade --no-cache-dir 'aiohttp>=3.14.0' 'cryptography>=48.0.1'
+# aiohttp and cryptography are inherited from the ACPT base image in the base and ptca conda envs.
+# cryptography is pinned as a transitive/base image package to fix GHSA-g6cj-pr64-35w5.
+RUN /opt/conda/bin/python -m pip install --upgrade --no-cache-dir 'aiohttp>=3.14.3' 'cryptography>=50.0.0' && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir 'aiohttp>=3.14.3' 'cryptography>=50.0.0'
 
 # torch is inherited from the ACPT base image and overridden here; keep CUDA 12.6 wheels to fix GHSA-rrmf-rvhw-rf47.
 RUN conda run -n ptca python -m pip install --upgrade --no-cache-dir \
