@@ -159,6 +159,16 @@ RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  pip install --no-cache-dir --no-build-isolation \
  git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d"
 
-RUN rm -rf /opt/miniconda/pkgs/
+# pip's vendored manifests inherited from the base image still record
+# setuptools==70.3.0 long after setuptools itself has been upgraded, and the
+# scanner reports that stale entry as GHSA-5rjg-fvgr-3xxf / CVE-2025-47273 with
+# an empty install path. pip vendors no setuptools code, only the name, so the
+# entry is inaccurate rather than a real component. Drop just that line from
+# vendor.txt so the genuinely vendored packages stay listed, and drop
+# bom.cdx.json, which merely duplicates vendor.txt in CycloneDX form.
+RUN rm -rf /opt/miniconda/pkgs/ && \
+    find /opt/miniconda $AZUREML_CONDA_ENVIRONMENT_PATH -path '*/pip/_vendor/vendor.txt' \
+        -exec sed -i '/^setuptools==/d' {} + && \
+    find /opt/miniconda $AZUREML_CONDA_ENVIRONMENT_PATH -path '*/pip/_vendor/bom.cdx.json' -delete
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
