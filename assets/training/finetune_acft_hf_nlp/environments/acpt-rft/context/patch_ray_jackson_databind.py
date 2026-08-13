@@ -50,6 +50,22 @@ ARTIFACTS = (
         "pom_sha1_env": "JACKSON_CORE_POM_SHA1",
     },
     {
+        "name": "log4j-api",
+        "group_path": "org/apache/logging/log4j",
+        "maven_prefix": "META-INF/maven/org.apache.logging.log4j/log4j-api/",
+        "entry_prefixes": (
+            "org/apache/logging/log4j/",
+            "META-INF/services/org.apache.logging.log4j.",
+        ),
+        "entry_fragments": (
+            "/org/apache/logging/log4j/",
+            "/META-INF/maven/org.apache.logging.log4j/log4j-api/",
+        ),
+        "version_env": "LOG4J_API_VERSION",
+        "jar_sha1_env": "LOG4J_API_JAR_SHA1",
+        "pom_sha1_env": "LOG4J_API_POM_SHA1",
+    },
+    {
         "name": "log4j-core",
         "group_path": "org/apache/logging/log4j",
         "maven_prefix": "META-INF/maven/org.apache.logging.log4j/log4j-core/",

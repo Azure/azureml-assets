@@ -23,7 +23,7 @@ RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 
 # Security floors for transitive deps whose parent packages do not pin them safely.
 # protobuf:        mlflow-skinny<=3.9.0 requires protobuf<7 (GHSA fix at >=6.33.5)
-# ray:             GHSA-q5fh-2hc8-f6rq; also bundles log4j-core 2.25.3 in JARs (patched below)
+# ray:             GHSA-q5fh-2hc8-f6rq; also bundles log4j artifacts in JARs (patched below)
 # nltk:            GHSA-gfwx-w7gr-fvh7
 # pyasn1, python-multipart, xgrammar: CVE floors (no parent that pins them safely)
 # mlflow:          azureml-mlflow 1.62.0.post2 pins mlflow-skinny<=3.9.0; explicit upgrade
@@ -31,7 +31,8 @@ RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 # vllm:            GHSA-pq5c-rjhq-qp7p, GHSA-3mwp-wvh9-7528, GHSA-6c4r-fmh3-7rh8 (librosa LFE)
 # pyOpenSSL:       GHSA-vp96-hxj8-p424, GHSA-5pwr-322w-8jr4; azureml-core 1.61.0.post3 pins
 #                  pyopenssl<26.0.0, so explicit override is the only remediation.
-# cryptography:    pinned transitive/base image package in ptca env; fixes GHSA-537c-gmf6-5ccf.
+# cryptography:    mlflow currently constrains cryptography<50, so it is patched separately
+#                  with --no-deps below; fixes GHSA-g6cj-pr64-35w5.
 # urllib3:         GHSA-mf9v-mfxr-j63j, GHSA-qccp-gfcp-xxvc; fix in 2.7.0. urllib3 is brought
 #                  in transitively by requests/botocore/azureml-core/kubernetes/etc., all of
 #                  which only constrain urllib3<3 (loose). No parent package pins urllib3>=2.7,
@@ -41,8 +42,11 @@ RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 #                  CVE-2024-1135 and CVE-2024-6827.
 RUN pip install --upgrade 'protobuf>=6.33.5,<7' 'xgrammar>=0.1.32' \
     'nltk>=3.9.4' 'pyasn1>=0.6.3' 'python-multipart>=0.0.22' 'ray>=2.55.0' \
-    'mlflow>=3.8.1,<4.0.0' 'vllm>=0.24.0' 'pyOpenSSL>=26.0.0' 'cryptography>=48.0.1' \
+    'mlflow>=3.8.1,<4.0.0' 'vllm>=0.24.0' 'pyOpenSSL>=26.0.0' \
     'urllib3>=2.7.0' 'gunicorn>=22.0.0'
+# cryptography: pinned transitive dep of mlflow/base image; mlflow constrains
+# cryptography<50, so install the scanner-required GHSA-g6cj-pr64-35w5 floor separately.
+RUN pip install --no-cache-dir --upgrade --no-deps 'cryptography>=50.0.0'
 # torch: pinned transitive dep of vllm; vllm 0.24.0-0.26.0 pins torch==2.11.0,
 # so install the GHSA-rrmf-rvhw-rf47 security floor separately. transformers:
 # vllm requires transformers<5, so reinstall the scanner-required 5.x floor after vllm.
@@ -73,14 +77,14 @@ RUN rm -rf ~/.cache/pip
 # urllib3 in base conda env: see urllib3 note above; same direct-override rationale.
 # pip: see note above - bootstrap tool, must be upgraded directly in base env too.
 # py-rattler: pinned transitive dep from base image conda tooling; fixes GHSA-q53q-5r4j-5729
-# cryptography: pinned transitive/base image package in base env; fixes GHSA-537c-gmf6-5ccf.
+# cryptography: pinned transitive/base image package in base env; fixes GHSA-g6cj-pr64-35w5.
 # pydantic-settings: pinned transitive dep from base image conda tooling; fixes GHSA-4xgf-cpjx-pc3j
 # setuptools: see note above - bootstrap tool, must be upgraded directly in base env too.
 # msgpack: see note above - clean stale metadata in base env too.
 # Also clean stale conda-meta/pip-*.json (see ptca env note above for scanner detail).
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'pip>=26.1.2' 'setuptools>=83.0.0' 'msgpack>=1.2.1' 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' \
         'aiohttp>=3.14.0' 'click>=8.3.3' 'idna>=3.15' \
-        'PyJWT>=2.13.0' 'py-rattler>=0.24.0' 'cryptography>=48.0.1' 'pydantic-settings>=2.14.2' && \
+        'PyJWT>=2.13.0' 'py-rattler>=0.24.0' 'cryptography>=50.0.0' 'pydantic-settings>=2.14.2' && \
         rm -f /opt/conda/conda-meta/pip-26.0*.json \
               /opt/conda/conda-meta/pip-26.1.1-*.json \
               /opt/conda/conda-meta/setuptools-70.3*.json \
@@ -94,12 +98,11 @@ RUN pip install --no-cache-dir --upgrade 'pyarrow>=23.0.1'
 RUN rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/ray/_private/runtime_env/agent/thirdparty_files/aiohttp* \
            /opt/conda/envs/ptca/lib/python3.10/site-packages/ray/_private/runtime_env/agent/thirdparty_files/idna* && \
     pip install --no-cache-dir --target /opt/conda/envs/ptca/lib/python3.10/site-packages/ray/_private/runtime_env/agent/thirdparty_files 'aiohttp>=3.14.0' 'idna>=3.15'
-# Patch log4j-core 2.25.3 to 2.25.4 inside Ray's fat JAR.
-# ray (all versions through 2.55.1) bundles log4j-core 2.25.3 in java/dependencies.bzl.
-# No ray release includes 2.25.4; manual JAR surgery is required.
-# Fixes: GHSA-3pxv-7cmr-fjr4, GHSA-445c-vh5m-36rj, GHSA-6hg6-v5c8-fphq
+# Patch Log4j artifacts inside Ray's fat JAR to 2.25.5.
+# ray bundles Log4j in java/dependencies.bzl, so manual JAR surgery is required.
+# Fixes: CVE-2026-49844, GHSA-3pxv-7cmr-fjr4, GHSA-445c-vh5m-36rj, GHSA-6hg6-v5c8-fphq
 COPY patch_log4j /tmp/patch_log4j.py
-RUN python3 /tmp/patch_log4j.py 2.25.4 && rm -f /tmp/patch_log4j.py
+RUN python3 /tmp/patch_log4j.py 2.25.5 && rm -f /tmp/patch_log4j.py
 # jackson-core/databind: pinned transitive deps of ray; bundled in Ray's fat JAR,
 # fixes GHSA-rmj7-2vxq-3g9f, GHSA-j3rv-43j4-c7qm, GHSA-hgj6-7826-r7m5,
 # GHSA-5jmj-h7xm-6q6v, GHSA-5gvw-p9qm-jgwh, GHSA-mhm7-754m-9p8w,

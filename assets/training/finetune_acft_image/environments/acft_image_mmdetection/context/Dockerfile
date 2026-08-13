@@ -51,10 +51,16 @@ RUN sed -i 's/2.2.0/2.3.0/' /opt/conda/envs/ptca/lib/python3.10/site-packages/mm
 RUN pip uninstall -y onnx && pip install --no-cache-dir 'onnx-weekly>=1.22.0.dev20260504'
 
 # pyarrow: pinned transitive dep of datasets; image install downgrades the base, fixes CVE-2026-25087.
-# cryptography: pinned transitive dep of azureml-core; image install downgrades the base, fixes GHSA-537c-gmf6-5ccf.
+# aiohttp: pinned inherited dep from the ACPT base image; fixes GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, and GHSA-mfx4-hv73-q22v.
+# cryptography: pinned inherited base dep and transitive dep of azureml-core in ptca; fixes GHSA-g6cj-pr64-35w5.
+RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade \
+    'aiohttp>=3.14.3' \
+    'cryptography>=50.0.0' \
+ && conda run -n ptca python -m pip install --no-cache-dir --upgrade \
+    'aiohttp>=3.14.3' \
+    'cryptography>=50.0.0'
 RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade \
-    'pyarrow>=23.0.1' \
-    'cryptography>=48.0.1'
+    'pyarrow>=23.0.1'
 
 # torch: pinned transitive dep of the ACFT image stack; this image overrides
 # the ACPT base version, fixes GHSA-rrmf-rvhw-rf47.
