@@ -66,19 +66,22 @@ RUN pip uninstall -y fastmcp mcp
 #   version pin at all, so pip resolves to 1.3.10 which has GHSA-v92g-xgxw-vvmm. No parent
 #   release floors Mako>=1.3.11, so explicit override is required.
 # GitPython: transitive dep (mlflow -> mlflow-skinny requires gitpython<4,>=3.1.9); the
-#   loose floor can resolve vulnerable builds; override to >=3.1.55 for GHSA-2f96-g7mh-g2hx,
+#   loose floor can resolve vulnerable builds; override to >=3.1.57 for GHSA-2f96-g7mh-g2hx,
 #   GHSA-956x-8gvw-wg5v, GHSA-v396-v7q4-x2qj, GHSA-94p4-4cq8-9g67,
-#   GHSA-fjr4-x663-mwxc, GHSA-6p8h-3wgx-97gf, and GHSA-r9mr-m37c-5fr3.
-# aiohttp: transitive dep; resolves to 3.13.5 which has GHSA-jg22-mg44-37j8, GHSA-hg6j-4rv6-33pg.
-#   No parent release floors aiohttp>=3.14.0, so explicit override is required.
+#   GHSA-fjr4-x663-mwxc, GHSA-6p8h-3wgx-97gf, GHSA-r9mr-m37c-5fr3,
+#   GHSA-p538-c434-8v24, GHSA-539m-9xh6-q6rr, and GHSA-3f7w-8rr8-f37f.
+# aiohttp: transitive dep; lower versions have GHSA-jg22-mg44-37j8, GHSA-hg6j-4rv6-33pg,
+#   GHSA-mfx4-hv73-q22v, GHSA-cq5v-8q36-5273, and GHSA-mq44-7p77-q5h7.
+#   No parent release floors aiohttp>=3.14.3, so explicit override is required.
 # pyarrow: resolves to 20.0.0 which has GHSA-rgxp-2hwp-jwgg; no parent release floors
 #   pyarrow>=23.0.1, so explicit override is required.
-# cryptography: transitive dep of ACPT base image and AzureML requirements; fixes GHSA-537c-gmf6-5ccf.
+# cryptography: transitive dep of ACPT base image and AzureML requirements; fixes GHSA-537c-gmf6-5ccf
+#   and GHSA-g6cj-pr64-35w5.
 # pyasn1: transitive dep of mlflow -> databricks-sdk -> google-auth; fixes GHSA-hm4w-wwcw-mr6r and GHSA-8ppf-4f7h-5ppj.
 # pillow: transitive dep of image/vision packages; fixes GHSA-8v84-f9pq-wr9x, GHSA-9hw9-ch79-4vh6,
 #   GHSA-vjc4-5qp5-m44j, GHSA-pg7v-jwj7-p798, GHSA-45hq-cxwh-f6vc, GHSA-phj9-mv4w-65pm,
 #   GHSA-62p4-gmf7-7g93, and GHSA-5x94-69rx-g8h2.
-RUN pip install --progress-bar off --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.55' 'aiohttp>=3.14.0' 'pyarrow>=23.0.1' 'cryptography>=48.0.1' 'pyasn1>=0.6.4' 'pillow>=12.3.0'
+RUN pip install --progress-bar off --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.57' 'aiohttp>=3.14.3' 'pyarrow>=23.0.1' 'cryptography>=50.0.0' 'pyasn1>=0.6.4' 'pillow>=12.3.0'
 
 # Upgrade vulnerable packages in the base conda Python
 # urllib3: transitive dep via requests; loose floor (urllib3<3,>=1.21.1) resolves to vulnerable 2.6.3
@@ -91,13 +94,15 @@ RUN pip install --progress-bar off --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitP
 # click: transitive via mlflow-skinny (click<9,>=7.0), uvicorn (click>=7.0), typer (click>=8.2.1),
 #   flask (click>=8.1.3) - all loose floors resolve to vulnerable 8.2.1 (GHSA-47fr-3ffg-hgmw /
 #   CVE-2026-7246). No parent release floors click>=8.3.3, so explicit override is required.
-# aiohttp: resolves to 3.13.5 which has GHSA-jg22-mg44-37j8, GHSA-hg6j-4rv6-33pg. No parent
-#   release floors aiohttp>=3.14.0, so explicit override is required.
+# aiohttp: lower versions have GHSA-jg22-mg44-37j8, GHSA-hg6j-4rv6-33pg,
+#   GHSA-mfx4-hv73-q22v, GHSA-cq5v-8q36-5273, and GHSA-mq44-7p77-q5h7. No parent
+#   release floors aiohttp>=3.14.3, so explicit override is required.
 # PyJWT: resolves to 2.12.1 which has GHSA-jq35-7prp-9v3f and GHSA-993g-76c3-p5m4. No parent
 #   release floors PyJWT>=2.13.0, so explicit override is required.
 # setuptools: bootstrapped by the ACPT base conda image; fixes GHSA-h35f-9h28-mq5c.
 # py-rattler: transitive dep of ACPT base image conda tooling; fixes GHSA-q53q-5r4j-5729.
-# cryptography: transitive dep of ACPT base image and AzureML requirements; fixes GHSA-537c-gmf6-5ccf.
+# cryptography: transitive dep of ACPT base image and AzureML requirements; fixes GHSA-537c-gmf6-5ccf
+#   and GHSA-g6cj-pr64-35w5.
 # pydantic-settings: transitive dep of AzureML requirements that can downgrade the patched base; fixes GHSA-4xgf-cpjx-pc3j.
-RUN /opt/conda/bin/python -m pip install --progress-bar off --no-cache-dir --upgrade 'urllib3>=2.7.0' 'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.0' 'PyJWT>=2.13.0' 'setuptools>=83.0.0' 'py-rattler>=0.24.0' 'cryptography>=48.0.1' 'pydantic-settings>=2.14.2' && \
+RUN /opt/conda/bin/python -m pip install --progress-bar off --no-cache-dir --upgrade 'urllib3>=2.7.0' 'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.3' 'PyJWT>=2.13.0' 'setuptools>=83.0.0' 'py-rattler>=0.24.0' 'cryptography>=50.0.0' 'pydantic-settings>=2.14.2' && \
     rm -rf /opt/conda/lib/python3.14/site-packages/setuptools-82.0.0.dist-info
