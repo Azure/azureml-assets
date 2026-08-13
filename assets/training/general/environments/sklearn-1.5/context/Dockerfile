@@ -53,11 +53,11 @@ RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
     rm conda_dependencies.yaml
 
 # Security vulnerability fixes for transitive dependencies.
-# cryptography==48.0.1: pinned transitive dep of azureml-mlflow / azureml-core; fixes GHSA-537c-gmf6-5ccf.
+# cryptography>=50.0.0: pinned transitive dep of azureml-mlflow / azureml-core; fixes GHSA-g6cj-pr64-35w5 and GHSA-537c-gmf6-5ccf.
 # GitPython>=3.1.55: pinned transitive dep of azureml-mlflow; fixes GHSA-fjr4-x663-mwxc, GHSA-6p8h-3wgx-97gf, GHSA-r9mr-m37c-5fr3, GHSA-94p4-4cq8-9g67.
 # pyarrow>=23.0.1: pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg.
 RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
-    'aiohttp>=3.14.0' cryptography==48.0.1 'distributed>=2026.1.0' 'GitPython>=3.1.55' 'pyarrow>=23.0.1'
+    'aiohttp>=3.14.0' 'cryptography>=50.0.0' 'distributed>=2026.1.0' 'GitPython>=3.1.55' 'pyarrow>=23.0.1'
 
-# idna>=3.15 (GHSA-65pc-fj4g-8rjx): base-image miniconda ships idna<3.15; drop once base image updates
-RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'idna>=3.15'
+# idna>=3.15 (GHSA-65pc-fj4g-8rjx) and cryptography>=50.0.0 (GHSA-g6cj-pr64-35w5): base-image miniconda pins; drop once base image updates.
+RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'idna>=3.15' 'cryptography>=50.0.0'
