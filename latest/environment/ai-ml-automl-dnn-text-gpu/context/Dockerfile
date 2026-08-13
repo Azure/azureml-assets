@@ -109,14 +109,19 @@ RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.5
 RUN pip install --no-cache-dir --upgrade 'pip>=26.1.2'
 
 # Upgrade bokeh, cryptography, and onnx in the AZUREML conda env (py3.10).
-# NOTE: AzureML packages do not force the fixed cryptography floor; use >=48.0.1.
+# NOTE: AzureML packages do not force the fixed cryptography floor; use >=50.0.0.
 # Override onnx to fix GHSA-cmw6-hcpp-c6jp, GHSA-538c-55jv-c5g9, GHSA-q56x-g2fj-4rj6, GHSA-p433-9wv8-28xj, GHSA-3r9x-f23j-gc73, GHSA-hqmj-h5c6-369m, and GHSA-x4hj-rm42-cggg
 # Root cause: azureml-automl-runtime==1.62.0 (latest) pins onnx<=1.17.0; cannot upgrade parent
-RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=48.0.1' 'bokeh>=3.8.2' 'onnx>=1.22.0'
+RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=50.0.0' 'bokeh>=3.8.2' 'onnx>=1.22.0'
 
 # Security: upgrade aiohttp to fix GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8,
-# and follow-up aiohttp advisories requiring >=3.14.1 in the AzureML conda env.
-RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.1'
+# and follow-up aiohttp advisories requiring >=3.14.3 in the AzureML conda env.
+RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3'
+
+# The ACPT ptca env and the base conda prefix carry their own copies of these
+# packages, which the AzureML conda env above never touches; patch them explicitly.
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3'
+RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3' 'cryptography>=50.0.0'
 
 # torch is pinned by the ACPT base image in the ptca env and by
 # azureml-automl-dnn-nlp in this AzureML env; upgrade both for GHSA-rrmf-rvhw-rf47,

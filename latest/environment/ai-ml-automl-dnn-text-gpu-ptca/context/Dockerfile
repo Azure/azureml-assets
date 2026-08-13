@@ -37,7 +37,7 @@ RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.5
 #   package controls pip here, so direct upgrade is required. The stale
 #   conda-meta JSON files for older pip builds are removed so scanners do not
 #   re-flag them.
-# setuptools 81.0.0 -> >=82.0.1 (GHSA-58pv-8j8x-9vj2 in vendored jaraco.context):
+# setuptools 81.0.0 -> >=83.0.0 (GHSA-h35f-9h28-mq5c, GHSA-58pv-8j8x-9vj2):
 #   setuptools is a build dependency with no parent that pins it.
 # torch 2.8.0+cu126 -> >=2.10.0 (GHSA-vgrw-7cvw-pwgx, GHSA-qfhq-4f3w-5fph):
 #   inherited from the ACPT base image ptca conda environment.
@@ -55,22 +55,25 @@ RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.5
 #   override is required.
 # pyarrow 17.0.0 -> >=23.0.1 (GHSA-rgxp-2hwp-jwgg / CVE-2026-25087): pinned
 #   transitive dep of azureml-automl-dnn-nlp via AzureML dataset/runtime packages.
-# cryptography 46.0.7 -> >=48.0.1 (GHSA-537c-gmf6-5ccf): pinned transitive dep
+# cryptography -> >=50.0.0 (GHSA-g6cj-pr64-35w5): pinned transitive dep
 #   brought in by the ACPT base image ptca conda environment.
+# GitPython -> >=3.1.57 (GHSA-3f7w-8rr8-f37f, GHSA-539m-9xh6-q6rr,
+#   GHSA-p538-c434-8v24): pinned transitive dep of AzureML/MLflow.
 RUN conda install -p /opt/conda/envs/ptca -c conda-forge -y 'pip>=26.1.2' && \
     /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
-    'setuptools>=82.0.1' \
+    'setuptools>=83.0.0' \
     'torch>=2.10.0' \
     'onnx>=1.21.0' \
     'bokeh>=3.8.2' \
     'distributed>=2026.1.0' \
     'aiohttp>=3.14.0' \
     'pyarrow>=23.0.1' \
-    'cryptography>=48.0.1' && \
+    'cryptography>=50.0.0' \
+    'GitPython>=3.1.57' && \
     rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0.1-*.json \
           /opt/conda/envs/ptca/conda-meta/pip-26.1.1-*.json
 
-# Vulnerability patches for conda base env (python 3.13 at /opt/conda)
+# Vulnerability patches for the conda base environment at /opt/conda.
 # pip 26.0.1 -> >=26.1.1 (GHSA-jp4c-xjxw-mgf9, CVE-2026-6357): no parent
 #   package controls pip here, so direct upgrade is required.
 # urllib3 2.6.3 -> >=2.7.0 (GHSA-qccp-gfcp-xxvc / CVE-2026-44431, GHSA-mf9v-mfxr-j63j
@@ -81,7 +84,7 @@ RUN conda install -p /opt/conda/envs/ptca -c conda-forge -y 'pip>=26.1.2' && \
 #   `yarl`) declare loose idna requirements, so direct override is required.
 # click >=8.3.3 (GHSA-47fr-3ffg-hgmw): CLI parents use loose click floors, so
 #   direct override is required.
-# setuptools 82.0.0 -> >=82.0.1 (GHSA-58pv-8j8x-9vj2 in vendored jaraco.context):
+# setuptools 82.0.0 -> >=83.0.0 (GHSA-h35f-9h28-mq5c, GHSA-58pv-8j8x-9vj2):
 #   no parent package pins setuptools.
 # python-dotenv 1.2.1 -> >=1.2.2 (GHSA-mf9w-mj56-hr94): brought in transitively by
 #   anaconda-auth==0.14.4 (Requires-Dist: python-dotenv with no version pin) and
@@ -96,7 +99,7 @@ RUN conda install -p /opt/conda/envs/ptca -c conda-forge -y 'pip>=26.1.2' && \
 #   transitive dep brought in by the ACPT base image conda environment.
 # py-rattler 0.23.1 -> >=0.24.0 (GHSA-q53q-5r4j-5729): pinned transitive dep
 #   brought in by the ACPT base image conda tooling.
-# cryptography 46.0.7 -> >=48.0.1 (GHSA-537c-gmf6-5ccf): pinned transitive dep
+# cryptography -> >=50.0.0 (GHSA-g6cj-pr64-35w5): pinned transitive dep
 #   brought in by the ACPT base image conda environment.
 # pydantic-settings 2.12.0 -> >=2.14.2 (GHSA-4xgf-cpjx-pc3j): transitive dep
 #   brought in by the ACPT base image conda environment.
@@ -109,15 +112,28 @@ RUN /opt/conda/bin/pip install --no-cache-dir --upgrade \
     'urllib3>=2.7.0' \
     'idna>=3.15' \
     'click>=8.3.3' \
-    'setuptools>=82.0.1' \
+    'setuptools>=83.0.0' \
     'python-dotenv>=1.2.2' \
     'aiohttp>=3.14.0' \
     'PyJWT>=2.13.0' \
     'py-rattler>=0.24.0' \
-    'cryptography>=48.0.1' \
+    'cryptography>=50.0.0' \
     'pydantic-settings>=2.14.2' \
     'msgpack>=1.2.1' && \
     rm -rf /opt/conda/pkgs/click-8.2.1-* \
            /opt/conda/pkgs/idna-3.11-* \
            /opt/conda/pkgs/pip-26.0.1-* \
-           /opt/conda/pkgs/python-dotenv-1.2.1-*
+           /opt/conda/pkgs/python-dotenv-1.2.1-* \
+           /opt/conda/pkgs/msgpack-1.1.2-* \
+           /opt/conda/pkgs/setuptools-70.3.0-*
+
+# Remove stale vendored metadata that scanners otherwise report as installed packages.
+RUN set -eux; \
+    find /opt /root /tmp -path '*/pip/_vendor/bom.cdx.json' -type f -delete; \
+    find /opt /root /tmp -path '*/_vendor/vendor.txt' -type f -exec \
+        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +; \
+    for metadata in $(find /opt /root /tmp -type f \( -name METADATA -o -name PKG-INFO \) 2>/dev/null); do \
+        if grep -Eq '^Name: (setuptools|msgpack)$' "$metadata" && grep -Eq '^Version: (70\.3\.0|1\.1\.2)$' "$metadata"; then \
+            rm -rf "$(dirname "$metadata")"; \
+        fi; \
+    done

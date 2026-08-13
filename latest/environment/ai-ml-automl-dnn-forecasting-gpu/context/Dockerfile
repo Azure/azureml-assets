@@ -119,7 +119,7 @@ RUN pip install --no-cache-dir -c /tmp/security-constraints.txt \
 
 # Security overrides needed because parent packages cap vulnerable versions.
 # distributed>=2026.1.0: CVE-2026-23528 (via azureml-train-automl-runtime -> dask[complete])
-# cryptography>=46.0.5: CVE-2026-26007 (via azureml-mlflow, azure-identity, azureml-core -> msal/pyopenssl)
+# cryptography>=50.0.0: CVE-2026-26007 (via azureml-mlflow, azure-identity, azureml-core -> msal/pyopenssl)
 # mlflow-skinny>=2.16.0: security fixes (via azureml-mlflow, azureml-contrib-automl-dnn-forecasting)
 # protobuf>=5.29.6: CVE-2026-0994 (via mlflow-skinny, azureml-automl-runtime -> onnx/onnxruntime)
 # pillow>=12.3.0: current Pillow GHSA findings (via matplotlib, bokeh, tensorboard)
@@ -129,13 +129,17 @@ RUN pip install --no-cache-dir -c /tmp/security-constraints.txt \
 # pyarrow>=23.0.1: GHSA-rgxp-2hwp-jwgg / CVE-2026-25087 (via azureml-dataset-runtime)
 RUN pip install --no-cache-dir --upgrade -c /tmp/security-constraints.txt \
                           'distributed>=2026.1.0' \
-                          'cryptography>=46.0.5' \
+                          'cryptography>=50.0.0' \
                           'mlflow-skinny>=2.16.0' \
                           'protobuf>=5.29.6' \
                           'pillow>=12.3.0' \
                           'bokeh>=3.8.2' \
                           'onnx>=1.21.0' \
                           'pyarrow>=23.0.1'
+
+# The base Miniconda prefix carries its own copy of cryptography, which the
+# AzureML conda environment above never touches, so patch it explicitly.
+RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'cryptography>=50.0.0'
 
 # torch pinned for azureml-contrib-automl-dnn-forecasting; fixes GHSA-rrmf-rvhw-rf47,
 # GHSA-vgrw-7cvw-pwgx, and GHSA-qfhq-4f3w-5fph.

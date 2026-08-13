@@ -55,10 +55,9 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
     'pip>=26.1'
 
 # Install pip dependencies
-# GitPython>=3.1.50 overrides the transitive copy pulled in by mlflow-skinny ->
-# databricks-sdk -> gitpython (also pulled by azureml-* telemetry helpers).
-# Required for GHSA-7545-fcxq-7j24, GHSA-mv93-w799-cj2w, GHSA-v87r-6q3f-2j67;
-# parent packages still allow the older versions, so this direct floor is needed.
+# GitPython>=3.1.57 overrides the transitive copy pulled in by mlflow-skinny ->
+# databricks-sdk -> gitpython (also pulled by azureml-* telemetry helpers);
+# parent packages still allow the older, vulnerable versions.
 RUN pip install \
                 azureml-core==1.61.0.post4 \
                 azureml-mlflow==1.62.0.post5 \
@@ -70,7 +69,6 @@ RUN pip install \
                 azureml-automl-runtime==1.62.0.post1 \
                 azureml-train-automl-client==1.62.0 \
                 azureml-train-automl-runtime==1.62.0 \
-                azureml-dataset-runtime==1.62.0.post1 \
                 azureml-defaults==1.62.0 \
                 'inference-schema' \
                 'mlflow-skinny>=2.16.0' \
@@ -79,67 +77,45 @@ RUN pip install \
                 'xgboost==1.5.2' \
                 'mltable>=1.0.0' \
                 'pytorch-transformers==1.0.0' \
-                'GitPython>=3.1.50' \
+                'GitPython>=3.1.57' \
                 'spacy==3.7.4' \
                 'pillow>=12.1.1' \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz'
 
+# azureml-dataset-runtime is resolved in its own pip invocation, as the other
+# AutoML environments already do. Its current release requires pyarrow>=23.0.1
+# while azureml-train-automl-runtime pins pyarrow==17.0.0, so resolving both in a
+# single invocation is impossible. The pyarrow security floor below is applied
+# afterwards regardless.
+RUN pip install azureml-dataset-runtime==1.62.0.post1
+
 # Fix vulnerabilities - security overrides for transitive dependencies.
-# Parent research refreshed 2026-05-26; direct floors are kept only where the
-# current parent packages still allow vulnerable lower versions.
-#
-# distributed>=2026.1.0    CVE-2026-23528  XSS-to-RCE via Dask dashboard proxy
-#                          Chain: azureml-train-automl-runtime 1.62.0 ->
-#                          dask[complete]<=2023.2.0 -> distributed. Latest dask
-#                          only aligns distributed to the dask release; it does
-#                          not force this security floor.
-#
-# protobuf>=5.29.6         CVE-2025-4565   DoS via recursive protobuf messages (pure-Python)
-#                          Chain (L1): mlflow-skinny -> protobuf. Latest
-#                          mlflow-skinny 3.12.0 still allows protobuf>=3.12.0.
-#                          Chain (L2): azureml-automl-runtime -> onnxruntime -> protobuf
-#
-# cryptography>=46.0.5     CVE-2026-26007  EC subgroup validation bypass (ECDH key leak)
-#                          Chain (L1): mltable -> cryptography
-#                          Chain (L2): azureml-core -> paramiko -> cryptography.
-#                          Latest mltable 1.6.3 and paramiko 3.5.1 keep loose
-#                          cryptography floors.
-#
-# bokeh>=3.8.2             GHSA-793v-589g-574v  conda env installs 2.4.3, pip can't auto-upgrade
-#                          Chain (L1): azureml-train-automl-runtime 1.62.0 ->
-#                          bokeh<3.0.0 and dask[complete]<=2023.2.0.
-#
-# onnx>=1.21.0             GHSA-cmw6-hcpp-c6jp, GHSA-538c-55jv-c5g9, GHSA-q56x-g2fj-4rj6,
-#                          GHSA-p433-9wv8-28xj, GHSA-3r9x-f23j-gc73, GHSA-hqmj-h5c6-369m
-#                          azureml-automl-runtime pins onnx<=1.17.0; latest release (1.62.0)
-#                          still carries that upper bound, so a parent-package upgrade cannot
-#                          resolve the CVEs.  Override required.
-#                          Chain (L1): azureml-automl-runtime -> onnx
-#
-# urllib3>=2.7.0           GHSA-mf9v-mfxr-j63j, GHSA-qccp-gfcp-xxvc
-#                          Chain (L1): requests -> urllib3  (pulled by ~every azureml-* pkg,
-#                          mlflow-skinny, mltable, azure-* SDKs).  Latest `requests` 2.32.5
-#                          still declares `urllib3<3`, never `>=2.7`, so upgrading any
-#                          intermediate parent cannot raise the floor.  Direct override required.
-#
-# ujson>=5.12.1            GHSA-c38f-wx89-p2xg  (decode buffer overflow)
-#                          Current parent metadata does not declare a tight ujson
-#                          floor, so the floor can only be raised via a direct
-#                          override here.
-# pyarrow>=23.0.1          GHSA-rgxp-2hwp-jwgg / CVE-2026-25087 use-after-free
-#                          in Apache Arrow C++. Chain (L1):
-#                          azureml-dataset-runtime -> pyarrow.
-# torch==2.13.0            GHSA-rrmf-rvhw-rf47 plus prior torch findings
-#                          azureml-train-automl-runtime resolves torch 2.8.0,
-#                          so the DNN environment direct pin must be re-applied
-#                          after AzureML package installation.
-RUN pip install --no-cache-dir --upgrade 'distributed>=2026.1.0' 'protobuf>=5.29.6' 'cryptography>=46.0.5' \
+# Each floor is required because the current parent packages still allow the
+# vulnerable lower version, so bumping the parent alone does not remediate.
+# distributed>=2026.1.0  CVE-2026-23528; azureml-train-automl-runtime -> dask[complete] -> distributed
+# protobuf>=5.29.6       CVE-2025-4565; mlflow-skinny -> protobuf, azureml-automl-runtime -> onnxruntime
+# cryptography>=50.0.0   GHSA-537c-gmf6-5ccf, GHSA-g6cj-pr64-35w5; mltable and azureml-core -> paramiko
+# bokeh>=3.8.2           GHSA-793v-589g-574v; parent caps bokeh<3.0.0
+# onnx>=1.21.0           GHSA-cmw6-hcpp-c6jp and 5 related; azureml-automl-runtime caps onnx<=1.17.0
+# urllib3>=2.7.0         GHSA-mf9v-mfxr-j63j, GHSA-qccp-gfcp-xxvc; requests only declares urllib3<3
+# ujson>=5.12.1          GHSA-c38f-wx89-p2xg decode buffer overflow
+# pyarrow>=23.0.1        GHSA-rgxp-2hwp-jwgg / CVE-2026-25087; azureml-dataset-runtime -> pyarrow
+# setuptools>=83.0.0     GHSA-5rjg-fvgr-3xxf, GHSA-h35f-9h28-mq5c
+# torch==2.13.0          GHSA-rrmf-rvhw-rf47; azureml-train-automl-runtime resolves 2.8.0, so the
+#                        pin must be re-applied after the AzureML packages are installed
+RUN pip install --no-cache-dir --upgrade 'distributed>=2026.1.0' 'protobuf>=5.29.6' 'cryptography>=50.0.0' \
     'bokeh>=3.8.2' \
     'onnx>=1.21.0' \
     'urllib3>=2.7.0' \
     'ujson>=5.12.1' \
     'pyarrow>=23.0.1' \
+    'setuptools>=83.0.0' \
     'torch==2.13.0'
+
+# The base Miniconda prefix carries its own copy of cryptography, which the
+# AzureML conda environment above never touches, so patch it explicitly.
+RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'cryptography>=50.0.0'
+
 RUN rm -rf /opt/miniconda/pkgs/
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
