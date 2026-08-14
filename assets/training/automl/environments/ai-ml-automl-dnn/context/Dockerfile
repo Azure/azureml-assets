@@ -4,6 +4,7 @@ ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl-dnn
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 ENV PIP_NO_CACHE_DIR=1
 ENV PIP_PROGRESS_BAR=off
+ENV TORCH_VERSION=2.13.0+cpu
 
 COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/ /var/mlflow_resources/
 
@@ -32,11 +33,12 @@ RUN conda create -y -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     -c conda-forge && \
     conda clean -a -y
 
-# Install cudatoolkit via conda (not available on pip; single-package solve is trivial)
-RUN conda install -y -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    cudatoolkit=10.0.130 \
-    -c nvidia -c conda-forge && \
-    conda clean -a -y
+# Install CPU Torch explicitly. This non-GPU environment only needs Torch runtime
+# functionality; the default PyPI torch wheel pulls a CUDA dependency stack.
+RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
+    --index-url https://download.pytorch.org/whl/cpu \
+    --extra-index-url https://pypi.org/simple \
+    "torch==$TORCH_VERSION"
 
 # Install scientific packages via pip (avoids conda solver OOM)
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
@@ -50,16 +52,17 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
     'setuptools-git' \
     'setuptools==82.0.1' \
     'wheel>=0.46.2' \
-    'torch==2.13.0' \
     'scipy==1.10.1' \
     'psutil>5.0.0,<6.0.0' \
     'pip>=26.1'
+
+RUN printf '%s\n' "torch==$TORCH_VERSION" > /tmp/torch-constraints.txt
 
 # Install pip dependencies
 # GitPython>=3.1.57 overrides the transitive copy pulled in by mlflow-skinny ->
 # databricks-sdk -> gitpython (also pulled by azureml-* telemetry helpers);
 # parent packages still allow the older, vulnerable versions.
-RUN pip install \
+RUN pip install --use-deprecated=legacy-resolver \
                 azureml-core=={{latest-pypi-version}} \
                 azureml-mlflow=={{latest-pypi-version}} \
                 azureml-pipeline-core=={{latest-pypi-version}} \
@@ -102,8 +105,8 @@ RUN pip install azureml-dataset-runtime=={{latest-pypi-version}}
 # ujson>=5.12.1          GHSA-c38f-wx89-p2xg decode buffer overflow
 # pyarrow>=23.0.1        GHSA-rgxp-2hwp-jwgg / CVE-2026-25087; azureml-dataset-runtime -> pyarrow
 # setuptools>=83.0.0     GHSA-5rjg-fvgr-3xxf, GHSA-h35f-9h28-mq5c
-# torch==2.13.0          GHSA-rrmf-rvhw-rf47; azureml-train-automl-runtime resolves 2.8.0, so the
-#                        pin must be re-applied after the AzureML packages are installed
+# torch==2.13.0+cpu      GHSA-rrmf-rvhw-rf47; installed above from the CPU wheel
+#                        to avoid adding the large CUDA dependency stack
 #
 # numpy>=1.23.5,<1.24 is NOT a security floor. It repeats the cap applied further up so
 # that pip sees it while resolving the floors above: onnx pulls ml_dtypes, which as of
@@ -111,15 +114,14 @@ RUN pip install azureml-dataset-runtime=={{latest-pypi-version}}
 # numpy to 2.2.6, which contradicts azureml-automl-runtime, azureml-training-tabular,
 # numba and scipy, and leaves the prebuilt pandas 1.5.3 wheel binary-incompatible
 # ("numpy.dtype size changed") so the environment fails on `import pandas` at runtime.
-RUN pip install --no-cache-dir --upgrade 'numpy>=1.23.5,<1.24' \
+RUN pip install -c /tmp/torch-constraints.txt --no-cache-dir --upgrade 'numpy>=1.23.5,<1.24' \
     'distributed>=2026.1.0' 'protobuf>=5.29.6' 'cryptography>=50.0.0' \
     'bokeh>=3.8.2' \
     'onnx>=1.21.0' \
     'urllib3>=2.7.0' \
     'ujson>=5.12.1' \
     'pyarrow>=23.0.1' \
-    'setuptools>=83.0.0' \
-    'torch==2.13.0'
+    'setuptools>=83.0.0'
 
 # The base Miniconda prefix carries its own copy of cryptography, which the
 # AzureML conda environment above never touches, so patch it explicitly.
@@ -133,6 +135,7 @@ RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'cryptogra
 # vendor.txt so the genuinely vendored packages stay listed, and drop
 # bom.cdx.json, which merely duplicates vendor.txt in CycloneDX form.
 RUN rm -rf /opt/miniconda/pkgs/ && \
+    rm -f /tmp/torch-constraints.txt && \
     find /opt/miniconda $AZUREML_CONDA_ENVIRONMENT_PATH -path '*/pip/_vendor/vendor.txt' \
         -exec sed -i '/^setuptools==/d' {} + && \
     find /opt/miniconda $AZUREML_CONDA_ENVIRONMENT_PATH -path '*/pip/_vendor/bom.cdx.json' -delete
