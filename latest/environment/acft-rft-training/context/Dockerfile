@@ -43,7 +43,10 @@ COPY utils /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/vllm/uti
 # vllm is a direct top-level runtime dependency in this image; pin the patched release.
 RUN pip install --no-cache-dir vllm==0.24.0
 # vllm 0.24.0 pins torch==2.11.0; override after vllm to fix GHSA-rrmf-rvhw-rf47 / VCM 5014621.
-RUN pip install --no-cache-dir --no-deps torch==2.13.0
+# Install from the cu126 index. The base image is cu126 and the recommended A100 v4 SKU ships a
+# driver capped at CUDA 12.8, but the default PyPI torch wheel is built against CUDA 13.0, so the
+# image fails at runtime with "CUDA driver too old (found version 12080)" / cuda_is_available=false.
+RUN pip install --no-cache-dir --no-deps torch==2.13.0 --index-url https://download.pytorch.org/whl/cu126
 # vllm's resolver can upgrade numpy, but verl 0.7.1 requires numpy<2.
 RUN pip install --no-cache-dir numpy==1.26.4
 # Keep xgrammar at the patched floor even when pulled transitively by vllm.
