@@ -2,6 +2,7 @@ FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl-dnn
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
+ENV PIP_NO_CACHE_DIR=1
 ENV PIP_PROGRESS_BAR=off
 
 COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/ /var/mlflow_resources/
