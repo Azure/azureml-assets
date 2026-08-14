@@ -9,7 +9,7 @@ tags:
 system_metadata:
   alias: qwen3.5-9b
   publisher: Microsoft
-  directoryPath: v3
+  directoryPath: v4
   foundryLocal: ''
   inputModalities:
   - text
@@ -46,9 +46,9 @@ variantInfo:
     - RTN
     device: gpu
     executionProvider: WebGPUExecutionProvider
-    fileSizeBytes: 7492005352
-    vRamFootprintBytes: 7492005352
-version: 3
+    fileSizeBytes: 7491984366
+    vRamFootprintBytes: 7491984366
+version: 4
 description: |
   This model is an optimized version of Qwen3.5-9B to enable local inference on GPUs. This model uses RTN quantization.
 
