@@ -129,8 +129,16 @@ RUN pip install \
 # GitPython>=3.1.57: mlflow-skinny -> databricks-sdk -> gitpython keeps a loose floor
 # pyasn1>=0.6.4: GHSA-hm4w-wwcw-mr6r, GHSA-8ppf-4f7h-5ppj (via google-auth -> pyasn1)
 # setuptools>=83.0.0: GHSA-5rjg-fvgr-3xxf, GHSA-h35f-9h28-mq5c
+#
+# numpy>=1.23.5,<1.24 is NOT a security floor. It repeats the cap applied further up so
+# that pip sees it while resolving the floors above: onnx pulls ml_dtypes, which as of
+# 0.6.0 requires numpy 2.x. Without the cap in this same resolve, pip silently upgrades
+# numpy to 2.2.6, which contradicts azureml-automl-runtime, azureml-training-tabular,
+# numba and scipy, and leaves the prebuilt pandas 1.5.3 wheel binary-incompatible
+# ("numpy.dtype size changed") so the environment fails on `import pandas` at runtime.
 RUN pip install --upgrade torchvision==0.23.0 torch==2.8.0 --no-cache-dir
 RUN pip install --upgrade --no-cache-dir \
+                          'numpy>=1.23.5,<1.24' \
                           'distributed>=2026.1.0' 'mlflow-skinny>=2.16.0' \
                           'protobuf>=5.29.6' 'pillow>=12.3.0' \
                           'bokeh>=3.8.2' \
