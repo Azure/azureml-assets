@@ -303,6 +303,29 @@ _VERL_LOGITS_NEW = '''                    logits_rmpad = output.logits.squeeze(0
 
 
 # --------------------------------------------------------------------------------------
+# The bucket-overflow assertion names a Hydra path that does not exist. The field lives on
+# CheckpointEngineConfig (verl/workers/config/rollout.py), nested under the rollout config,
+# so following the printed hint fails with
+#   RolloutConfig.__init__() got an unexpected keyword argument
+#   'update_weights_bucket_megabytes'
+# Print the override that actually works. Also add the missing space between the two
+# sentences, which run together in the original.
+# --------------------------------------------------------------------------------------
+_VERL_BUCKET_HINT_OLD = '''                assert offset + weight.nbytes <= self.bucket_size, (
+                    f"Weight {name}({weight.shape}, {weight.dtype}) is too large to fit in the bucket."
+                    f"Please increase rollout.update_weights_bucket_megabytes({self.bucket_size_mb} MB)."
+                )'''
+_VERL_BUCKET_HINT_NEW = '''                # ACFT-RFT-COMPAT: name the Hydra path that actually exists.
+                # update_weights_bucket_megabytes is on CheckpointEngineConfig, nested under
+                # the rollout config, so the original hint is rejected by RolloutConfig.
+                assert offset + weight.nbytes <= self.bucket_size, (
+                    f"Weight {name}({weight.shape}, {weight.dtype}) is too large to fit in the bucket. "
+                    f"Please increase actor_rollout_ref.rollout.checkpoint_engine."
+                    f"update_weights_bucket_megabytes (currently {self.bucket_size_mb} MB)."
+                )'''
+
+
+# --------------------------------------------------------------------------------------
 # The bundled RFT driver starts the Ray head with the dashboard disabled. Enable it on
 # port 8265 (ray[default] from PyPI ships the dashboard frontend, so no separate frontend
 # install is required). The recipe-supplied driver copy is enabled separately at submit time.
@@ -395,6 +418,15 @@ def main():
     # verl actor forward <-> flash-attn 4 / activation offload
     _replace("verl.utils.attention_utils", _VERL_BERT_OLD, _VERL_BERT_NEW)
     _replace("verl.workers.actor.dp_actor", _VERL_LOGITS_OLD, _VERL_LOGITS_NEW)
+
+    # verl weight transfer: correct the remediation path in the bucket-overflow message.
+    # Optional anchor: this is a message-only fix, so a wording change upstream should not
+    # fail the image build.
+    _replace_if_present(
+        "verl.workers.rollout.vllm_rollout.bucketed_weight_transfer",
+        _VERL_BUCKET_HINT_OLD,
+        _VERL_BUCKET_HINT_NEW,
+    )
 
     # Ray dashboard: reporter robustness + enable it on :8265
     _replace("ray.dashboard.modules.reporter.reporter_agent", _RAY_REPORTER_OLD, _RAY_REPORTER_NEW)
