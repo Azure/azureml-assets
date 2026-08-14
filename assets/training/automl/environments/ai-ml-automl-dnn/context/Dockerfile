@@ -103,7 +103,15 @@ RUN pip install azureml-dataset-runtime=={{latest-pypi-version}}
 # setuptools>=83.0.0     GHSA-5rjg-fvgr-3xxf, GHSA-h35f-9h28-mq5c
 # torch==2.13.0          GHSA-rrmf-rvhw-rf47; azureml-train-automl-runtime resolves 2.8.0, so the
 #                        pin must be re-applied after the AzureML packages are installed
-RUN pip install --no-cache-dir --upgrade 'distributed>=2026.1.0' 'protobuf>=5.29.6' 'cryptography>=50.0.0' \
+#
+# numpy>=1.23.5,<1.24 is NOT a security floor. It repeats the cap applied further up so
+# that pip sees it while resolving the floors above: onnx pulls ml_dtypes, which as of
+# 0.6.0 requires numpy 2.x. Without the cap in this same resolve, pip silently upgrades
+# numpy to 2.2.6, which contradicts azureml-automl-runtime, azureml-training-tabular,
+# numba and scipy, and leaves the prebuilt pandas 1.5.3 wheel binary-incompatible
+# ("numpy.dtype size changed") so the environment fails on `import pandas` at runtime.
+RUN pip install --no-cache-dir --upgrade 'numpy>=1.23.5,<1.24' \
+    'distributed>=2026.1.0' 'protobuf>=5.29.6' 'cryptography>=50.0.0' \
     'bokeh>=3.8.2' \
     'onnx>=1.21.0' \
     'urllib3>=2.7.0' \
@@ -116,6 +124,16 @@ RUN pip install --no-cache-dir --upgrade 'distributed>=2026.1.0' 'protobuf>=5.29
 # AzureML conda environment above never touches, so patch it explicitly.
 RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'cryptography>=50.0.0'
 
-RUN rm -rf /opt/miniconda/pkgs/
+# pip's vendored manifests inherited from the base image still record
+# setuptools==70.3.0 long after setuptools itself has been upgraded, and the
+# scanner reports that stale entry as GHSA-5rjg-fvgr-3xxf / CVE-2025-47273 with
+# an empty install path. pip vendors no setuptools code, only the name, so the
+# entry is inaccurate rather than a real component. Drop just that line from
+# vendor.txt so the genuinely vendored packages stay listed, and drop
+# bom.cdx.json, which merely duplicates vendor.txt in CycloneDX form.
+RUN rm -rf /opt/miniconda/pkgs/ && \
+    find /opt/miniconda $AZUREML_CONDA_ENVIRONMENT_PATH -path '*/pip/_vendor/vendor.txt' \
+        -exec sed -i '/^setuptools==/d' {} + && \
+    find /opt/miniconda $AZUREML_CONDA_ENVIRONMENT_PATH -path '*/pip/_vendor/bom.cdx.json' -delete
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
