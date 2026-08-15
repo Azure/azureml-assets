@@ -34,8 +34,6 @@ You are NOT grading intent recognition. Assume the agent has understood the inte
 
 INPUT
 =====
-CONVERSATION_HISTORY: {{query}}
-AGENT_RESPONSE: {{response}}
 
 CONVERSATION_HISTORY is the full dialogue between the user and the agent up to the user's latest message.
 AGENT_RESPONSE is the agent reply to that latest user message.
@@ -290,3 +288,8 @@ EXPECTED OUTPUT:
   "score": 1,
   "status": "completed"
 }
+
+
+# Data
+CONVERSATION_HISTORY: {{query}}
+AGENT_RESPONSE: {{response}}

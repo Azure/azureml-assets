@@ -6,16 +6,18 @@ ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 # distributed/bokeh/onnx/msgpack: parent packages cap these below patched versions.
 # GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6,
 # GHSA-538c-55jv-c5g9, GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m (onnx)
-# cryptography is a pinned transitive dep of azureml-core; fixes GHSA-537c-gmf6-5ccf.
+# cryptography, setuptools, and h2 are inherited from the base image; cryptography is also a transitive dep of azureml-core.
+# Fixes GHSA-g6cj-pr64-35w5, GHSA-h35f-9h28-mq5c, and GHSA-6hr6-w5qg-qmwg.
 # pyarrow is a pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg.
 # torch is a pinned transitive dep of azureml-contrib-automl-dnn-forecasting; fixes GHSA-rrmf-rvhw-rf47.
 # msgpack is a pinned transitive dep of distributed; fixes GHSA-6v7p-g79w-8964.
 COPY conda_dependencies.yaml .
-RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
+RUN /opt/miniconda/bin/python -m pip install --upgrade --no-cache-dir 'cryptography>=50.0.0' 'setuptools>=83.0.0' 'h2>=4.4.1' && \
+    conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH python -m pip install --upgrade --no-cache-dir 'pip>=26.1.2' && \
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --upgrade --no-cache-dir \
-    'cryptography>=48.0.1' 'GitPython>=3.1.55' 'setuptools>=83.0.0' 'distributed>=2026.1.0' \
+    'cryptography>=50.0.0' 'GitPython>=3.1.55' 'setuptools>=83.0.0' 'distributed>=2026.1.0' \
     'bokeh>=3.8.2' \
     'onnx>=1.21.0' \
     'pyarrow==23.0.1' \
@@ -47,6 +49,15 @@ RUN apt-get update && \
         libgssapi-krb5-2=1.19.2-2ubuntu0.8 \
         libk5crypto3=1.19.2-2ubuntu0.8 \
         libkrb5-3=1.19.2-2ubuntu0.8 \
+        libxml2=2.9.13+dfsg-1ubuntu0.12 \
+        curl=7.81.0-1ubuntu1.25 \
+        libcurl3-gnutls=7.81.0-1ubuntu1.25 \
+        libcurl4=7.81.0-1ubuntu1.25 \
+        libnghttp2-14=1.43.0-1ubuntu0.4 \
+        gzip=1.10-4ubuntu4.2 \
+        openssh-client=1:8.9p1-3ubuntu0.16 \
+        openssh-server=1:8.9p1-3ubuntu0.16 \
+        openssh-sftp-server=1:8.9p1-3ubuntu0.16 \
         libpam-runtime=1.4.0-11ubuntu2.7 \
         libpam0g=1.4.0-11ubuntu2.7 \
         libpam-modules=1.4.0-11ubuntu2.7 \

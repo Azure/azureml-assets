@@ -27,6 +27,20 @@ RUN set -eux; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
 
+# Patch vulnerable Python packages inherited in the base Miniconda prefix.
+# These are transitive base-image packages, not direct dependencies of this image:
+# cryptography fixes GHSA-g6cj-pr64-35w5; h2 fixes GHSA-6hr6-w5qg-qmwg;
+# msgpack fixes GHSA-6v7p-g79w-8964; pydantic-settings fixes GHSA-4xgf-cpjx-pc3j;
+# setuptools fixes GHSA-5rjg-fvgr-3xxf and GHSA-h35f-9h28-mq5c.
+RUN if [ -x /opt/miniconda/bin/python ]; then \
+        /opt/miniconda/bin/python -m pip install --no-cache-dir --progress-bar off --upgrade \
+            'cryptography>=50.0.0' \
+            'h2>=4.4.1' \
+            'msgpack>=1.2.1' \
+            'pydantic-settings>=2.14.2' \
+            'setuptools>=83.0.0'; \
+    fi
+
 RUN conda create -q -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
     -c conda-forge && \
@@ -46,16 +60,18 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --pr
     'psutil>5.0.0,<6.0.0' \
     'torch==2.13.0'
 
-# Install pip dependencies, then apply security overrides.
+# Install pip dependencies, then apply security overrides for vulnerable transitive packages.
 # distributed and bokeh are pinned transitive deps of azureml-train-automl-runtime; fix CVE-2026-23528 and GHSA-793v-589g-574v.
-# cryptography, GitPython, pydantic-settings, python-dotenv, and pyasn1 are pinned transitive deps of AzureML/MLflow; fix their current GHSA findings.
-# msgpack is a pinned transitive dep of the AzureML AutoML Dask stack; fixes GHSA-6v7p-g79w-8964.
-# onnx is pinned because azureml-automl-runtime constrains onnx<=1.17.0; fixes current ONNX GHSA findings.
-# pyarrow is a pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg / CVE-2026-25087.
+# cryptography>=50.0.0 is pinned as a transitive dep of AzureML/MLflow; fixes GHSA-g6cj-pr64-35w5.
+# GitPython>=3.1.58 is pinned as a transitive dep of azureml-mlflow; fixes GitPython GHSA findings.
+# pydantic-settings and pyasn1 are pinned as transitive deps of AzureML/MLflow; fix GHSA findings.
+# msgpack is pinned as a transitive dep of the AzureML AutoML Dask stack; fixes GHSA-6v7p-g79w-8964.
+# onnx is pinned because azureml-automl-runtime constrains onnx<=1.17.0; fixes ONNX GHSA findings.
+# pyarrow is pinned as a transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg / CVE-2026-25087.
 # setuptools is kept above vulnerable versions in Python prefixes; fixes GHSA-5rjg-fvgr-3xxf and GHSA-h35f-9h28-mq5c.
 RUN printf '%s\n' \
-                'cryptography>=48.0.1' \
-                'GitPython>=3.1.55' \
+                'cryptography>=50.0.0' \
+                'GitPython>=3.1.58' \
                 'msgpack>=1.2.1' \
                 'pillow>=12.3.0' \
                 'pydantic-settings>=2.14.2' \
@@ -84,8 +100,8 @@ RUN printf '%s\n' \
                 'prophet==1.1.4' \
                 'inference-schema' \
                 'mltable>=1.0.0' \
-                'cryptography>=48.0.1' \
-                'GitPython>=3.1.55' \
+                'cryptography>=50.0.0' \
+                'GitPython>=3.1.58' \
                 'msgpack>=1.2.1' \
                 'pillow==12.3.0' \
                 'pydantic-settings>=2.14.2' \
@@ -94,7 +110,7 @@ RUN printf '%s\n' \
     pip install --no-cache-dir --progress-bar off --upgrade -c /tmp/security-constraints.txt \
                 'distributed>=2026.1.0' \
                 'bokeh>=3.8.2' \
-                'cryptography>=48.0.1' \
+                'cryptography>=50.0.0' \
                 'onnx>=1.21.0' \
                 'pillow>=12.3.0' \
                 'pydantic-settings>=2.14.2' \

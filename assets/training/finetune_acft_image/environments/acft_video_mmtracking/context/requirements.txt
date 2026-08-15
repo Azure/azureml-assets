@@ -13,5 +13,4 @@ openmim==0.3.9
 mmengine==0.8.4
 peft==0.15.2
 setuptools>=83.0.0
-GitPython>=3.1.55  # pinned transitive dep of azureml-core; fixes GHSA-r9mr-m37c-5fr3, GHSA-6p8h-3wgx-97gf, GHSA-fjr4-x663-mwxc, GHSA-94p4-4cq8-9g67
-filelock>=3.20.1
+GitPython>=3.1.57  # pinned transitive dep of azureml-core; fixes GHSA-r9mr-m37c-5fr3, GHSA-6p8h-3wgx-97gf, GHSA-fjr4-x663-mwxc, GHSA-94p4-4cq8-9g67, GHSA-p538-c434-8v24, GHSA-539m-9xh6-q6rr, GHSA-3f7w-8rr8-f37f

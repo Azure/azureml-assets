@@ -83,11 +83,6 @@ Structure your reasoning as follows:
 
 Note: You are only passed the names of the tools that have been called by the agent. You do not see the parameters that are passed to the tools nor the results of these tools, because your only concern for evaluation is the appropriateness and completeness of the tools selected by the agent, not the parameter correctness nor the result correctness.
 
-# Data
-CONVERSATION: {{query}}
-TOOL DEFINITIONS: {{tool_definitions}}
-TOOL CALLS MADE BY AGENT: {{tool_calls}}
-
 # Tasks
 ## Please provide your evaluation for the tool selection in relation to the user's query based on the definitions and examples above.
 
@@ -115,5 +110,11 @@ Your output should consist only of a JSON object with the following fields:
   - status: a string indicating the evaluation status. Must be one of:
       - "completed": tool calls were present, tool definitions were available, and evaluation was performed.
       - "skipped": evaluation was not performed because there were no tool calls to evaluate, or tool definitions were missing, or no conversation was provided. When skipped, set score to null and properties to null.
+
+# Data
+TOOL DEFINITIONS: {{tool_definitions}}
+CONVERSATION: {{query}}
+TOOL CALLS MADE BY AGENT: {{tool_calls}}
+
 
 # Output

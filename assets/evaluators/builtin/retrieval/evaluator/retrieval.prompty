@@ -77,11 +77,6 @@ user:
   **Context:** ["Gas exchange is the delivery of oxygen from the lungs to the bloodstream, and the elimination of carbon dioxide from the bloodstream to the lungs. It occurs in the lungs between the alveoli and a network of tiny blood vessels called capillaries, which are located in the walls of the alveoli. The walls of the alveoli actually share a membrane with the capillaries in which oxygen and carbon dioxide move freely between the respiratory system and the bloodstream.", "Arterioles branch into capillaries, the smallest of all blood vessels. Capillaries are the sites of nutrient and waste exchange between the blood and body cells. Capillaries are microscopic vessels that join the arterial system with the venous system.", "Arterioles are the smallest arteries and regulate blood flow into capillary beds through vasoconstriction and vasodilation. Capillaries are the smallest vessels and allow for exchange of substances between the blood and interstitial fluid. Continuous capillaries are most common and allow passage of fluids and small solutes. Fenestrated capillaries are more permeable to fluids and solutes than continuous capillaries.", "Tweet. The smallest blood vessels in the human body are capillaries. They are responsible for the absorption of oxygen into the blood stream and for removing the deoxygenated red blood cells for return to the heart and lungs for reoxygenation.", "2. Capillaries—these are the sites of gas exchange between the tissues. 3. Veins—these return oxygen poor blood to the heart, except for the vein that carries blood from the lungs. On the right is a diagram showing how the three connect. Notice the artery and vein are much larger than the capillaries.", "Gas exchange occurs in the capillaries which are the smallest blood vessels in the body. Each artery that comes from the heart is surrounded by capillaries so that they can take it to the various parts of the body."]
 
 
-# Data
-QUERY: {{query}}
-CONTEXT: {{context}}
-
-
 # Tasks
 ## Please provide your assessment Score for the previous CONTEXT in relation to the QUERY based on the Definitions above.
 
@@ -107,3 +102,8 @@ Response format exactly as follows ("reason", "score", and "status" MUST be top-
   "score": <1-5>,
   "status": "completed"
 }
+
+
+# Data
+QUERY: {{query}}
+CONTEXT: {{context}}

@@ -46,21 +46,21 @@ RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade --index-url
 # pydantic-settings; parents still use unpinned python-dotenv or
 # python-dotenv>=0.21.0.
 RUN conda install -y -n base -c conda-forge 'urllib3=2.7.0' 'idna=3.15' 'click=8.3.3' 'python-dotenv=1.2.2' && \
-    rm -rf /opt/conda/lib/python3.13/site-packages/urllib3-2.6*.dist-info \
-           /opt/conda/lib/python3.13/site-packages/idna-3.11.dist-info \
-           /opt/conda/lib/python3.13/site-packages/click-8.2*.dist-info \
-           /opt/conda/lib/python3.13/site-packages/python_dotenv-1.2.1.dist-info \
-           /opt/conda/lib/python3.13/site-packages/python-dotenv-1.2.1.dist-info && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/urllib3-2.6*.dist-info \
+           /opt/conda/lib/python3.14/site-packages/idna-3.11.dist-info \
+           /opt/conda/lib/python3.14/site-packages/click-8.2*.dist-info \
+           /opt/conda/lib/python3.14/site-packages/python_dotenv-1.2.1.dist-info \
+           /opt/conda/lib/python3.14/site-packages/python-dotenv-1.2.1.dist-info && \
     conda clean -ay
 
 # The conda-forge conda update can add optional conda-rattler-solver/py-rattler
 # metadata. This image does not need that solver plugin after build-time package
 # installation, so remove it to avoid carrying unused solver artifacts.
 RUN /opt/conda/bin/pip uninstall -y py-rattler conda-rattler-solver && \
-    rm -rf /opt/conda/lib/python3.13/site-packages/rattler \
-           /opt/conda/lib/python3.13/site-packages/py_rattler* \
-           /opt/conda/lib/python3.13/site-packages/py-rattler* \
-           /opt/conda/lib/python3.13/site-packages/conda_rattler_solver* && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/rattler \
+           /opt/conda/lib/python3.14/site-packages/py_rattler* \
+           /opt/conda/lib/python3.14/site-packages/py-rattler* \
+           /opt/conda/lib/python3.14/site-packages/conda_rattler_solver* && \
     rm -f /opt/conda/conda-meta/py-rattler-*.json \
           /opt/conda/conda-meta/conda-rattler-solver-*.json
 
@@ -69,8 +69,9 @@ RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'aiohttp>=3
     conda run -n ptca python -m pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0'
 
 # pyarrow: pinned transitive dep in ptca; brought in by AzureML dependencies, fixes GHSA-rgxp-2hwp-jwgg.
-# cryptography: pinned transitive dep of ACPT base image; brought in by base image, fixes GHSA-537c-gmf6-5ccf.
-RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade 'pyarrow>=23.0.1' 'cryptography==48.0.1'
+# cryptography: pinned transitive dep of ACPT base image; brought in by base image, fixes GHSA-g6cj-pr64-35w5.
+RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade 'pyarrow>=23.0.1' 'cryptography==50.0.0' && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/cryptography-48.0.1.dist-info
 
 # setuptools: direct dependency in requirements.txt and inherited from ACPT base image; fixes CVE-2026-59890.
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'setuptools==83.0.0' && \
@@ -79,12 +80,13 @@ RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'setuptools
            /opt/conda/envs/ptca/lib/python3.10/site-packages/setuptools-8[12]*.dist-info
 
 # PyJWT: pinned transitive dep in base; brought in by base image, fixes GHSA-jq35-7prp-9v3f and GHSA-993g-76c3-p5m4.
-# cryptography: pinned transitive dep of ACPT base image; brought in by base image, fixes GHSA-537c-gmf6-5ccf.
+# cryptography: pinned transitive dep of ACPT base image; brought in by base image, fixes GHSA-g6cj-pr64-35w5.
 # pydantic-settings: pinned transitive dep of azureml-defaults -> azureml-inference-server-http, fixes GHSA-4xgf-cpjx-pc3j.
 # msgpack: pinned transitive dep of azureml-mlflow -> mlflow-skinny, fixes GHSA-6v7p-g79w-8964.
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.13.0' 'cryptography==48.0.1' 'pydantic-settings>=2.14.2' 'msgpack>=1.2.1' && \
-    rm -rf /opt/conda/lib/python3.13/site-packages/pydantic_settings-2.12*.dist-info \
-           /opt/conda/lib/python3.13/site-packages/pydantic__settings-2.12*.dist-info \
-           /opt/conda/lib/python3.13/site-packages/msgpack-1.1*.dist-info
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.13.0' 'cryptography==50.0.0' 'pydantic-settings>=2.14.2' 'msgpack>=1.2.1' && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/cryptography-48.0.1.dist-info \
+           /opt/conda/lib/python3.14/site-packages/pydantic_settings-2.12*.dist-info \
+           /opt/conda/lib/python3.14/site-packages/pydantic__settings-2.12*.dist-info \
+           /opt/conda/lib/python3.14/site-packages/msgpack-1.1*.dist-info
 
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/

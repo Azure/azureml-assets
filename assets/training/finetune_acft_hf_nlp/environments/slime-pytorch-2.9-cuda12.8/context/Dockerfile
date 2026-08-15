@@ -13,7 +13,7 @@ ARG SGLANG_DEPENDENCY_VERSION=0.5.10.post1
 ARG SGLANG_VERSION=0.5.11
 ARG MEGATRON_COMMIT=1dcf0dafa884ad52ffb243625717a3471643e087
 ARG MBRIDGE_COMMIT=89eb10887887bc74853f89a4de258c0702932a1c
-ARG LOG4J_VERSION=2.25.4
+ARG LOG4J_VERSION=2.25.5
 ARG CAUSAL_CONV1D_WHEEL=https://github.com/yeshsurya/causal-conv1d/releases/download/v1.5.0/causal_conv1d-1.5.0.post8-cp312-cp312-linux_x86_64.whl
 ARG MAMBA_SSM_WHEEL=https://github.com/yeshsurya/mamba/releases/download/v2.3.2/mamba_ssm-2.3.2.post1-cp312-cp312-linux_x86_64.whl
 
@@ -136,9 +136,9 @@ COPY patch_ray_log4j.py /tmp/patch_ray_log4j.py
 # Ray vendors Log4j inside its fat jar, so overlay the fixed artifacts directly
 # into the jar until Ray publishes a wheel with the patched dependency.
 RUN LOG4J_VERSION=${LOG4J_VERSION} \
-    LOG4J_API_SHA1=89ff2217b193fb187b134aa6ebcbfa8a28b018a9 \
-    LOG4J_CORE_SHA1=b963c3d6bfdf05c61ad47a74e9f9295131607df2 \
-    LOG4J_SLF4J_IMPL_SHA1=07c27f97ecedecf58341d4d4467bc3a58fbad73f \
+    LOG4J_API_SHA1=6c80ea65e41f7858f7e15cb390c98c36167c7b3a \
+    LOG4J_CORE_SHA1=c194a13e18b0a36014e867d2d323b989bf212151 \
+    LOG4J_SLF4J_IMPL_SHA1=542f388168432b2dfce12edde0d99c01649c4873 \
     python /tmp/patch_ray_log4j.py && \
     rm /tmp/patch_ray_log4j.py
 
@@ -195,7 +195,7 @@ RUN python -m pip install --no-cache-dir --index-url https://download.pytorch.or
         torchvision==0.25.0 \
         torchaudio==2.10.0 && \
     python -m pip install --no-cache-dir \
-        "aiohttp>=3.14.0" \
+        "aiohttp>=3.14.3" \
         "starlette>=1.0.1" \
         "idna>=3.15" \
         "pyarrow>=23.0.1" \
@@ -204,8 +204,8 @@ RUN python -m pip install --no-cache-dir --index-url https://download.pytorch.or
         "transformers>=5.5.0,<=5.6.0" \
         "mcp[cli]>=1.28.1" \
         "wandb>=0.28.1" \
-        "GitPython>=3.1.55" \
-        "cryptography>=49.0.0" \
+        "GitPython>=3.1.57" \
+        "cryptography>=50.0.0" \
         "setuptools>=83.0.0"
 
 # The optional wandb service binary embeds vulnerable Go modules; remove it so
@@ -216,9 +216,11 @@ RUN WANDB_CORE="$(python -c 'import pathlib, wandb; print(pathlib.Path(wandb.__f
 
 COPY patch_ray_thirdparty.py /tmp/patch_ray_thirdparty.py
 # Upgrade Ray's vendored Python packages and remove their obsolete metadata.
-RUN python -m pip install --no-cache-dir \
+# --upgrade is required: with --target, pip leaves an already-present copy in place,
+# so without it the vendored aiohttp stays at the vulnerable version.
+RUN python -m pip install --no-cache-dir --upgrade \
         "idna>=3.15" \
-        "aiohttp>=3.14.0" \
+        "aiohttp>=3.14.3" \
         --target "$(python -c 'import site; print(site.getsitepackages()[0])')/ray/_private/runtime_env/agent/thirdparty_files" && \
     python /tmp/patch_ray_thirdparty.py && \
     rm /tmp/patch_ray_thirdparty.py
