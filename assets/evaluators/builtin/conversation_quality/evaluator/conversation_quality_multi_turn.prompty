@@ -30,16 +30,6 @@ You are a multi-criteria judge for a multi-turn tool-using agent. In ONE assessm
 
 Turns are 0-indexed. "User turn 0" is the first user request, "User turn 1" the second, and so on. When you report a `failed_turn`, use this 0-based turn index.
 
-INPUT
-=====
-CONVERSATION: {{messages}}
-
-{% if tool_definitions %}
-TOOL_DEFINITIONS: {{tool_definitions}}
-{% endif %}
-
-CONVERSATION is the full multi-turn dialogue: system message, user queries, assistant text, assistant tool calls ([TOOL_CALL] name(args)), and tool results ([TOOL_RESULT] ...). Tool calls and results are the agent's internal working process; the user only sees the agent's text responses. TOOL_DEFINITIONS lists the tools available to the agent. Some conversations carry NO user turn at all (response-only data used to isolate language quality) — in that case judge fluency only and skip the other five criteria per their own skip conditions below.
-
 Each criterion is scored INDEPENDENTLY based ONLY on the conversation and tool definitions provided. Do NOT let a failure in one criterion bias another. For each criterion, first apply its own skip condition; if skipped, set score=null and status="skipped". Otherwise set status="completed", write your "reason" FIRST (a brief chain-of-thought justification), and only then choose the "score" that your reasoning supports — the output schema lists "reason" before "score" for exactly this purpose. All six criteria below list their Ratings in the same ascending order, from lowest/worst (listed first) to highest/best (listed last).
 
 CRITERIA
@@ -170,3 +160,14 @@ Output a single JSON object EXACTLY in this shape (no extra keys, no prose outsi
     "failed_turn": <0-based earliest failing user turn, or null if score is 1>
   }
 }
+
+# INPUT
+CONVERSATION: {{messages}}
+
+{% if tool_definitions %}
+TOOL_DEFINITIONS: {{tool_definitions}}
+{% endif %}
+
+CONVERSATION is the full multi-turn dialogue: system message, user queries, assistant text, assistant tool calls ([TOOL_CALL] name(args)), and tool results ([TOOL_RESULT] ...). Tool calls and results are the agent's internal working process; the user only sees the agent's text responses. TOOL_DEFINITIONS lists the tools available to the agent. Some conversations carry NO user turn at all (response-only data used to isolate language quality) — in that case judge fluency only and skip the other five criteria per their own skip conditions below.
+
+# OUTPUT

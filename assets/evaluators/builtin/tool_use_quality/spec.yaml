@@ -10,99 +10,77 @@ tags:
   provider: "Microsoft"
   is_continuous_scenario: "true"
 supportedEvaluationLevels: ["conversation", "turn"]
-initParameterSchema:
-  type: "object"
-  properties:
-    deployment_name:
-      type: "string"
-    evaluation_level:
-      type: "string"
-    threshold:
-      type: "object"
-      properties:
+definition:
+  type: "composite"
+  init_parameters:
+    type: "object"
+    properties:
+      deployment_name:
+        type: "string"
+      evaluation_level:
+        type: "string"
+      threshold:
+        type: "number"
+        minimum: 0
+        maximum: 1
+        multipleOf: 1
+    required: ["deployment_name"]
+  data_schema:
+    type: "object"
+    properties:
+      query:
+        anyOf:
+          - type: "string"
+          - type: "array"
+            items:
+              type: "object"
+      response:
+        anyOf:
+          - type: "string"
+          - type: "array"
+            items:
+              type: "object"
+      messages:
+        type: "array"
+        items:
+          type: "object"
+      tool_definitions:
+        anyOf:
+          - type: "object"
+          - type: "array"
+            items:
+              type: "object"
+    anyOf:
+      - required: ["query", "response", "tool_definitions"]
+      - required: ["messages", "tool_definitions"]
+  metrics:
+    tool_use_quality:
+      type: "boolean"
+      min_value: 0
+      max_value: 1
+      desirable_direction: "increase"
+    evaluator_metrics:
+      type: "boolean"
+      min_value: 0
+      max_value: 1
+      desirable_direction: "increase"
+  evaluator_properties:
+    builtin.tool_call_success: {}
+    builtin.tool_input_accuracy: {}
+    builtin.tool_call_accuracy:
+      init_parameters:
+        properties:
+          threshold:
+            type: "number"
+            minimum: 1
+            maximum: 5
+            multipleOf: 1
+      metrics:
         tool_call_accuracy:
-          type: "number"
-          minimum: 1
-          maximum: 5
-          multipleOf: 1
-        tool_call_success:
-          type: "number"
-          minimum: 0
-          maximum: 1
-          multipleOf: 1
-        tool_input_accuracy:
-          type: "number"
-          minimum: 0
-          maximum: 1
-          multipleOf: 1
-        tool_output_utilization:
-          type: "number"
-          minimum: 0
-          maximum: 1
-          multipleOf: 1
-        tool_selection:
-          type: "number"
-          minimum: 0
-          maximum: 1
-          multipleOf: 1
-  required: ["deployment_name"]
-dataMappingSchema:
-  type: "object"
-  properties:
-    query:
-      anyOf:
-        - type: "string"
-        - type: "array"
-          items:
-            type: "object"
-    response:
-      anyOf:
-        - type: "string"
-        - type: "array"
-          items:
-            type: "object"
-    messages:
-      type: "array"
-      items:
-        type: "object"
-    tool_definitions:
-      anyOf:
-        - type: "object"
-        - type: "array"
-          items:
-            type: "object"
-  anyOf:
-    - required: ["query", "response", "tool_definitions"]
-    - required: ["messages", "tool_definitions"]
-outputSchema:
-  tool_use_quality:
-    type: "boolean"
-    desirable_direction: "increase"
-    min_value: 0
-    max_value: 1
-  tool_call_accuracy:
-    type: "ordinal"
-    desirable_direction: "increase"
-    min_value: 1
-    max_value: 5
-  tool_call_success:
-    type: "boolean"
-    desirable_direction: "increase"
-    min_value: 0
-    max_value: 1
-  tool_input_accuracy:
-    type: "boolean"
-    desirable_direction: "increase"
-    min_value: 0
-    max_value: 1
-  tool_output_utilization:
-    type: "boolean"
-    desirable_direction: "increase"
-    min_value: 0
-    max_value: 1
-  tool_selection:
-    type: "boolean"
-    desirable_direction: "increase"
-    min_value: 0
-    max_value: 1
+          type: "ordinal"
+          min_value: 1
+          max_value: 5
+          desirable_direction: "increase"
+    builtin.tool_output_utilization: {}
+    builtin.tool_selection: {}
 path: ./evaluator

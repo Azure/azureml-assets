@@ -28,23 +28,6 @@ single agent interaction against FIVE independent evaluation rubrics at once and
 return one JSON object with a separate result for each rubric. Judge every rubric
 strictly and independently of the others, exactly as if each were scored alone.
 
-# SHARED DATA
-CONVERSATION (prior turns; may contain earlier tool calls and their results):
-{{query}}
-
-AGENT RESPONSE (the agent's latest message being evaluated; contains the tool
-calls made in response to the user's last query, each tool call's result, and any
-final text to the user):
-{{response}}
-
-TOOL DEFINITIONS:
-{{tool_definitions}}
-
-Notes for reading the data:
-- "TOOL CALLS TO BE EVALUATED" / "TOOL CALLS MADE BY AGENT" = the tool calls found
-  in the AGENT RESPONSE only (not the ones in CONVERSATION, which are context).
-- Each tool call includes its name, arguments, and its result.
-
 user:
 Evaluate the AGENT RESPONSE against ALL FIVE rubrics below. For each rubric, first
 apply its Skip conditions; if skipped, set score=null and status="skipped".
@@ -135,8 +118,7 @@ NAMES matter here — ignore parameter correctness and tool results.
 Skip (score=null, status="skipped") if: there are NO tool calls in the AGENT RESPONSE, OR
 TOOL DEFINITIONS are missing, OR the CONVERSATION is missing.
 
-================================================================================
-# OUTPUT
+# OUTPUT FORMAT
 Return EXACTLY one JSON object (no markdown, no extra text) with this schema:
 {
   "tool_call_accuracy":       {"score": <1-5 or null>, "status": "completed"|"skipped", "reason": "<brief>"},
@@ -147,3 +129,22 @@ Return EXACTLY one JSON object (no markdown, no extra text) with this schema:
 }
 Each "reason" must be 1-3 sentences justifying that rubric's score. Judge each rubric
 independently and strictly on its own scale.
+
+# INPUT
+CONVERSATION (prior turns; may contain earlier tool calls and their results):
+{{query}}
+
+AGENT RESPONSE (the agent's latest message being evaluated; contains the tool
+calls made in response to the user's last query, each tool call's result, and any
+final text to the user):
+{{response}}
+
+TOOL DEFINITIONS:
+{{tool_definitions}}
+
+## Notes for reading the data:
+- "TOOL CALLS TO BE EVALUATED" / "TOOL CALLS MADE BY AGENT" = the tool calls found
+  in the AGENT RESPONSE only (not the ones in CONVERSATION, which are context).
+- Each tool call includes its name, arguments, and its result.
+
+# OUTPUT

@@ -25,26 +25,6 @@ JSON object with a separate result for each rubric. Judge every rubric strictly 
 independently of the others, exactly as if each were scored alone — do not let one
 rubric's verdict influence another's.
 
-# SHARED DATA
-CONVERSATION (the user's query and any prior turns / conversation history; may be
-empty for some rows — e.g. fluency-only datasets that carry no query):
-{{query}}
-
-AGENT RESPONSE (the assistant's response being evaluated; may contain final text to
-the user as well as any tool calls the agent made and their results):
-{{response}}
-
-TOOL DEFINITIONS (available tools; may be empty):
-{{tool_definitions}}
-
-Notes for reading the data:
-- "TOOL CALLS" = the tool calls found inside the AGENT RESPONSE, each with its name,
-  arguments, and result.
-- Treat the CONVERSATION as the user's intent/request and the AGENT RESPONSE as the
-  assistant's attempt to satisfy it.
-- For groundedness the source of truth for factual claims is the CONTENT retrieved
-  via tool calls inside the AGENT RESPONSE (tool_result blocks) and any context in
-  the CONVERSATION; there is no separate CONTEXT field.
 
 user:
 Evaluate the AGENT RESPONSE against ALL SIX rubrics below. For each rubric, first apply
@@ -265,3 +245,26 @@ chain-of-thought justification) and only then commit to the score it supports:
 }
 Each "reason" must be 1-3 sentences justifying that rubric's score, written before the
 score itself. Judge each rubric independently and strictly on its own scale.
+
+# INPUT DATA
+CONVERSATION (the user's query and any prior turns / conversation history; may be
+empty for some rows — e.g. fluency-only datasets that carry no query):
+{{query}}
+
+AGENT RESPONSE (the assistant's response being evaluated; may contain final text to
+the user as well as any tool calls the agent made and their results):
+{{response}}
+
+TOOL DEFINITIONS (available tools; may be empty):
+{{tool_definitions}}
+
+## NOTES FOR READING THE INPUT DATA
+- "TOOL CALLS" = the tool calls found inside the AGENT RESPONSE, each with its name,
+  arguments, and result.
+- Treat the CONVERSATION as the user's intent/request and the AGENT RESPONSE as the
+  assistant's attempt to satisfy it.
+- For groundedness the source of truth for factual claims is the CONTENT retrieved
+  via tool calls inside the AGENT RESPONSE (tool_result blocks) and any context in
+  the CONVERSATION; there is no separate CONTEXT field.
+
+# OUTPUT

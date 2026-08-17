@@ -31,31 +31,6 @@ rubrics at once and return one JSON object with a separate result for each
 rubric. Judge every rubric strictly and independently of the others, exactly as
 if each were scored alone.
 
-# DATA
-CONVERSATION (full multi-turn transcript; each user turn is labeled
-"User turn <k>:" starting from 0; each agent turn is "Agent turn <k>:"; tool
-calls appear inline as "[TOOL_CALL] name(args)" and their results as
-"[TOOL_RESULT] ..."):
-{{messages}}
-
-TOOL DEFINITIONS (JSON array):
-{{tool_definitions}}
-
-# SCOPE (multi-turn extension)
-- "TOOL CALLS TO BE EVALUATED" = **every** tool call the agent made across
-  **all** of its agent turns in the CONVERSATION above.
-- Judge the SESSION as a whole. When evaluating relevance/completeness/
-  selection, consider each user turn's needs and whether the calls made in
-  the corresponding (or subsequent) agent turn addressed them.
-- When a tool call is a retry after an error, treat it exactly like the
-  single-turn rubric does (successful recovery is credited).
-
-# LOCALIZATION — `failed_turn`
-For each rubric, if the score indicates failure/skip, report a 0-based
-`failed_turn` = the FIRST user turn whose corresponding agent turn violated
-the rubric. If the rubric passes at the maximum level (tool_call_accuracy=5,
-or a 1 for binary rubrics) OR is skipped, set `failed_turn` to null.
-
 user:
 Evaluate the AGENT SESSION against ALL FIVE rubrics below. For each rubric,
 first apply its Skip conditions; if skipped, set score=null and
@@ -147,8 +122,13 @@ if some redundant/unnecessary (but not irrelevant) tools were also selected.
 Skip (score=null, status="skipped") if: NO tool calls anywhere in the session,
 OR TOOL DEFINITIONS are missing, OR the conversation is missing.
 
-================================================================================
-# FAILED-TURN RULES
+# LOCALIZATION — `failed_turn`
+For each rubric, if the score indicates failure/skip, report a 0-based
+`failed_turn` = the FIRST user turn whose corresponding agent turn violated
+the rubric. If the rubric passes at the maximum level (tool_call_accuracy=5,
+or a 1 for binary rubrics) OR is skipped, set `failed_turn` to null.
+
+## FAILED-TURN RULES
 - `failed_turn` is either the user-turn index or null.
 - If tool_call_accuracy=5 → failed_turn MUST be null.
 - If any binary rubric = 1 → its failed_turn MUST be null.
@@ -156,7 +136,7 @@ OR TOOL DEFINITIONS are missing, OR the conversation is missing.
 - Otherwise, choose the FIRST user turn where the failing behavior first
   appears (looking at the agent turn(s) responding to that user turn).
 
-# OUTPUT
+# OUTPUT FORMAT
 Return EXACTLY one JSON object (no markdown, no extra text) with this schema:
 {
   "tool_call_accuracy":       {"score": <1-5 or null>, "status": "completed"|"skipped", "reason": "<brief>", "failed_turn": <int or null>},
@@ -165,5 +145,26 @@ Return EXACTLY one JSON object (no markdown, no extra text) with this schema:
   "tool_output_utilization":  {"score": <0|1 or null>, "status": "completed"|"skipped", "reason": "<brief>", "failed_turn": <int or null>},
   "tool_selection":           {"score": <0|1 or null>, "status": "completed"|"skipped", "reason": "<brief>", "failed_turn": <int or null>}
 }
-Each "reason" must be 1-3 sentences justifying that rubric's score. Judge each
-rubric independently and strictly on its own scale.
+Each "reason" must be 1-3 sentences justifying that rubric's score. Judge each rubric independently and strictly on its own scale.
+
+# INPUT
+CONVERSATION (full multi-turn transcript; each user turn is labeled
+"User turn <k>:" starting from 0; each agent turn is "Agent turn <k>:"; tool
+calls appear inline as "[TOOL_CALL] name(args)" and their results as
+"[TOOL_RESULT] ..."):
+{{messages}}
+
+TOOL DEFINITIONS (JSON array):
+{{tool_definitions}}
+
+# SCOPE (multi-turn)
+- "TOOL CALLS TO BE EVALUATED" = **every** tool call the agent made across
+  **all** of its agent turns in the CONVERSATION above.
+- Judge the SESSION as a whole. When evaluating relevance/completeness/
+  selection, consider each user turn's needs and whether the calls made in
+  the corresponding (or subsequent) agent turn addressed them.
+- When a tool call is a retry after an error, treat it exactly like the
+  single-turn rubric does (successful recovery is credited).
+
+# OUTPUT
+
