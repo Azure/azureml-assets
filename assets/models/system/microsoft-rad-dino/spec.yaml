@@ -31,5 +31,5 @@ system_metadata:
     - Standard_NC96ads_A100_v4
     - Standard_ND96asr_v4
     - Standard_ND96amsr_A100_v4
-inferenceEnvironmentAssetId: azureml://registries/azureml/environments/mlflow-model-inference/versions/22
+  inferenceEnvironmentAssetId: azureml://registries/azureml/environments/mlflow-model-inference/versions/22
 version: 4
