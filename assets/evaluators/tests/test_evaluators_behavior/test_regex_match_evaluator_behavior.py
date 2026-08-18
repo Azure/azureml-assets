@@ -225,3 +225,39 @@ class TestRegexMatchEvaluatorBehavior(BaseCodeEvaluatorRunner):
         evaluator = RegexMatchEvaluator(patterns=r"answer: {{ground_truth}}")
         resolved = evaluator._resolve_pattern(r"answer: {{ground_truth}}", {})
         assert resolved == r"answer: {{ground_truth}}"
+
+    # ==================== BENCHMARK MARKDOWN BOLD PATTERN TESTS ====================
+    # These tests validate the regex patterns used by bigbenchhard, musr, and gpqa_diamond
+    # to handle markdown bold/italic formatting in model responses.
+
+    # The benchmark pattern for BBH/GPQA-style answers
+    BENCHMARK_PATTERN = r"(?i)\*{0,3}ANSWER\*{0,3}\s*:\s*\*{0,3}({{ground_truth}})\*{0,3}"
+
+    @pytest.mark.parametrize("response,ground_truth", [
+        ("ANSWER: B", "B"),                          # plain
+        ("**ANSWER**: **B**", "B"),                   # bold keyword and answer
+        ("**ANSWER: B**", "B"),                       # bold entire line
+        ("***ANSWER***: ***B***", "B"),               # bold+italic
+        ("*ANSWER*: *B*", "B"),                       # italic only
+        ("ANSWER: True", "True"),                     # boolean answer (MuSR)
+        ("**ANSWER**: **True**", "True"),             # bold boolean
+        ("ANSWER:B", "B"),                            # no space after colon
+    ])
+    def test_benchmark_markdown_bold_patterns_match(self, response, ground_truth):
+        """Test that benchmark patterns handle markdown bold/italic formatting."""
+        evaluator = RegexMatchEvaluator(patterns=self.BENCHMARK_PATTERN)
+        results = evaluator(response=response, ground_truth=ground_truth)
+        result_data = self._extract_and_print_result(results, "benchmark_bold")
+        self.assert_pass(result_data)
+
+    @pytest.mark.parametrize("response,ground_truth", [
+        ("ANSWER: A", "B"),                           # wrong answer
+        ("The answer is B", "B"),                     # missing ANSWER: prefix
+        ("**ANSWER**: **A**", "B"),                   # bold but wrong
+    ])
+    def test_benchmark_markdown_bold_patterns_no_match(self, response, ground_truth):
+        """Test that benchmark patterns correctly reject wrong answers."""
+        evaluator = RegexMatchEvaluator(patterns=self.BENCHMARK_PATTERN)
+        results = evaluator(response=response, ground_truth=ground_truth)
+        result_data = self._extract_and_print_result(results, "benchmark_bold_no_match")
+        self.assert_fail(result_data)

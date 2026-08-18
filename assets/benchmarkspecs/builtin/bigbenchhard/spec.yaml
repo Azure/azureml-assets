@@ -22,8 +22,8 @@ evaluator:
     evaluator_version: "2"
     initialization_parameters:
       patterns:
-        - "(?i)\\*{0,2}ANSWER\\*{0,2}\\s*:\\s*\\*{0,2}\\$?({{ground_truth}})\\*{0,2}(?:\\s|$|\\.|,)"
-        - "(?i)\\*{0,2}ANSWER\\*{0,2}\\s*:\\s*\\*{0,2}\\$?\\(?({{ground_truth}})\\)?\\*{0,2}(?:\\s|$|\\.|,)"
+        - "(?i)\\*{0,3}ANSWER\\*{0,3}\\s*:\\s*\\*{0,3}\\$?({{ground_truth}})\\*{0,3}(?:\\s|$|\\.|,)"
+        - "(?i)\\*{0,3}ANSWER\\*{0,3}\\s*:\\s*\\*{0,3}\\$?\\(?({{ground_truth}})\\)?\\*{0,3}(?:\\s|$|\\.|,)"
     data_mapping:
       ground_truth: "{{item.target}}"
       response: "{{sample.output_text}}"

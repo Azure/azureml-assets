@@ -1,6 +1,6 @@
 type: "benchmarkspec"
 name: "builtin.gpqa_diamond"
-version: 5
+version: 6
 display_name: "GPQA Diamond Benchmark"
 description: "GPQA Diamond is a curated to be a higher-difficulty subset of the GPQA benchmark. (Graduate-Level Google-Proof Q&A) benchmark for evaluating model reasoning accuracy on multiple-choice science questions."
 benchmarkType: "builtin"
@@ -22,7 +22,7 @@ evaluator:
     evaluator_version: "2"
     initialization_parameters:
       patterns:
-        - "(?i)ANSWER\\s*:\\s*({{ground_truth}})"
+        - "(?i)\\*{0,3}ANSWER\\*{0,3}\\s*:\\s*\\*{0,3}({{ground_truth}})\\*{0,3}"
     data_mapping:
       ground_truth: "{{item.Correct_Answer}}"
       response: "{{sample.output_text}}"
