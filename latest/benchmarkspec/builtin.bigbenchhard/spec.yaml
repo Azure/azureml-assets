@@ -1,6 +1,6 @@
 type: "benchmarkspec"
 name: "builtin.bigbenchhard"
-version: 1
+version: 2
 display_name: "BIG-Bench Hard Benchmark"
 description: "BIG-Bench Hard (BBH) is a suite of 23 challenging tasks from the BIG-Bench
   benchmark where prior language models did not outperform average human performance.
@@ -28,8 +28,10 @@ evaluator:
     evaluator_version: "2"
     initialization_parameters:
       patterns:
-      - "(?i)ANSWER\\s*:\\s*\\$?({{ground_truth}})(?:\\s|$|\\.|,)"
-      - "(?i)ANSWER\\s*:\\s*\\$?\\(?({{ground_truth}})\\)?(?:\\s|$|\\.|,)"
+      - "(?i)\\*{0,3}ANSWER\\*{0,3}\\s*:\\s*\\*{0,3}\\$?({{ground_truth}})\\*{0,3}(?:\\\
+        s|$|\\.|,)"
+      - "(?i)\\*{0,3}ANSWER\\*{0,3}\\s*:\\s*\\*{0,3}\\$?\\(?({{ground_truth}})\\)?\\\
+        *{0,3}(?:\\s|$|\\.|,)"
     data_mapping:
       ground_truth: "{{item.target}}"
       response: "{{sample.output_text}}"
