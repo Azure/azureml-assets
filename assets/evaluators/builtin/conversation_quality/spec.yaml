@@ -1,100 +1,95 @@
 type: "evaluator"
+id: "azureml://registries/azureml/evaluators/builtin.conversation_quality/versions/1"
 name: "builtin.conversation_quality"
 version: 1
 displayName: "Conversation-Quality-Evaluators-(Preview)"
 description: "A meta-evaluator that batches fluency, coherence, intent_resolution, task_adherence, groundedness, and task_completion into a single LLM call. The primary conversation_quality score fails when any evaluated evaluator fails, while the evaluator keys preserve the raw LLM results. Supports single-turn query/response and multi-turn messages inputs, including response-only fluency evaluation."
 evaluatorType: "builtin"
-evaluatorSubType: "code"
+evaluatorSubType: "composite"
 categories: ["quality", "agents"]
 supportedEvaluationLevels: ["conversation", "turn"]
 tags:
   provider: "Microsoft"
   is_continuous_scenario: "true"
+  composite_evaluator: ["builtin.fluency", "builtin.coherence", "builtin.intent_resolution", "builtin.task_adherence", "builtin.groundedness", "builtin.task_completion"]
+initParameterSchema:
+  type: "object"
+  properties:
+    deployment_name:
+      type: "string"
+    threshold:
+      type: "number"
+      minimum: 1
+      maximum: 5
+      multipleOf: 1
+    evaluation_level:
+      type: "string"
+  required: ["deployment_name"]
+dataMappingSchema:
+  type: "object"
+  properties:
+    query:
+      anyOf:
+        - type: "string"
+        - type: "array"
+          items:
+            type: "object"
+    response:
+      anyOf:
+        - type: "string"
+        - type: "array"
+          items:
+            type: "object"
+    tool_definitions:
+      anyOf:
+        - type: "object"
+        - type: "array"
+          items:
+            type: "object"
+    messages:
+      type: "array"
+      items:
+        type: "object"
+  anyOf:
+    - required: ["query", "response"]
+    - required: ["messages"]
 definition:
-  type: "composite"
-  init_parameters:
-    type: "object"
-    properties:
-      deployment_name:
-        type: "string"
-      evaluation_level:
-        type: "string"
-      threshold:
-        type: "number"
-        minimum: 1
-        maximum: 5
-        multipleOf: 1
-    required: ["deployment_name"]
-  data_schema:
-    type: "object"
-    properties:
-      query:
-        anyOf:
-          - type: "string"
-          - type: "array"
-            items:
-              type: "object"
-      response:
-        anyOf:
-          - type: "string"
-          - type: "array"
-            items:
-              type: "object"
-      tool_definitions:
-        anyOf:
-          - type: "object"
-          - type: "array"
-            items:
-              type: "object"
-      messages:
-        type: "array"
-        items:
-          type: "object"
-    anyOf:
-      - required: ["query", "response"]
-      - required: ["messages"]
+  type: "code"
+  code_text: null
+  blob_uri: "https://.../conversation-quality/evaluator"
   metrics:
     conversation_quality:
       type: "boolean"
+      desirable_direction: "increase"
       min_value: 0
       max_value: 1
-      desirable_direction: "increase"
-    evaluator_metrics:
+      is_primary: true
+    fluency:
       type: "ordinal"
+      desirable_direction: "increase"
       min_value: 1
       max_value: 5
+    coherence:
+      type: "ordinal"
       desirable_direction: "increase"
-  evaluator_properties:
-    builtin.fluency: {}
-    builtin.coherence: {}
-    builtin.intent_resolution: {}
-    builtin.groundedness: {}
-    builtin.task_adherence:
-      init_parameters:
-        properties:
-          threshold:
-            type: "number"
-            minimum: 0
-            maximum: 1
-            multipleOf: 1
-      metrics:
-        task_adherence:
-          type: "boolean"
-          min_value: 0
-          max_value: 1
-          desirable_direction: "increase"
-    builtin.task_completion:
-      init_parameters:
-        properties:
-          threshold:
-            type: "number"
-            minimum: 0
-            maximum: 1
-            multipleOf: 1
-      metrics:
-        task_completion:
-          type: "boolean"
-          min_value: 0
-          max_value: 1
-          desirable_direction: "increase"
+      min_value: 1
+      max_value: 5
+    intent_resolution:
+      type: "ordinal"
+      desirable_direction: "increase"
+      min_value: 1
+      max_value: 5
+    task_adherence:
+      type: "boolean"
+      desirable_direction: "increase"
+    groundedness:
+      type: "ordinal"
+      desirable_direction: "increase"
+      min_value: 1
+      max_value: 5
+    task_completion:
+      type: "boolean"
+      desirable_direction: "increase"
+      min_value: 0
+      max_value: 1
 path: ./evaluator
