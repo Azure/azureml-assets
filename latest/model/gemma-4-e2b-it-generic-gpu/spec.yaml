@@ -10,7 +10,7 @@ system_metadata:
   alias: gemma-4-e2b-it
   publisher: Microsoft
   directoryPath: v1
-  foundryLocal: 'test'
+  foundryLocal: ''
   inputModalities:
   - text
   - image
@@ -37,7 +37,7 @@ system_metadata:
     enableMaap: false
   reasoningStart: '<|channel>thought\n'
   reasoningEnd: '<|channel|>'
-  minFLVersion: 1.2.1
+  minFLVersion: 2.0.0
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/gemma-4-e2b-it/versions/1
