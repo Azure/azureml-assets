@@ -22,7 +22,7 @@ evaluator:
     evaluator_version: "2"
     initialization_parameters:
       patterns:
-        - "(?i)\\*{0,3}ANSWER\\*{0,3}\\s*:\\s*\\*{0,3}({{ground_truth}})\\*{0,3}"
+        - "(?i)\\*{0,3}ANSWER\\*{0,3}\\s*:\\s*\\*{0,3}({{ground_truth}})\\*{0,3}(?:\\s|$|\\.|,)"
     data_mapping:
       ground_truth: "{{item.answer_choice}}"
       response: "{{sample.output_text}}"
