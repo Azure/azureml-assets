@@ -82,6 +82,8 @@ definition:
     task_adherence:
       type: "boolean"
       desirable_direction: "increase"
+      min_value: 0
+      max_value: 1
     groundedness:
       type: "ordinal"
       desirable_direction: "increase"
