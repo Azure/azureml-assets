@@ -33,7 +33,6 @@ from azure.ai.evaluation._common._experimental import experimental
 
 from azure.ai.evaluation._evaluators._common._validators import (
     ValidatorInterface,
-    ConversationValidator,
 )
 
 try:  # azure-ai-evaluation >= 1.18.1

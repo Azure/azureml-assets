@@ -40,7 +40,8 @@ class TestDeflectionRateEvaluatorQualityMultiTurn(BaseQualityEvaluatorRunner):
                 {"role": "user", "content": "Is there anything I can do myself?"},
                 {
                     "role": "assistant",
-                    "content": "Select Forgot Password on the sign-in page, enter your email, and use the reset link sent to you.",
+                    "content": "Select Forgot Password on the sign-in page, enter your email, "
+                               "and use the reset link sent to you.",
                 },
             ],
         )
