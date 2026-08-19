@@ -89,6 +89,7 @@ class _ValidatorUnitTestSupport:
         "groundedness": ("completed", "error", "error"),
         "task_adherence": ("completed", ValueError, EvaluationException),
         "task_completion": ("completed", ValueError, EvaluationException),
+        "deflection_rate": ("completed", "completed", EvaluationException),
     }
 
     # _do_eval with a missing score: groundedness/tool_output_utilization raise
@@ -229,8 +230,10 @@ class _ValidatorUnitTestSupport:
             " _the_super_real_call _wrap_string_messages serialize_messages"
         ),
         "deflection_rate": (
-            "ConversationValidator _convert_kwargs_to_eval_input _do_eval _get_token_metadata"
-            " _is_intermediate_response _real_call _return_not_applicable_result"
+            "ConversationValidator EvaluationLevel MessagesOrQueryResponseInputValidator _convert_kwargs_to_eval_input"
+            " _build_result _do_eval _get_token_metadata _is_intermediate_response _parse_prompty_output"
+            " _preprocess_messages _real_call _resolve_evaluation_level _return_not_applicable_result"
+            " _should_use_conversation_level _split_messages_at_latest_user serialize_messages"
         ),
         "quality_grader": (
             "ConversationValidator _build_result _convert_kwargs_to_eval_input _do_eval"
