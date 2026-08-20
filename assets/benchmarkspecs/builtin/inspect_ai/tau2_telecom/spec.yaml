@@ -1,6 +1,6 @@
 type: "benchmarkspec"
 name: "builtin.inspect_ai.tau2_telecom"
-version: 1
+version: 2
 display_name: "τ²-Bench Telecom Benchmark (inspect_ai)"
 description: "τ²-bench Telecom is a dual-control agent benchmark that evaluates AI agents on realistic telecom customer service tasks. Both the AI agent and a simulated user interact to resolve issues. Evaluated using the inspect_ai framework."
 benchmarkType: "builtin"
@@ -11,6 +11,7 @@ evaluator:
     type: "inspect_ai"
     name: "tau2 Telecom"
     task_name: "inspect_evals/tau2_telecom"
+    model: "{{aoai_deployment_and_model}}"
 
 dataset:
   datasetName: "tau2_telecom"

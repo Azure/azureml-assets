@@ -1,6 +1,6 @@
 type: "benchmarkspec"
 name: "builtin.inspect_ai.browse_comp"
-version: 1
+version: 2
 display_name: "BrowseComp Benchmark (inspect_ai)"
 description: "BrowseComp is a benchmark for evaluating browsing agents on realistic web research tasks. Problems are encrypted at rest and decrypted at runtime. Evaluated using the inspect_ai framework."
 benchmarkType: "builtin"
@@ -11,6 +11,7 @@ evaluator:
     type: "inspect_ai"
     name: "BrowseComp"
     task_name: "inspect_evals/browse_comp"
+    model: "{{aoai_deployment_and_model}}"
 
 dataset:
   datasetName: "browse_comp"
