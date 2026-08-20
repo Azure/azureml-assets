@@ -1,5 +1,5 @@
 ---
-name: Tool Use Evaluation Suite
+name: Tool Use Composite Evaluator
 description: >
   A single composite evaluator that scores ALL FIVE prod tool evaluators
   (tool_call_accuracy, tool_call_success, tool_input_accuracy,

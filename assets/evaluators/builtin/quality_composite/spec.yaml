@@ -1,14 +1,14 @@
 type: "evaluator"
-id: "azureml://registries/azureml/evaluators/builtin.quality_suite/versions/1"
-name: "builtin.quality_suite"
+id: "azureml://registries/azureml/evaluators/builtin.quality_composite/versions/1"
+name: "builtin.quality_composite"
 version: 1
-displayName: "Quality-Evaluation-Suite-(Preview)"
-description: "A composite evaluator that batches fluency, coherence, intent_resolution, task_adherence, groundedness, and task_completion into a single LLM call. The primary quality_suite score fails when any evaluated evaluator fails, while the evaluator keys preserve the LLM results and derived pass/fail fields. Supports single-turn query/response and multi-turn messages inputs."
+displayName: "Quality-Composite-Evaluator-(Preview)"
+description: "A composite evaluator that batches fluency, coherence, intent_resolution, task_adherence, groundedness, and task_completion into a single LLM call. The primary quality_composite score fails when any evaluated evaluator fails, while the evaluator keys preserve the LLM results and derived pass/fail fields. Supports single-turn query/response and multi-turn messages inputs."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
 categories: ["quality", "agents"]
 supportedEvaluationLevels: ["conversation", "turn"]
-metadata:
+tags:
   provider: "Microsoft"
   is_continuous_scenario: "true"
   composite_evaluator: ["fluency", "coherence", "intent_resolution", "task_adherence", "groundedness", "task_completion"]
@@ -56,9 +56,9 @@ dataMappingSchema:
 definition:
   type: "code"
   code_text: null
-  blob_uri: "https://.../quality-suite/evaluator"
+  blob_uri: "https://.../quality-composite/evaluator"
   metrics:
-    quality_suite:
+    quality_composite:
       type: "boolean"
       desirable_direction: "increase"
       min_value: 0

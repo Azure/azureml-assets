@@ -3,7 +3,7 @@
 
 """Quality tests for the Tool Use Evaluation Suite (multi-turn) with real flow execution.
 
-See test_tool_use_suite_evaluator_quality.py for why this file builds the evaluator
+See test_tool_use_composite_evaluator_quality.py for why this file builds the evaluator
 directly instead of using BaseQualityEvaluatorRunner.
 
 Requires real Azure OpenAI credentials via environment variables:
@@ -17,26 +17,26 @@ import pytest
 from azure.ai.evaluation import AzureOpenAIModelConfiguration
 from azure.identity import DefaultAzureCredential
 
-from ...builtin.tool_use_suite.evaluator._tool_use_suite import ToolUseEvaluationSuite
+from ...builtin.tool_use_composite.evaluator._tool_use_composite import ToolUseCompositeEvaluator
 
 
-def _make_real_evaluator() -> ToolUseEvaluationSuite:
+def _make_real_evaluator() -> ToolUseCompositeEvaluator:
     model_config = AzureOpenAIModelConfiguration(
         azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
         azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT"),
         api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-08-01-preview"),
     )
-    return ToolUseEvaluationSuite(model_config=model_config, credential=DefaultAzureCredential())
+    return ToolUseCompositeEvaluator(model_config=model_config, credential=DefaultAzureCredential())
 
 
 def _assert_evaluator_passed(result, name: str):
-    evaluator = result["tool_use_suite_evaluators"][name]
+    evaluator = result["tool_use_composite_evaluators"][name]
     assert evaluator["status"] == "completed", f"{name} should be completed, got {evaluator.get('status')}"
     assert evaluator["score"] is not None, f"{name} expected a score, reason: {evaluator.get('reason')}"
 
 
 def _assert_evaluator_failed(result, name: str):
-    evaluator = result["tool_use_suite_evaluators"][name]
+    evaluator = result["tool_use_composite_evaluators"][name]
     assert evaluator["status"] == "completed", f"{name} should be completed, got {evaluator.get('status')}"
     assert evaluator["score"] is not None, f"{name} expected a score, reason: {evaluator.get('reason')}"
 
@@ -64,8 +64,8 @@ FLIGHT_TOOL_DEFINITIONS = [
 
 
 @pytest.mark.quality
-class TestToolUseEvaluationSuiteQualityMultiTurn:
-    """Quality tests for ToolUseEvaluationSuite with multi-turn (messages) input."""
+class TestToolUseCompositeEvaluatorQualityMultiTurn:
+    """Quality tests for ToolUseCompositeEvaluator with multi-turn (messages) input."""
 
     def test_all_evaluators_pass_across_multi_turn_session(self):
         """A correctly executed, multi-turn flight-booking session passes all five evaluators."""
@@ -127,8 +127,8 @@ class TestToolUseEvaluationSuiteQualityMultiTurn:
             "tool_selection",
         ):
             _assert_evaluator_passed(result, name)
-            assert result["tool_use_suite_evaluators"][name]["failed_turn"] is None
-        assert result["tool_use_suite"] == 1
+            assert result["tool_use_composite_evaluators"][name]["failed_turn"] is None
+        assert result["tool_use_composite"] == 1
 
     def test_tool_output_utilization_fails_and_localizes_failed_turn(self):
         """A later turn that misuses an earlier tool output fails tool_output_utilization with a failed_turn."""
@@ -185,5 +185,5 @@ class TestToolUseEvaluationSuiteQualityMultiTurn:
         ]
         result = evaluator(messages=messages, tool_definitions=FLIGHT_TOOL_DEFINITIONS)
         _assert_evaluator_failed(result, "tool_output_utilization")
-        assert result["tool_use_suite_evaluators"]["tool_output_utilization"]["failed_turn"] == 1
-        assert result["tool_use_suite"] == 0
+        assert result["tool_use_composite_evaluators"]["tool_output_utilization"]["failed_turn"] == 1
+        assert result["tool_use_composite"] == 0

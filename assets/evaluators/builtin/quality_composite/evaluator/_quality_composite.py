@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Quality Evaluation Suite composite evaluator."""
+"""Quality Composite Evaluator."""
 
 import logging
 import os
@@ -324,9 +324,9 @@ logger = logging.getLogger(__name__)
 
 
 def _create_extended_error_target():
-    """Create an extended ErrorTarget enum for QualityEvaluationSuite."""
+    """Create an extended ErrorTarget enum for QualityCompositeEvaluator."""
     existing_members = {member.name: member.value for member in ErrorTarget}
-    existing_members["QUALITY_EVALUATION_SUITE"] = "QualityEvaluationSuite"
+    existing_members["QUALITY_COMPOSITE_EVALUATOR"] = "QualityCompositeEvaluator"
     return Enum("ExtendedErrorTarget", existing_members)
 
 
@@ -344,27 +344,27 @@ _EVALUATORS: Tuple[Dict[str, Union[str, int]], ...] = (
 
 
 @experimental
-class QualityEvaluationSuite(PromptyEvaluatorBase[Union[str, int]]):
+class QualityCompositeEvaluator(PromptyEvaluatorBase[Union[str, int]]):
     """Batch six quality evaluators into one LLM call.
 
     The suite preserves the member evaluators' LLM results and derived threshold/pass
-    fields exclusively under ``quality_suite_evaluators``. The primary
-    ``quality_suite`` result is an any-fail aggregate: it passes only when
+    fields exclusively under ``quality_composite_evaluators``. The primary
+    ``quality_composite`` result is an any-fail aggregate: it passes only when
     every evaluated member meets its configured threshold.
     """
 
-    _PROMPTY_FILE = "quality_suite.prompty"
-    _MULTI_TURN_PROMPTY_FILE = "quality_suite_multi_turn.prompty"
-    _RESULT_KEY = "quality_suite"
+    _PROMPTY_FILE = "quality_composite.prompty"
+    _MULTI_TURN_PROMPTY_FILE = "quality_composite_multi_turn.prompty"
+    _RESULT_KEY = "quality_composite"
     _OPTIONAL_PARAMS = ["messages", "tool_definitions"]
     _EVALUATORS = _EVALUATORS
 
     _validator: ValidatorInterface
-    id = "azureai://built-in/evaluators/quality_suite"
+    id = "azureai://built-in/evaluators/quality_composite"
 
     @override
     def __init__(self, model_config, *, credential=None, evaluation_level=None, threshold=None, **kwargs):
-        """Initialize the Quality Evaluation Suite."""
+        """Initialize the Quality Composite Evaluator."""
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
         threshold_value = {
@@ -374,10 +374,10 @@ class QualityEvaluationSuite(PromptyEvaluatorBase[Union[str, int]]):
             threshold_value.update({name: value for name, value in threshold.items() if name in threshold_value})
 
         self._evaluation_level = _resolve_evaluation_level(
-            evaluation_level, ExtendedErrorTarget.QUALITY_EVALUATION_SUITE
+            evaluation_level, ExtendedErrorTarget.QUALITY_COMPOSITE_EVALUATOR
         )
         self._validator = MessagesOrQueryResponseInputValidator(
-            error_target=ExtendedErrorTarget.QUALITY_EVALUATION_SUITE,
+            error_target=ExtendedErrorTarget.QUALITY_COMPOSITE_EVALUATOR,
             requires_query=False,
             enforce_tool_definitions=False,
         )
@@ -465,7 +465,7 @@ class QualityEvaluationSuite(PromptyEvaluatorBase[Union[str, int]]):
                     message=f"Invalid score value for {name}: {score}.",
                     blame=ErrorBlame.SYSTEM_ERROR,
                     category=ErrorCategory.FAILED_EXECUTION,
-                    target=ExtendedErrorTarget.QUALITY_EVALUATION_SUITE,
+                    target=ExtendedErrorTarget.QUALITY_COMPOSITE_EVALUATOR,
                 )
             if score < evaluator["min"] or score > evaluator["max"]:
                 raise EvaluationException(
@@ -475,7 +475,7 @@ class QualityEvaluationSuite(PromptyEvaluatorBase[Union[str, int]]):
                     ),
                     blame=ErrorBlame.SYSTEM_ERROR,
                     category=ErrorCategory.FAILED_EXECUTION,
-                    target=ExtendedErrorTarget.QUALITY_EVALUATION_SUITE,
+                    target=ExtendedErrorTarget.QUALITY_COMPOSITE_EVALUATOR,
                 )
             evaluator_output["passed"] = score >= threshold
             normalized_evaluators[name] = evaluator_output
@@ -489,20 +489,20 @@ class QualityEvaluationSuite(PromptyEvaluatorBase[Union[str, int]]):
             aggregate_result = "not_applicable"
             aggregate_passed = None
             aggregate_status = "skipped"
-            aggregate_reason = "Not applicable: all conversation-quality evaluators were skipped."
+            aggregate_reason = "Not applicable: all quality evaluators were skipped."
         else:
             aggregate_score = 0 if failed_evaluators else 1
             aggregate_result = EVALUATION_PASS_FAIL_MAPPING[aggregate_score == 1]
             aggregate_passed = aggregate_score == 1
             aggregate_status = "completed"
             if failed_evaluators:
-                aggregate_reason = "Failed conversation-quality evaluators: " + ", ".join(failed_evaluators) + "."
+                aggregate_reason = "Failed quality evaluators: " + ", ".join(failed_evaluators) + "."
             elif skipped_evaluators:
                 aggregate_reason = (
-                    "All evaluated conversation-quality evaluators passed; some evaluators were skipped."
+                    "All evaluated quality evaluators passed; some evaluators were skipped."
                 )
             else:
-                aggregate_reason = "All conversation-quality evaluators passed."
+                aggregate_reason = "All quality evaluators passed."
 
         aggregate_properties = dict(token_metadata)
         aggregate_properties["failed_evaluators"] = failed_evaluators
@@ -600,14 +600,14 @@ class QualityEvaluationSuite(PromptyEvaluatorBase[Union[str, int]]):
         if eval_input.get("response") is None:
             raise EvaluationException(
                 message=(
-                    "A response must be provided as input to the Quality Evaluation Suite."
+                    "A response must be provided as input to the Quality Composite Evaluator."
                 ),
                 internal_message=(
-                    "A response must be provided as input to the Quality Evaluation Suite."
+                    "A response must be provided as input to the Quality Composite Evaluator."
                 ),
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.MISSING_FIELD,
-                target=ExtendedErrorTarget.QUALITY_EVALUATION_SUITE,
+                target=ExtendedErrorTarget.QUALITY_COMPOSITE_EVALUATOR,
             )
         if eval_input.get("query") is None:
             eval_input["query"] = []
@@ -647,7 +647,7 @@ class QualityEvaluationSuite(PromptyEvaluatorBase[Union[str, int]]):
                 message="Evaluator returned invalid output.",
                 blame=ErrorBlame.SYSTEM_ERROR,
                 category=ErrorCategory.FAILED_EXECUTION,
-                target=ExtendedErrorTarget.QUALITY_EVALUATION_SUITE,
+                target=ExtendedErrorTarget.QUALITY_COMPOSITE_EVALUATOR,
             )
 
         evaluators: Dict[str, Dict] = {}

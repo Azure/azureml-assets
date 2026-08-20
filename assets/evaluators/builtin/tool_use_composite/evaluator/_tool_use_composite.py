@@ -404,9 +404,9 @@ logger = logging.getLogger(__name__)
 
 # Create extended ErrorTarget enum with the new member
 def _create_extended_error_target():
-    """Create an extended ErrorTarget enum for ToolUseEvaluationSuite."""
+    """Create an extended ErrorTarget enum for ToolUseCompositeEvaluator."""
     existing_members = {member.name: member.value for member in ErrorTarget}
-    existing_members["TOOL_USE_EVALUATION_SUITE"] = "ToolUseEvaluationSuite"
+    existing_members["TOOL_USE_COMPOSITE_EVALUATOR"] = "ToolUseCompositeEvaluator"
 
     ExtendedErrorTarget = Enum("ExtendedErrorTarget", existing_members)
     return ExtendedErrorTarget
@@ -429,8 +429,8 @@ _EVALUATORS: Tuple[Dict[str, Union[str, int]], ...] = (
 
 
 @experimental
-class ToolUseEvaluationSuite(PromptyEvaluatorBase[Union[str, int]]):
-    """The Tool Use Evaluation Suite batches five tool-usage evaluators into one LLM call.
+class ToolUseCompositeEvaluator(PromptyEvaluatorBase[Union[str, int]]):
+    """The Tool Use Composite Evaluator batches five tool-usage evaluators into one LLM call.
 
     This is a composite evaluator: it scores the same five evaluators as the standalone
     ``ToolCallAccuracyEvaluator``, ``ToolCallSuccessEvaluator``, ``ToolInputAccuracyEvaluator``,
@@ -442,9 +442,9 @@ class ToolUseEvaluationSuite(PromptyEvaluatorBase[Union[str, int]]):
     ``tool_input_accuracy``, ``tool_output_utilization``, ``tool_selection``) so this evaluator's
     output can be used as a drop-in replacement for running the five evaluators separately.
 
-    The primary ``tool_use_suite`` result is an any-fail aggregate. Raw evaluator
+    The primary ``tool_use_composite`` result is an any-fail aggregate. Raw evaluator
     objects (including ``failed_turn`` for multi-turn evaluations) are available
-    exclusively under ``tool_use_suite_evaluators``.
+    exclusively under ``tool_use_composite_evaluators``.
 
     :param model_config: Configuration for the Azure OpenAI model.
     :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
@@ -462,20 +462,20 @@ class ToolUseEvaluationSuite(PromptyEvaluatorBase[Union[str, int]]):
     :type threshold: Optional[Dict[str, Union[int, float]]]
     """
 
-    _PROMPTY_FILE = "tool_use_suite.prompty"
-    _MULTI_TURN_PROMPTY_FILE = "tool_use_suite_multi_turn.prompty"
-    _RESULT_KEY = "tool_use_suite"
+    _PROMPTY_FILE = "tool_use_composite.prompty"
+    _MULTI_TURN_PROMPTY_FILE = "tool_use_composite_multi_turn.prompty"
+    _RESULT_KEY = "tool_use_composite"
     _OPTIONAL_PARAMS = ["messages"]
     _EVALUATORS = _EVALUATORS
 
     _validator: ValidatorInterface
 
-    id = "azureai://built-in/evaluators/tool_use_suite"
+    id = "azureai://built-in/evaluators/tool_use_composite"
     """Evaluator identifier, experimental and to be used only with evaluation in cloud."""
 
     @override
     def __init__(self, model_config, *, credential=None, evaluation_level=None, threshold=None, **kwargs):
-        """Initialize the ToolUseEvaluationSuite.
+        """Initialize the ToolUseCompositeEvaluator.
 
         :param model_config: Configuration for the Azure OpenAI model.
         :type model_config: Union[AzureOpenAIModelConfiguration, OpenAIModelConfiguration]
@@ -498,12 +498,12 @@ class ToolUseEvaluationSuite(PromptyEvaluatorBase[Union[str, int]]):
 
         # Validate and store evaluation level
         self._evaluation_level = _resolve_evaluation_level(
-            evaluation_level, ExtendedErrorTarget.TOOL_USE_EVALUATION_SUITE
+            evaluation_level, ExtendedErrorTarget.TOOL_USE_COMPOSITE_EVALUATOR
         )
 
         # Initialize input validator (supports both query/response and messages)
         self._validator = MessagesOrQueryResponseInputValidator(
-            error_target=ExtendedErrorTarget.TOOL_USE_EVALUATION_SUITE,
+            error_target=ExtendedErrorTarget.TOOL_USE_COMPOSITE_EVALUATOR,
             optional_tool_definitions=False,
             enforce_tool_definitions=True,
         )
@@ -545,7 +545,7 @@ class ToolUseEvaluationSuite(PromptyEvaluatorBase[Union[str, int]]):
         The query and response can be either a string or a list of messages.
 
         Example:
-            evaluator = ToolUseEvaluationSuite(model_config)
+            evaluator = ToolUseCompositeEvaluator(model_config)
             result = evaluator(query=query, response=response, tool_definitions=tool_definitions)
 
         :keyword query: The query being evaluated, either a string or a list of messages.
@@ -568,7 +568,7 @@ class ToolUseEvaluationSuite(PromptyEvaluatorBase[Union[str, int]]):
         """Evaluate tool-use quality for a full multi-turn conversation.
 
         Example:
-            evaluator = ToolUseEvaluationSuite(model_config)
+            evaluator = ToolUseCompositeEvaluator(model_config)
             result = evaluator(messages=messages, tool_definitions=tool_definitions)
 
         :keyword messages: The full multi-turn conversation as a list of message dicts.
@@ -657,7 +657,7 @@ class ToolUseEvaluationSuite(PromptyEvaluatorBase[Union[str, int]]):
                     message=f"Invalid score value for {name}: {score}.",
                     blame=ErrorBlame.SYSTEM_ERROR,
                     category=ErrorCategory.FAILED_EXECUTION,
-                    target=ExtendedErrorTarget.TOOL_USE_EVALUATION_SUITE,
+                    target=ExtendedErrorTarget.TOOL_USE_COMPOSITE_EVALUATOR,
                 )
             if score < evaluator["min"] or score > evaluator["max"]:
                 raise EvaluationException(
@@ -667,7 +667,7 @@ class ToolUseEvaluationSuite(PromptyEvaluatorBase[Union[str, int]]):
                     ),
                     blame=ErrorBlame.SYSTEM_ERROR,
                     category=ErrorCategory.FAILED_EXECUTION,
-                    target=ExtendedErrorTarget.TOOL_USE_EVALUATION_SUITE,
+                    target=ExtendedErrorTarget.TOOL_USE_COMPOSITE_EVALUATOR,
                 )
             evaluator_output["passed"] = score >= threshold
             normalized_evaluators[name] = evaluator_output
@@ -822,7 +822,7 @@ class ToolUseEvaluationSuite(PromptyEvaluatorBase[Union[str, int]]):
                 ),
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.MISSING_FIELD,
-                target=ExtendedErrorTarget.TOOL_USE_EVALUATION_SUITE,
+                target=ExtendedErrorTarget.TOOL_USE_COMPOSITE_EVALUATOR,
             )
         if _is_intermediate_response(eval_input.get("response")):
             return self._return_not_applicable_result(
@@ -867,8 +867,8 @@ class ToolUseEvaluationSuite(PromptyEvaluatorBase[Union[str, int]]):
         """Parse the prompty output into an aggregate result with raw evaluator results.
 
         The five evaluator objects preserve their LLM fields and receive derived
-        threshold/pass fields under ``tool_use_suite_evaluators``. The primary
-        ``tool_use_suite`` score is an any-fail score derived from those objects.
+        threshold/pass fields under ``tool_use_composite_evaluators``. The primary
+        ``tool_use_composite`` score is an any-fail score derived from those objects.
 
         :param prompty_output_dict: Raw output from the prompty flow.
         :type prompty_output_dict: Dict
@@ -885,7 +885,7 @@ class ToolUseEvaluationSuite(PromptyEvaluatorBase[Union[str, int]]):
                 message="Evaluator returned invalid output.",
                 blame=ErrorBlame.SYSTEM_ERROR,
                 category=ErrorCategory.FAILED_EXECUTION,
-                target=ExtendedErrorTarget.TOOL_USE_EVALUATION_SUITE,
+                target=ExtendedErrorTarget.TOOL_USE_COMPOSITE_EVALUATOR,
             )
 
         token_metadata = self._get_token_metadata(prompty_output_dict)

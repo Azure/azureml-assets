@@ -1,13 +1,13 @@
 type: "evaluator"
-id: "azureml://registries/azureml/evaluators/builtin.tool_use_suite/versions/1"
-name: "builtin.tool_use_suite"
+id: "azureml://registries/azureml/evaluators/builtin.tool_use_composite/versions/1"
+name: "builtin.tool_use_composite"
 version: 1
-displayName: "Tool-Use-Evaluation-Suite-(Preview)"
-description: "A composite evaluator that batches the tool_call_accuracy, tool_call_success, tool_input_accuracy, tool_output_utilization, and tool_selection evaluators into a single LLM call. The primary tool_use_suite score fails when any evaluated evaluator fails, while the evaluator keys preserve the LLM results and derived pass/fail fields. Supports both single-turn (query/response) and multi-turn (messages) agent interactions."
+displayName: "Tool-Use-Composite-Evaluator-(Preview)"
+description: "A composite evaluator that batches the tool_call_accuracy, tool_call_success, tool_input_accuracy, tool_output_utilization, and tool_selection evaluators into a single LLM call. The primary tool_use_composite score fails when any evaluated evaluator fails, while the evaluator keys preserve the LLM results and derived pass/fail fields. Supports both single-turn (query/response) and multi-turn (messages) agent interactions."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
 categories: ["agents"]
-metadata:
+tags:
   provider: "Microsoft"
   is_continuous_scenario: "true"
   composite_evaluator: ["tool_call_accuracy", "tool_call_success", "tool_input_accuracy", "tool_output_utilization", "tool_selection"]
@@ -56,9 +56,9 @@ dataMappingSchema:
 definition:
   type: "code"
   code_text: null
-  blob_uri: "https://.../tool-use-suite/evaluator"
+  blob_uri: "https://.../tool-use-composite/evaluator"
   metrics:
-    tool_use_suite:
+    tool_use_composite:
       type: "boolean"
       desirable_direction: "increase"
       min_value: 0

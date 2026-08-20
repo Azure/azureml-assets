@@ -3,7 +3,7 @@
 
 """Behavioral tests for the Tool Use Evaluation Suite composite evaluator.
 
-ToolUseEvaluationSuite batches five evaluators (tool_call_accuracy, tool_call_success,
+ToolUseCompositeEvaluator batches five evaluators (tool_call_accuracy, tool_call_success,
 tool_input_accuracy, tool_output_utilization, tool_selection) into a single LLM
 call, so its ``llm_output`` shape (one JSON object keyed by evaluator name) differs
 from the single-evaluator shape assumed by the shared ``BaseToolsEvaluatorBehaviorTest``
@@ -21,7 +21,7 @@ import pytest
 from azure.ai.evaluation import AzureOpenAIModelConfiguration
 from azure.ai.evaluation._exceptions import EvaluationException
 
-from ...builtin.tool_use_suite.evaluator._tool_use_suite import ToolUseEvaluationSuite, _EVALUATORS
+from ...builtin.tool_use_composite.evaluator._tool_use_composite import ToolUseCompositeEvaluator, _EVALUATORS
 
 VALID_QUERY = "What's the weather in Seattle?"
 VALID_RESPONSE = "The weather in Seattle is rainy at 14 degrees C."
@@ -86,7 +86,7 @@ def _make_evaluator(**init_kwargs):
         azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
         azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
     )
-    return ToolUseEvaluationSuite(model_config=model_config, **init_kwargs)
+    return ToolUseCompositeEvaluator(model_config=model_config, **init_kwargs)
 
 
 def _mock_flows(evaluator, llm_output):
@@ -101,8 +101,8 @@ def _mock_flows(evaluator, llm_output):
 
 
 @pytest.mark.unittest
-class TestToolUseEvaluationSuiteBehavior:
-    """Behavioral tests for the ToolUseEvaluationSuite composite evaluator."""
+class TestToolUseCompositeEvaluatorBehavior:
+    """Behavioral tests for the ToolUseCompositeEvaluator."""
 
     # region routing
 
@@ -147,12 +147,12 @@ class TestToolUseEvaluationSuiteBehavior:
         """The primary score and all five raw evaluator objects are present under the aggregate result."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
         result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE, tool_definitions=VALID_TOOL_DEFINITIONS)
-        assert result["tool_use_suite"] == 1
-        assert result["tool_use_suite_threshold"] == 1
-        assert result["tool_use_suite_result"] == "pass"
-        assert result["tool_use_suite_passed"] is True
-        evaluators = result["tool_use_suite_evaluators"]
-        assert "evaluators" not in result["tool_use_suite_properties"]
+        assert result["tool_use_composite"] == 1
+        assert result["tool_use_composite_threshold"] == 1
+        assert result["tool_use_composite_result"] == "pass"
+        assert result["tool_use_composite_passed"] is True
+        evaluators = result["tool_use_composite_evaluators"]
+        assert "evaluators" not in result["tool_use_composite_properties"]
         assert evaluators["tool_call_accuracy"]["threshold"] == 3
         assert evaluators["tool_call_accuracy"]["passed"] is True
         for name in _EVALUATOR_NAMES:
@@ -167,8 +167,8 @@ class TestToolUseEvaluationSuiteBehavior:
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
         result = evaluator(messages=VALID_MESSAGES, tool_definitions=VALID_TOOL_DEFINITIONS)
         for name in _EVALUATOR_NAMES:
-            assert result["tool_use_suite_evaluators"][name] is not None
-        assert result["tool_use_suite_evaluators"]["tool_call_accuracy"]["failed_turn"] is None
+            assert result["tool_use_composite_evaluators"][name] is not None
+        assert result["tool_use_composite_evaluators"]["tool_call_accuracy"]["failed_turn"] is None
 
     def test_thresholds_default_to_standalone_evaluator_defaults(self):
         """Default thresholds match each standalone evaluator's default."""
@@ -190,13 +190,13 @@ class TestToolUseEvaluationSuiteBehavior:
             _all_completed_llm_output(score_overrides={"tool_call_accuracy": 3}),
         )
         result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE, tool_definitions=VALID_TOOL_DEFINITIONS)
-        assert result["tool_use_suite"] == 0
-        assert result["tool_use_suite_threshold"] == 1
-        assert result["tool_use_suite_result"] == "fail"
-        assert result["tool_use_suite_evaluators"]["tool_call_accuracy"]["score"] == 3
-        assert result["tool_use_suite_evaluators"]["tool_call_accuracy"]["threshold"] == 4
-        assert result["tool_use_suite_evaluators"]["tool_call_accuracy"]["passed"] is False
-        assert result["tool_use_suite_evaluators"]["tool_selection"]["score"] == 1
+        assert result["tool_use_composite"] == 0
+        assert result["tool_use_composite_threshold"] == 1
+        assert result["tool_use_composite_result"] == "fail"
+        assert result["tool_use_composite_evaluators"]["tool_call_accuracy"]["score"] == 3
+        assert result["tool_use_composite_evaluators"]["tool_call_accuracy"]["threshold"] == 4
+        assert result["tool_use_composite_evaluators"]["tool_call_accuracy"]["passed"] is False
+        assert result["tool_use_composite_evaluators"]["tool_selection"]["score"] == 1
 
     @pytest.mark.parametrize("score", [True, 6])
     def test_invalid_member_score_raises(self, score):
@@ -216,17 +216,17 @@ class TestToolUseEvaluationSuiteBehavior:
         """When the LLM marks every evaluator skipped, all five results are not_applicable."""
         evaluator = _mock_flows(_make_evaluator(), _all_skipped_llm_output())
         result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE, tool_definitions=VALID_TOOL_DEFINITIONS)
-        assert result["tool_use_suite"] is None
-        assert result["tool_use_suite_threshold"] == 1
-        assert result["tool_use_suite_result"] == "not_applicable"
-        assert result["tool_use_suite_passed"] is None
+        assert result["tool_use_composite"] is None
+        assert result["tool_use_composite_threshold"] == 1
+        assert result["tool_use_composite_result"] == "not_applicable"
+        assert result["tool_use_composite_passed"] is None
         for name in _EVALUATOR_NAMES:
-            assert result["tool_use_suite_evaluators"][name]["score"] is None
-            assert result["tool_use_suite_evaluators"][name]["threshold"] == next(
+            assert result["tool_use_composite_evaluators"][name]["score"] is None
+            assert result["tool_use_composite_evaluators"][name]["threshold"] == next(
                 evaluator["default_threshold"] for evaluator in _EVALUATORS if evaluator["name"] == name
             )
-            assert result["tool_use_suite_evaluators"][name]["status"] == "skipped"
-            assert result["tool_use_suite_evaluators"][name]["passed"] is None
+            assert result["tool_use_composite_evaluators"][name]["status"] == "skipped"
+            assert result["tool_use_composite_evaluators"][name]["passed"] is None
 
     def test_mixed_skip_and_completed_evaluators(self):
         """One evaluator can be skipped while the others are completed, independently."""
@@ -238,11 +238,11 @@ class TestToolUseEvaluationSuiteBehavior:
         }
         evaluator = _mock_flows(_make_evaluator(), llm_output)
         result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE, tool_definitions=VALID_TOOL_DEFINITIONS)
-        assert result["tool_use_suite"] == 1
-        assert result["tool_use_suite_evaluators"]["tool_output_utilization"]["score"] is None
-        assert result["tool_use_suite_evaluators"]["tool_output_utilization"]["status"] == "skipped"
-        assert result["tool_use_suite_evaluators"]["tool_call_accuracy"]["status"] == "completed"
-        assert result["tool_use_suite_evaluators"]["tool_call_accuracy"]["score"] == 5
+        assert result["tool_use_composite"] == 1
+        assert result["tool_use_composite_evaluators"]["tool_output_utilization"]["score"] is None
+        assert result["tool_use_composite_evaluators"]["tool_output_utilization"]["status"] == "skipped"
+        assert result["tool_use_composite_evaluators"]["tool_call_accuracy"]["status"] == "completed"
+        assert result["tool_use_composite_evaluators"]["tool_call_accuracy"]["score"] == 5
 
     def test_intermediate_response_returns_not_applicable_for_all_evaluators(self):
         """An intermediate function-call-only response skips all evaluators without calling the LLM."""
@@ -261,10 +261,10 @@ class TestToolUseEvaluationSuiteBehavior:
             }
         ]
         result = evaluator(query=VALID_QUERY, response=intermediate_response, tool_definitions=VALID_TOOL_DEFINITIONS)
-        assert result["tool_use_suite"] is None
+        assert result["tool_use_composite"] is None
         for name in _EVALUATOR_NAMES:
-            assert result["tool_use_suite_evaluators"][name]["score"] is None
-            assert result["tool_use_suite_evaluators"][name]["status"] == "skipped"
+            assert result["tool_use_composite_evaluators"][name]["score"] is None
+            assert result["tool_use_composite_evaluators"][name]["status"] == "skipped"
         evaluator._flow.assert_not_called()
 
     # endregion
@@ -332,9 +332,9 @@ class TestToolUseEvaluationSuiteBehavior:
         del llm_output["llm_output"]["tool_selection"]
         evaluator = _mock_flows(_make_evaluator(), llm_output)
         result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE, tool_definitions=VALID_TOOL_DEFINITIONS)
-        assert result["tool_use_suite_evaluators"]["tool_selection"]["score"] is None
-        assert result["tool_use_suite_evaluators"]["tool_selection"]["status"] == "skipped"
-        assert result["tool_use_suite_evaluators"]["tool_call_accuracy"]["status"] == "completed"
+        assert result["tool_use_composite_evaluators"]["tool_selection"]["score"] is None
+        assert result["tool_use_composite_evaluators"]["tool_selection"]["status"] == "skipped"
+        assert result["tool_use_composite_evaluators"]["tool_call_accuracy"]["status"] == "completed"
 
     def test_do_eval_missing_query_or_response_raises(self):
         """The direct evaluation path requires both query and response."""
@@ -349,9 +349,9 @@ class TestToolUseEvaluationSuiteBehavior:
         assert asyncio.run(evaluator._the_super_real_call()) == {}
 
         evaluator._convert_kwargs_to_eval_input = MagicMock(return_value=[{"response": VALID_RESPONSE}] * 2)
-        evaluator._do_eval = AsyncMock(return_value={"tool_use_suite": 1})
-        evaluator._aggregate_results = MagicMock(return_value={"tool_use_suite": 1})
-        assert asyncio.run(evaluator._the_super_real_call()) == {"tool_use_suite": 1}
+        evaluator._do_eval = AsyncMock(return_value={"tool_use_composite": 1})
+        evaluator._aggregate_results = MagicMock(return_value={"tool_use_composite": 1})
+        assert asyncio.run(evaluator._the_super_real_call()) == {"tool_use_composite": 1}
 
         evaluator._convert_kwargs_to_eval_input = MagicMock(side_effect=ValueError("invalid input"))
         with pytest.raises(ValueError, match="invalid input"):

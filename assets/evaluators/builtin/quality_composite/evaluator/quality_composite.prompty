@@ -1,5 +1,5 @@
 ---
-name: Quality Evaluation Suite
+name: Quality Composite Evaluator
 description: >
   A single composite evaluator that scores SIX prod agent-quality evaluators (fluency, coherence, intent_resolution, task_adherence, groundedness, task_completion) in ONE LLM call. Each member evaluator's rubric and scale are preserved verbatim from its source; the model must return one JSON object keyed by evaluator id.
 model:
