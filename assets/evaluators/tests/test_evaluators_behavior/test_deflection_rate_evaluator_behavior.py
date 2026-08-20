@@ -118,6 +118,7 @@ class TestDeflectionRateMultiturnBehavior:
     evaluator_type = DeflectionRateEvaluator
 
     def test_messages_uses_multi_turn_flow(self):
+        """Messages input should route to the multi-turn flow."""
         evaluator = create_mocked_evaluator(DeflectionRateEvaluator, "deflection_rate")
 
         result = evaluator(messages=VALID_MESSAGES)
@@ -128,6 +129,7 @@ class TestDeflectionRateMultiturnBehavior:
         evaluator._flow.assert_not_called()
 
     def test_messages_are_serialized_for_multi_turn_prompt(self):
+        """Messages should be serialized into the multi-turn prompt text."""
         evaluator = create_mocked_evaluator(DeflectionRateEvaluator, "deflection_rate")
 
         evaluator(messages=VALID_MESSAGES)
@@ -137,18 +139,21 @@ class TestDeflectionRateMultiturnBehavior:
         assert "Use Forgot Password on the sign-in page." in conversation_text
 
     def test_empty_messages_raises_error(self):
+        """An empty messages list should raise an evaluation exception."""
         evaluator = create_mocked_evaluator(DeflectionRateEvaluator, "deflection_rate")
 
         with pytest.raises(EvaluationException):
             evaluator(messages=[])
 
     def test_non_list_messages_raises_error(self):
+        """A non-list messages value should raise an evaluation exception."""
         evaluator = create_mocked_evaluator(DeflectionRateEvaluator, "deflection_rate")
 
         with pytest.raises(EvaluationException):
             evaluator(messages="not a list")
 
     def test_turn_evaluation_level_uses_response_flow_for_messages(self):
+        """Turn-level evaluation should use the single-response flow."""
         evaluator = create_mocked_evaluator(
             DeflectionRateEvaluator,
             "deflection_rate",
@@ -161,6 +166,7 @@ class TestDeflectionRateMultiturnBehavior:
         evaluator._multi_turn_flow.assert_not_called()
 
     def test_conversation_evaluation_level_requires_messages(self):
+        """Conversation-level evaluation without messages should raise an error."""
         evaluator = create_mocked_evaluator(
             DeflectionRateEvaluator,
             "deflection_rate",
