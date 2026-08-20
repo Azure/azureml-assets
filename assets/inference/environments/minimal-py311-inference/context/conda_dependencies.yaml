@@ -9,6 +9,5 @@ dependencies:
   - azureml-inference-server-http=={{latest-pypi-version}}
   - azure-storage-blob=={{latest-pypi-version}}
   - azure-identity=={{latest-pypi-version}}
-  - setuptools>=82.0.1
   - numpy
   - joblib=={{latest-pypi-version}}
