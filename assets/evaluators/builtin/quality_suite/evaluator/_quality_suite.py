@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Conversation Quality meta-evaluator."""
+"""Quality Evaluation Suite composite evaluator."""
 
 import logging
 import os
@@ -324,9 +324,9 @@ logger = logging.getLogger(__name__)
 
 
 def _create_extended_error_target():
-    """Create an extended ErrorTarget enum for ConversationQualityEvaluators."""
+    """Create an extended ErrorTarget enum for QualityEvaluationSuite."""
     existing_members = {member.name: member.value for member in ErrorTarget}
-    existing_members["CONVERSATION_QUALITY_EVALUATORS"] = "ConversationQualityEvaluators"
+    existing_members["QUALITY_EVALUATION_SUITE"] = "QualityEvaluationSuite"
     return Enum("ExtendedErrorTarget", existing_members)
 
 
@@ -344,27 +344,27 @@ _EVALUATORS: Tuple[Dict[str, Union[str, int]], ...] = (
 
 
 @experimental
-class ConversationQualityEvaluators(PromptyEvaluatorBase[Union[str, int]]):
-    """Batch six conversation-quality evaluators into one LLM call.
+class QualityEvaluationSuite(PromptyEvaluatorBase[Union[str, int]]):
+    """Batch six quality evaluators into one LLM call.
 
-    The evaluator preserves the member evaluators' raw LLM results exclusively under
-    ``conversation_quality_evaluators``. The primary ``conversation_quality`` result
-    is an any-fail aggregate: it passes only when every evaluated member meets its
-    configured threshold.
+    The suite preserves the member evaluators' LLM results and derived threshold/pass
+    fields exclusively under ``quality_suite_evaluators``. The primary
+    ``quality_suite`` result is an any-fail aggregate: it passes only when
+    every evaluated member meets its configured threshold.
     """
 
-    _PROMPTY_FILE = "conversation_quality.prompty"
-    _MULTI_TURN_PROMPTY_FILE = "conversation_quality_multi_turn.prompty"
-    _RESULT_KEY = "conversation_quality"
+    _PROMPTY_FILE = "quality_suite.prompty"
+    _MULTI_TURN_PROMPTY_FILE = "quality_suite_multi_turn.prompty"
+    _RESULT_KEY = "quality_suite"
     _OPTIONAL_PARAMS = ["messages", "tool_definitions"]
     _EVALUATORS = _EVALUATORS
 
     _validator: ValidatorInterface
-    id = "azureai://built-in/evaluators/conversation_quality"
+    id = "azureai://built-in/evaluators/quality_suite"
 
     @override
     def __init__(self, model_config, *, credential=None, evaluation_level=None, threshold=None, **kwargs):
-        """Initialize the Conversation Quality Evaluators."""
+        """Initialize the Quality Evaluation Suite."""
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
         threshold_value = {
@@ -374,10 +374,10 @@ class ConversationQualityEvaluators(PromptyEvaluatorBase[Union[str, int]]):
             threshold_value.update({name: value for name, value in threshold.items() if name in threshold_value})
 
         self._evaluation_level = _resolve_evaluation_level(
-            evaluation_level, ExtendedErrorTarget.CONVERSATION_QUALITY_EVALUATORS
+            evaluation_level, ExtendedErrorTarget.QUALITY_EVALUATION_SUITE
         )
         self._validator = MessagesOrQueryResponseInputValidator(
-            error_target=ExtendedErrorTarget.CONVERSATION_QUALITY_EVALUATORS,
+            error_target=ExtendedErrorTarget.QUALITY_EVALUATION_SUITE,
             requires_query=False,
             enforce_tool_definitions=False,
         )
@@ -447,20 +447,25 @@ class ConversationQualityEvaluators(PromptyEvaluatorBase[Union[str, int]]):
         """Build the any-fail aggregate and preserve raw evaluator results."""
         evaluated_scores: Dict[str, Union[int, float]] = {}
         skipped_evaluators: List[str] = []
+        normalized_evaluators: Dict[str, Dict] = {}
         for evaluator in self._EVALUATORS:
             name = evaluator["name"]
-            evaluator_output = evaluators[name]
+            evaluator_output = dict(evaluators[name])
+            threshold = self._threshold_for(name)
             status = evaluator_output.get("status", "completed")
             score = evaluator_output.get("score")
+            evaluator_output["threshold"] = threshold
+            evaluator_output["passed"] = None
             if status == "skipped" or score is None:
                 skipped_evaluators.append(name)
+                normalized_evaluators[name] = evaluator_output
                 continue
             if isinstance(score, bool) or not isinstance(score, (int, float)):
                 raise EvaluationException(
                     message=f"Invalid score value for {name}: {score}.",
                     blame=ErrorBlame.SYSTEM_ERROR,
                     category=ErrorCategory.FAILED_EXECUTION,
-                    target=ExtendedErrorTarget.CONVERSATION_QUALITY_EVALUATORS,
+                    target=ExtendedErrorTarget.QUALITY_EVALUATION_SUITE,
                 )
             if score < evaluator["min"] or score > evaluator["max"]:
                 raise EvaluationException(
@@ -470,8 +475,10 @@ class ConversationQualityEvaluators(PromptyEvaluatorBase[Union[str, int]]):
                     ),
                     blame=ErrorBlame.SYSTEM_ERROR,
                     category=ErrorCategory.FAILED_EXECUTION,
-                    target=ExtendedErrorTarget.CONVERSATION_QUALITY_EVALUATORS,
+                    target=ExtendedErrorTarget.QUALITY_EVALUATION_SUITE,
                 )
+            evaluator_output["passed"] = score >= threshold
+            normalized_evaluators[name] = evaluator_output
             evaluated_scores[name] = score
 
         failed_evaluators = [
@@ -509,7 +516,7 @@ class ConversationQualityEvaluators(PromptyEvaluatorBase[Union[str, int]]):
             f"{self._RESULT_KEY}_status": aggregate_status,
             f"{self._RESULT_KEY}_threshold": 1,
             f"{self._RESULT_KEY}_properties": aggregate_properties,
-            f"{self._RESULT_KEY}_evaluators": evaluators,
+            f"{self._RESULT_KEY}_evaluators": normalized_evaluators,
         }
         result.update({f"{self._RESULT_KEY}_{key}": value for key, value in token_metadata.items()})
         return result
@@ -593,14 +600,14 @@ class ConversationQualityEvaluators(PromptyEvaluatorBase[Union[str, int]]):
         if eval_input.get("response") is None:
             raise EvaluationException(
                 message=(
-                    "A response must be provided as input to the Conversation Quality Evaluators."
+                    "A response must be provided as input to the Quality Evaluation Suite."
                 ),
                 internal_message=(
-                    "A response must be provided as input to the Conversation Quality Evaluators."
+                    "A response must be provided as input to the Quality Evaluation Suite."
                 ),
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.MISSING_FIELD,
-                target=ExtendedErrorTarget.CONVERSATION_QUALITY_EVALUATORS,
+                target=ExtendedErrorTarget.QUALITY_EVALUATION_SUITE,
             )
         if eval_input.get("query") is None:
             eval_input["query"] = []
@@ -633,14 +640,14 @@ class ConversationQualityEvaluators(PromptyEvaluatorBase[Union[str, int]]):
         self, prompty_output_dict: Dict, is_multi_turn: bool = False
     ) -> Dict[str, Union[int, str]]:
         """Parse the LLM response into aggregate and raw evaluator results."""
-        del is_multi_turn  # The raw evaluator object, including failed_turn, is preserved unchanged.
+        del is_multi_turn
         llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
         if not isinstance(llm_output, dict):
             raise EvaluationException(
                 message="Evaluator returned invalid output.",
                 blame=ErrorBlame.SYSTEM_ERROR,
                 category=ErrorCategory.FAILED_EXECUTION,
-                target=ExtendedErrorTarget.CONVERSATION_QUALITY_EVALUATORS,
+                target=ExtendedErrorTarget.QUALITY_EVALUATION_SUITE,
             )
 
         evaluators: Dict[str, Dict] = {}

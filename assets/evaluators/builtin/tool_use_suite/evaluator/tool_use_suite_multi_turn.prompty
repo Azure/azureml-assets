@@ -1,7 +1,7 @@
 ---
-name: Tool Use Quality Evaluators (Multi-Turn)
+name: Tool Use Evaluation Suite (Multi-Turn)
 description: >
-  Multi-turn variant of the tool use quality evaluators. Scores ALL FIVE
+  Multi-turn variant of the tool use evaluation suite. Scores ALL FIVE
   prod tool evaluators (tool_call_accuracy, tool_call_success,
   tool_input_accuracy, tool_output_utilization, tool_selection) in ONE
   LLM call over an entire multi-turn agent session. Each member

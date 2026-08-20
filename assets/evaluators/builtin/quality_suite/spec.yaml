@@ -1,17 +1,17 @@
 type: "evaluator"
-id: "azureml://registries/azureml/evaluators/builtin.conversation_quality/versions/1"
-name: "builtin.conversation_quality"
+id: "azureml://registries/azureml/evaluators/builtin.quality_suite/versions/1"
+name: "builtin.quality_suite"
 version: 1
-displayName: "Conversation-Quality-Evaluators-(Preview)"
-description: "A meta-evaluator that batches fluency, coherence, intent_resolution, task_adherence, groundedness, and task_completion into a single LLM call. The primary conversation_quality score fails when any evaluated evaluator fails, while the evaluator keys preserve the raw LLM results. Supports single-turn query/response and multi-turn messages inputs, including response-only fluency evaluation."
+displayName: "Quality-Evaluation-Suite-(Preview)"
+description: "A composite evaluator that batches fluency, coherence, intent_resolution, task_adherence, groundedness, and task_completion into a single LLM call. The primary quality_suite score fails when any evaluated evaluator fails, while the evaluator keys preserve the LLM results and derived pass/fail fields. Supports single-turn query/response and multi-turn messages inputs."
 evaluatorType: "builtin"
-evaluatorSubType: "composite"
+evaluatorSubType: "code"
 categories: ["quality", "agents"]
 supportedEvaluationLevels: ["conversation", "turn"]
-tags:
+metadata:
   provider: "Microsoft"
   is_continuous_scenario: "true"
-  composite_evaluator: ["builtin.fluency", "builtin.coherence", "builtin.intent_resolution", "builtin.task_adherence", "builtin.groundedness", "builtin.task_completion"]
+  composite_evaluator: ["fluency", "coherence", "intent_resolution", "task_adherence", "groundedness", "task_completion"]
 initParameterSchema:
   type: "object"
   properties:
@@ -56,9 +56,9 @@ dataMappingSchema:
 definition:
   type: "code"
   code_text: null
-  blob_uri: "https://.../conversation-quality/evaluator"
+  blob_uri: "https://.../quality-suite/evaluator"
   metrics:
-    conversation_quality:
+    quality_suite:
       type: "boolean"
       desirable_direction: "increase"
       min_value: 0

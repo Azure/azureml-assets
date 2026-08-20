@@ -1,4 +1,4 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Conversation Quality Evaluators implementation package."""
+"""Tool Use Evaluation Suite package."""

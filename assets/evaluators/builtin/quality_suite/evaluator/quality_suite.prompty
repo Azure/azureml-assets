@@ -1,7 +1,7 @@
 ---
-name: Converstion Quality Evaluators
+name: Quality Evaluation Suite
 description: >
-  A single meta-evaluator that scores SIX prod agent-quality evaluators (fluency, coherence, intent_resolution, task_adherence, groundedness, task_completion) in ONE LLM call. Each member evaluator's rubric and scale are preserved verbatim from its source; the model must return one JSON object keyed by evaluator id.
+  A single composite evaluator that scores SIX prod agent-quality evaluators (fluency, coherence, intent_resolution, task_adherence, groundedness, task_completion) in ONE LLM call. Each member evaluator's rubric and scale are preserved verbatim from its source; the model must return one JSON object keyed by evaluator id.
 model:
   api: chat
   parameters:

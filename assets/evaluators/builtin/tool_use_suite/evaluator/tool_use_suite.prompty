@@ -1,7 +1,7 @@
 ---
-name: Tool Use Quality Evaluators
+name: Tool Use Evaluation Suite
 description: >
-  A single meta-evaluator that scores ALL FIVE prod tool evaluators
+  A single composite evaluator that scores ALL FIVE prod tool evaluators
   (tool_call_accuracy, tool_call_success, tool_input_accuracy,
   tool_output_utilization, tool_selection) in ONE LLM call. Each member
   evaluator's rubric and scale are preserved verbatim; the model must return

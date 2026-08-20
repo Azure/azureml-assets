@@ -404,9 +404,9 @@ logger = logging.getLogger(__name__)
 
 # Create extended ErrorTarget enum with the new member
 def _create_extended_error_target():
-    """Create an extended ErrorTarget enum for ToolUseQualityEvaluators."""
+    """Create an extended ErrorTarget enum for ToolUseEvaluationSuite."""
     existing_members = {member.name: member.value for member in ErrorTarget}
-    existing_members["TOOL_USE_QUALITY_EVALUATORS"] = "ToolUseQualityEvaluators"
+    existing_members["TOOL_USE_EVALUATION_SUITE"] = "ToolUseEvaluationSuite"
 
     ExtendedErrorTarget = Enum("ExtendedErrorTarget", existing_members)
     return ExtendedErrorTarget
@@ -429,10 +429,10 @@ _EVALUATORS: Tuple[Dict[str, Union[str, int]], ...] = (
 
 
 @experimental
-class ToolUseQualityEvaluators(PromptyEvaluatorBase[Union[str, int]]):
-    """The Tool Use Quality Evaluators batch five tool-usage evaluators into one LLM call.
+class ToolUseEvaluationSuite(PromptyEvaluatorBase[Union[str, int]]):
+    """The Tool Use Evaluation Suite batches five tool-usage evaluators into one LLM call.
 
-    This is a meta-evaluator: it scores the same five evaluators as the standalone
+    This is a composite evaluator: it scores the same five evaluators as the standalone
     ``ToolCallAccuracyEvaluator``, ``ToolCallSuccessEvaluator``, ``ToolInputAccuracyEvaluator``,
     ``ToolOutputUtilizationEvaluator`` and ``ToolSelectionEvaluator`` evaluators, but issues a
     single LLM call per turn/conversation instead of five, reducing evaluation cost and latency.
@@ -442,9 +442,9 @@ class ToolUseQualityEvaluators(PromptyEvaluatorBase[Union[str, int]]):
     ``tool_input_accuracy``, ``tool_output_utilization``, ``tool_selection``) so this evaluator's
     output can be used as a drop-in replacement for running the five evaluators separately.
 
-    The primary ``tool_use_quality`` result is an any-fail aggregate. Raw evaluator
+    The primary ``tool_use_suite`` result is an any-fail aggregate. Raw evaluator
     objects (including ``failed_turn`` for multi-turn evaluations) are available
-    exclusively under ``tool_use_quality_evaluators``.
+    exclusively under ``tool_use_suite_evaluators``.
 
     :param model_config: Configuration for the Azure OpenAI model.
     :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
@@ -462,20 +462,20 @@ class ToolUseQualityEvaluators(PromptyEvaluatorBase[Union[str, int]]):
     :type threshold: Optional[Dict[str, Union[int, float]]]
     """
 
-    _PROMPTY_FILE = "tool_use_quality.prompty"
-    _MULTI_TURN_PROMPTY_FILE = "tool_use_quality_multi_turn.prompty"
-    _RESULT_KEY = "tool_use_quality"
+    _PROMPTY_FILE = "tool_use_suite.prompty"
+    _MULTI_TURN_PROMPTY_FILE = "tool_use_suite_multi_turn.prompty"
+    _RESULT_KEY = "tool_use_suite"
     _OPTIONAL_PARAMS = ["messages"]
     _EVALUATORS = _EVALUATORS
 
     _validator: ValidatorInterface
 
-    id = "azureai://built-in/evaluators/tool_use_quality"
+    id = "azureai://built-in/evaluators/tool_use_suite"
     """Evaluator identifier, experimental and to be used only with evaluation in cloud."""
 
     @override
     def __init__(self, model_config, *, credential=None, evaluation_level=None, threshold=None, **kwargs):
-        """Initialize the ToolUseQualityEvaluators.
+        """Initialize the ToolUseEvaluationSuite.
 
         :param model_config: Configuration for the Azure OpenAI model.
         :type model_config: Union[AzureOpenAIModelConfiguration, OpenAIModelConfiguration]
@@ -498,12 +498,12 @@ class ToolUseQualityEvaluators(PromptyEvaluatorBase[Union[str, int]]):
 
         # Validate and store evaluation level
         self._evaluation_level = _resolve_evaluation_level(
-            evaluation_level, ExtendedErrorTarget.TOOL_USE_QUALITY_EVALUATORS
+            evaluation_level, ExtendedErrorTarget.TOOL_USE_EVALUATION_SUITE
         )
 
         # Initialize input validator (supports both query/response and messages)
         self._validator = MessagesOrQueryResponseInputValidator(
-            error_target=ExtendedErrorTarget.TOOL_USE_QUALITY_EVALUATORS,
+            error_target=ExtendedErrorTarget.TOOL_USE_EVALUATION_SUITE,
             optional_tool_definitions=False,
             enforce_tool_definitions=True,
         )
@@ -545,7 +545,7 @@ class ToolUseQualityEvaluators(PromptyEvaluatorBase[Union[str, int]]):
         The query and response can be either a string or a list of messages.
 
         Example:
-            evaluator = ToolUseQualityEvaluators(model_config)
+            evaluator = ToolUseEvaluationSuite(model_config)
             result = evaluator(query=query, response=response, tool_definitions=tool_definitions)
 
         :keyword query: The query being evaluated, either a string or a list of messages.
@@ -568,7 +568,7 @@ class ToolUseQualityEvaluators(PromptyEvaluatorBase[Union[str, int]]):
         """Evaluate tool-use quality for a full multi-turn conversation.
 
         Example:
-            evaluator = ToolUseQualityEvaluators(model_config)
+            evaluator = ToolUseEvaluationSuite(model_config)
             result = evaluator(messages=messages, tool_definitions=tool_definitions)
 
         :keyword messages: The full multi-turn conversation as a list of message dicts.
@@ -639,20 +639,25 @@ class ToolUseQualityEvaluators(PromptyEvaluatorBase[Union[str, int]]):
         """
         evaluated_scores: Dict[str, Union[int, float]] = {}
         skipped_evaluators: List[str] = []
+        normalized_evaluators: Dict[str, Dict] = {}
         for evaluator in self._EVALUATORS:
             name = evaluator["name"]
-            evaluator_output = evaluators[name]
+            evaluator_output = dict(evaluators[name])
+            threshold = self._threshold_for(name)
             status = evaluator_output.get("status", "completed")
             score = evaluator_output.get("score")
+            evaluator_output["threshold"] = threshold
+            evaluator_output["passed"] = None
             if status == "skipped" or score is None:
                 skipped_evaluators.append(name)
+                normalized_evaluators[name] = evaluator_output
                 continue
             if isinstance(score, bool) or not isinstance(score, (int, float)):
                 raise EvaluationException(
                     message=f"Invalid score value for {name}: {score}.",
                     blame=ErrorBlame.SYSTEM_ERROR,
                     category=ErrorCategory.FAILED_EXECUTION,
-                    target=ExtendedErrorTarget.TOOL_USE_QUALITY_EVALUATORS,
+                    target=ExtendedErrorTarget.TOOL_USE_EVALUATION_SUITE,
                 )
             if score < evaluator["min"] or score > evaluator["max"]:
                 raise EvaluationException(
@@ -662,8 +667,10 @@ class ToolUseQualityEvaluators(PromptyEvaluatorBase[Union[str, int]]):
                     ),
                     blame=ErrorBlame.SYSTEM_ERROR,
                     category=ErrorCategory.FAILED_EXECUTION,
-                    target=ExtendedErrorTarget.TOOL_USE_QUALITY_EVALUATORS,
+                    target=ExtendedErrorTarget.TOOL_USE_EVALUATION_SUITE,
                 )
+            evaluator_output["passed"] = score >= threshold
+            normalized_evaluators[name] = evaluator_output
             evaluated_scores[name] = score
 
         failed_evaluators = [
@@ -699,7 +706,7 @@ class ToolUseQualityEvaluators(PromptyEvaluatorBase[Union[str, int]]):
             f"{self._RESULT_KEY}_status": aggregate_status,
             f"{self._RESULT_KEY}_threshold": 1,
             f"{self._RESULT_KEY}_properties": aggregate_properties,
-            f"{self._RESULT_KEY}_evaluators": evaluators,
+            f"{self._RESULT_KEY}_evaluators": normalized_evaluators,
         }
         result.update({f"{self._RESULT_KEY}_{key}": value for key, value in token_metadata.items()})
         return result
@@ -809,13 +816,13 @@ class ToolUseQualityEvaluators(PromptyEvaluatorBase[Union[str, int]]):
         # Single-turn path (query/response)
         if eval_input.get("query") is None or eval_input.get("response") is None:
             raise EvaluationException(
-                message="Both query and response must be provided as input to the Tool Use Quality Evaluators.",
+                message="Both query and response must be provided as input to the Tool Use Evaluation Suite.",
                 internal_message=(
-                    "Both query and response must be provided as input to the Tool Use Quality Evaluators."
+                    "Both query and response must be provided as input to the Tool Use Evaluation Suite."
                 ),
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.MISSING_FIELD,
-                target=ExtendedErrorTarget.TOOL_USE_QUALITY_EVALUATORS,
+                target=ExtendedErrorTarget.TOOL_USE_EVALUATION_SUITE,
             )
         if _is_intermediate_response(eval_input.get("response")):
             return self._return_not_applicable_result(
@@ -859,9 +866,9 @@ class ToolUseQualityEvaluators(PromptyEvaluatorBase[Union[str, int]]):
     ) -> Dict[str, Union[int, str]]:
         """Parse the prompty output into an aggregate result with raw evaluator results.
 
-        The five evaluator objects are preserved exactly under
-        ``tool_use_quality_evaluators``. The primary ``tool_use_quality`` score is an
-        any-fail score derived from those raw objects.
+        The five evaluator objects preserve their LLM fields and receive derived
+        threshold/pass fields under ``tool_use_suite_evaluators``. The primary
+        ``tool_use_suite`` score is an any-fail score derived from those objects.
 
         :param prompty_output_dict: Raw output from the prompty flow.
         :type prompty_output_dict: Dict
@@ -878,7 +885,7 @@ class ToolUseQualityEvaluators(PromptyEvaluatorBase[Union[str, int]]):
                 message="Evaluator returned invalid output.",
                 blame=ErrorBlame.SYSTEM_ERROR,
                 category=ErrorCategory.FAILED_EXECUTION,
-                target=ExtendedErrorTarget.TOOL_USE_QUALITY_EVALUATORS,
+                target=ExtendedErrorTarget.TOOL_USE_EVALUATION_SUITE,
             )
 
         token_metadata = self._get_token_metadata(prompty_output_dict)
@@ -894,8 +901,6 @@ class ToolUseQualityEvaluators(PromptyEvaluatorBase[Union[str, int]]):
                     "reason": "Evaluator did not return a result for this evaluator.",
                 }
             else:
-                # Do not inject token metadata or derived fields into this object:
-                # Callers receive the actual LLM evaluator output unchanged.
                 evaluators[name] = evaluator_output
 
         return self._build_aggregate_result(evaluators, token_metadata)

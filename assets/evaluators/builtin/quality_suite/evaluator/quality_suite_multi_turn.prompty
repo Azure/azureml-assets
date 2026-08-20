@@ -1,5 +1,5 @@
 ---
-name: Conversation Quality Evaluators (Multi-Turn)
+name: Quality Evaluation Suite (Multi-Turn)
 description: >
   One judge call scoring SIX independent quality rubrics (fluency, coherence, intent_resolution, task_adherence, groundedness, task_completion) over a full multi-turn user-agent conversation, and identifying the earliest failed user turn per rubric.
 model:
