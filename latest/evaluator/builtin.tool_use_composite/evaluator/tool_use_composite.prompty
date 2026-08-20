@@ -1,0 +1,150 @@
+---
+name: Tool Use Composite Evaluator
+description: >
+  A single composite evaluator that scores ALL FIVE prod tool evaluators
+  (tool_call_accuracy, tool_call_success, tool_input_accuracy,
+  tool_output_utilization, tool_selection) in ONE LLM call. Each member
+  evaluator's rubric and scale are preserved verbatim; the model must return
+  one JSON object keyed by evaluator id.
+model:
+  api: chat
+  parameters:
+    temperature: 0.0
+    max_tokens: 6000
+    top_p: 1.0
+    response_format:
+      type: json_object
+inputs:
+  query:
+    type: List
+  response:
+    type: List
+  tool_definitions:
+    type: List
+---
+system:
+You are an expert evaluator of AI agents that call tools. You will assess a
+single agent interaction against FIVE independent evaluation rubrics at once and
+return one JSON object with a separate result for each rubric. Judge every rubric
+strictly and independently of the others, exactly as if each were scored alone.
+
+user:
+Evaluate the AGENT RESPONSE against ALL FIVE rubrics below. For each rubric, first
+apply its Skip conditions; if skipped, set score=null and status="skipped".
+Otherwise set status="completed" and assign a score on that rubric's own scale.
+
+================================================================================
+RUBRIC 1 — tool_call_accuracy  (SCALE: integer 1-5)
+================================================================================
+Overall effectiveness of ALL tool calls in the AGENT RESPONSE for the user's query.
+Criteria: (1) Collective relevance; (2) Parameter correctness — all params extracted
+from or reasonably inferred from the CONVERSATION; fabricated params => Level 2;
+(3) Completeness — all necessary tool calls made (failed calls don't count as missing);
+(4) Efficiency — no unnecessary duplicate calls with identical params (don't penalize a
+single tool returning multiple results, e.g. file_search); (5) Execution success — calls
+succeeded or recovered from errors. Only evaluate tool calls in the AGENT RESPONSE.
+Ratings:
+- 1 (Irrelevant): tool calls not relevant to the query.
+- 2 (Partially Relevant - Wrong Execution): somewhat related but couldn't reach helpful
+  info due to incorrect parameters, OR missing necessary tool calls, OR tools returned
+  errors with no successful retry. (Fabricated parameters => Level 2.)
+- 3 (Relevant but Inefficient): relevant, correct, grounded params leading to a correct
+  output, BUT multiple excessive/unnecessary tool calls were made.
+- 4 (Correct with Retrials): correct tools + correct grounded params; a tool errored but
+  the agent retried and succeeded.
+- 5 (Optimal Solution): correct tools + correct grounded params; no excessive calls; no
+  errors; the calls helped address the query.
+Skip (score=null, status="skipped") if: there are NO tool calls in the AGENT RESPONSE,
+OR a tool call references a tool not present in TOOL DEFINITIONS.
+
+================================================================================
+RUBRIC 2 — tool_call_success  (SCALE: integer 0 or 1)
+================================================================================
+For EACH tool call in the AGENT RESPONSE, decide whether its RESULT indicates a
+technical success or failure. Care ONLY about technical errors/failures/exceptions,
+NOT business correctness, parameter choice, or tool selection.
+A tool result is FAILED if any apply: it errored/threw an exception; failed to run or
+return; returned a result indicating an error/failure; returned an object/JSON with a
+field indicating an error; timed out; or returned a result that makes no technical sense
+given the tool definition (e.g. an empty/null result when the tool must always return
+data). Otherwise it SUCCEEDED — even if the value is business-wrong (e.g. sqrt(4)=7 is a
+business mistake, still a success; wrong list delimiter is a business mistake, still a
+success; an empty {} is fine only if the tool isn't expected to return data).
+Score: 1 if ALL tool calls succeeded; 0 if ANY failed.
+Skip (score=null, status="skipped") if: there are NO tool calls in the AGENT RESPONSE.
+
+================================================================================
+RUBRIC 3 — tool_input_accuracy  (SCALE: integer 0 or 1)
+================================================================================
+Strict binary check of the PARAMETERS passed to the tool calls in the AGENT RESPONSE.
+FAIL (0) if ANY parameter of ANY call violates ANY of: (1) Groundedness — every param
+must be derived from / supported by the CONVERSATION or query; no fabricated/unsupported
+values; (2) Type compliance — matches the type in the tool definition; (3) Format
+compliance — matches format/structure/constraints in the definition; (4) Required
+parameters — all required params present; (5) Unexpected parameters — no params that are
+not defined in the tool definition; (6) Value appropriateness — values are contextually
+appropriate for the tool's purpose. PASS (1) only if ALL params of ALL calls satisfy ALL
+six criteria perfectly.
+Skip (score=null, status="skipped") if: there are NO tool calls in the AGENT RESPONSE.
+
+================================================================================
+RUBRIC 4 — tool_output_utilization  (SCALE: integer 0 or 1)
+================================================================================
+Judge ONLY whether the agent correctly UNDERSTOOD and USED tool OUTPUTS when producing
+the AGENT RESPONSE. A "use" = any appearance of a prior tool output (from CONVERSATION or
+from a tool result within the AGENT RESPONSE) inside the AGENT RESPONSE — either as a
+factual claim to the user or as a parameter in a new tool call. Do NOT judge which tool
+was chosen, whether new inputs are valid on their own, or task completeness.
+FAIL (0) if any tool-derived value is used incorrectly: wrong value/entity, wrong
+transformation/unit, fabricated (claimed but not present in any tool output), or a prior
+output reused incorrectly in a new tool call. PASS (1) if there are no faulty uses.
+Conservative rule: when uncertain whether a use is correct, treat it as a fault.
+Skip (score=null, status="skipped") if: the CONVERSATION or AGENT RESPONSE is empty, OR
+there are NO tool outputs available to be used.
+
+================================================================================
+RUBRIC 5 — tool_selection  (SCALE: integer 0 or 1)
+================================================================================
+Judge the appropriateness and efficiency of the TOOLS CHOSEN (by name) in the AGENT
+RESPONSE for the user's last query. Consider tools already called earlier in the
+CONVERSATION: if a tool was already called and provided needed data, it need not be
+called again. Only evaluate tool selections in the AGENT RESPONSE.
+FAIL (0) if any: selected tools are irrelevant/inappropriate for the query; an essential
+tool available in TOOL DEFINITIONS and needed for the task was NOT selected AND was not
+called earlier in the CONVERSATION; or the selection shows a fundamental misunderstanding.
+PASS (1) if all necessary tools were selected (counting prior calls in CONVERSATION), even
+if some redundant/unnecessary (but not irrelevant) tools were also selected. Only tool
+NAMES matter here — ignore parameter correctness and tool results.
+Skip (score=null, status="skipped") if: there are NO tool calls in the AGENT RESPONSE, OR
+TOOL DEFINITIONS are missing, OR the CONVERSATION is missing.
+
+# OUTPUT FORMAT
+Return EXACTLY one JSON object (no markdown, no extra text) with this schema:
+{
+  "tool_call_accuracy":       {"score": <1-5 or null>, "status": "completed"|"skipped", "reason": "<brief>"},
+  "tool_call_success":        {"score": <0|1 or null>, "status": "completed"|"skipped", "reason": "<brief>"},
+  "tool_input_accuracy":      {"score": <0|1 or null>, "status": "completed"|"skipped", "reason": "<brief>"},
+  "tool_output_utilization":  {"score": <0|1 or null>, "status": "completed"|"skipped", "reason": "<brief>"},
+  "tool_selection":           {"score": <0|1 or null>, "status": "completed"|"skipped", "reason": "<brief>"}
+}
+Each "reason" must be 1-3 sentences justifying that rubric's score. Judge each rubric
+independently and strictly on its own scale.
+
+# INPUT
+CONVERSATION (prior turns; may contain earlier tool calls and their results):
+{{query}}
+
+AGENT RESPONSE (the agent's latest message being evaluated; contains the tool
+calls made in response to the user's last query, each tool call's result, and any
+final text to the user):
+{{response}}
+
+TOOL DEFINITIONS:
+{{tool_definitions}}
+
+## Notes for reading the data:
+- "TOOL CALLS TO BE EVALUATED" / "TOOL CALLS MADE BY AGENT" = the tool calls found
+  in the AGENT RESPONSE only (not the ones in CONVERSATION, which are context).
+- Each tool call includes its name, arguments, and its result.
+
+# OUTPUT

@@ -1,0 +1,102 @@
+type: "evaluator"
+id: "azureml://registries/azureml/evaluators/builtin.quality_composite/versions/1"
+name: "builtin.quality_composite"
+version: 1
+displayName: "Quality-Composite-Evaluator-(Preview)"
+description: "A composite evaluator that batches fluency, coherence, intent_resolution,
+  task_adherence, groundedness, and task_completion into a single LLM call. The primary
+  quality_composite score fails when any evaluated evaluator fails, while the evaluator
+  keys preserve the LLM results and derived pass/fail fields. Supports single-turn
+  query/response and multi-turn messages inputs."
+evaluatorType: "builtin"
+evaluatorSubType: "code"
+categories: ["quality", "agents"]
+supportedEvaluationLevels: ["conversation", "turn"]
+tags:
+  provider: "Microsoft"
+  is_continuous_scenario: "true"
+  composite_evaluator: ["fluency", "coherence", "intent_resolution", "task_adherence",
+    "groundedness", "task_completion"]
+initParameterSchema:
+  type: "object"
+  properties:
+    deployment_name:
+      type: "string"
+    threshold:
+      type: "number"
+      minimum: 1
+      maximum: 5
+      multipleOf: 1
+    evaluation_level:
+      type: "string"
+  required: ["deployment_name"]
+dataMappingSchema:
+  type: "object"
+  properties:
+    query:
+      anyOf:
+      - type: "string"
+      - type: "array"
+        items:
+          type: "object"
+    response:
+      anyOf:
+      - type: "string"
+      - type: "array"
+        items:
+          type: "object"
+    tool_definitions:
+      anyOf:
+      - type: "object"
+      - type: "array"
+        items:
+          type: "object"
+    messages:
+      type: "array"
+      items:
+        type: "object"
+  anyOf:
+  - required: ["query", "response"]
+  - required: ["messages"]
+definition:
+  type: "code"
+  code_text:
+  blob_uri: "https://.../quality-composite/evaluator"
+  metrics:
+    quality_composite:
+      type: "boolean"
+      desirable_direction: "increase"
+      min_value: 0
+      max_value: 1
+      is_primary: true
+    fluency:
+      type: "ordinal"
+      desirable_direction: "increase"
+      min_value: 1
+      max_value: 5
+    coherence:
+      type: "ordinal"
+      desirable_direction: "increase"
+      min_value: 1
+      max_value: 5
+    intent_resolution:
+      type: "ordinal"
+      desirable_direction: "increase"
+      min_value: 1
+      max_value: 5
+    task_adherence:
+      type: "boolean"
+      desirable_direction: "increase"
+      min_value: 0
+      max_value: 1
+    groundedness:
+      type: "ordinal"
+      desirable_direction: "increase"
+      min_value: 1
+      max_value: 5
+    task_completion:
+      type: "boolean"
+      desirable_direction: "increase"
+      min_value: 0
+      max_value: 1
+path: ./evaluator
