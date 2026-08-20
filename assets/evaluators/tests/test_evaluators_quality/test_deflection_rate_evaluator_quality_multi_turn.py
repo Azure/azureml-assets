@@ -18,16 +18,19 @@ class TestDeflectionRateEvaluatorQualityMultiTurn(BaseQualityEvaluatorRunner):
     evaluator_type = DeflectionRateEvaluator
 
     def assert_pass(self, result_data: Dict[str, Any]) -> None:
+        """Assert the evaluator produced a passing deflection result."""
         assert result_data["label"] == "pass"
         assert result_data["status"] == "completed"
         assert result_data["score"] <= self._get_threshold(result_data)
 
     def assert_fail(self, result_data: Dict[str, Any]) -> None:
+        """Assert the evaluator produced a failing deflection result."""
         assert result_data["label"] == "fail"
         assert result_data["status"] == "completed"
         assert result_data["score"] > self._get_threshold(result_data)
 
     def test_pass_deflection_later_resolved(self) -> None:
+        """Deflection followed by a resolution in a later turn should pass."""
         self.run_quality_test(
             test_label="PASS-multi-turn-deflection-later-resolved",
             expected=ExpectedResult.PASS,
@@ -46,6 +49,7 @@ class TestDeflectionRateEvaluatorQualityMultiTurn(BaseQualityEvaluatorRunner):
         )
 
     def test_fail_unresolved_redirect(self) -> None:
+        """A conversation that only redirects the user should fail."""
         self.run_quality_test(
             test_label="FAIL-multi-turn-unresolved-redirect",
             expected=ExpectedResult.FAIL,

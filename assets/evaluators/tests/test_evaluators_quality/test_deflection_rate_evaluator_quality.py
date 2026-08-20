@@ -34,13 +34,16 @@ class TestDeflectionRateEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     @property
     def expected_result_fields(self) -> List[str]:
-        """Return the legacy field schema plus the standardized status field."""
+        """Return the standardized result fields plus legacy deflection metadata."""
         return [
             self._result_prefix,
+            f"{self._result_prefix}_score",
+            f"{self._result_prefix}_passed",
             f"{self._result_prefix}_result",
             f"{self._result_prefix}_reason",
-            f"{self._result_prefix}_threshold",
             f"{self._result_prefix}_status",
+            f"{self._result_prefix}_threshold",
+            f"{self._result_prefix}_properties",
             f"{self._result_prefix}_deflection_type",
         ]
 
@@ -92,17 +95,12 @@ class TestDeflectionRateEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_pass_direct_answer_factual(self) -> None:
         """Test case: PASS - Direct factual answer provided."""
-                """Return the standardized result fields plus legacy deflection metadata."""
+        self.run_quality_test(
             test_label="PASS-direct-answer-factual",
             expected=ExpectedResult.PASS,
-                    f"{self._result_prefix}_score",
-                    f"{self._result_prefix}_passed",
-                    f"{self._result_prefix}_result",
-                    f"{self._result_prefix}_reason",
-                    f"{self._result_prefix}_status",
-                    f"{self._result_prefix}_threshold",
-                    f"{self._result_prefix}_properties",
-                    f"{self._result_prefix}_deflection_type",
+            response="The capital of France is Paris. It has been the capital since the late 10th century.",
+        )
+
         self.run_quality_test(
             test_label="PASS-direct-answer-helpful",
             expected=ExpectedResult.PASS,
