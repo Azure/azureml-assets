@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202607.1
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202608.1
 
 USER root
 # Apply Ubuntu security updates, including inherited base-image packages with
