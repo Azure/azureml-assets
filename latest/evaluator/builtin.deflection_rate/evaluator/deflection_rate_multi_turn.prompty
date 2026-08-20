@@ -1,0 +1,38 @@
+---
+name: Deflection Rate Multi-Turn
+description: Evaluates unresolved user-request deflection across a full multi-turn conversation
+model:
+  api: chat
+  parameters:
+    temperature: 0.0
+    max_tokens: 1500
+    top_p: 1.0
+    presence_penalty: 0
+    frequency_penalty: 0
+    response_format:
+      type: json_object
+inputs:
+  messages:
+    type: string
+---
+system:
+You are an AI evaluation agent that assesses whether an AI assistant deflected any user request in a complete conversation.
+
+user:
+Evaluate the CONVERSATION below.
+
+A deflection is an assistant response that refuses or rejects a request without a direct answer (`plain_denial`), sends the user to another source instead of answering (`send_elsewhere`), or changes the request to remain in scope instead of answering it (`reframe`). A direct answer is `plain_answer`.
+
+Review every user request and the later assistant turns that address it. Score 1 only if at least one request is deflected and never directly resolved later in the conversation. A later direct resolution of the same request clears an earlier deflection. Score 0 when every request receives a direct answer or a later resolution.
+
+Tool calls and results describe working context, not an answer by themselves. An error or timeout that leaves a request unanswered is a deflection.
+
+CONVERSATION:
+{{messages}}
+
+Output a JSON object with these keys:
+{
+  "score": <0 or 1>,
+  "deflection_type": "<plain_denial | send_elsewhere | reframe | plain_answer>",
+  "explanation": "<Brief explanation of the assigned rating>"
+}

@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.deflection_rate"
-version: 2
+version: 3
 displayName: "Deflection-Rate-Evaluator"
 description: "Evaluates whether an AI agent successfully resolved a user's query without
   requiring human intervention (deflection). A deflection occurs when the AI indicates
@@ -13,6 +13,7 @@ categories: ["business"]
 tags:
   provider: "Microsoft"
   is_continuous_scenario: "true"
+supportedEvaluationLevels: ["conversation", "turn"]
 initParameterSchema:
   type: "object"
   properties:
@@ -23,6 +24,8 @@ initParameterSchema:
       minimum: 0
       maximum: 1
       multipleOf: 1
+    evaluation_level:
+      type: "string"
   required: ["deployment_name"]
 dataMappingSchema:
   type: "object"
@@ -33,7 +36,13 @@ dataMappingSchema:
       - type: "array"
         items:
           type: "object"
-  required: ["response"]
+    messages:
+      type: "array"
+      items:
+        type: "object"
+  anyOf:
+  - required: ["response"]
+  - required: ["messages"]
 outputSchema:
   deflection_rate:
     type: "boolean"
