@@ -53,45 +53,41 @@ dataMappingSchema:
   anyOf:
     - required: ["query", "response"]
     - required: ["messages"]
-definition:
-  type: "code"
-  code_text: null
-  blob_uri: "https://.../quality-composite/evaluator"
-  metrics:
-    quality_composite:
-      type: "boolean"
-      desirable_direction: "increase"
-      min_value: 0
-      max_value: 1
-      is_primary: true
-    fluency:
-      type: "ordinal"
-      desirable_direction: "increase"
-      min_value: 1
-      max_value: 5
-    coherence:
-      type: "ordinal"
-      desirable_direction: "increase"
-      min_value: 1
-      max_value: 5
-    intent_resolution:
-      type: "ordinal"
-      desirable_direction: "increase"
-      min_value: 1
-      max_value: 5
-    task_adherence:
-      type: "boolean"
-      desirable_direction: "increase"
-      min_value: 0
-      max_value: 1
-    groundedness:
-      type: "ordinal"
-      desirable_direction: "increase"
-      min_value: 1
-      max_value: 5
-    task_completion:
-      type: "boolean"
-      desirable_direction: "increase"
-      min_value: 0
-      max_value: 1
+outputSchema:
+  quality_composite:
+    type: "boolean"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
+    is_primary: true
+  fluency:
+    type: "ordinal"
+    desirable_direction: "increase"
+    min_value: 1
+    max_value: 5
+  coherence:
+    type: "ordinal"
+    desirable_direction: "increase"
+    min_value: 1
+    max_value: 5
+  intent_resolution:
+    type: "ordinal"
+    desirable_direction: "increase"
+    min_value: 1
+    max_value: 5
+  task_adherence:
+    type: "boolean"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
+  groundedness:
+    type: "ordinal"
+    desirable_direction: "increase"
+    min_value: 1
+    max_value: 5
+  task_completion:
+    type: "boolean"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
 path: ./evaluator

@@ -53,40 +53,36 @@ dataMappingSchema:
   anyOf:
     - required: ["query", "response", "tool_definitions"]
     - required: ["messages", "tool_definitions"]
-definition:
-  type: "code"
-  code_text: null
-  blob_uri: "https://.../tool-use-composite/evaluator"
-  metrics:
-    tool_use_composite:
-      type: "boolean"
-      desirable_direction: "increase"
-      min_value: 0
-      max_value: 1
-      is_primary: true
-    tool_call_accuracy:
-      type: "ordinal"
-      desirable_direction: "increase"
-      min_value: 1
-      max_value: 5
-    tool_call_success:
-      type: "boolean"
-      desirable_direction: "increase"
-      min_value: 0
-      max_value: 1
-    tool_input_accuracy:
-      type: "boolean"
-      desirable_direction: "increase"
-      min_value: 0
-      max_value: 1
-    tool_output_utilization:
-      type: "boolean"
-      desirable_direction: "increase"
-      min_value: 0
-      max_value: 1
-    tool_selection:
-      type: "boolean"
-      desirable_direction: "increase"
-      min_value: 0
-      max_value: 1
+outputSchema:
+  tool_use_composite:
+    type: "boolean"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
+    is_primary: true
+  tool_call_accuracy:
+    type: "ordinal"
+    desirable_direction: "increase"
+    min_value: 1
+    max_value: 5
+  tool_call_success:
+    type: "boolean"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
+  tool_input_accuracy:
+    type: "boolean"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
+  tool_output_utilization:
+    type: "boolean"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
+  tool_selection:
+    type: "boolean"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
 path: ./evaluator
