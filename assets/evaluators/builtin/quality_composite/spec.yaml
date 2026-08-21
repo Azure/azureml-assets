@@ -11,7 +11,7 @@ supportedEvaluationLevels: ["conversation", "turn"]
 tags:
   provider: "Microsoft"
   is_continuous_scenario: "true"
-  composite_evaluator: '["fluency", "coherence", "intent_resolution", "task_adherence", "groundedness", "task_completion"]'
+  composite_evaluator: "fluency, coherence, intent_resolution, task_adherence, groundedness, task_completion"
 initParameterSchema:
   type: "object"
   properties:
