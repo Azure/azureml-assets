@@ -35,4 +35,4 @@ system_metadata:
   platformCapabilities:
     enableBatch: false
   inferenceEnvironmentAssetId: azureml://registries/azureml/environments/mlflow-model-inference/versions/22
-version: 4
+version: 5
