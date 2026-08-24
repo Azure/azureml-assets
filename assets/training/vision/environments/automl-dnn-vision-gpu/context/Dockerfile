@@ -1,6 +1,7 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch271:{{latest-image-tag}}
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-vision-gpu
+ENV PIP_PROGRESS_BAR off
 # Prepend path to AzureML conda environment
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
@@ -10,23 +11,26 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 /artifacts /var/
-# Pin OS packages to patched Ubuntu USN versions when this image installs or inherits them.
+# Install runtime OS packages and pin vulnerable base packages to patched Ubuntu USN versions.
+# libsystemd0/libudev1/udev fix USN-8626-1 inherited from the base image.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get install -y --no-install-recommends \
-        curl=7.81.0-1ubuntu1.25 \
-        libcurl3-gnutls=7.81.0-1ubuntu1.25 \
-        libcurl4=7.81.0-1ubuntu1.25 \
+        curl=7.81.0-1ubuntu1.26 \
+        libsystemd0=249.11-0ubuntu3.22 \
+        libudev1=249.11-0ubuntu3.22 \
+        libcurl3-gnutls=7.81.0-1ubuntu1.26 \
+        libcurl4=7.81.0-1ubuntu1.26 \
         libnghttp2-14=1.43.0-1ubuntu0.4 \
-        libnginx-mod-http-echo=1.18.0-6ubuntu14.18 \
-        libnginx-mod-http-geoip2=1.18.0-6ubuntu14.18 \
+        libnginx-mod-http-echo=1.18.0-6ubuntu14.20 \
+        libnginx-mod-http-geoip2=1.18.0-6ubuntu14.20 \
         libunwind8 \
         libsqlite3-0=3.37.2-2ubuntu0.7 \
         libxml2=2.9.13+dfsg-1ubuntu0.12 \
-        nginx-common=1.18.0-6ubuntu14.18 \
+        nginx-common=1.18.0-6ubuntu14.20 \
         libxml++2.6-2v5 \
-        nginx-light=1.18.0-6ubuntu14.18 \
-        wget=1.21.2-2ubuntu1.4 \
+        nginx-light=1.18.0-6ubuntu14.20 \
+        wget=1.21.2-2ubuntu1.5 \
         tar=1.34+dfsg-1ubuntu0.1.22.04.6 \
         libkrb5support0=1.19.2-2ubuntu0.8 \
         libgssapi-krb5-2=1.19.2-2ubuntu0.8 \
@@ -39,6 +43,7 @@ RUN apt-get update && \
         psmisc \
         rsyslog=8.2112.0-2ubuntu2.4 \
         runit \
+        udev=249.11-0ubuntu3.22 \
         unzip && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
@@ -124,20 +129,21 @@ RUN /opt/conda/bin/conda install -n ptca -c conda-forge 'pip>=26.1' -y && \
 
 # Fix security vulnerabilities in active conda env (azureml-automl-dnn-vision-gpu, python 3.10)
 # aiohttp, bokeh, distributed, protobuf, cryptography, filelock, setuptools, PyJWT, urllib3, pillow,
-# onnx, pyarrow, requests, python-dotenv, GitPython — all transitive deps of azureml SDK packages pinned with template
+# onnx, pyarrow, requests, python-dotenv, GitPython, sqlparse — transitive deps of azureml SDK packages pinned with template
 # versions (cannot upgrade parent during template rendering).
 # setuptools>=83.0.0: fixes GHSA-5rjg-fvgr-3xxf and GHSA-h35f-9h28-mq5c.
 # cryptography>=46.0.7: azure-identity (via azureml-dataprep) only requires cryptography>=2.5.
 # pyarrow>=23.0.1: pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg / CVE-2026-25087.
 # python-dotenv>=1.2.2: CVE-2026-28684; pydantic-settings (<=2.14.0) requires >=0.21.0 only.
-# GitPython>=3.1.55: pinned transitive dep of mlflow-skinny/azureml-mlflow; fixes GitPython GHSA findings.
+# GitPython>=3.1.58: pinned transitive dep of mlflow-skinny/azureml-mlflow; fixes GitPython GHSA findings.
+# sqlparse>=0.6.0: pinned transitive dep of mlflow-skinny/azureml-mlflow; fixes sqlparse GHSA findings.
 # msgpack>=1.2.1: pinned transitive dep of azureml SDK packages; fixes GHSA-6v7p-g79w-8964.
 # idna>=3.15 and click>=8.3.3 are direct overrides because requests/yarl/dask parents keep
 # loose dependency ranges that allow vulnerable versions.
 RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' 'distributed>=2026.1.0' 'protobuf>=6.33.5' 'cryptography>=46.0.7' \
     'filelock>=3.20.3' 'setuptools>=83.0.0' 'PyJWT>=2.12.0' 'urllib3>=2.7.0' 'pillow>=12.2.0' \
     'onnx>=1.21.0' 'requests>=2.33.0' 'python-dotenv>=1.2.2' \
-    'bokeh>=3.8.2' 'idna>=3.15' 'click>=8.3.3' 'pyarrow>=23.0.1' 'GitPython>=3.1.55' 'msgpack>=1.2.1' && \
+    'bokeh>=3.8.2' 'idna>=3.15' 'click>=8.3.3' 'pyarrow>=23.0.1' 'GitPython>=3.1.58' 'sqlparse>=0.6.0' 'msgpack>=1.2.1' && \
     rm -f $AZUREML_CONDA_ENVIRONMENT_PATH/conda-meta/setuptools-70*.json \
           $AZUREML_CONDA_ENVIRONMENT_PATH/conda-meta/msgpack-python-1.1*.json \
           $AZUREML_CONDA_ENVIRONMENT_PATH/conda-meta/msgpack-1.1*.json \
