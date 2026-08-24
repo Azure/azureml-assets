@@ -2,23 +2,17 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 
 USER root
 ENV PIP_PROGRESS_BAR=off
-# Pull in latest OS security updates on top of the base image, including explicit
-# floors for wget/tar/Kerberos/SQLite packages inherited from the base image.
+# Pull in latest OS security updates on top of the base image.
 RUN apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get -y -qq upgrade && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --only-upgrade \
-        wget=1.21.2-2ubuntu1.4 \
-        tar=1.34+dfsg-1ubuntu0.1.22.04.6 \
-        libkrb5support0=1.19.2-2ubuntu0.8 \
-        libgssapi-krb5-2=1.19.2-2ubuntu0.8 \
-        libk5crypto3=1.19.2-2ubuntu0.8 \
-        libkrb5-3=1.19.2-2ubuntu0.8 \
-        libsqlite3-0=3.37.2-2ubuntu0.7 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
-RUN pip install azureml-evaluate-mlflow=={{latest-pypi-version}}
+# azureml-metrics: transitive dep of azureml-evaluate-mlflow; pin to current
+# AzureML release to avoid resolver backtracking into obsolete mmcv-full builds.
+RUN pip install --no-cache-dir azureml-evaluate-mlflow=={{latest-pypi-version}} \
+    azureml-metrics[all]=={{latest-pypi-version}}
 RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 
 # Security floors for transitive deps whose parent packages do not pin them safely.
@@ -37,13 +31,15 @@ RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 #                  in transitively by requests/botocore/azureml-core/kubernetes/etc., all of
 #                  which only constrain urllib3<3 (loose). No parent package pins urllib3>=2.7,
 #                  so direct override is the only remediation.
+# sqlparse:        transitive dep of mlflow; fixes GHSA-pwgv-4x5q-6m9f,
+#                  GHSA-3496-9g83-7v6x, GHSA-prg7-hcfm-mfcr, GHSA-f2ff-p2ww-7p4p.
 # vllm:            GHSA-rwxx-mrjm-wc2m and related vLLM advisories require >=0.24.0.
 # gunicorn:        pinned transitive dep introduced by azureml evaluate/ACFT packages; fixes
 #                  CVE-2024-1135 and CVE-2024-6827.
 RUN pip install --upgrade 'protobuf>=6.33.5,<7' 'xgrammar>=0.1.32' \
     'nltk>=3.9.4' 'pyasn1>=0.6.3' 'python-multipart>=0.0.22' 'ray>=2.55.0' \
     'mlflow>=3.8.1,<4.0.0' 'vllm>=0.24.0' 'pyOpenSSL>=26.0.0' \
-    'urllib3>=2.7.0' 'gunicorn>=22.0.0'
+    'urllib3>=2.7.0' 'sqlparse>=0.6.0' 'gunicorn>=22.0.0'
 # cryptography: pinned transitive dep of mlflow/base image; mlflow constrains
 # cryptography<50, so install the scanner-required GHSA-g6cj-pr64-35w5 floor separately.
 RUN pip install --no-cache-dir --upgrade --no-deps 'cryptography>=50.0.0'
@@ -119,6 +115,14 @@ RUN JACKSON_ARTIFACT=jackson-core \
     JACKSON_POM_SHA1=e2f1e832d86886fc316342c59503090191645fb9 \
     python3 /tmp/patch_ray_jackson_databind.py && \
     rm -f /tmp/patch_ray_jackson_databind.py
+# httpcore5: pinned transitive dep of ray; bundled in Ray's fat JAR,
+# fixes GHSA-hf6x-8p5f-cgmf.
+COPY patch_ray_httpcore5.py /tmp/patch_ray_httpcore5.py
+RUN HTTPCORE5_VERSION=5.4.3 \
+    HTTPCORE5_JAR_SHA1=32a0699fbcb103f5621c00983ee8f5aac080e4a6 \
+    HTTPCORE5_POM_SHA1=4553084e7ef07928bc1c2b65d4b099b972ba53a6 \
+    python3 /tmp/patch_ray_httpcore5.py && \
+    rm -f /tmp/patch_ray_httpcore5.py
 RUN find /opt/conda -type d \( -name 'setuptools-70.3.0.dist-info' -o -name 'msgpack-1.1.2.dist-info' \) -prune -exec rm -rf {} + && \
     find /opt/conda -path '*/site-packages/pip/_vendor/bom.cdx.json' -delete && \
     find /opt/conda -path '*/site-packages/pip/_vendor/vendor.txt' -exec sed -i -e '/^setuptools==70\.3\.0$/d' -e '/^msgpack==1\.1\.2$/d' {} + && \
