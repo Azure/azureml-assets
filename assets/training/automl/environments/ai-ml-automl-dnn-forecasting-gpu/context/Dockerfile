@@ -83,6 +83,8 @@ RUN printf '%s\n' \
                 'GitPython>=3.1.55' \
                 '# msgpack pinned transitive dep of AzureML AutoML/Dask; fixes GHSA-6v7p-g79w-8964' \
                 'msgpack>=1.2.1' \
+                '# numpy is NOT a security floor. onnx pulls ml_dtypes, which as of 0.6.0 requires numpy>=2.0.0; without this cap the security-override resolve below silently upgrades numpy to 2.x, contradicting azureml-automl-runtime/numba/scipy and leaving the prebuilt pandas 1.5.3 wheel binary-incompatible, so the image fails on import pandas with "numpy.dtype size changed".' \
+                'numpy>=1.23.5,<1.24' \
                 '# pillow pinned transitive dep of matplotlib/bokeh/tensorboard; fixes GHSA-8v84-f9pq-wr9x, GHSA-9hw9-ch79-4vh6, GHSA-vjc4-5qp5-m44j, GHSA-pg7v-jwj7-p798, GHSA-45hq-cxwh-f6vc, GHSA-phj9-mv4w-65pm, GHSA-62p4-gmf7-7g93, and GHSA-5x94-69rx-g8h2' \
                 'pillow>=12.3.0' \
                 '# pydantic-settings pinned transitive dep of AzureML/MLflow; fixes GHSA-4xgf-cpjx-pc3j' \
@@ -91,6 +93,8 @@ RUN printf '%s\n' \
                 'pyasn1>=0.6.4' \
                 '# setuptools pinned packaging tool in this conda env; fixes GHSA-h35f-9h28-mq5c' \
                 'setuptools>=83.0.0' \
+                '# sqlparse pinned transitive dep of mlflow-skinny; fixes GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr, GHSA-3496-9g83-7v6x, and GHSA-pwgv-4x5q-6m9f' \
+                'sqlparse>=0.6.0' \
                 > /tmp/security-constraints.txt && \
     pip install --no-cache-dir -c /tmp/security-constraints.txt \
                 azureml-core=={{latest-pypi-version}} \
@@ -119,7 +123,7 @@ RUN pip install --no-cache-dir -c /tmp/security-constraints.txt \
 
 # Security overrides needed because parent packages cap vulnerable versions.
 # distributed>=2026.1.0: CVE-2026-23528 (via azureml-train-automl-runtime -> dask[complete])
-# cryptography>=50.0.0: CVE-2026-26007 (via azureml-mlflow, azure-identity, azureml-core -> msal/pyopenssl)
+# cryptography>=46.0.5: CVE-2026-26007 (via azureml-mlflow, azure-identity, azureml-core -> msal/pyopenssl)
 # mlflow-skinny>=2.16.0: security fixes (via azureml-mlflow, azureml-contrib-automl-dnn-forecasting)
 # protobuf>=5.29.6: CVE-2026-0994 (via mlflow-skinny, azureml-automl-runtime -> onnx/onnxruntime)
 # pillow>=12.3.0: current Pillow GHSA findings (via matplotlib, bokeh, tensorboard)
@@ -127,19 +131,17 @@ RUN pip install --no-cache-dir -c /tmp/security-constraints.txt \
 # onnx>=1.21.0: GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6, GHSA-538c-55jv-c5g9,
 #   GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m (via azureml-automl-runtime -> onnxconverter-common/skl2onnx)
 # pyarrow>=23.0.1: GHSA-rgxp-2hwp-jwgg / CVE-2026-25087 (via azureml-dataset-runtime)
+# sqlparse>=0.6.0: GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr, GHSA-3496-9g83-7v6x, GHSA-pwgv-4x5q-6m9f (via mlflow-skinny)
 RUN pip install --no-cache-dir --upgrade -c /tmp/security-constraints.txt \
                           'distributed>=2026.1.0' \
-                          'cryptography>=50.0.0' \
+                          'cryptography>=46.0.5' \
                           'mlflow-skinny>=2.16.0' \
                           'protobuf>=5.29.6' \
                           'pillow>=12.3.0' \
                           'bokeh>=3.8.2' \
                           'onnx>=1.21.0' \
-                          'pyarrow>=23.0.1'
-
-# The base Miniconda prefix carries its own copy of cryptography, which the
-# AzureML conda environment above never touches, so patch it explicitly.
-RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'cryptography>=50.0.0'
+                          'pyarrow>=23.0.1' \
+                          'sqlparse>=0.6.0'
 
 # torch pinned for azureml-contrib-automl-dnn-forecasting; fixes GHSA-rrmf-rvhw-rf47,
 # GHSA-vgrw-7cvw-pwgx, and GHSA-qfhq-4f3w-5fph.
