@@ -16,6 +16,7 @@ sglang-router>=0.2.3
 tensorboard
 transformers>=5.5.0
 wandb>=0.28.1
+sqlparse>=0.6.0  # pinned transitive dep of azureml-mlflow/mlflow; fixes GHSA-pwgv-4x5q-6m9f/GHSA-3496-9g83-7v6x/GHSA-prg7-hcfm-mfcr/GHSA-f2ff-p2ww-7p4p
 pyasn1>=0.6.4  # pinned transitive dep of azureml-core/ray; fixes CVE-2026-59885/CVE-2026-59886
 GitPython>=3.1.55  # pinned transitive dep of wandb; fixes GHSA-2f96-g7mh-g2hx/GHSA-956x-8gvw-wg5v/GHSA-v396-v7q4-x2qj/GHSA-94p4-4cq8-9g67
 azureml-core=={{latest-pypi-version}}

@@ -19,17 +19,13 @@ ARG MAMBA_SSM_WHEEL=https://github.com/yeshsurya/mamba/releases/download/v2.3.2/
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PIP_NO_CACHE_DIR=1
+ENV PIP_NO_COLOR=1
 ENV PIP_PROGRESS_BAR=off
 ENV PYTHONUNBUFFERED=1
 ENV MAX_JOBS=1
 ENV PYTHONPATH=/opt/Megatron-LM:${PYTHONPATH}
 
 RUN set -eux; \
-    find /etc/apt -type f \( -name '*.list' -o -name '*.sources' \) \
-        -exec sed -i \
-            -e 's|http://archive.ubuntu.com/ubuntu|http://azure.archive.ubuntu.com/ubuntu|g' \
-            -e 's|http://security.ubuntu.com/ubuntu|http://azure.archive.ubuntu.com/ubuntu|g' \
-            {} +; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
         build-essential \
@@ -96,7 +92,7 @@ RUN python -m pip install --no-cache-dir \
     python -m pip install --no-cache-dir \
         'nvidia-modelopt[torch]>=0.37.0' --no-build-isolation
 
-# The PyTorch extension has no public wheel for this image's torch/CUDA stack.
+# The PyTorch extension has no public wheel for this image's build-time torch/CUDA stack.
 # Install the hosted wheel extracted from the tested canary image instead of
 # building transformer-engine-torch from source in the release pipeline.
 RUN python -m pip install --no-cache-dir \
@@ -110,8 +106,8 @@ RUN python -m pip install --no-cache-dir \
 # backend and aborts the first training forward with "No dot product attention
 # backend is available for the provided inputs". cuDNN-fused does not cover this
 # thd + padding_causal config on sm80, and the Unfused backend does not support
-# thd, so flash-attn is required. No public wheel exists for this torch 2.9 /
-# cu12.8 / cp312 stack, so install the hosted prebuilt wheel (TE 2.10 supports
+# thd, so flash-attn is required. No public wheel exists for this torch /
+# CUDA / cp312 stack, so install the hosted prebuilt wheel (TE 2.10 supports
 # flash-attn <= 2.8.3) instead of building from source in the release pipeline.
 RUN python -m pip install --no-cache-dir \
         https://github.com/yeshsurya/flash-attention/releases/download/flash_attn-2.8.3-cp312-cp312-linux_x86_64/flash_attn-2.8.3-cp312-cp312-linux_x86_64.whl
@@ -154,6 +150,15 @@ RUN JACKSON_CORE_VERSION=2.21.5 \
     python /tmp/patch_ray_jackson.py && \
     rm /tmp/patch_ray_jackson.py
 
+COPY patch_ray_httpcore5.py /tmp/patch_ray_httpcore5.py
+# Ray vendors HttpCore5 inside its fat jar; patch the embedded classes and Maven
+# metadata to fix GHSA-hf6x-8p5f-cgmf until Ray publishes a patched wheel.
+RUN HTTPCORE5_VERSION=5.4.3 \
+    HTTPCORE5_JAR_SHA1=32a0699fbcb103f5621c00983ee8f5aac080e4a6 \
+    HTTPCORE5_POM_SHA1=4553084e7ef07928bc1c2b65d4b099b972ba53a6 \
+    python /tmp/patch_ray_httpcore5.py && \
+    rm /tmp/patch_ray_httpcore5.py
+
 RUN cd /opt/slime && \
     python -m pip install --no-cache-dir -e . --no-deps
 
@@ -190,12 +195,15 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Upgrade vulnerable Python packages.
-RUN python -m pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cu128 \
-        torch==2.10.0 \
-        torchvision==0.25.0 \
-        torchaudio==2.10.0 && \
+# torch/torchvision are installed from PyPI: the download.pytorch.org cu128
+# index does not publish 2.13.0/0.28.0 (it stops at torch 2.11.0+cu128), so
+# these pins already resolved from PyPI. The PyPI wheels bundle their own
+# CUDA runtime via the nvidia-* dependencies, so no extra index is required.
+RUN python -m pip install --no-cache-dir \
+        torch==2.13.0 \
+        torchvision==0.28.0 && \
     python -m pip install --no-cache-dir \
-        "aiohttp>=3.14.3" \
+        "aiohttp>=3.14.0" \
         "starlette>=1.0.1" \
         "idna>=3.15" \
         "pyarrow>=23.0.1" \
@@ -204,8 +212,8 @@ RUN python -m pip install --no-cache-dir --index-url https://download.pytorch.or
         "transformers>=5.5.0,<=5.6.0" \
         "mcp[cli]>=1.28.1" \
         "wandb>=0.28.1" \
-        "GitPython>=3.1.57" \
-        "cryptography>=50.0.0" \
+        "GitPython>=3.1.55" \
+        "cryptography>=49.0.0" \
         "setuptools>=83.0.0"
 
 # The optional wandb service binary embeds vulnerable Go modules; remove it so
@@ -216,11 +224,9 @@ RUN WANDB_CORE="$(python -c 'import pathlib, wandb; print(pathlib.Path(wandb.__f
 
 COPY patch_ray_thirdparty.py /tmp/patch_ray_thirdparty.py
 # Upgrade Ray's vendored Python packages and remove their obsolete metadata.
-# --upgrade is required: with --target, pip leaves an already-present copy in place,
-# so without it the vendored aiohttp stays at the vulnerable version.
-RUN python -m pip install --no-cache-dir --upgrade \
+RUN python -m pip install --no-cache-dir \
         "idna>=3.15" \
-        "aiohttp>=3.14.3" \
+        "aiohttp>=3.14.0" \
         --target "$(python -c 'import site; print(site.getsitepackages()[0])')/ray/_private/runtime_env/agent/thirdparty_files" && \
     python /tmp/patch_ray_thirdparty.py && \
     rm /tmp/patch_ray_thirdparty.py
