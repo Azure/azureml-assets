@@ -1,5 +1,5 @@
 # PTCA image
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202608.1
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202608.2
 
 # Pull latest Ubuntu 22.04 security patches on each rebuild.
 # Explicit package list ensures frequently flagged USN fixes are applied even

@@ -54,7 +54,8 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
     'psutil>5.0.0,<6.0.0' \
     'pip>=26.1'
 
-# Install pip dependencies
+# Install pip dependencies. Keep these split across multiple RUN statements so
+# no individual Docker layer exceeds the registry validation limit.
 # GitPython>=3.1.57 overrides the transitive copy pulled in by mlflow-skinny ->
 # databricks-sdk -> gitpython (also pulled by azureml-* telemetry helpers);
 # parent packages still allow the older, vulnerable versions.
@@ -65,21 +66,25 @@ RUN pip install \
                 azureml-telemetry==1.62.0 \
                 azureml-interpret==1.62.0 \
                 azureml-responsibleai==1.62.0 \
+                azureml-defaults==1.62.0 \
+                'inference-schema' \
+                'mlflow-skinny>=2.16.0' \
+                'GitPython>=3.1.57' \
+                'pillow>=12.1.1'
+
+RUN pip install \
                 azureml-automl-core==1.62.0.post3 \
                 azureml-automl-runtime==1.62.0.post1 \
                 azureml-train-automl-client==1.62.0 \
                 azureml-train-automl-runtime==1.62.0 \
-                azureml-defaults==1.62.0 \
-                'inference-schema' \
-                'mlflow-skinny>=2.16.0' \
+                'mltable>=1.0.0'
+
+RUN pip install \
                 'cmdstanpy==1.0.4' \
                 'prophet==1.1.4' \
                 'xgboost==1.5.2' \
-                'mltable>=1.0.0' \
                 'pytorch-transformers==1.0.0' \
-                'GitPython>=3.1.57' \
                 'spacy==3.7.4' \
-                'pillow>=12.1.1' \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz'
 
 # azureml-dataset-runtime is resolved in its own pip invocation, as the other
