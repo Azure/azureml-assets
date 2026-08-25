@@ -112,7 +112,16 @@ RUN pip install --no-cache-dir --upgrade 'pip>=26.1.2'
 # NOTE: AzureML packages do not force the fixed cryptography floor; use >=50.0.0.
 # Override onnx to fix GHSA-cmw6-hcpp-c6jp, GHSA-538c-55jv-c5g9, GHSA-q56x-g2fj-4rj6, GHSA-p433-9wv8-28xj, GHSA-3r9x-f23j-gc73, GHSA-hqmj-h5c6-369m, and GHSA-x4hj-rm42-cggg
 # Root cause: azureml-automl-runtime==1.62.0 (latest) pins onnx<=1.17.0; cannot upgrade parent
-RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=50.0.0' 'bokeh>=3.8.2' 'onnx>=1.22.0'
+# NOTE: sqlparse>=0.6.0 fixes GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr, GHSA-3496-9g83-7v6x,
+#       and GHSA-pwgv-4x5q-6m9f. sqlparse is a transitive dep of mlflow/azureml-mlflow and no
+#       parent release floors the patched version, so an explicit override is required.
+# numpy~=1.23.5 is NOT a security floor. It repeats the cap applied to the conda env above so
+# that pip sees it while resolving the floors here: onnx pulls ml_dtypes, which as of 0.6.0
+# requires numpy>=2.0.0. Without the cap in this same resolve pip silently upgrades numpy to
+# 2.x, which contradicts azureml-automl-runtime and scipy and leaves the prebuilt pandas 1.5.3
+# wheel binary-incompatible, so the image fails on import pandas with
+# "ValueError: numpy.dtype size changed".
+RUN pip install --upgrade 'numpy~=1.23.5' 'distributed>=2026.1.0' 'cryptography>=50.0.0' 'bokeh>=3.8.2' 'onnx>=1.22.0' 'sqlparse>=0.6.0'
 
 # Security: upgrade aiohttp to fix GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8,
 # and follow-up aiohttp advisories requiring >=3.14.3 in the AzureML conda env.
@@ -123,11 +132,15 @@ RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3'
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3'
 RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3' 'cryptography>=50.0.0'
 
-# torch is pinned by the ACPT base image in the ptca env and by
-# azureml-automl-dnn-nlp in this AzureML env; upgrade both for GHSA-rrmf-rvhw-rf47,
-# GHSA-vgrw-7cvw-pwgx, and GHSA-qfhq-4f3w-5fph while keeping CUDA 12.6 wheels.
+# torch is pinned by azureml-automl-dnn-nlp in this AzureML conda env; upgrade it for
+# GHSA-rrmf-rvhw-rf47, GHSA-vgrw-7cvw-pwgx, and GHSA-qfhq-4f3w-5fph while keeping CUDA 12.6
+# wheels.
+# NOT FIXED HERE - torch in the ptca env: that environment is owned by the ACPT base image,
+# which ships a matched torch/torchvision/torchaudio set. Overriding torch alone leaves
+# torchvision and torchaudio pinned to the old torch and breaks them at import time, and no
+# matched newer set exists (torch 2.13.0 has no corresponding torchaudio release). Those CVEs
+# must be remediated in the ACPT base image.
 RUN pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 'torch==2.13.0+cu126'
-RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 'torch==2.13.0+cu126'
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'setuptools>=83.0.0'
 
 # Apply the same setuptools security fix in the AzureML and base conda envs.
