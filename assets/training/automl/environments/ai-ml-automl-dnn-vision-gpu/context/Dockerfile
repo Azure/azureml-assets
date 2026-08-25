@@ -55,9 +55,20 @@ EXPOSE 5001 8883 8888
 
 ENV ENABLE_METADATA=true
 
-# Update pip in base and ptca environments
-RUN conda install pip -n base -y
-RUN conda install pip -n ptca -y
+# Update pip in base and ptca environments.
+# The pip already present in these envs was installed by pip itself, so conda does not
+# own its files; overlaying a conda pip on top leaves a mix of two pip trees behind and
+# every later pip invocation dies with "ImportError: cannot import name
+# 'get_runnable_pip' from 'pip._internal.utils.misc'". Remove the pip package directory
+# first so conda lays down a coherent installation. --force-reinstall is required: the
+# conda-meta record survives the rm, so a plain "conda install pip" is a no-op and would
+# leave the env with no pip module at all.
+RUN rm -rf /opt/conda/lib/python*/site-packages/pip \
+           /opt/conda/lib/python*/site-packages/pip-*.dist-info && \
+    conda install pip -n base -y --force-reinstall
+RUN rm -rf /opt/conda/envs/ptca/lib/python*/site-packages/pip \
+           /opt/conda/envs/ptca/lib/python*/site-packages/pip-*.dist-info && \
+    conda install pip -n ptca -y --force-reinstall
 
 # Create conda environment
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
@@ -121,7 +132,18 @@ RUN pip install --no-cache-dir --use-deprecated=legacy-resolver \
 # NOTE: pillow==12.3.0 fixes GHSA-8v84-f9pq-wr9x, GHSA-9hw9-ch79-4vh6,
 #       GHSA-vjc4-5qp5-m44j, GHSA-pg7v-jwj7-p798, GHSA-45hq-cxwh-f6vc,
 #       GHSA-phj9-mv4w-65pm, GHSA-62p4-gmf7-7g93, and GHSA-5x94-69rx-g8h2.
+# NOTE: sqlparse>=0.6.0 fixes GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr,
+#       GHSA-3496-9g83-7v6x, and GHSA-pwgv-4x5q-6m9f. It is installed transitively
+#       via mlflow-skinny from azureml-mlflow; no parent release floors the patched
+#       version, so explicit override is required.
+# NOTE: numpy~=1.23.5 is NOT a security floor. It repeats the cap applied to the conda
+#       env above so that pip sees it while resolving the floors here: onnx pulls
+#       ml_dtypes, which as of 0.6.0 requires numpy>=2.0.0. Without the cap in this same
+#       resolve pip silently upgrades numpy to 2.x, leaving the prebuilt pandas wheel
+#       binary-incompatible so the image fails on import pandas with
+#       "ValueError: numpy.dtype size changed".
 RUN pip install --no-cache-dir --upgrade \
+                'numpy~=1.23.5' \
                 'cryptography>=48.0.1' \
                 'distributed>=2026.1.0' \
                 'mlflow-skinny>=2.16.0' \
@@ -136,6 +158,7 @@ RUN pip install --no-cache-dir --upgrade \
                 'wheel>=0.46.2' \
                 'starlette>=1.0.1' \
                 'pyarrow>=23.0.1' \
+                'sqlparse>=0.6.0' \
                 'torch>=2.10.0'
 
 # Vulnerability patches for ptca environment
@@ -144,8 +167,11 @@ RUN pip install --no-cache-dir --upgrade \
 #   wheel to be imported during the self-update check. ptca env ships pip 26.0.1
 #   in biweekly.202605.2; pip is its own parent (no upstream package can pull in a
 #   fixed pip via dependency resolution), so explicit override is required.
-# torch>=2.10.0 (GHSA-vgrw-7cvw-pwgx / GHSA-qfhq-4f3w-5fph): ptca env in the
-#   ACPT base image ships torch 2.8.0+cu126; explicit override required.
+# NOT FIXED HERE - torch (GHSA-vgrw-7cvw-pwgx / GHSA-qfhq-4f3w-5fph): the ptca env is
+#   owned by the ACPT base image, which ships a matched torch/torchvision/torchaudio
+#   set. Overriding torch alone leaves torchvision and torchaudio pinned to the old
+#   torch and breaks them at import time, and no matched newer set exists (torch 2.13.0
+#   has no corresponding torchaudio release). Must be remediated in the ACPT base image.
 # pillow==12.3.0: pinned transitive dep brought in by the ACPT base image;
 #   fixes GHSA-8v84-f9pq-wr9x, GHSA-9hw9-ch79-4vh6, GHSA-vjc4-5qp5-m44j,
 #   GHSA-pg7v-jwj7-p798, GHSA-45hq-cxwh-f6vc, GHSA-phj9-mv4w-65pm,
@@ -154,8 +180,7 @@ RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
                 'pip>=26.1' \
                 'aiohttp>=3.14.0' \
                 'msgpack>=1.2.1' \
-                'pillow==12.3.0' \
-                'torch>=2.10.0'
+                'pillow==12.3.0'
 # setuptools>=83.0.0 fixes GHSA-h35f-9h28-mq5c in the inherited PTCA environment.
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==83.0.0'
 
@@ -164,7 +189,7 @@ RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-d
 #   python-dotenv 1.2.1 is shipped in the base conda env of the ACPT
 #   base image as a transitive dep via pydantic-settings (declares python-dotenv>=0.21.0
 #   with no upper-bound tightening through 2.14.0), so no parent package release pins
-#   python-dotenv>=1.2.2 — explicit override of /opt/conda is the only fix path until
+#   python-dotenv>=1.2.2 ΓÇö explicit override of /opt/conda is the only fix path until
 #   the ACPT base image is rebuilt with the patch.
 # pip>=26.1 (CVE-2026-6357 / GHSA-jp4c-xjxw-mgf9): pip < 26.1 deferred imports of
 #   well-known module names until after wheel install, allowing a freshly-installed
@@ -173,7 +198,7 @@ RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-d
 #   a fixed pip via dependency resolution), so explicit override is required.
 # urllib3>=2.7.0 (GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j): urllib3 2.6.3 is shipped
 #   in the base conda env by the ACPT base image. urllib3 is a root security
-#   package — its parents (requests pins urllib3>=1.21.1,<3; botocore pins
+#   package ΓÇö its parents (requests pins urllib3>=1.21.1,<3; botocore pins
 #   urllib3>=1.25.4,<3) do not bound it tightly enough to force 2.7.0, so no parent
 #   upgrade can pull in the fix. Explicit override required.
 # click>=8.3.3 (GHSA-47fr-3ffg-hgmw / CVE-2026-7246): metadata probe of the
