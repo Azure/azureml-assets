@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import pytest
 import skops.io as skops_io
 from sklearn.linear_model import LinearRegression
@@ -38,6 +39,17 @@ class _UntrustedModel:
     pass
 
 
+class _OtherUntrustedModel:
+    pass
+
+
+def _symlink_or_skip(link_path, target_path, target_is_directory=False):
+    try:
+        link_path.symlink_to(target_path, target_is_directory=target_is_directory)
+    except (NotImplementedError, OSError) as error:
+        pytest.skip(f"Symbolic links are unavailable: {error}")
+
+
 def test_get_model_loads_trusted_skops_model(tmp_path):
     """Load a trusted regression pipeline without changing its predictions."""
     model_path = tmp_path / "model.skops"
@@ -61,8 +73,55 @@ def test_get_model_rejects_untrusted_skops_types(tmp_path):
     model_path = tmp_path / "model.skops"
     skops_io.dump(_UntrustedModel(), model_path)
 
-    with pytest.raises(ValueError, match="not trusted by default"):
+    with pytest.raises(ValueError, match="not explicitly trusted"):
         model_loader.get_model(str(model_path))
+
+
+def test_get_model_passes_only_explicitly_allowlisted_types(tmp_path, monkeypatch):
+    """Pass exact allowlisted types to skops instead of enabling broad trust."""
+    model_path = tmp_path / "model.skops"
+    skops_io.dump(_UntrustedModel(), model_path)
+    untrusted_types = skops_io.get_untrusted_types(file=model_path)
+    assert len(untrusted_types) == 1
+    monkeypatch.setattr(
+        model_loader,
+        "_TRUSTED_AUTOML_FORECASTING_TYPES",
+        frozenset(untrusted_types),
+    )
+
+    loaded_model = model_loader.get_model(str(model_path))
+
+    assert isinstance(loaded_model, _UntrustedModel)
+
+
+def test_get_model_rejects_types_outside_explicit_allowlist(tmp_path, monkeypatch):
+    """Reject an artifact when even one custom type is not allowlisted."""
+    model_path = tmp_path / "model.skops"
+    skops_io.dump([_UntrustedModel(), _OtherUntrustedModel()], model_path)
+    untrusted_types = skops_io.get_untrusted_types(file=model_path)
+    allowed_type = next(name for name in untrusted_types if name.endswith("._UntrustedModel"))
+    monkeypatch.setattr(
+        model_loader,
+        "_TRUSTED_AUTOML_FORECASTING_TYPES",
+        frozenset({allowed_type}),
+    )
+
+    with pytest.raises(ValueError, match="_OtherUntrustedModel"):
+        model_loader.get_model(str(model_path))
+
+
+@pytest.mark.parametrize(
+    "offset",
+    [pd.offsets.Day(), pd.offsets.Week(), pd.offsets.MonthEnd(), pd.offsets.Minute()],
+)
+def test_get_model_loads_supported_forecasting_frequencies(tmp_path, offset):
+    """Load common non-hourly forecasting frequencies by exact type."""
+    model_path = tmp_path / "model.skops"
+    skops_io.dump(offset, model_path)
+
+    loaded_offset = model_loader.get_model(str(model_path))
+
+    assert loaded_offset == offset
 
 
 def test_get_model_rejects_malicious_pickle_without_deserializing(tmp_path):
@@ -129,3 +188,32 @@ def test_find_model_rejects_non_directory_path(tmp_path):
 
     with pytest.raises(ValueError, match="regular directory"):
         model_loader.find_model(str(model_path))
+
+
+def test_find_model_rejects_directory_symlink(tmp_path):
+    """Reject a model path that redirects to another directory."""
+    real_model_directory = tmp_path / "real-model"
+    real_model_directory.mkdir()
+    (real_model_directory / "model.skops").write_bytes(b"skops")
+    linked_model_directory = tmp_path / "linked-model"
+    _symlink_or_skip(
+        linked_model_directory,
+        real_model_directory,
+        target_is_directory=True,
+    )
+
+    with pytest.raises(ValueError, match="regular directory"):
+        model_loader.find_model(str(linked_model_directory))
+
+
+def test_find_model_rejects_skops_symlink_in_directory(tmp_path):
+    """Reject a .skops artifact that redirects to another file."""
+    real_model = tmp_path / "real-model.skops"
+    real_model.write_bytes(b"skops")
+    model_directory = tmp_path / "model-directory"
+    model_directory.mkdir()
+    linked_model = model_directory / "model.skops"
+    _symlink_or_skip(linked_model, real_model)
+
+    with pytest.raises(ValueError, match="Symbolic links"):
+        model_loader.find_model(str(model_directory))
