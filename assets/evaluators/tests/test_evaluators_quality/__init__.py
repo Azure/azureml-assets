@@ -13,6 +13,7 @@ from .test_intent_resolution_evaluator_quality import TestIntentResolutionEvalua
 from .test_task_adherence_evaluator_quality import TestTaskAdherenceEvaluatorQuality
 from .test_task_completion_evaluator_quality import TestTaskCompletionEvaluatorQuality
 from .test_task_completion_evaluator_quality_multi_turn import TestTaskCompletionEvaluatorQualityMultiTurn
+from .test_deflection_rate_evaluator_quality_multi_turn import TestDeflectionRateEvaluatorQualityMultiTurn
 from .test_customer_satisfaction_evaluator_quality_multi_turn import TestCustomerSatisfactionEvaluatorQualityMultiTurn
 from .test_tool_call_success_evaluator_quality import TestToolCallSuccessEvaluatorQuality
 from .test_tool_call_accuracy_evaluator_quality import TestToolCallAccuracyEvaluatorQuality
@@ -31,6 +32,7 @@ __all__ = [
     "TestTaskAdherenceEvaluatorQuality",
     "TestTaskCompletionEvaluatorQuality",
     "TestTaskCompletionEvaluatorQualityMultiTurn",
+    "TestDeflectionRateEvaluatorQualityMultiTurn",
     "TestCustomerSatisfactionEvaluatorQualityMultiTurn",
     "TestToolCallSuccessEvaluatorQuality",
     "TestToolCallAccuracyEvaluatorQuality",

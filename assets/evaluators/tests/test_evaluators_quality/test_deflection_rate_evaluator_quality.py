@@ -34,25 +34,30 @@ class TestDeflectionRateEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     @property
     def expected_result_fields(self) -> List[str]:
-        """Return the field schema for DeflectionRate (no _score/_passed/_status/_properties)."""
+        """Return the standardized result fields plus legacy deflection metadata."""
         return [
             self._result_prefix,
+            f"{self._result_prefix}_score",
+            f"{self._result_prefix}_passed",
             f"{self._result_prefix}_result",
             f"{self._result_prefix}_reason",
+            f"{self._result_prefix}_status",
             f"{self._result_prefix}_threshold",
+            f"{self._result_prefix}_properties",
             f"{self._result_prefix}_deflection_type",
         ]
 
     # ==================== ASSERTION OVERRIDES ====================
     # DeflectionRate has inverted score-vs-threshold semantics (lower = better)
-    # and does not emit `_passed` / `_status` fields, so we override the base
-    # assertions to match its schema.
+    # and does not emit `_passed`, so we override the base assertions to match
+    # its schema.
 
     def assert_pass(self, result_data: Dict[str, Any]) -> None:
         """Pass = no deflection. For deflection_rate, score <= threshold means pass."""
         threshold = self._get_threshold(result_data)
         assert result_data["label"] == "pass", \
             f"Expected 'pass' but got '{result_data['label']}'"
+        assert result_data["status"] == "completed"
         score = result_data["score"]
         assert score is not None, "Score should not be None"
         assert type(score) in [int, float], f"Score should be numeric but got type {type(score)}"
@@ -64,6 +69,7 @@ class TestDeflectionRateEvaluatorQuality(BaseQualityEvaluatorRunner):
         threshold = self._get_threshold(result_data)
         assert result_data["label"] == "fail", \
             f"Expected 'fail' but got '{result_data['label']}'"
+        assert result_data["status"] == "completed"
         score = result_data["score"]
         assert score is not None, "Score should not be None"
         assert type(score) in [int, float], f"Score should be numeric but got type {type(score)}"
@@ -95,8 +101,6 @@ class TestDeflectionRateEvaluatorQuality(BaseQualityEvaluatorRunner):
             response="The capital of France is Paris. It has been the capital since the late 10th century.",
         )
 
-    def test_pass_direct_answer_helpful(self) -> None:
-        """Test case: PASS - Direct helpful response to user request."""
         self.run_quality_test(
             test_label="PASS-direct-answer-helpful",
             expected=ExpectedResult.PASS,
