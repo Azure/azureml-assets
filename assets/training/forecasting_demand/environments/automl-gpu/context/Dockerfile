@@ -20,6 +20,7 @@ RUN /opt/miniconda/bin/python -m pip install --upgrade --no-cache-dir 'cryptogra
     'cryptography>=50.0.0' 'GitPython>=3.1.55' 'setuptools>=83.0.0' 'distributed>=2026.1.0' \
     'bokeh>=3.8.2' \
     'onnx>=1.21.0' \
+    'numpy==1.23.5' \
     'pyarrow==23.0.1' \
     'torch==2.13.0' \
     'msgpack>=1.2.1' && \
