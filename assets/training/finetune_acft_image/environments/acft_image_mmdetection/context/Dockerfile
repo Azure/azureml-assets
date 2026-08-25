@@ -4,15 +4,19 @@ USER root
 
 # OS packages: pinned inherited deps from the ACPT base image; fixes
 # USN-8533-1, USN-8538-1, USN-8543-1, USN-8553-1, USN-8477-3,
-# USN-8565-1, USN-8572-1, USN-8585-1, USN-8601-1, and USN-8611-1.
+# USN-8565-1, USN-8572-1, USN-8585-1, USN-8601-1, USN-8611-1, and USN-8626-1.
+# wget and the dotnet-* packages are upgraded rather than pinned: the jammy archive
+# has already superseded the versions that were pinned here and only keeps the newest
+# build, so an exact pin fails with "Version ... was not found". --only-upgrade means
+# these are upgraded to the current (patched) archive version when present.
 RUN apt-get update && apt-get install -y --no-install-recommends --only-upgrade \
     openssh-client=1:8.9p1-3ubuntu0.16 \
     libasound2=1.2.6.1-1ubuntu1.2 \
     libasound2-data=1.2.6.1-1ubuntu1.2 \
-    wget=1.21.2-2ubuntu1.4 \
-    dotnet-hostfxr-8.0=8.0.29-0ubuntu1~22.04.1 \
-    dotnet-runtime-8.0=8.0.29-0ubuntu1~22.04.1 \
-    dotnet-host-8.0=8.0.29-0ubuntu1~22.04.1 \
+    wget \
+    dotnet-hostfxr-8.0 \
+    dotnet-runtime-8.0 \
+    dotnet-host-8.0 \
     tar=1.34+dfsg-1ubuntu0.1.22.04.6 \
     libsqlite3-0=3.37.2-2ubuntu0.7 \
     libkrb5support0=1.19.2-2ubuntu0.8 \
@@ -28,6 +32,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends --only-upgrade 
     locales=2.35-0ubuntu3.14 \
     libc6=2.35-0ubuntu3.14 \
     libc-bin=2.35-0ubuntu3.14 \
+    libsystemd0 \
+    libudev1 \
+    udev \
  && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
