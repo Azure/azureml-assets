@@ -47,7 +47,9 @@ system_metadata:
     - Standard_ND96amsr_A100_v4
   platformCapabilities:
     enableBatch: false
-version: 4
+  inferenceEnvironmentAssetId: 
+    azureml://registries/azureml/environments/mlflow-model-inference/versions/22
+version: 5
 description: |
   The TamGen is a 100 million-parameter model that can generate compounds based on the input protein information. TamGen is pre-trained on 10 million compounds from PubChem and fine-tuned on CrossDocked and PDB datasets. We evaluate TamGen on existing benchmarks and achieve top performance. Furthermore, TamGen has successfully identified novel inhibitors for Tuberculosis, which have been subsequently validated through wet-lab experiments.
 
