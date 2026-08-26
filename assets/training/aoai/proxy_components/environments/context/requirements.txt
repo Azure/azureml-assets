@@ -8,5 +8,9 @@ azureml-telemetry=={{latest-pypi-version}}
 pydantic==2.7.0
 azure-keyvault-secrets==4.8.0
 requests==2.34.2
-# pinned transitive dep of azureml-mlflow; introduced by this image, fixes GHSA-6p8h-3wgx-97gf, GHSA-fjr4-x663-mwxc, GHSA-94p4-4cq8-9g67, and GHSA-r9mr-m37c-5fr3.
-GitPython>=3.1.55
+# pinned transitive dep of azureml-mlflow; introduced by this image, fixes GHSA-hmq2-w58f-27jc, GHSA-hh9p-6wh2-4mfc, GHSA-jm78-9fvv-mhgr, GHSA-wvpp-8hx9-p66j, GHSA-9rj7-rf2p-w77r, and GHSA-4gmw-gg2m-w46p.
+GitPython>=3.1.58
+# pinned transitive dep of azureml-mlflow; introduced by this image, fixes GHSA-3496-9g83-7v6x, GHSA-prg7-hcfm-mfcr, GHSA-f2ff-p2ww-7p4p, and GHSA-pwgv-4x5q-6m9f.
+sqlparse>=0.6.0
+# pinned transitive dep of the base miniconda HTTP stack; introduced by the base image, fixes GHSA-6hr6-w5qg-qmwg.
+h2>=4.4.1

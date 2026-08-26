@@ -1,25 +1,15 @@
 FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
 
-# Upgrade base-image OS packages that are still vulnerable in the rendered base image.
-RUN apt-get update \
-    && apt-get install -y --only-upgrade --no-install-recommends \
-        tar \
-        libsqlite3-0 \
-        rsyslog \
-        libpam-runtime \
-        libpam0g \
-        libpam-modules \
-        libpam-modules-bin \
-        nginx-common \
-        nginx-light \
-        nginx \
-        wget \
-        libkrb5support0 \
-        libgssapi-krb5-2 \
-        libk5crypto3 \
-        libkrb5-3 \
-    && rm -rf /var/lib/apt/lists/*
+# Upgrade OS packages to pull current Ubuntu security patches.
+# The current openmpi5.0-ubuntu24.04 base plus apt upgrade contains the required
+# Ubuntu security fixes, including the systemd packages from USN-8626-1.
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 
-RUN pip install -r requirements.txt --no-cache-dir
+# pinned transitive dep of azure-identity via msal; azureml-mlflow caps cryptography below the patched version, fixes GHSA-g6cj-pr64-35w5.
+RUN pip install -r requirements.txt --no-cache-dir \
+    && pip install "cryptography>=50.0.0" --no-cache-dir --no-deps

@@ -10,10 +10,8 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
 # Upgrade OS packages to pull current Ubuntu security patches.
-# The current openmpi5.0-ubuntu24.04 base already contains the required fixes for
-# curl/libcurl* (USN-8487-1), libnghttp2-14 (USN-8495-1), libsqlite3-0
-# (USN-8480-1), tar (USN-8477-1), rsyslog (USN-8598-1), and PAM
-# (USN-8601-1), so no package pins are needed here.
+# The current openmpi5.0-ubuntu24.04 base plus apt upgrade contains the required
+# Ubuntu security fixes, including systemd packages from USN-8626-1.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get clean && \
@@ -55,14 +53,19 @@ RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
     rm conda_dependencies.yaml
 
 # Security vulnerability fixes
-# setuptools, urllib3, wheel already fixed in openmpi base (latest tag).
-# cryptography: pinned transitive dep of azureml-core/azureml-mlflow; fixes GHSA-537c-gmf6-5ccf.
+# GitPython>=3.1.58: pinned transitive dep of azureml-core; fixes GHSA-hmq2-w58f-27jc,
+#   GHSA-jm78-9fvv-mhgr, GHSA-hh9p-6wh2-4mfc, GHSA-4gmw-gg2m-w46p,
+#   GHSA-9rj7-rf2p-w77r, and GHSA-wvpp-8hx9-p66j.
+# cryptography>=50.0.0: pinned transitive dep of azureml-core/azureml-mlflow; fixes GHSA-g6cj-pr64-35w5.
+# sqlparse>=0.6.0: pinned transitive dep of Django pulled by azureml-core; fixes
+#   GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr, GHSA-3496-9g83-7v6x, and GHSA-pwgv-4x5q-6m9f.
 # aiohttp / protobuf / distributed / pyarrow: kept overrides to ensure latest patched versions;
 #   parent constraints (azureml-mlflow caps mlflow-skinny<=3.9.0 -> protobuf<7,
 #   dask~=2026.3.0 -> distributed<2026.3.1) would otherwise allow older patch
 #   levels with outstanding CVEs, so explicit floor pins are required.
 # pyarrow>=23.0.1: pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg.
-# starlette>=1.0.1 / idna>=3.15: transitive via fastapi / requests (base miniconda ships idna<3.15); drop when parents/base update
+# starlette>=1.0.1 / idna>=3.15: transitive via fastapi / requests.
+# h2>=4.4.1: pinned transitive dep brought in by the base miniconda env; fixes GHSA-6hr6-w5qg-qmwg.
 RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
-    'aiohttp>=3.14.0' 'protobuf>=6.33.5' 'distributed>=2026.1.0' cryptography==48.0.1 'idna>=3.15' 'starlette>=1.0.1' 'pyarrow>=23.0.1' && \
-    /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'idna>=3.15'
+    'aiohttp>=3.14.0' 'protobuf>=6.33.5' 'distributed>=2026.1.0' 'GitPython>=3.1.58' 'cryptography>=50.0.0' 'sqlparse>=0.6.0' 'idna>=3.15' 'starlette>=1.0.1' 'pyarrow>=23.0.1' && \
+    /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'cryptography>=50.0.0' 'h2>=4.4.1' 'idna>=3.15'

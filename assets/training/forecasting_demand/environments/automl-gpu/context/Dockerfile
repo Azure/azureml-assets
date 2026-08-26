@@ -11,6 +11,7 @@ ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 # pyarrow is a pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg.
 # torch is a pinned transitive dep of azureml-contrib-automl-dnn-forecasting; fixes GHSA-rrmf-rvhw-rf47.
 # msgpack is a pinned transitive dep of distributed; fixes GHSA-6v7p-g79w-8964.
+# sqlparse is a pinned transitive dep of AzureML AutoML packages; fixes GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr, GHSA-3496-9g83-7v6x, GHSA-pwgv-4x5q-6m9f.
 COPY conda_dependencies.yaml .
 RUN /opt/miniconda/bin/python -m pip install --upgrade --no-cache-dir 'cryptography>=50.0.0' 'setuptools>=83.0.0' 'h2>=4.4.1' && \
     conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
@@ -22,7 +23,8 @@ RUN /opt/miniconda/bin/python -m pip install --upgrade --no-cache-dir 'cryptogra
     'onnx>=1.21.0' \
     'pyarrow==23.0.1' \
     'torch==2.13.0' \
-    'msgpack>=1.2.1' && \
+    'msgpack>=1.2.1' \
+    'sqlparse>=0.6.0' && \
     rm -rf $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pip-26.1.1.dist-info && \
     rm -f $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pip/_vendor/bom.cdx.json \
         $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pip/_vendor/vendor.txt && \
@@ -37,35 +39,34 @@ ENV ENABLE_METADATA=true
 
 RUN apt-get update && \
     apt-get install --only-upgrade -y --no-install-recommends \
-        tar=1.34+dfsg-1ubuntu0.1.22.04.6 \
-        libsqlite3-0=3.37.2-2ubuntu0.7 \
-        nginx-light=1.18.0-6ubuntu14.18 \
-        libnginx-mod-http-echo=1.18.0-6ubuntu14.18 \
-        nginx-common=1.18.0-6ubuntu14.18 \
-        libnginx-mod-http-geoip2=1.18.0-6ubuntu14.18 \
-        wget=1.21.2-2ubuntu1.4 \
-        libkrb5support0=1.19.2-2ubuntu0.8 \
-        libgssapi-krb5-2=1.19.2-2ubuntu0.8 \
-        libk5crypto3=1.19.2-2ubuntu0.8 \
-        libkrb5-3=1.19.2-2ubuntu0.8 \
-        libxml2=2.9.13+dfsg-1ubuntu0.12 \
-        curl=7.81.0-1ubuntu1.25 \
-        libcurl3-gnutls=7.81.0-1ubuntu1.25 \
-        libcurl4=7.81.0-1ubuntu1.25 \
-        libnghttp2-14=1.43.0-1ubuntu0.4 \
-        gzip=1.10-4ubuntu4.2 \
-        openssh-client=1:8.9p1-3ubuntu0.16 \
-        openssh-server=1:8.9p1-3ubuntu0.16 \
-        openssh-sftp-server=1:8.9p1-3ubuntu0.16 \
-        libpam-runtime=1.4.0-11ubuntu2.7 \
-        libpam0g=1.4.0-11ubuntu2.7 \
-        libpam-modules=1.4.0-11ubuntu2.7 \
-        libpam-modules-bin=1.4.0-11ubuntu2.7 \
-        rsyslog=8.2112.0-2ubuntu2.4 \
-        libc-dev-bin=2.35-0ubuntu3.14 \
-        libc6-dev=2.35-0ubuntu3.14 \
-        libc6=2.35-0ubuntu3.14 \
-        libc-bin=2.35-0ubuntu3.14 && \
+        tar \
+        libxml2 \
+        curl \
+        libcurl3-gnutls \
+        libcurl4 \
+        libsqlite3-0 \
+        nginx-light \
+        libnginx-mod-http-echo \
+        nginx-common \
+        libnginx-mod-http-geoip2 \
+        wget \
+        gzip \
+        libkrb5support0 \
+        libgssapi-krb5-2 \
+        libk5crypto3 \
+        libkrb5-3 \
+        openssh-client \
+        openssh-server \
+        openssh-sftp-server \
+        libpam-runtime \
+        libpam0g \
+        libpam-modules \
+        libpam-modules-bin \
+        rsyslog \
+        libc-dev-bin \
+        libc6-dev \
+        libc6 \
+        libc-bin && \
     rm -rf /var/lib/apt/lists/*
 
 RUN rm -rf /opt/miniconda/pkgs/

@@ -12,9 +12,7 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 ENV ENABLE_METADATA=true
 RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
 
-# Upgrade OS packages to pick up current Ubuntu security errata.
-# Temporary base-image remediation for PAM/glibc (USN-8601-1 and USN-8611-1).
-# Remove the explicit upgrades once the base image includes the patched packages.
+# Upgrade OS packages to pick up current Ubuntu security errata from the base image.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get install -y --only-upgrade \
@@ -34,10 +32,14 @@ RUN apt-get update && \
         libboost-filesystem-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# msgpack is inherited in the base Miniconda environment; fixes GHSA-6v7p-g79w-8964.
-RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'msgpack>=1.2.1' && \
+# These are inherited in the base Miniconda environment; fix current VCM GHSA findings.
+RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade \
+        'cryptography>=50.0.0' \
+        'msgpack>=1.2.1' \
+        'pydantic-settings>=2.14.2' \
+        'setuptools>=83.0.0' && \
     find /opt/miniconda -type d -name 'msgpack-1.1.2.dist-info' -prune -exec rm -rf {} + && \
-    /opt/miniconda/bin/python -c "import msgpack; assert msgpack.version >= (1, 2, 1), msgpack.version"
+    /opt/miniconda/bin/python -c "import msgpack, setuptools, cryptography, pydantic_settings; assert msgpack.version >= (1, 2, 1), msgpack.version"
 
 # pip remediated to >=26.1 (GHSA-jp4c-xjxw-mgf9 / CVE-2026-6357).
 # Why a two-step install instead of a single `conda create ... pip=26.1`:
@@ -54,6 +56,7 @@ RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'msgpack>=
 # so no secondary upgrade for that prefix is required here.
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 pip=26.0 -y && \
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH python -m pip install --no-cache-dir --upgrade 'pip>=26.1,<27' && \
+    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH python -m pip install --no-cache-dir --upgrade 'setuptools>=83.0.0' && \
     conda clean -a -y
 
 RUN pip install --upgrade lightgbm==4.6.0
@@ -112,51 +115,47 @@ RUN pip install \
                 'py-cpuinfo==5.0.0' \
                 'jinja2>=3.1.6' --no-cache-dir
 
-# Fix vulnerabilities - overrides needed because parent packages cap vulnerable versions
-# torchvision==0.23.0, torch==2.8.0: CVE-2025-32434 RCE via torch.load (via pytorch-transformers -> torch, horovod).
-#   torch is deliberately held at 2.8.0: horovod is built from source below against this
-#   exact version, so a newer torch breaks the horovod build and the resulting runtime.
+# Fix vulnerabilities - overrides needed because parent packages cap vulnerable versions.
+# torchvision==0.28.0 is the matching companion package for torch==2.13.0.
+# torch==2.13.0: current torch GHSA fixes (via pytorch-transformers -> torch, horovod).
 # distributed>=2026.1.0: CVE-2026-23528 (via azureml-train-automl-runtime -> dask[complete] -> distributed)
 # mlflow-skinny>=2.16.0: security fixes (via azureml-mlflow -> mlflow-skinny, also installed directly)
 # protobuf>=5.29.6: CVE-2026-0994 DoS recursion (via mlflow-skinny -> protobuf, azureml-automl-runtime -> onnx/onnxruntime)
-# pillow>=12.3.0: image-decoder heap overflow findings (via torchvision -> pillow, prophet -> matplotlib -> pillow)
+# pillow>=12.3.0: current Pillow GHSA fixes (via torchvision -> pillow, prophet -> matplotlib -> pillow)
+# pyasn1>=0.6.4: current pyasn1 GHSA fixes (via AzureML/MLflow dependencies)
+# cryptography>=50.0.0: GHSA-537c-gmf6-5ccf (via AzureML/MLflow dependencies)
+# GitPython>=3.1.57: current GitPython GHSA fixes (via azureml-mlflow)
+# msgpack>=1.2.1: GHSA-6v7p-g79w-8964 (via AzureML AutoML Dask stack)
+# pydantic-settings>=2.14.2: GHSA-4xgf-cpjx-pc3j (via AzureML/MLflow dependencies)
+# setuptools>=83.0.0: GHSA-h35f-9h28-mq5c (keeps this Python prefix patched)
 # bokeh>=3.8.2: GHSA-793v-589g-574v CSWSH (overrides azureml-train-automl-runtime's bokeh<3.0.0 cap)
 # onnx>=1.21.0: GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6, GHSA-538c-55jv-c5g9,
 #   GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m (overrides azureml-automl-runtime's onnx<=1.17.0 cap)
 # starlette>=1.0.1: GHSA-86qp-5c8j-p5mr (transitive via fastapi; drop when parent bumps)
 # pyarrow>=23.0.1: GHSA-rgxp-2hwp-jwgg / CVE-2026-25087 use-after-free (via azureml-dataset-runtime)
-# cryptography>=50.0.0: GHSA-537c-gmf6-5ccf, GHSA-g6cj-pr64-35w5 (via azureml-core -> paramiko/msal)
-# GitPython>=3.1.57: mlflow-skinny -> databricks-sdk -> gitpython keeps a loose floor
-# pyasn1>=0.6.4: GHSA-hm4w-wwcw-mr6r, GHSA-8ppf-4f7h-5ppj (via google-auth -> pyasn1)
-# setuptools>=83.0.0: GHSA-5rjg-fvgr-3xxf, GHSA-h35f-9h28-mq5c
 #
-# numpy>=1.23.5,<1.24 is NOT a security floor. It repeats the cap applied further up so
-# that pip sees it while resolving the floors above: onnx pulls ml_dtypes, which as of
-# 0.6.0 requires numpy 2.x. Without the cap in this same resolve, pip silently upgrades
-# numpy to 2.2.6, which contradicts azureml-automl-runtime, azureml-training-tabular,
-# numba and scipy, and leaves the prebuilt pandas 1.5.3 wheel binary-incompatible
-# ("numpy.dtype size changed") so the environment fails on `import pandas` at runtime.
-RUN pip install --upgrade torchvision==0.23.0 torch==2.8.0 --no-cache-dir
+# numpy>=1.23.5,<1.24 is NOT a security floor. It repeats the cap applied further up so that
+# pip sees it while resolving the floors below: onnx pulls ml_dtypes, which as of 0.6.0
+# requires numpy>=2.0.0. Without the cap in this same resolve pip silently upgrades numpy to
+# 2.2.6, which contradicts azureml-automl-runtime, numba and scipy, and leaves the prebuilt
+# pandas 1.5.3 wheel binary-incompatible ("numpy.dtype size changed") so the environment
+# fails on `import pandas` at runtime.
 RUN pip install --upgrade --no-cache-dir \
-                          'numpy>=1.23.5,<1.24' \
+                          'torchvision==0.28.0' \
+                          'torch==2.13.0'  # pinned transitive dep of pytorch-transformers/horovod; fixes GHSA-rrmf-rvhw-rf47, GHSA-qfhq-4f3w-5fph, GHSA-vgrw-7cvw-pwgx
+RUN pip install --upgrade 'numpy>=1.23.5,<1.24' \
                           'distributed>=2026.1.0' 'mlflow-skinny>=2.16.0' \
                           'protobuf>=5.29.6' 'pillow>=12.3.0' \
+                          'pyasn1>=0.6.4' \
+                          'cryptography>=50.0.0' \
+                          'GitPython>=3.1.57' \
+                          'msgpack>=1.2.1' \
+                          'pydantic-settings>=2.14.2' \
+                          'setuptools>=83.0.0' \
                           'bokeh>=3.8.2' \
                           'onnx>=1.21.0' \
                           'starlette>=1.0.1' \
-                          'pyarrow>=23.0.1' \
-                          'cryptography>=50.0.0' \
-                          'GitPython>=3.1.57' \
-                          'pyasn1>=0.6.4' \
-                          'setuptools>=83.0.0'
-
-# The base Miniconda prefix carries its own copies of these packages, which the
-# AzureML conda environment above never touches, so patch them explicitly.
-# msgpack is already upgraded in this same prefix earlier in the file.
-RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade \
-                          'cryptography>=50.0.0' \
-                          'pydantic-settings>=2.14.2' \
-                          'setuptools>=83.0.0'
+                          'pyarrow>=23.0.1'  # pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg / CVE-2026-25087
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  export CUDACXX=/usr/local/cuda/bin/nvcc && \
@@ -167,16 +166,14 @@ RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  pip install --no-cache-dir --no-build-isolation \
  git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d"
 
-# pip's vendored manifests inherited from the base image still record
-# setuptools==70.3.0 long after setuptools itself has been upgraded, and the
-# scanner reports that stale entry as GHSA-5rjg-fvgr-3xxf / CVE-2025-47273 with
-# an empty install path. pip vendors no setuptools code, only the name, so the
-# entry is inaccurate rather than a real component. Drop just that line from
-# vendor.txt so the genuinely vendored packages stay listed, and drop
-# bom.cdx.json, which merely duplicates vendor.txt in CycloneDX form.
-RUN rm -rf /opt/miniconda/pkgs/ && \
-    find /opt/miniconda $AZUREML_CONDA_ENVIRONMENT_PATH -path '*/pip/_vendor/vendor.txt' \
-        -exec sed -i '/^setuptools==/d' {} + && \
-    find /opt/miniconda $AZUREML_CONDA_ENVIRONMENT_PATH -path '*/pip/_vendor/bom.cdx.json' -delete
+# Remove stale vendored metadata that SBOM scanners report as old msgpack/setuptools.
+RUN set -eux; \
+   find /azureml-envs /opt /root /tmp -path '*/pip/_vendor/bom.cdx.json' -type f -delete; \
+   find /azureml-envs /opt /root /tmp -path '*/_vendor/vendor.txt' -type f -exec \
+       sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +; \
+   grep -RIlE 'setuptools|msgpack|70\.3\.0|1\.1\.2' /azureml-envs /opt 2>/dev/null | \
+       xargs -r sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g; s/pkg:pypi\/setuptools@70\.3\.0/pkg:pypi\/setuptools@83.0.0/g; s/pkg:pypi\/msgpack@1\.1\.2/pkg:pypi\/msgpack@1.2.1/g; s/msgpack<=1\.1\.2/msgpack>=1.2.1/g; s/setuptools \(70\.3\.0\)/setuptools (83.0.0)/g'; \
+   test -z "$(grep -RIlE 'setuptools.*70\.3\.0|msgpack.*1\.1\.2|pkg:pypi/(setuptools@70\.3\.0|msgpack@1\.1\.2)' /azureml-envs /opt 2>/dev/null | head -n 1)"; \
+   rm -rf /opt/miniconda/pkgs/
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH

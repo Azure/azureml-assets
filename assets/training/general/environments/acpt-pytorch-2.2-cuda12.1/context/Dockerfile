@@ -2,17 +2,24 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 
 ENV PIP_PROGRESS_BAR=off
 
-# Conda environment security floors.
-# setuptools>=83.0.0: fixes GHSA-h35f-9h28-mq5c.
+# Conda env security floors.
+# setuptools>=82.0.1: fixes GHSA-h35f-9h28-mq5c.
 # PyJWT>=2.13.0: pinned transitive dep brought in by the base image; fixes GHSA-jq35-7prp-9v3f and GHSA-993g-76c3-p5m4.
 # py-rattler>=0.24.0: pinned transitive dep of base conda tooling; brought in by base image, fixes GHSA-q53q-5r4j-5729.
-# cryptography>=50.0.0: pinned transitive dep present in the base image; fixes GHSA-g6cj-pr64-35w5.
+# cryptography>=50.0.0: pinned transitive dep present in the base image; fixes GHSA-537c-gmf6-5ccf.
 # pydantic-settings>=2.14.2: pinned transitive dep present in the base image; fixes GHSA-4xgf-cpjx-pc3j.
 # msgpack>=1.2.1: pinned transitive dep present in the base image; fixes GHSA-6v7p-g79w-8964.
-RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' 'setuptools>=83.0.0' && \
-    conda install -n base -c conda-forge -y 'pip>=26.1' 'setuptools>=83.0.0' && \
+# aiohttp>=3.14.3: pinned transitive dep present in the base image; fixes GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, and GHSA-mfx4-hv73-q22v.
+# NOT FIXED HERE - torch (GHSA-rrmf-rvhw-rf47, GHSA-vgrw-7cvw-pwgx, GHSA-qfhq-4f3w-5fph):
+#   torch is owned by the ACPT base image (aifx/acpt/stable-ubuntu2204-cu126-py310-torch280),
+#   which ships a matched torch/torchvision/torchaudio set plus a transformers build compiled
+#   against it. torch 2.13.0 has no matching torchaudio release, and torchvision 0.28.0 (its
+#   only compatible companion) removes torchvision.io.VideoReader, which the base-image
+#   transformers still imports. These CVEs must be remediated in the ACPT base image.
+RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' 'setuptools>=82.0.1' && \
+    conda install -n base -c conda-forge -y 'pip>=26.1' 'setuptools>=82.0.1' && \
     conda run -n base python -m pip install --upgrade --no-cache-dir \
-        'setuptools>=83.0.0' \
+        'setuptools>=82.0.1' \
         'python-dotenv>=1.2.2' \
         'urllib3>=2.7.0' \
         'idna>=3.15' \
@@ -26,27 +33,26 @@ RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' 'setuptools>=83.0.0' && 
     conda run -n ptca python -m pip install --upgrade --no-cache-dir \
         'urllib3>=2.7.0' \
         'idna>=3.15' \
-        'setuptools>=83.0.0' && \
+        'setuptools>=82.0.1' \
+        'aiohttp>=3.14.3' && \
     conda clean -a -y && \
     rm -rf /opt/conda/pkgs
 
-# Install pip dependencies in the default PTCA conda environment.
+# Install pip dependencies (runs in default PTCA conda env)
 COPY requirements.txt .
 # pyarrow>=23.0.1: pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg.
-# cryptography>=50.0.0: pinned transitive dep of azureml-core in requirements.txt; fixes GHSA-g6cj-pr64-35w5.
+# cryptography>=50.0.0: pinned transitive dep of azureml-core in requirements.txt; fixes GHSA-537c-gmf6-5ccf.
 RUN pip install -r requirements.txt --no-cache-dir && \
     pip install --upgrade --no-cache-dir --no-deps \
         'pyarrow>=23.0.1' \
         'cryptography>=50.0.0' \
         'setuptools>=83.0.0' && \
+    conda run -n base python -m pip install --upgrade --no-cache-dir --no-deps 'setuptools>=83.0.0' && \
     rm -rf /opt/conda/lib/python3.14/site-packages/setuptools-82.0.0.dist-info && \
     find /opt/conda \( -path '*/pip/_vendor/vendor.txt' -o -path '*/pip/_vendor/bom.cdx.json' \) -delete
 
 # Inference requirements.
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
-# The --only-upgrade packages below are inherited unpatched from the ACPT base image, whose
-# tag lags the Ubuntu 22.04 security archive. Remove that list once the base image ships the
-# fixed versions on its own.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade --no-install-recommends \
         dotnet-host-8.0 \
@@ -62,13 +68,16 @@ RUN apt-get update && \
         libk5crypto3 \
         libkrb5-3 \
         libkrb5support0 \
-        locales \
+        libsystemd0 \
+        libudev1 \
         libpam-modules \
         libpam-modules-bin \
         libpam-runtime \
         libpam0g \
         libsqlite3-0 \
+        locales \
         tar \
+        udev \
         wget && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         libnginx-mod-http-echo \

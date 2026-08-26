@@ -30,4 +30,6 @@ dependencies:
   - torch-tb-profiler~=0.4.0
   - starlette>=1.0.1
   - pyarrow>=23.0.1  # pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg
-  - cryptography==48.0.1  # pinned transitive dep of azureml-core/azureml-mlflow; fixes GHSA-537c-gmf6-5ccf
+  - GitPython>=3.1.58  # pinned transitive dep of azureml-core; fixes GHSA-hmq2-w58f-27jc/GHSA-jm78-9fvv-mhgr/GHSA-hh9p-6wh2-4mfc/GHSA-4gmw-gg2m-w46p/GHSA-9rj7-rf2p-w77r/GHSA-wvpp-8hx9-p66j
+  - cryptography>=50.0.0  # pinned transitive dep of azureml-core/azureml-mlflow; fixes GHSA-g6cj-pr64-35w5
+  - sqlparse>=0.6.0  # pinned transitive dep of Django pulled by azureml-core; fixes GHSA-f2ff-p2ww-7p4p/GHSA-prg7-hcfm-mfcr/GHSA-3496-9g83-7v6x/GHSA-pwgv-4x5q-6m9f
