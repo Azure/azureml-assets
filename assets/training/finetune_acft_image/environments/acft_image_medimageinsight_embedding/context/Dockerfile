@@ -56,7 +56,8 @@ RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade \
 # mlflow 3.5.0 has CVEs (CVE-2025-14287, CVE-2026-2033, CVE-2026-2635, GHSA-fh64-r2vc-xvhr);
 # upgrade after requirements install. azureml-mlflow 1.62.0.post2 pins mlflow-skinny<=3.9.0,
 # so mlflow must be upgraded separately (post-pip-install) to avoid resolver conflict.
-RUN pip install --progress-bar off --no-cache-dir mlflow==3.11.1
+# mlflow 3.15.0 additionally fixes GHSA-7gwp-5pfp-969j and GHSA-2cm6-r77w-6g96.
+RUN pip install --progress-bar off --no-cache-dir mlflow==3.15.0
 # fastmcp + mcp were installed as regular deps of mlflow 3.5.0 (fastmcp -> mcp) but orphaned after
 # mlflow 3.11.1 (fastmcp moved to optional "mcp" extra); uninstall both to remove vulnerable packages
 RUN pip uninstall -y fastmcp mcp
@@ -81,7 +82,10 @@ RUN pip uninstall -y fastmcp mcp
 # pillow: transitive dep of image/vision packages; fixes GHSA-8v84-f9pq-wr9x, GHSA-9hw9-ch79-4vh6,
 #   GHSA-vjc4-5qp5-m44j, GHSA-pg7v-jwj7-p798, GHSA-45hq-cxwh-f6vc, GHSA-phj9-mv4w-65pm,
 #   GHSA-62p4-gmf7-7g93, and GHSA-5x94-69rx-g8h2.
-RUN pip install --progress-bar off --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.57' 'aiohttp>=3.14.3' 'pyarrow>=23.0.1' 'cryptography>=50.0.0' 'pyasn1>=0.6.4' 'pillow>=12.3.0'
+# sqlparse: transitive dep (mlflow -> sqlalchemy tooling); no parent release floors
+#   sqlparse>=0.6.0, so explicit override is required. Fixes GHSA-f2ff-p2ww-7p4p,
+#   GHSA-prg7-hcfm-mfcr, GHSA-3496-9g83-7v6x, and GHSA-pwgv-4x5q-6m9f.
+RUN pip install --progress-bar off --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.57' 'aiohttp>=3.14.3' 'pyarrow>=23.0.1' 'cryptography>=50.0.0' 'pyasn1>=0.6.4' 'pillow>=12.3.0' 'sqlparse>=0.6.0'
 
 # Upgrade vulnerable packages in the base conda Python
 # urllib3: transitive dep via requests; loose floor (urllib3<3,>=1.21.1) resolves to vulnerable 2.6.3

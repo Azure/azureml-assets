@@ -4,3 +4,4 @@ mlflow
 azureml-mlflow
 azureml-core
 setuptools>=83.0.0
+sqlparse>=0.6.0  # pinned transitive dep of mlflow; fixes GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr, GHSA-3496-9g83-7v6x, GHSA-pwgv-4x5q-6m9f
