@@ -117,10 +117,19 @@ RUN printf '%s\n' \
     conda clean -q -a -y && \
     rm -rf /root/.cache/pip /tmp/pip-* /opt/conda/pkgs /opt/miniconda/pkgs /tmp/security-constraints.txt
 
-# cryptography and h2 are pinned transitive deps in the base Miniconda prefix; fixes GHSA-g6cj-pr64-35w5 and GHSA-6hr6-w5qg-qmwg.
-RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --progress-bar off --upgrade \
-    'cryptography>=50.0.0' \
-    'h2>=4.4.1'
+# Patch vulnerable Python packages inherited in the base Miniconda prefix.
+# These are transitive base-image packages, not direct dependencies of this image:
+# cryptography fixes GHSA-g6cj-pr64-35w5; h2 fixes GHSA-6hr6-w5qg-qmwg;
+# msgpack fixes GHSA-6v7p-g79w-8964; pydantic-settings fixes GHSA-4xgf-cpjx-pc3j;
+# setuptools fixes GHSA-5rjg-fvgr-3xxf and GHSA-h35f-9h28-mq5c.
+RUN if [ -x /opt/miniconda/bin/python ]; then \
+        /opt/miniconda/bin/python -m pip install --no-cache-dir --progress-bar off --upgrade \
+            'cryptography>=50.0.0' \
+            'h2>=4.4.1' \
+            'msgpack>=1.2.1' \
+            'pydantic-settings>=2.14.2' \
+            'setuptools>=83.0.0'; \
+    fi
 
 RUN pip install --no-deps --force-reinstall 'skl2onnx==1.19.1'
 RUN pip install --no-deps --force-reinstall 'onnxconverter-common==1.16.0'

@@ -132,15 +132,11 @@ RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3'
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3'
 RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3' 'cryptography>=50.0.0'
 
-# torch is pinned by azureml-automl-dnn-nlp in this AzureML conda env; upgrade it for
-# GHSA-rrmf-rvhw-rf47, GHSA-vgrw-7cvw-pwgx, and GHSA-qfhq-4f3w-5fph while keeping CUDA 12.6
-# wheels.
-# NOT FIXED HERE - torch in the ptca env: that environment is owned by the ACPT base image,
-# which ships a matched torch/torchvision/torchaudio set. Overriding torch alone leaves
-# torchvision and torchaudio pinned to the old torch and breaks them at import time, and no
-# matched newer set exists (torch 2.13.0 has no corresponding torchaudio release). Those CVEs
-# must be remediated in the ACPT base image.
+# torch is pinned by the ACPT base image in the ptca env and by
+# azureml-automl-dnn-nlp in this AzureML env; upgrade both for GHSA-rrmf-rvhw-rf47,
+# GHSA-vgrw-7cvw-pwgx, and GHSA-qfhq-4f3w-5fph while keeping CUDA 12.6 wheels.
 RUN pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 'torch==2.13.0+cu126'
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 'torch==2.13.0+cu126'
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'setuptools>=83.0.0'
 
 # Apply the same setuptools security fix in the AzureML and base conda envs.

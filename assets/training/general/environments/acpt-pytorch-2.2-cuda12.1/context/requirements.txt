@@ -13,7 +13,7 @@ azureml-inference-server-http
 azure-monitor-opentelemetry-exporter==1.0.0b23
 # GitPython: transitive dep of azureml-mlflow/mlflow; fixes GHSA-r9mr-m37c-5fr3,
 # GHSA-6p8h-3wgx-97gf, GHSA-fjr4-x663-mwxc, and GHSA-94p4-4cq8-9g67.
-GitPython>=3.1.55
+GitPython>=3.1.57
 inference-schema
 MarkupSafe==2.1.2
 regex
@@ -21,7 +21,7 @@ pybind11
 pillow>=12.2.0
 # GHSA-69w3-r845-3855 requires transformers>=5.0.0rc3; upgrading to stable 5.x
 transformers>=5.0.0
-aiohttp>=3.14.0
+aiohttp>=3.14.3
 # onnx: transitive dep of onnxruntime in base image; parent uses loose floor (>=1.16.0);
 # override needed for GHSA-p433-9wv8-28xj, GHSA-538c-55jv-c5g9, GHSA-cmw6-hcpp-c6jp, GHSA-q56x-g2fj-4rj6, GHSA-hqmj-h5c6-369m
 onnx>=1.21.0

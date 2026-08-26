@@ -6,7 +6,7 @@ ENV PIP_PROGRESS_BAR=off
 # setuptools>=82.0.1: fixes GHSA-h35f-9h28-mq5c.
 # PyJWT>=2.13.0: pinned transitive dep brought in by the base image; fixes GHSA-jq35-7prp-9v3f and GHSA-993g-76c3-p5m4.
 # py-rattler>=0.24.0: pinned transitive dep of base conda tooling; brought in by base image, fixes GHSA-q53q-5r4j-5729.
-# cryptography>=48.0.1: pinned transitive dep present in the base image; fixes GHSA-537c-gmf6-5ccf.
+# cryptography>=50.0.0: pinned transitive dep present in the base image; fixes GHSA-537c-gmf6-5ccf.
 # pydantic-settings>=2.14.2: pinned transitive dep present in the base image; fixes GHSA-4xgf-cpjx-pc3j.
 # msgpack>=1.2.1: pinned transitive dep present in the base image; fixes GHSA-6v7p-g79w-8964.
 # aiohttp>=3.14.3: pinned transitive dep present in the base image; fixes GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, and GHSA-mfx4-hv73-q22v.
@@ -27,7 +27,7 @@ RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' 'setuptools>=82.0.1' && 
         'aiohttp>=3.14.3' \
         'PyJWT>=2.13.0' \
         'py-rattler>=0.24.0' \
-        'cryptography>=48.0.1' \
+        'cryptography>=50.0.0' \
         'pydantic-settings>=2.14.2' \
         'msgpack>=1.2.1' && \
     conda run -n ptca python -m pip install --upgrade --no-cache-dir \
@@ -41,11 +41,11 @@ RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' 'setuptools>=82.0.1' && 
 # Install pip dependencies (runs in default PTCA conda env)
 COPY requirements.txt .
 # pyarrow>=23.0.1: pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg.
-# cryptography>=48.0.1: pinned transitive dep of azureml-core in requirements.txt; fixes GHSA-537c-gmf6-5ccf.
+# cryptography>=50.0.0: pinned transitive dep of azureml-core in requirements.txt; fixes GHSA-537c-gmf6-5ccf.
 RUN pip install -r requirements.txt --no-cache-dir && \
     pip install --upgrade --no-cache-dir --no-deps \
         'pyarrow>=23.0.1' \
-        'cryptography>=48.0.1' \
+        'cryptography>=50.0.0' \
         'setuptools>=83.0.0' && \
     conda run -n base python -m pip install --upgrade --no-cache-dir --no-deps 'setuptools>=83.0.0' && \
     rm -rf /opt/conda/lib/python3.14/site-packages/setuptools-82.0.0.dist-info && \

@@ -34,7 +34,7 @@ RUN apt-get update && \
 
 # These are inherited in the base Miniconda environment; fix current VCM GHSA findings.
 RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade \
-        'cryptography>=48.0.1' \
+        'cryptography>=50.0.0' \
         'msgpack>=1.2.1' \
         'pydantic-settings>=2.14.2' \
         'setuptools>=83.0.0' && \
@@ -123,8 +123,8 @@ RUN pip install \
 # protobuf>=5.29.6: CVE-2026-0994 DoS recursion (via mlflow-skinny -> protobuf, azureml-automl-runtime -> onnx/onnxruntime)
 # pillow>=12.3.0: current Pillow GHSA fixes (via torchvision -> pillow, prophet -> matplotlib -> pillow)
 # pyasn1>=0.6.4: current pyasn1 GHSA fixes (via AzureML/MLflow dependencies)
-# cryptography>=48.0.1: GHSA-537c-gmf6-5ccf (via AzureML/MLflow dependencies)
-# GitPython>=3.1.55: current GitPython GHSA fixes (via azureml-mlflow)
+# cryptography>=50.0.0: GHSA-537c-gmf6-5ccf (via AzureML/MLflow dependencies)
+# GitPython>=3.1.57: current GitPython GHSA fixes (via azureml-mlflow)
 # msgpack>=1.2.1: GHSA-6v7p-g79w-8964 (via AzureML AutoML Dask stack)
 # pydantic-settings>=2.14.2: GHSA-4xgf-cpjx-pc3j (via AzureML/MLflow dependencies)
 # setuptools>=83.0.0: GHSA-h35f-9h28-mq5c (keeps this Python prefix patched)
@@ -147,8 +147,8 @@ RUN pip install --upgrade 'numpy>=1.23.5,<1.24' \
                           'distributed>=2026.1.0' 'mlflow-skinny>=2.16.0' \
                           'protobuf>=5.29.6' 'pillow>=12.3.0' \
                           'pyasn1>=0.6.4' \
-                          'cryptography>=48.0.1' \
-                          'GitPython>=3.1.55' \
+                          'cryptography>=50.0.0' \
+                          'GitPython>=3.1.57' \
                           'msgpack>=1.2.1' \
                           'pydantic-settings>=2.14.2' \
                           'setuptools>=83.0.0' \

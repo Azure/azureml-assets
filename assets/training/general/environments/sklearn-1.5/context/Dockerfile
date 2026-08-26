@@ -60,5 +60,5 @@ RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
 RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
     'aiohttp>=3.14.0' 'cryptography>=50.0.0' 'distributed>=2026.1.0' 'GitPython>=3.1.55' 'pyarrow>=23.0.1' 'sqlparse>=0.6.0'
 
-# idna>=3.15 (GHSA-65pc-fj4g-8rjx): base-image miniconda ships idna<3.15; drop once base image updates
-RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'idna>=3.15'
+# idna>=3.15 (GHSA-65pc-fj4g-8rjx) and cryptography>=50.0.0 (GHSA-g6cj-pr64-35w5): base-image miniconda pins; drop once base image updates.
+RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'idna>=3.15' 'cryptography>=50.0.0'

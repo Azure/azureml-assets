@@ -26,6 +26,11 @@ ENV MAX_JOBS=1
 ENV PYTHONPATH=/opt/Megatron-LM:${PYTHONPATH}
 
 RUN set -eux; \
+    find /etc/apt -type f \( -name '*.list' -o -name '*.sources' \) \
+        -exec sed -i \
+            -e 's|http://archive.ubuntu.com/ubuntu|http://azure.archive.ubuntu.com/ubuntu|g' \
+            -e 's|http://security.ubuntu.com/ubuntu|http://azure.archive.ubuntu.com/ubuntu|g' \
+            {} +; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
         build-essential \
@@ -201,9 +206,10 @@ RUN apt-get update && \
 # CUDA runtime via the nvidia-* dependencies, so no extra index is required.
 RUN python -m pip install --no-cache-dir \
         torch==2.13.0 \
-        torchvision==0.28.0 && \
+        torchvision==0.28.0 \
+        torchaudio==2.11.0 && \
     python -m pip install --no-cache-dir \
-        "aiohttp>=3.14.0" \
+        "aiohttp>=3.14.3" \
         "starlette>=1.0.1" \
         "idna>=3.15" \
         "pyarrow>=23.0.1" \
@@ -212,8 +218,8 @@ RUN python -m pip install --no-cache-dir \
         "transformers>=5.5.0,<=5.6.0" \
         "mcp[cli]>=1.28.1" \
         "wandb>=0.28.1" \
-        "GitPython>=3.1.55" \
-        "cryptography>=49.0.0" \
+        "GitPython>=3.1.57" \
+        "cryptography>=50.0.0" \
         "setuptools>=83.0.0"
 
 # The optional wandb service binary embeds vulnerable Go modules; remove it so
@@ -224,9 +230,11 @@ RUN WANDB_CORE="$(python -c 'import pathlib, wandb; print(pathlib.Path(wandb.__f
 
 COPY patch_ray_thirdparty.py /tmp/patch_ray_thirdparty.py
 # Upgrade Ray's vendored Python packages and remove their obsolete metadata.
-RUN python -m pip install --no-cache-dir \
+# --upgrade is required: with --target, pip leaves an already-present copy in place,
+# so without it the vendored aiohttp stays at the vulnerable version.
+RUN python -m pip install --no-cache-dir --upgrade \
         "idna>=3.15" \
-        "aiohttp>=3.14.0" \
+        "aiohttp>=3.14.3" \
         --target "$(python -c 'import site; print(site.getsitepackages()[0])')/ray/_private/runtime_env/agent/thirdparty_files" && \
     python /tmp/patch_ray_thirdparty.py && \
     rm /tmp/patch_ray_thirdparty.py
