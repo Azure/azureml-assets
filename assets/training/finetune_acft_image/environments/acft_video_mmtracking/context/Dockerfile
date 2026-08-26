@@ -13,6 +13,7 @@ RUN apt-get -y update \
     tar wget libsqlite3-0 openssh-client \
     libasound2 libasound2-data \
     dotnet-hostfxr-8.0 dotnet-runtime-8.0 dotnet-host-8.0 \
+    libsystemd0 libudev1 udev \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
