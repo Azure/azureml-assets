@@ -98,8 +98,3 @@ RUN set -eux; \
     find /opt /root -type d \( -name 'setuptools-70.3.0.dist-info' -o -name 'msgpack-1.1.2.dist-info' \) -prune -exec rm -rf {} +; \
     find /opt /root -path '*/_vendor/vendor.txt' -type f -exec \
         sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +
-
-# torch: pinned dep from ACPT ptca env; fixes GHSA-rrmf-rvhw-rf47, GHSA-qfhq-4f3w-5fph, and GHSA-vgrw-7cvw-pwgx.
-# torchvision and torchaudio are upgraded with torch to keep the CUDA PyTorch stack compatible.
-RUN pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 \
-    'torch==2.13.0' 'torchvision==0.28.0' 'torchaudio==2.11.0'

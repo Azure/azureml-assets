@@ -17,9 +17,9 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 COPY requirements.txt .
 
-RUN pip install -r requirements.txt --no-cache-dir
 RUN pip install azureml-acft-common-components==0.0.91
-RUN pip install azureml-evaluate-mlflow==0.0.91
+RUN pip install azureml-evaluate-mlflow==0.0.91 azureml-metrics[all]==0.0.91
+RUN pip install -r requirements.txt --no-cache-dir
 RUN pip install verl==0.7.1
 RUN pip install sacrebleu==2.5.1
 COPY tracking /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/tracking.py
@@ -41,12 +41,9 @@ COPY azure_grader /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/r
 COPY azure_python_grader /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/reward_score/azure_python_grader.py
 COPY utils /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/vllm/utils.py
 # vllm is a direct top-level runtime dependency in this image; pin the patched release.
-RUN pip install --no-cache-dir vllm==0.24.0
-# vllm 0.24.0 pins torch==2.11.0; override after vllm to fix GHSA-rrmf-rvhw-rf47 / VCM 5014621.
-# Install from the cu126 index. The base image is cu126 and the recommended A100 v4 SKU ships a
-# driver capped at CUDA 12.8, but the default PyPI torch wheel is built against CUDA 13.0, so the
-# image fails at runtime with "CUDA driver too old (found version 12080)" / cuda_is_available=false.
-RUN pip install --no-cache-dir --no-deps torch==2.13.0 --index-url https://download.pytorch.org/whl/cu126
+RUN pip install --no-cache-dir vllm==0.26.0
+# vllm can override torch; reinstall torch after vllm to fix GHSA-rrmf-rvhw-rf47 / VCM 5014621.
+RUN pip install --no-cache-dir --no-deps torch==2.13.0
 # vllm's resolver can upgrade numpy, but verl 0.7.1 requires numpy<2.
 RUN pip install --no-cache-dir numpy==1.26.4
 # Keep xgrammar at the patched floor even when pulled transitively by vllm.
@@ -68,7 +65,9 @@ RUN pip install --no-cache-dir 'flash-attn-4>=4.0.0b9'
 #   pins pyopenssl<26.0.0, so explicit override is required.
 # starlette>=1.0.1: GHSA-86qp-5c8j-p5mr; placed here (after vllm) so that vllm's transitive
 #   fastapi dependency cannot downgrade starlette to the vulnerable 0.x series.
-RUN pip install --upgrade 'cryptography>=48.0.1' 'pydantic-settings>=2.14.2' 'fastmcp>=3.2.0' 'Mako>=1.3.11' 'lxml>=6.1.0' 'transformers==5.6.0' 'GitPython>=3.1.47' 'pyOpenSSL>=26.0.0' 'starlette>=1.0.1'
+# sqlparse>=0.6.0: pinned transitive dep of mlflow/azureml-mlflow; fixes GHSA-f2ff-p2ww-7p4p,
+#   GHSA-prg7-hcfm-mfcr, GHSA-3496-9g83-7v6x, and GHSA-pwgv-4x5q-6m9f.
+RUN pip install --upgrade 'cryptography>=48.0.1' 'pydantic-settings>=2.14.2' 'fastmcp>=3.2.0' 'Mako>=1.3.11' 'lxml>=6.1.0' 'transformers==5.6.0' 'GitPython>=3.1.47' 'pyOpenSSL>=26.0.0' 'starlette>=1.0.1' 'sqlparse>=0.6.0'
 # Base env (py3.13) and ptca env (py3.10) overrides for packages where every parent pins a loose floor.
 # cryptography>=48.0.1 (base env, py3.13): GHSA-537c-gmf6-5ccf; direct override
 #   keeps the base env patched if later package resolution leaves an older copy.
@@ -132,7 +131,8 @@ RUN find /opt/conda/envs/ptca/lib/python3.10/site-packages/ray -type d -name 'th
 # Patch jackson-databind/core, vendored by ray, for GHSA-5jmj-h7xm-6q6v,
 # GHSA-5gvw-p9qm-jgwh, GHSA-mhm7-754m-9p8w, and GHSA-r7wm-3cxj-wff9; patch
 # log4j-api/core for CVE-2026-49844, GHSA-445c-vh5m-36rj,
-# GHSA-6hg6-v5c8-fphq, and GHSA-3pxv-7cmr-fjr4.
+# GHSA-6hg6-v5c8-fphq, and GHSA-3pxv-7cmr-fjr4; patch httpcore5 for
+# GHSA-hf6x-8p5f-cgmf.
 COPY patch_ray_jackson_databind.py /tmp/patch_ray_jackson_databind.py
 RUN JACKSON_DATABIND_VERSION=2.21.5 \
     JACKSON_DATABIND_JAR_SHA1=84924990b468233a28214ae2c505a9ec24cd6ea6 \
@@ -146,6 +146,9 @@ RUN JACKSON_DATABIND_VERSION=2.21.5 \
     LOG4J_CORE_VERSION=2.25.5 \
     LOG4J_CORE_JAR_SHA1=c194a13e18b0a36014e867d2d323b989bf212151 \
     LOG4J_CORE_POM_SHA1=1f76ca57995fe0e588dc92ff3aa9f26d45af79ba \
+    HTTPCORE5_VERSION=5.4.3 \
+    HTTPCORE5_JAR_SHA1=32a0699fbcb103f5621c00983ee8f5aac080e4a6 \
+    HTTPCORE5_POM_SHA1=4553084e7ef07928bc1c2b65d4b099b972ba53a6 \
     /opt/conda/envs/ptca/bin/python /tmp/patch_ray_jackson_databind.py && \
     rm -f /tmp/patch_ray_jackson_databind.py
 COPY vllm_rollout /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/workers/rollout/vllm_rollout/vllm_rollout.py

@@ -30,8 +30,13 @@ RUN apt-get update && \
 
 # ptca env (python 3.10): pip is a preinstalled install tool, not pulled by a
 # Python parent package. Use conda-forge for the patched build and remove stale metadata.
-RUN conda install -y -n ptca -c conda-forge pip==26.1.2 && \
-    rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/pip-26.1.1.dist-info && \
+# The existing pip in this env was installed by pip itself, so conda does not own its
+# files and overlaying a conda pip on top leaves a mix of two pip trees behind
+# ("ImportError: cannot import name 'get_runnable_pip' from 'pip._internal.utils.misc'").
+# Remove the pip package directory first so conda lays down a coherent installation.
+RUN rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/pip \
+           /opt/conda/envs/ptca/lib/python3.10/site-packages/pip-*.dist-info && \
+    conda install -y -n ptca -c conda-forge pip==26.1.2 && \
     rm -f /opt/conda/envs/ptca/conda-meta/pip-26.1.1*.json && \
     conda clean -ay
 

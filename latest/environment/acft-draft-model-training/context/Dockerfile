@@ -2,8 +2,13 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly
 USER root
 ENV PIP_PROGRESS_BAR=off
 
-# Apply OS security updates inherited from the base image.
+# Apply OS security updates not yet covered by the base image.
 # libpam and glibc packages are inherited from the base image; fixes USN-8601-1 and USN-8611-1.
+# libsystemd0, libudev1 and udev are likewise inherited unpatched from the base image;
+# fixes USN-8626-1. Upgraded rather than pinned so the build tracks the security archive.
+# wget is upgraded rather than pinned for the same reason: the jammy archive has already
+# superseded the version that was pinned here and only keeps the newest build, so an
+# exact pin fails with "Version ... was not found".
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libpam-runtime=1.4.0-11ubuntu2.7 \
         libpam0g=1.4.0-11ubuntu2.7 \
@@ -18,7 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         dotnet-host-8.0 dotnet-hostfxr-8.0 dotnet-runtime-8.0 \
         libgcrypt20 \
         liblzma5 xz-utils \
-        wget=1.21.2-2ubuntu1.4 \
+        wget \
         tar=1.34+dfsg-1ubuntu0.1.22.04.6 \
         libkrb5support0=1.19.2-2ubuntu0.8 \
         libgssapi-krb5-2=1.19.2-2ubuntu0.8 \
@@ -28,6 +33,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libasound2=1.2.6.1-1ubuntu1.2 \
         libasound2-data=1.2.6.1-1ubuntu1.2 \
         openssh-client=1:8.9p1-3ubuntu0.16 \
+ && apt-get install -y --only-upgrade libsystemd0 libudev1 udev \
  && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
@@ -41,10 +47,14 @@ COPY requirements.txt .
 # GHSA-69w3-r845-3855 (CVE-2026-1839): arbitrary code execution in Trainer class;
 # patched only in transformers>=5.0.0rc3. Upgrading to latest stable 5.x.
 # GHSA-86qp-5c8j-p5mr: starlette vulnerability; patched in >=1.0.1 (ptca env).
+# azureml-metrics[all] is a transitive dependency of azureml-evaluate-mlflow;
+# pinned to the matching latest release to avoid obsolete releases with stale dependencies.
 # aiohttp is a transitive dependency from the base Python 3.14 env and AzureML/MLflow stack;
 # pinned to fix GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, and GHSA-mfx4-hv73-q22v.
 # cryptography is a transitive dependency in the ptca env from the AzureML/MLflow stack;
 # pinned to fix GHSA-g6cj-pr64-35w5.
+# sqlparse is a transitive dependency of MLflow in the ptca env; pinned to fix
+# GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr, GHSA-3496-9g83-7v6x, and GHSA-pwgv-4x5q-6m9f.
 # Override vulnerable transitive dependencies in the base (Python 3.14) and ptca
 # (Python 3.10) environments because parent ranges permit older versions.
 # Remove obsolete conda and vendored dependency metadata after upgrading.
@@ -52,7 +62,7 @@ RUN pip install -r requirements.txt --no-cache-dir \
  && pip install --no-cache-dir --force-reinstall "sglang>=0.5.10" \
  && pip install --no-cache-dir azureml-acft-common-components==0.0.91 \
  && pip install --no-cache-dir numpy==2.2.5 \
- && pip install --no-cache-dir azureml-evaluate-mlflow==0.0.91 \
+ && pip install --no-cache-dir azureml-evaluate-mlflow==0.0.91 azureml-metrics[all]==0.0.91 \
  && pip install --no-cache-dir --force-reinstall "mlflow>=3.2.0,<4.0.0" \
  && pip install --no-cache-dir --upgrade "wandb>=0.28.1" \
  && find /opt/conda/envs/ptca -name 'wandb-core' -path '*/wandb/bin/*' -delete \
@@ -66,7 +76,7 @@ RUN pip install -r requirements.txt --no-cache-dir \
         'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'pip>=26.1' \
         'PyJWT>=2.13.0' 'py-rattler>=0.24.0' 'cryptography>=50.0.0' 'pydantic-settings>=2.14.2' 'msgpack>=1.2.1' \
         'setuptools>=83.0.0' \
- && pip install --no-cache-dir --upgrade 'pip>=26.1' 'PyJWT>=2.13.0' 'msgpack>=1.2.1' 'setuptools>=83.0.0' \
+ && pip install --no-cache-dir --upgrade 'pip>=26.1' 'PyJWT>=2.13.0' 'msgpack>=1.2.1' 'setuptools>=83.0.0' 'sqlparse>=0.6.0' \
  && find /opt/conda /opt/conda/envs/ptca -path '*/conda-meta/pip-*.json' -delete \
  && find /opt/conda /opt/conda/envs/ptca \( -path '*/conda-meta/setuptools-*.json' -o -path '*/conda-meta/msgpack-python-*.json' \) -delete \
  && find /opt/conda /opt/conda/envs/ptca -path '*/site-packages/pip/_vendor/bom.cdx.json' -delete \

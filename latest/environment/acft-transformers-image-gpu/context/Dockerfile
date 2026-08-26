@@ -29,7 +29,7 @@ RUN apt-get -y update && apt-get -y upgrade \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-RUN pip install -r requirements.txt --no-cache-dir
+RUN pip install --progress-bar off -r requirements.txt --no-cache-dir
 
 # Override vulnerable transitive deps in ptca env that are not fixed in the base image
 # onnx: azureml-acft-accelerator==0.0.89 requires onnx<=1.17.0 which downgrades base 1.21.0;
@@ -59,13 +59,15 @@ RUN pip install -r requirements.txt --no-cache-dir
 # aiohttp: transitive dep (mlflow and other packages); ships 3.13.5 which has
 #   GHSA-jg22-mg44-37j8 and GHSA-hg6j-4rv6-33pg; handled separately via conda run
 #   (see below) to ensure the correct ptca env is targeted.
-RUN pip install --no-cache-dir --upgrade 'onnx>=1.21.0' 'pyasn1>=0.6.4' 'fastmcp>=3.2.0' 'Mako>=1.3.12' 'GitPython>=3.1.55' 'python-dotenv>=1.2.2' 'pillow>=12.2.0' 'pytest>=9.0.3' 'urllib3>=2.7.0'
+RUN pip install --progress-bar off --no-cache-dir --upgrade 'onnx>=1.21.0' 'pyasn1>=0.6.4' 'fastmcp>=3.2.0' 'Mako>=1.3.12' 'GitPython>=3.1.55' 'python-dotenv>=1.2.2' 'pillow>=12.2.0' 'pytest>=9.0.3' 'urllib3>=2.7.0'
 # pip: package installer itself - there is no parent package that brings it in.
 #   Both conda envs (ptca python3.10, base python3.14) ship pip from the base
 #   image, vulnerable to GHSA-wf93-45jw-7689. Use conda-forge to upgrade pip in both
 #   envs without allowing the solver to roll back other packages (--freeze-installed).
-RUN conda install -n ptca -y -c conda-forge --freeze-installed 'pip=26.1.2' \
- && conda install -n base -y -c conda-forge --freeze-installed 'pip=26.1.2'
+RUN rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/pip* \
+           /opt/conda/lib/python3.14/site-packages/pip* \
+ && conda install -n ptca -y -c conda-forge --freeze-installed --force-reinstall 'pip=26.1.2' \
+ && conda install -n base -y -c conda-forge --freeze-installed --force-reinstall 'pip=26.1.2'
 # python-dotenv in base conda env: transitive dep of uvicorn[standard] (>=0.13); loose floor,
 #   base image has 1.2.1 which has GHSA-mf9w-mj56-hr94; override to >=1.2.2
 # urllib3 in base conda env: same root cause as above — base ships 2.6.3 via
@@ -85,17 +87,17 @@ RUN conda install -n ptca -y -c conda-forge --freeze-installed 'pip=26.1.2' \
 #   base ships 2.12.0 which has GHSA-4xgf-cpjx-pc3j; override to >=2.14.2.
 # setuptools in base conda env: base image ships 82.0.0 which has GHSA-h35f-9h28-mq5c;
 #   override to >=83.0.0.
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'aiohttp>=3.14.0' 'click>=8.3.3' 'idna>=3.15' 'PyJWT>=2.13.0' 'cryptography>=50.0.0' 'pydantic-settings>=2.14.2' 'setuptools>=83.0.0'
+RUN conda run -n base python -m pip install --progress-bar off --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'aiohttp>=3.14.0' 'click>=8.3.3' 'idna>=3.15' 'PyJWT>=2.13.0' 'cryptography>=50.0.0' 'pydantic-settings>=2.14.2' 'setuptools>=83.0.0'
 # aiohttp in ptca env: same CVEs as base env — GHSA-jg22-mg44-37j8 and GHSA-hg6j-4rv6-33pg.
 # pyarrow in ptca env: ships 20.0.0 which has GHSA-rgxp-2hwp-jwgg; override to >=23.0.1.
 # cryptography in ptca env: pinned transitive/base-image dep brought in by the base ACPT image;
 #   prior override installed 48.0.1, which has GHSA-g6cj-pr64-35w5; override to >=50.0.0.
 # setuptools in ptca env: direct requirement below covers GHSA-h35f-9h28-mq5c;
 #   keep both conda envs consistent.
-RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' 'pyarrow>=23.0.1' 'cryptography>=50.0.0' 'setuptools>=83.0.0'
+RUN conda run -n ptca python -m pip install --progress-bar off --no-cache-dir --upgrade 'aiohttp>=3.14.0' 'pyarrow>=23.0.1' 'cryptography>=50.0.0' 'setuptools>=83.0.0'
 # torch in ptca env: inherited from the ACPT torch 2.8 CUDA 12.6 base image and
 #   flagged by GHSA-vgrw-7cvw-pwgx, GHSA-qfhq-4f3w-5fph, and GHSA-rrmf-rvhw-rf47.
-RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 'torch>=2.13.0'
+RUN conda run -n ptca python -m pip install --progress-bar off --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 'torch>=2.13.0'
 # The conda pip upgrade can reinstall the rattler solver. The base image does
 # not need it for runtime, and its compiled extension currently carries Rust CVEs.
 RUN conda config --system --set solver classic \
