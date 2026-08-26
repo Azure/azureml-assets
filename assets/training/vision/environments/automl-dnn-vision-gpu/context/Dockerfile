@@ -16,11 +16,11 @@ COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 /artif
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get install -y --no-install-recommends \
-        curl=7.81.0-1ubuntu1.26 \
+        curl=7.81.0-1ubuntu1.27 \
         libsystemd0=249.11-0ubuntu3.22 \
         libudev1=249.11-0ubuntu3.22 \
-        libcurl3-gnutls=7.81.0-1ubuntu1.26 \
-        libcurl4=7.81.0-1ubuntu1.26 \
+        libcurl3-gnutls=7.81.0-1ubuntu1.27 \
+        libcurl4=7.81.0-1ubuntu1.27 \
         libnghttp2-14=1.43.0-1ubuntu0.4 \
         libnginx-mod-http-echo=1.18.0-6ubuntu14.20 \
         libnginx-mod-http-geoip2=1.18.0-6ubuntu14.20 \
