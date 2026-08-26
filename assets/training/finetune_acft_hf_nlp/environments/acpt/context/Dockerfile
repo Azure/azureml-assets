@@ -21,7 +21,7 @@ RUN apt-get update && apt-get -y upgrade && \
       liblzma5 \
       libsqlite3-0=3.37.2-2ubuntu0.7 \
       tar=1.34+dfsg-1ubuntu0.1.22.04.6 \
-      wget=1.21.2-2ubuntu1.4 \
+      wget=1.21.2-2ubuntu1.5 \
       xz-utils && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -34,7 +34,9 @@ COPY finetune_run.py /azureml/finetune/run.py
 RUN pip install mpi4py==4.1.1 --no-cache-dir
 RUN pip install -r requirements.txt --no-cache-dir
 
-RUN pip install mlflow==3.11.1
+# sqlparse is a transitive dependency of mlflow; pin to >=0.6.0 for GHSA-f2ff-p2ww-7p4p,
+# GHSA-prg7-hcfm-mfcr, GHSA-3496-9g83-7v6x, and GHSA-pwgv-4x5q-6m9f.
+RUN pip install --no-cache-dir mlflow==3.15.0 'sqlparse>=0.6.0'
 RUN pip install nltk==3.10.0 --no-cache-dir
 RUN python -m nltk.downloader punkt
 RUN python -m nltk.downloader punkt_tab
@@ -50,7 +52,7 @@ RUN pip install --upgrade --no-cache-dir 'fastmcp>=3.2.0'
 # Mako: transitive dep (mlflow → alembic → Mako); alembic has no version constraint; override needed (GHSA-v92g-xgxw-vvmm)
 # python-dotenv: transitive dep (fastmcp → python-dotenv); fastmcp 3.2.4 uses >=1.1.0; override needed (GHSA-mf9w-mj56-hr94)
 # onnx: azureml-acft-accelerator 0.0.89 caps onnx<=1.17.0; override needed for GHSA-3r9x-f23j-gc73, GHSA-hqmj-h5c6-369m etc.
-# skops: transitive dep (mlflow → skops); mlflow 3.11.1 declares 'skops<1' (loose floor), so pip
+# skops: transitive dep (mlflow → skops); mlflow declares 'skops<1' (loose floor), so pip
 #        resolves to 0.11.0 which has CVE-2025-54412/54413/54886
 #        (GHSA-m7f4-hrc6-fwg3, GHSA-4v6w-xpmh-gfgp, GHSA-378x-6p4f-8jgm); override to >=0.13.0
 # urllib3: transitive dep brought in by many parents (requests, botocore, kubernetes, etc.); the closest
@@ -58,13 +60,18 @@ RUN pip install --upgrade --no-cache-dir 'fastmcp>=3.2.0'
 #          not pull urllib3>=2.7.0; direct override required for GHSA-mf9v-mfxr-j63j, GHSA-qccp-gfcp-xxvc
 RUN pip install --upgrade --no-cache-dir pyasn1==0.6.4 'python-multipart>=0.0.26' 'Mako>=1.3.11' 'python-dotenv>=1.2.2' 'onnx>=1.21.0' 'skops>=0.13.0' 'urllib3>=2.7.0'
 
-# setuptools is inherited from the ACPT base image in both conda envs; override to fix GHSA-h35f-9h28-mq5c.
+# setuptools is inherited from the ACPT base image in both conda envs; upgrade pip metadata and
+# override setuptools to fix GHSA-5rjg-fvgr-3xxf/GHSA-h35f-9h28-mq5c.
 RUN conda install -n base -c conda-forge --no-deps -y 'setuptools>=83.0.0' && \
     conda install -n ptca -c conda-forge --no-deps -y 'setuptools>=83.0.0' && \
-    /opt/conda/bin/python -m pip install --upgrade --no-cache-dir 'setuptools==83.0.0' && \
-    conda run -n ptca python -m pip install --upgrade --no-cache-dir 'setuptools==83.0.0' && \
+    /opt/conda/bin/python -m pip install --upgrade --no-cache-dir 'pip>=26.1' 'setuptools==83.0.0' && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir 'pip>=26.1' 'setuptools==83.0.0' && \
     rm -rf /opt/conda/lib/python*/site-packages/setuptools-8[0-2].*.dist-info \
-           /opt/conda/envs/*/lib/python*/site-packages/setuptools-8[0-2].*.dist-info
+           /opt/conda/envs/*/lib/python*/site-packages/setuptools-8[0-2].*.dist-info \
+           /opt/conda/lib/python*/site-packages/pip/_vendor/bom.cdx.json \
+           /opt/conda/lib/python*/site-packages/pip/_vendor/vendor.txt \
+           /opt/conda/envs/*/lib/python*/site-packages/pip/_vendor/bom.cdx.json \
+           /opt/conda/envs/*/lib/python*/site-packages/pip/_vendor/vendor.txt
 
 # msgpack is inherited from the ACPT base image in the base conda env; override to fix GHSA-6v7p-g79w-8964.
 RUN /opt/conda/bin/python -m pip install --upgrade --no-cache-dir 'msgpack>=1.2.1' && \

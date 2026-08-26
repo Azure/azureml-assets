@@ -82,6 +82,31 @@ ARTIFACTS = (
         "jar_sha1_env": "LOG4J_CORE_JAR_SHA1",
         "pom_sha1_env": "LOG4J_CORE_POM_SHA1",
     },
+    {
+        "name": "httpcore5",
+        "group_path": "org/apache/httpcomponents/core5",
+        "maven_prefix": "META-INF/maven/org.apache.httpcomponents.core5/httpcore5/",
+        "entry_prefixes": (
+            "org/apache/hc/core5/annotation/",
+            "org/apache/hc/core5/concurrent/",
+            "org/apache/hc/core5/function/",
+            "org/apache/hc/core5/http/",
+            "org/apache/hc/core5/io/",
+            "org/apache/hc/core5/net/",
+            "org/apache/hc/core5/pool/",
+            "org/apache/hc/core5/reactor/",
+            "org/apache/hc/core5/ssl/",
+            "org/apache/hc/core5/testing/",
+            "org/apache/hc/core5/util/",
+        ),
+        "entry_fragments": (
+            "/org/apache/hc/core5/",
+            "/META-INF/maven/org.apache.httpcomponents.core5/httpcore5/",
+        ),
+        "version_env": "HTTPCORE5_VERSION",
+        "jar_sha1_env": "HTTPCORE5_JAR_SHA1",
+        "pom_sha1_env": "HTTPCORE5_POM_SHA1",
+    },
 )
 
 
