@@ -48,6 +48,8 @@ RUN printf 'Acquire::Retries "5";\n' > /etc/apt/apt.conf.d/80-retries && \
         libpython3.10-minimal \
         libpython3.10-stdlib \
         libsqlite3-0 \
+        libsystemd0 \
+        libudev1 \
         locales \
         dotnet-host-8.0 \
         dotnet-hostfxr-8.0 \
@@ -55,6 +57,7 @@ RUN printf 'Acquire::Retries "5";\n' > /etc/apt/apt.conf.d/80-retries && \
         python3.10 \
         python3.10-minimal \
         tar \
+        udev \
         wget && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
@@ -75,10 +78,23 @@ RUN apt-get update && \
 # GHSA-h35f-9h28-mq5c.
 # msgpack>=1.2.1: transitive dep of azureml-mlflow -> mlflow-skinny; fixes
 # GHSA-6v7p-g79w-8964.
+# sqlparse>=0.6.0: transitive dep of azureml-mlflow -> mlflow-skinny; fixes
+# GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr, GHSA-3496-9g83-7v6x, and
+# GHSA-pwgv-4x5q-6m9f.
+# NOT FIXED HERE - torch (GHSA-vgrw-7cvw-pwgx, GHSA-qfhq-4f3w-5fph,
+#   GHSA-rrmf-rvhw-rf47): torch is owned by the ACPT base image
+#   (aifx/acpt/stable-ubuntu2204-cu126-py310-torch280), which ships a matched
+#   torch/torchvision/torchaudio set plus a transformers build compiled against
+#   it. Overriding torch alone leaves torchvision/torchaudio pinned to
+#   torch==2.8.0 and breaks `transformers` at import time; upgrading the whole
+#   stack is not possible either, because torch 2.13.0 has no matching
+#   torchaudio release and torchvision 0.28.0 removes torchvision.io.VideoReader
+#   which the base-image transformers still imports. These CVEs must therefore
+#   be remediated in the ACPT base image, not in this curated layer.
 # urllib3>=2.7.0: GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j.
 # idna>=3.15: GHSA-65pc-fj4g-8rjx.
 # aiohttp>=3.14.3: GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8,
-#   GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, GHSA-mfx4-hv73-q22v.
+# GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, GHSA-mfx4-hv73-q22v.
 # cryptography>=50.0.0: pinned transitive dep of azureml-core; brought in by
 #   base image and AzureML SDK dependencies, fixes GHSA-537c-gmf6-5ccf and
 #   GHSA-g6cj-pr64-35w5.
@@ -86,7 +102,7 @@ RUN apt-get update && \
 #   azureml-dataset-runtime 1.62.0 caps pyarrow<21, so this post-install
 #   security override fixes GHSA-rgxp-2hwp-jwgg.
 RUN conda run -n ptca python -m pip install --upgrade --no-cache-dir \
-        'setuptools>=83.0.0' 'msgpack>=1.2.1' && \
+        'setuptools>=83.0.0' 'msgpack>=1.2.1' 'sqlparse>=0.6.0' && \
     find /opt/conda/envs/ptca -type d \( \
         -name 'setuptools-70.3.0.dist-info' -o \
         -name 'setuptools-70.3.0-py*.egg-info' -o \
@@ -99,7 +115,7 @@ RUN conda run -n ptca python -m pip install --upgrade --no-cache-dir \
         'cryptography>=50.0.0' 'pyarrow>=23.0.1' && \
     conda clean -a -y && rm -rf /opt/conda/pkgs/
 
-# Fix base conda env vulnerabilities (python 3.14). Parent packages still expose
+# Fix base conda env vulnerabilities (python 3.13). Parent packages still expose
 # loose vulnerable floors, so these direct floors are required:
 # setuptools>=83.0.0: conda requires setuptools>=60.0.0 only.
 # python-dotenv>=1.2.2: pydantic-settings 2.14.1 requires >=0.21.0.
@@ -108,7 +124,7 @@ RUN conda run -n ptca python -m pip install --upgrade --no-cache-dir \
 # click>=8.3.3: typer 0.25.1 requires >=8.2.1; mlflow-skinny 3.12.0 requires
 #   <9,>=7.0.
 # aiohttp>=3.14.3: GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8,
-#   GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, GHSA-mfx4-hv73-q22v.
+# GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, GHSA-mfx4-hv73-q22v.
 # cryptography>=50.0.0: pinned transitive dep of the base image, fixes
 #   GHSA-537c-gmf6-5ccf and GHSA-g6cj-pr64-35w5.
 # msgpack>=1.2.1: transitive dep of azureml-mlflow -> mlflow-skinny; fixes

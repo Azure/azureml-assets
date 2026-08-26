@@ -41,6 +41,10 @@ RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.5
 #   setuptools is a build dependency with no parent that pins it.
 # torch 2.8.0+cu126 -> >=2.10.0 (GHSA-vgrw-7cvw-pwgx, GHSA-qfhq-4f3w-5fph):
 #   inherited from the ACPT base image ptca conda environment.
+# numpy<2 is NOT a security floor: onnx pulls ml_dtypes, which as of 0.6.0 requires
+#   numpy>=2.0.0. Without this cap pip silently upgrades numpy to 2.x, leaving the
+#   prebuilt pandas wheel binary-incompatible so the image fails on import pandas with
+#   "ValueError: numpy.dtype size changed".
 # Override onnx to fix GHSA-cmw6-hcpp-c6jp, GHSA-538c-55jv-c5g9, GHSA-q56x-g2fj-4rj6,
 #   GHSA-p433-9wv8-28xj, GHSA-3r9x-f23j-gc73, GHSA-hqmj-h5c6-369m.
 #   Root cause: azureml-automl-runtime==1.62.0 is the latest release as of
@@ -59,17 +63,22 @@ RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.5
 #   brought in by the ACPT base image ptca conda environment.
 # GitPython -> >=3.1.57 (GHSA-3f7w-8rr8-f37f, GHSA-539m-9xh6-q6rr,
 #   GHSA-p538-c434-8v24): pinned transitive dep of AzureML/MLflow.
+# sqlparse -> >=0.6.0 (GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr, GHSA-3496-9g83-7v6x,
+#   GHSA-pwgv-4x5q-6m9f): pinned transitive dep of MLflow; no parent release floors
+#   the patched version, so direct override is required.
 RUN conda install -p /opt/conda/envs/ptca -c conda-forge -y 'pip>=26.1.2' && \
     /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
     'setuptools>=83.0.0' \
     'torch>=2.10.0' \
+    'numpy<2' \
     'onnx>=1.21.0' \
     'bokeh>=3.8.2' \
     'distributed>=2026.1.0' \
     'aiohttp>=3.14.0' \
     'pyarrow>=23.0.1' \
     'cryptography>=50.0.0' \
-    'GitPython>=3.1.57' && \
+    'GitPython>=3.1.57' \
+    'sqlparse>=0.6.0' && \
     rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0.1-*.json \
           /opt/conda/envs/ptca/conda-meta/pip-26.1.1-*.json
 

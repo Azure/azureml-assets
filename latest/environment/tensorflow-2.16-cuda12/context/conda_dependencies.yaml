@@ -28,5 +28,7 @@ dependencies:
   - debugpy~=1.6.3
   - idna>=3.15  # pinned transitive dep of requests/azureml packages; fixes GHSA-65pc-fj4g-8rjx
   - msgpack>=1.2.1  # pinned transitive dep of azureml packages; fixes GHSA-6v7p-g79w-8964
+  - GitPython>=3.1.58  # pinned transitive dep of azureml-core; fixes GHSA-jm78-9fvv-mhgr, GHSA-hmq2-w58f-27jc, GHSA-hh9p-6wh2-4mfc, GHSA-4gmw-gg2m-w46p, GHSA-9rj7-rf2p-w77r, and GHSA-wvpp-8hx9-p66j
+  - sqlparse>=0.6.0  # pinned transitive dep of azureml-mlflow/mlflow; fixes GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr, GHSA-3496-9g83-7v6x, and GHSA-pwgv-4x5q-6m9f
   - flask-cors==6.0.0
   - pillow>=12.2.0  # GHSA-whj4-6x5x-4v2j - bumped from 12.1.1
