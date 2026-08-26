@@ -26,8 +26,10 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
 # Fix Trivy/Qualys vuln from pip's internally vendored setuptools (GHSA-5rjg-fvgr-3xxf, CVE-2025-47273).
 # pip bundles a stale-versioned manifest of setuptools under pip/_vendor for its own internal use only;
 # the real installed setuptools package is unaffected.
-# Remove the stale manifest entry so scanners stop flagging it as a live vulnerable component.
-RUN find /opt/miniconda $AZUREML_CONDA_ENVIRONMENT_PATH -path '*/pip/_vendor/vendor.txt' \
+# Remove Conda's retained package cache before patching pip metadata; modifying cached files breaks
+# integrity verification when Conda later re-links them into an environment.
+RUN rm -rf /opt/miniconda/pkgs && \
+    find /opt/miniconda $AZUREML_CONDA_ENVIRONMENT_PATH -path '*/pip/_vendor/vendor.txt' \
         -exec sed -i '/^setuptools==/d' {} + && \
     find /opt/miniconda $AZUREML_CONDA_ENVIRONMENT_PATH -path '*/pip/_vendor/bom.cdx.json' -delete
 
