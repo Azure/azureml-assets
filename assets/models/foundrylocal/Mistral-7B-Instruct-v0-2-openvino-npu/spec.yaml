@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Mistral-7B-Instruct-v0-2-openvino-npu
 path: ./
-isArchived: true
+isArchived: false
 tags:
   contextLength: 4224
   capabilities: ''
@@ -11,6 +11,7 @@ system_metadata:
   publisher: Microsoft
   directoryPath: v3
   foundryLocal: ''
+  deploymentOptions: ['Foundry Local on Devices']
   inputModalities:
   - text
   license: apache-2.0

@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen2.5-coder-7b-instruct-generic-cpu
 path: ./
-isArchived: true
+isArchived: false
 tags:
   capabilities: tool-calling
   supportsReasoning: ''
@@ -11,6 +11,7 @@ system_metadata:
   publisher: Microsoft
   directoryPath: v4
   foundryLocal: ''
+  deploymentOptions: ['Foundry Local on Devices']
   inputModalities:
   - text
   license: apache-2.0

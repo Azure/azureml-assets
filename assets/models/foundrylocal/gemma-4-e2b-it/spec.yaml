@@ -1,7 +1,8 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: gemma-4-e2b-it
 path: ./
-isArchived: true
+isArchived: false
 system_metadata:
   foundryLocal: ''
+  deploymentOptions: ['Foundry Local on Devices']
 version: 1

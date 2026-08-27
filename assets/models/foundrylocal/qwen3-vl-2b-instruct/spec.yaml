@@ -1,7 +1,8 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen3-vl-2b-instruct
 path: ./
-isArchived: true
+isArchived: false
 system_metadata:
   foundryLocal: ''
+  deploymentOptions: ['Foundry Local on Devices']
 version: 1
