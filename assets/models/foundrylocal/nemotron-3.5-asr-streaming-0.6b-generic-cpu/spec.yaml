@@ -1,7 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: nemotron-3.5-asr-streaming-0.6b-generic-cpu
 path: ./
-isArchived: false
 tags:
   capabilities: ''
   supportsReasoning: ''

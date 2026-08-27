@@ -1,7 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: deepseek-r1-distill-qwen-7b
 path: ./
-isArchived: false
 system_metadata:
   foundryLocal: ''
   deploymentOptions: ['Foundry Local on Devices']

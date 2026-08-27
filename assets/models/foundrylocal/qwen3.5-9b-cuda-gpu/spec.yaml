@@ -1,7 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen3.5-9b-cuda-gpu
 path: ./
-isArchived: false
 tags:
   capabilities: reasoning,tool-calling
   supportsReasoning: 'true'

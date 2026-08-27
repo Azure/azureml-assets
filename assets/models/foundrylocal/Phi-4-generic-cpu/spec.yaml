@@ -1,7 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Phi-4-generic-cpu
 path: ./
-isArchived: false
 tags:
   contextLength: 16384
   capabilities: ''

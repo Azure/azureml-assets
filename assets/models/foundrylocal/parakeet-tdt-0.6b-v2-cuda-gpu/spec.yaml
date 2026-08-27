@@ -1,7 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: parakeet-tdt-0.6b-v2-cuda-gpu
 path: ./
-isArchived: false
 tags:
   capabilities: ''
   supportsReasoning: ''

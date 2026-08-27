@@ -1,7 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen3-0.6b-pp-finetuned-generic-cpu
 path: ./
-isArchived: false
 tags:
   contextLength: 40960
   capabilities: ''

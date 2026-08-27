@@ -1,7 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Phi-3.5-mini-instruct-generic-cpu
 path: ./
-isArchived: false
 tags:
   contextLength: 131072
   capabilities: ''

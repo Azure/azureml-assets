@@ -1,7 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: phi-4-openvino-gpu
 path: ./
-isArchived: false
 tags:
   contextLength: 16384
   capabilities: ''

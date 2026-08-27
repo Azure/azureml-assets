@@ -1,7 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: DeepSeek-R1-Distill-Qwen-7B-trtrtx-gpu
 path: ./
-isArchived: false
 tags:
   capabilities: reasoning
   supportsReasoning: 'true'

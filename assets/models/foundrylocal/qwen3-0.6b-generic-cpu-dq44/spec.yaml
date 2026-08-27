@@ -1,7 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen3-0.6b-generic-cpu-dq44
 path: ./
-isArchived: false
 tags:
   contextLength: 40960
   capabilities: reasoning

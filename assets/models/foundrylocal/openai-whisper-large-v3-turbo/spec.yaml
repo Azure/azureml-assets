@@ -1,7 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: openai-whisper-large-v3-turbo
 path: ./
-isArchived: false
 system_metadata:
   foundryLocal: ''
   deploymentOptions: ['Foundry Local on Devices']

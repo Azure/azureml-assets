@@ -1,7 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Phi-4-reasoning-generic-gpu
 path: ./
-isArchived: false
 tags:
   capabilities: reasoning
   supportsReasoning: 'true'

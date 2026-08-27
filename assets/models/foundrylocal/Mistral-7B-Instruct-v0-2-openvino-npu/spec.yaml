@@ -1,7 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Mistral-7B-Instruct-v0-2-openvino-npu
 path: ./
-isArchived: false
 tags:
   contextLength: 4224
   capabilities: ''

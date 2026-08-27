@@ -1,7 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen2.5-coder-1.5b-instruct-openvino-npu
 path: ./
-isArchived: false
 tags:
   capabilities: tool-calling
   supportsReasoning: ''

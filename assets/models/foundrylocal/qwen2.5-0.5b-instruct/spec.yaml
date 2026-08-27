@@ -1,7 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen2.5-0.5b-instruct
 path: ./
-isArchived: false
 system_metadata:
   foundryLocal: ''
   deploymentOptions: ['Foundry Local on Devices']

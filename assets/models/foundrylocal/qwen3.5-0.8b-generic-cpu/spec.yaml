@@ -1,7 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen3.5-0.8b-generic-cpu
 path: ./
-isArchived: false
 tags:
   capabilities: reasoning,tool-calling
   supportsReasoning: 'true'

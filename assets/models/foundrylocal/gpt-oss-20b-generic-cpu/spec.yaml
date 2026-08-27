@@ -1,7 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: gpt-oss-20b-generic-cpu
 path: ./
-isArchived: false
 tags:
   contextLength: 131072
   capabilities: reasoning

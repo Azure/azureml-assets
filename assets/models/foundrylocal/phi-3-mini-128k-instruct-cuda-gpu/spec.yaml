@@ -1,7 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Phi-3-mini-128k-instruct-cuda-gpu
 path: ./
-isArchived: false
 tags:
   contextLength: 131072
   capabilities: ''

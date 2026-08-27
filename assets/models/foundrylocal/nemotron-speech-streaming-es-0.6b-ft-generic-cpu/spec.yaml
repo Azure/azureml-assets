@@ -1,7 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: nemotron-speech-streaming-es-0.6b-ft-generic-cpu
 path: ./
-isArchived: false
 tags:
   capabilities: ''
   supportsReasoning: ''

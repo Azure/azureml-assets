@@ -1,7 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: openai-whisper-base-cuda-gpu
 path: ./
-isArchived: false
 tags:
   contextLength: 448
   capabilities: ''

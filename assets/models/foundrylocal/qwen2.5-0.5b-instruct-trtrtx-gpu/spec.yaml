@@ -1,7 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen2.5-0.5b-instruct-trtrtx-gpu
 path: ./
-isArchived: false
 tags:
   contextLength: 32768
   capabilities: ''

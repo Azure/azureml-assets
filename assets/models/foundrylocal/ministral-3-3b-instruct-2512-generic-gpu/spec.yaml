@@ -1,7 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: ministral-3-3b-instruct-2512-generic-gpu
 path: ./
-isArchived: false
 tags:
   capabilities: tool-calling
   supportsReasoning: ''
