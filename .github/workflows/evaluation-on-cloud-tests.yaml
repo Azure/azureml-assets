@@ -28,10 +28,10 @@ jobs:
 
     steps:
       - name: Clone branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@a37ce9120846195fa4ece8f58b268e6043cb2f26 # v3.7.0
 
       - name: Use Python 3.10 or newer
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@7f4fc3e22c37d6ff65e88745f38bd3157c663f7c # v4.9.1
         with:
           python-version: '>=3.10'
 
@@ -50,7 +50,7 @@ jobs:
         run: conda run -p $conda_env_prefix python -m pytest $eval_on_cloud_tests_dir --tb=native --junitxml=$pytest_reports/test-result.xml -x -n 1 -ra --show-capture=no
 
       - name: Publish test results
-        uses: EnricoMi/publish-unit-test-result-action@v2
+        uses: EnricoMi/publish-unit-test-result-action@d0a4676d0e0b938bc201470d88276b7c74c712b3 # v2.24.0
         if: always()
         with:
           check_name: Test Results for ${{ github.workflow }}
