@@ -708,6 +708,15 @@ class ToolUseCompositeEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             f"{self._RESULT_KEY}_properties": aggregate_properties,
             f"{self._RESULT_KEY}_evaluators": normalized_evaluators,
         }
+        for name, member_output in normalized_evaluators.items():
+            member_passed = member_output.get("passed")
+            result[f"{name}_score"] = member_output.get("score")
+            result[f"{name}_reason"] = member_output.get("reason")
+            result[f"{name}_threshold"] = member_output.get("threshold")
+            result[f"{name}_status"] = member_output.get("status")
+            if member_passed is not None:
+                result[f"{name}_result"] = EVALUATION_PASS_FAIL_MAPPING[member_passed]
+
         result.update({f"{self._RESULT_KEY}_{key}": value for key, value in token_metadata.items()})
         return result
 

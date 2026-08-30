@@ -143,8 +143,8 @@ class TestToolUseCompositeEvaluatorBehavior:
 
     # region output shape
 
-    def test_all_five_evaluators_are_nested_for_query_response(self):
-        """The primary score and all five raw evaluator objects are present under the aggregate result."""
+    def test_all_five_evaluators_are_nested_and_flattened_for_query_response(self):
+        """Member objects remain nested and expose converter-compatible flat keys."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
         result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE, tool_definitions=VALID_TOOL_DEFINITIONS)
         assert result["tool_use_composite"] == 1
@@ -161,6 +161,10 @@ class TestToolUseCompositeEvaluatorBehavior:
                 evaluator["max"] for evaluator in _EVALUATORS if evaluator["name"] == name
             )
             assert evaluators[name]["status"] == "completed"
+            for field in ("score", "reason", "threshold", "status"):
+                assert result[f"{name}_{field}"] == evaluators[name][field]
+            assert result[f"{name}_result"] == "pass"
+            assert f"{name}_passed" not in result
 
     def test_all_five_evaluators_present_messages(self):
         """All five evaluator result objects are nested for messages (multi-turn) input."""
@@ -197,6 +201,7 @@ class TestToolUseCompositeEvaluatorBehavior:
         assert result["tool_use_composite_evaluators"]["tool_call_accuracy"]["threshold"] == 4
         assert result["tool_use_composite_evaluators"]["tool_call_accuracy"]["passed"] is False
         assert result["tool_use_composite_evaluators"]["tool_selection"]["score"] == 1
+        assert result["tool_call_accuracy_result"] == "fail"
 
     @pytest.mark.parametrize("score", [True, 6])
     def test_invalid_member_score_raises(self, score):
@@ -227,6 +232,10 @@ class TestToolUseCompositeEvaluatorBehavior:
             )
             assert result["tool_use_composite_evaluators"][name]["status"] == "skipped"
             assert result["tool_use_composite_evaluators"][name]["passed"] is None
+            assert result[f"{name}_score"] is None
+            assert result[f"{name}_status"] == "skipped"
+            assert f"{name}_result" not in result
+            assert f"{name}_passed" not in result
 
     def test_mixed_skip_and_completed_evaluators(self):
         """One evaluator can be skipped while the others are completed, independently."""

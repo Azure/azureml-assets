@@ -133,8 +133,8 @@ class TestQualityCompositeEvaluatorBehavior:
 
     # region output shape and aggregation
 
-    def test_primary_score_and_raw_evaluator_objects_are_nested(self):
-        """Aggregate output keeps raw member results only in the nested evaluator map."""
+    def test_primary_score_and_member_results_are_flattened(self):
+        """Aggregate output includes nested member results and converter-compatible flat keys."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
         result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE)
         assert result["quality_composite"] == 1
@@ -148,6 +148,10 @@ class TestQualityCompositeEvaluatorBehavior:
         for name in _EVALUATOR_NAMES:
             assert name not in result
             assert evaluators[name]["status"] == "completed"
+            for field in ("score", "reason", "threshold", "status"):
+                assert result[f"{name}_{field}"] == evaluators[name][field]
+            assert result[f"{name}_result"] == "pass"
+            assert f"{name}_passed" not in result
 
     def test_multi_turn_raw_failed_turn_is_preserved(self):
         """Multi-turn raw evaluator results preserve their failed-turn metadata."""
@@ -190,6 +194,7 @@ class TestQualityCompositeEvaluatorBehavior:
         assert result["quality_composite_evaluators"]["fluency"]["threshold"] == 4
         assert result["quality_composite_evaluators"]["fluency"]["passed"] is False
         assert result["quality_composite_evaluators"]["coherence"]["score"] == 5
+        assert result["fluency_result"] == "fail"
 
     # endregion
 
@@ -211,6 +216,10 @@ class TestQualityCompositeEvaluatorBehavior:
             )
             assert result["quality_composite_evaluators"][name]["status"] == "skipped"
             assert result["quality_composite_evaluators"][name]["passed"] is None
+            assert result[f"{name}_score"] is None
+            assert result[f"{name}_status"] == "skipped"
+            assert f"{name}_result" not in result
+            assert f"{name}_passed" not in result
 
     def test_intermediate_response_returns_not_applicable(self):
         """An intermediate function-call response is skipped without invoking the LLM."""
