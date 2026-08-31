@@ -1,49 +1,53 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+isArchived: true
 name: qwen2.5-0.5b-instruct-openvino-npu
 path: ./
-isArchived: true
-tags:
-  capabilities: tool-calling
-  supportsReasoning: ''
-  contextLength: 4224
 system_metadata:
   alias: qwen2.5-0.5b
-  publisher: Microsoft
   directoryPath: v5
   foundryLocal: ''
   inputModalities:
   - text
   license: apache-2.0
-  licenseDescription: This model is provided under the License Terms available at <https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/blob/main/LICENSE>.
+  licenseDescription: This model is provided under the License Terms available at
+    <https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/blob/main/LICENSE>.
   maxOutputTokens: 2048
+  minFLVersion: 0.0.0
   outputModalities:
   - text
-  parameterSchema: '{"enabled": [{"name": "temperature", "default": 1.0}, {"name": "top_p", "default": 0.8}, {"name": "top_k", "default": 40}, {"name": "presence_penalty", "default": 1.1}]}'
-  promptTemplate: '{"system": "<|im_start|>system\n{Content}<|im_end|>", "user": "<|im_start|>user\n{Content}<|im_end|>", "assistant": "<|im_start|>assistant\n{Content}<|im_end|>", "prompt": "<|im_start|>user\n{Content}<|im_end|>\n<|im_start|>assistant"}'
+  parameterSchema: '{"enabled": [{"name": "temperature", "default": 1.0}, {"name":
+    "top_p", "default": 0.8}, {"name": "top_k", "default": 40}, {"name": "presence_penalty",
+    "default": 1.1}]}'
+  platformCapabilities:
+    enableMaap: false
+  promptTemplate: '{"system": "<|im_start|>system\n{Content}<|im_end|>", "user": "<|im_start|>user\n{Content}<|im_end|>",
+    "assistant": "<|im_start|>assistant\n{Content}<|im_end|>", "prompt": "<|im_start|>user\n{Content}<|im_end|>\n<|im_start|>assistant"}'
+  publisher: Microsoft
+  reasoningEnd: ''
+  reasoningStart: ''
   supportsToolCalling: true
+  tasks:
+    inferenceTasks:
+    - chat-completion
   toolCallEnd: </tool_call>
   toolCallStart: <tool_call>
   toolRegisterEnd: </tools>
   toolRegisterStart: <tools>
   toolResponseEnd: </tool_response>
   toolResponseStart: <tool_response>
-  tasks:
-    inferenceTasks:
-    - chat-completion
-  platformCapabilities:
-    enableMaap: false
-  reasoningStart: ''
-  reasoningEnd: ''
-  minFLVersion: 0.0.0
+tags:
+  capabilities: tool-calling
+  contextLength: 4224
+  supportsReasoning: ''
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/qwen2.5-0.5b-instruct/versions/1
   variantMetadata:
-    modelType: ONNX
-    quantization:
-    - RTN
     device: npu
     executionProvider: OpenVINOExecutionProvider
     fileSizeBytes: 347110223
+    modelType: ONNX
+    quantization:
+    - RTN
     vRamFootprintBytes: 347110223
 version: 5

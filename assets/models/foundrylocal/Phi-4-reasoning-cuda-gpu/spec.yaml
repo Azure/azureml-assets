@@ -1,40 +1,41 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+isArchived: true
 name: Phi-4-reasoning-cuda-gpu
 path: ./
-isArchived: true
-tags:
-  capabilities: reasoning
-  supportsReasoning: 'true'
-  contextLength: 32768
 system_metadata:
   alias: phi-4-reasoning
-  publisher: Microsoft
   directoryPath: v1
   foundryLocal: ''
   inputModalities:
   - text
   license: MIT
-  licenseDescription: This model is provided under the License Terms available at <https://huggingface.co/microsoft/phi-4/blob/main/LICENSE>.
+  licenseDescription: This model is provided under the License Terms available at
+    <https://huggingface.co/microsoft/phi-4/blob/main/LICENSE>.
   maxOutputTokens: 2048
+  minFLVersion: 0.0.0
   outputModalities:
   - text
+  platformCapabilities:
+    enableMaap: false
+  publisher: Microsoft
+  reasoningEnd: </think>
+  reasoningStart: <think>
   tasks:
     inferenceTasks:
     - chat-completion
-  platformCapabilities:
-    enableMaap: false
-  reasoningStart: <think>
-  reasoningEnd: </think>
-  minFLVersion: 0.0.0
+tags:
+  capabilities: reasoning
+  contextLength: 32768
+  supportsReasoning: 'true'
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/Phi-4-reasoning/versions/1
   variantMetadata:
-    modelType: ONNX
-    quantization:
-    - RTN
     device: gpu
     executionProvider: CUDAExecutionProvider
     fileSizeBytes: 8997956485
+    modelType: ONNX
+    quantization:
+    - RTN
     vRamFootprintBytes: 8998222295
 version: 1

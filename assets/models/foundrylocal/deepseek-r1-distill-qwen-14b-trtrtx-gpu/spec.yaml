@@ -1,41 +1,43 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+isArchived: true
 name: deepseek-r1-distill-qwen-14b-trtrtx-gpu
 path: ./
-isArchived: true
-tags:
-  capabilities: reasoning
-  supportsReasoning: 'true'
-  contextLength: 131072
 system_metadata:
   alias: deepseek-r1-14b
-  publisher: Microsoft
   directoryPath: v2
   foundryLocal: ''
   inputModalities:
   - text
   license: MIT
-  licenseDescription: This model is provided under the License Terms available at <https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-14B/blob/main/LICENSE>.
+  licenseDescription: This model is provided under the License Terms available at
+    <https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-14B/blob/main/LICENSE>.
   maxOutputTokens: 2048
+  minFLVersion: 0.0.0
   outputModalities:
   - text
-  promptTemplate: '{"system": "<|system|>\n{Content}<|end|>", "user": "<|user|>\n{Content}<|end|>", "assistant": "<|assistant|>\n{Content}<|end|>", "prompt": "<|user|>\n{Content}<|end|>\n<|assistant|>"}'
+  platformCapabilities:
+    enableMaap: false
+  promptTemplate: '{"system": "<|system|>\n{Content}<|end|>", "user": "<|user|>\n{Content}<|end|>",
+    "assistant": "<|assistant|>\n{Content}<|end|>", "prompt": "<|user|>\n{Content}<|end|>\n<|assistant|>"}'
+  publisher: Microsoft
+  reasoningEnd: </think>
+  reasoningStart: <think>
   tasks:
     inferenceTasks:
     - chat-completion
-  platformCapabilities:
-    enableMaap: false
-  reasoningStart: <think>
-  reasoningEnd: </think>
-  minFLVersion: 0.0.0
+tags:
+  capabilities: reasoning
+  contextLength: 131072
+  supportsReasoning: 'true'
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/deepseek-r1-distill-qwen-14b/versions/1
   variantMetadata:
-    modelType: ONNX
-    quantization:
-    - RTN
     device: gpu
     executionProvider: NvTensorRTRTXExecutionProvider
     fileSizeBytes: 10554882129
+    modelType: ONNX
+    quantization:
+    - RTN
     vRamFootprintBytes: 10555257559
 version: 2

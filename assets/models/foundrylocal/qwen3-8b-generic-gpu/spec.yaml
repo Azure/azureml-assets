@@ -1,48 +1,50 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+isArchived: true
 name: qwen3-8b-generic-gpu
 path: ./
-isArchived: true
-tags:
-  capabilities: reasoning,tool-calling
-  supportsReasoning: 'true'
-  contextLength: 40960
 system_metadata:
   alias: qwen3-8b
-  publisher: Microsoft
   directoryPath: v2
   foundryLocal: ''
   inputModalities:
   - text
   license: apache-2.0
-  licenseDescription: This model is provided under the License Terms available at <https://huggingface.co/Qwen/Qwen3-8B/blob/main/LICENSE>.
+  licenseDescription: This model is provided under the License Terms available at
+    <https://huggingface.co/Qwen/Qwen3-8B/blob/main/LICENSE>.
   maxOutputTokens: 2048
+  minFLVersion: 0.0.0
   outputModalities:
   - text
-  promptTemplate: '{"system": "<|im_start|>system\n{Content}<|im_end|>", "user": "<|im_start|>user\n{Content}<|im_end|>", "assistant": "<|im_start|>assistant\n{Content}<|im_end|>", "prompt": "<|im_start|>user\n{Content}<|im_end|>\n<|im_start|>assistant"}'
+  platformCapabilities:
+    enableMaap: false
+  promptTemplate: '{"system": "<|im_start|>system\n{Content}<|im_end|>", "user": "<|im_start|>user\n{Content}<|im_end|>",
+    "assistant": "<|im_start|>assistant\n{Content}<|im_end|>", "prompt": "<|im_start|>user\n{Content}<|im_end|>\n<|im_start|>assistant"}'
+  publisher: Microsoft
+  reasoningEnd: </think>
+  reasoningStart: <think>
   supportsToolCalling: true
+  tasks:
+    inferenceTasks:
+    - chat-completion
   toolCallEnd: </tool_call>
   toolCallStart: <tool_call>
   toolRegisterEnd: </tools>
   toolRegisterStart: <tools>
   toolResponseEnd: </tool_response>
   toolResponseStart: <tool_response>
-  tasks:
-    inferenceTasks:
-    - chat-completion
-  platformCapabilities:
-    enableMaap: false
-  reasoningStart: <think>
-  reasoningEnd: </think>
-  minFLVersion: 0.0.0
+tags:
+  capabilities: reasoning,tool-calling
+  contextLength: 40960
+  supportsReasoning: 'true'
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/qwen3-8b/versions/1
   variantMetadata:
-    modelType: ONNX
-    quantization:
-    - RTN
     device: gpu
     executionProvider: WebGPUExecutionProvider
     fileSizeBytes: 6446815751
+    modelType: ONNX
+    quantization:
+    - RTN
     vRamFootprintBytes: 6446815751
 version: 2

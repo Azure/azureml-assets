@@ -1,63 +1,44 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+isArchived: true
 name: Phi-3-medium-128k-instruct
 path: ./
-isArchived: true
-tags:
-  _aml_system_vanity_registry: azureml-phi
-  model_specific_defaults:
-    apply_deepspeed: 'true'
-    deepspeed_stage: 3
-    apply_lora: 'false'
-    apply_ort: 'false'
-    precision: 16
-    ignore_mismatched_sizes: 'false'
-    num_train_epochs: 1
-    per_device_train_batch_size: 4
-    per_device_eval_batch_size: 4
-    gradient_accumulation_steps: 4
-    learning_rate: 5e-6
-    learning_rate_min: 5e-7
-    learning_rate_max: 5e-5
-    lr_scheduler_type: cosine
-    logging_strategy: steps
-    logging_steps: 10
-    save_total_limit: 1
-    max_seq_length: 4096
 system_metadata:
-  deploymentOptions:
-  - UnifiedEndpointMaaS
-  - MaaP
-  - ServerlessMaaS
-  languages:
-  - en
-  sharedComputeCapacityEnabled: true
-  tasks:
-    fineTuningTasks:
-    - chat-completion
-    inferenceTasks:
-    - chat-completion
   SKU:
-    inferenceRecommendedSkus:
-    - Standard_NC48ads_A100_v4
-    - Standard_NC96ads_A100_v4
-    - Standard_ND96amsr_A100_v4
+    finetuneMinSkuSpec: 96|4|880|256
     finetuneRecommendedSkus:
     - Standard_NC96ads_A100_v4
     - Standard_ND96amsr_A100_v4
     inferenceMinSkuSpec: 48|2|440|128
-    finetuneMinSkuSpec: 96|4|880|256
-  publisher: Microsoft
+    inferenceRecommendedSkus:
+    - Standard_NC48ads_A100_v4
+    - Standard_NC96ads_A100_v4
+    - Standard_ND96amsr_A100_v4
   benchmark: quality
+  deploymentOptions:
+  - UnifiedEndpointMaaS
+  - MaaP
+  - ServerlessMaaS
+  deprecation:
+    finetuneDeprecationDate: '2025-06-30T00:00:00.000000Z'
+    finetuneRetirementDate: '2025-08-30T00:00:00.000000Z'
+    inferenceDeprecationDate: '2025-06-30T00:00:00.000000Z'
+    inferenceLegacyDate: '2025-06-09T00:00:00.000000Z'
+    inferenceRetirementDate: '2025-08-30T00:00:00.000000Z'
   displayName: Phi-3-medium instruct (128k)
   evaluation: evaluation.md
+  featured: true
   freePlayground: true
   hiddenLayerScanned: true
+  inferenceSupportedEnvs:
+  - vllm
   inputModalities:
   - text
   keywords:
   - Reasoning
   - Understanding
   - Large context
+  languages:
+  - en
   license: MIT
   licenseDescription: 'Microsoft.
 
@@ -102,28 +83,48 @@ system_metadata:
   notes: notes.md
   outputModalities:
   - text
+  platformCapabilities:
+    enableBatch: false
+    maasInference: true
   playgroundRateLimitTier: low
-  summary: Same Phi-3-medium model, but with a larger context size for RAG or few shot prompting.
-  textContextWindow: 131072
-  trainingDataDate: October 2023
-  featured: true
+  publisher: Microsoft
+  sharedComputeCapacityEnabled: true
+  summary: Same Phi-3-medium model, but with a larger context size for RAG or few
+    shot prompting.
   supportedComputes:
+    finetuneComputes:
+    - Standard_ND96amsr_A100_v4
+    - Standard_NC96ads_A100_v4
     inferenceComputes:
     - Standard_NC48ads_A100_v4
     - Standard_ND96amsr_A100_v4
     - Standard_NC96ads_A100_v4
-    finetuneComputes:
-    - Standard_ND96amsr_A100_v4
-    - Standard_NC96ads_A100_v4
-  deprecation:
-    finetuneDeprecationDate: '2025-06-30T00:00:00.000000Z'
-    finetuneRetirementDate: '2025-08-30T00:00:00.000000Z'
-    inferenceDeprecationDate: '2025-06-30T00:00:00.000000Z'
-    inferenceLegacyDate: '2025-06-09T00:00:00.000000Z'
-    inferenceRetirementDate: '2025-08-30T00:00:00.000000Z'
-  inferenceSupportedEnvs:
-  - vllm
-  platformCapabilities:
-    enableBatch: false
-    maasInference: true
+  tasks:
+    fineTuningTasks:
+    - chat-completion
+    inferenceTasks:
+    - chat-completion
+  textContextWindow: 131072
+  trainingDataDate: October 2023
+tags:
+  _aml_system_vanity_registry: azureml-phi
+  model_specific_defaults:
+    apply_deepspeed: 'true'
+    apply_lora: 'false'
+    apply_ort: 'false'
+    deepspeed_stage: 3
+    gradient_accumulation_steps: 4
+    ignore_mismatched_sizes: 'false'
+    learning_rate: 5e-6
+    learning_rate_max: 5e-5
+    learning_rate_min: 5e-7
+    logging_steps: 10
+    logging_strategy: steps
+    lr_scheduler_type: cosine
+    max_seq_length: 4096
+    num_train_epochs: 1
+    per_device_eval_batch_size: 4
+    per_device_train_batch_size: 4
+    precision: 16
+    save_total_limit: 1
 version: 7

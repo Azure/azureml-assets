@@ -1,41 +1,43 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+isArchived: true
 name: phi-4-openvino-gpu
 path: ./
-isArchived: true
-tags:
-  contextLength: 16384
-  capabilities: ''
-  supportsReasoning: ''
 system_metadata:
   alias: phi-4
-  publisher: Microsoft
   directoryPath: v2
   foundryLocal: ''
   inputModalities:
   - text
   license: MIT
-  licenseDescription: This model is provided under the License Terms available at <https://huggingface.co/microsoft/Phi-4/blob/main/LICENSE>.
+  licenseDescription: This model is provided under the License Terms available at
+    <https://huggingface.co/microsoft/Phi-4/blob/main/LICENSE>.
   maxOutputTokens: 2048
+  minFLVersion: 0.0.0
   outputModalities:
   - text
-  promptTemplate: '{"system": "<|system|>\n{Content}<|im_end|>", "user": "<|user|>\n{Content}<|im_end|>", "assistant": "<|assistant|>\n{Content}<|im_end|>", "prompt": "<|user|>\n{Content}<|im_end|>\n<|assistant|>"}'
+  platformCapabilities:
+    enableMaap: false
+  promptTemplate: '{"system": "<|system|>\n{Content}<|im_end|>", "user": "<|user|>\n{Content}<|im_end|>",
+    "assistant": "<|assistant|>\n{Content}<|im_end|>", "prompt": "<|user|>\n{Content}<|im_end|>\n<|assistant|>"}'
+  publisher: Microsoft
+  reasoningEnd: ''
+  reasoningStart: ''
   tasks:
     inferenceTasks:
     - chat-completion
-  platformCapabilities:
-    enableMaap: false
-  reasoningStart: ''
-  reasoningEnd: ''
-  minFLVersion: 0.0.0
+tags:
+  capabilities: ''
+  contextLength: 16384
+  supportsReasoning: ''
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/Phi-4/versions/7
   variantMetadata:
-    modelType: ONNX
-    quantization:
-    - RTN
     device: gpu
     executionProvider: OpenVINOExecutionProvider
     fileSizeBytes: 9486152522
+    modelType: ONNX
+    quantization:
+    - RTN
     vRamFootprintBytes: 9486152522
 version: 2

@@ -1,42 +1,43 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+isArchived: true
 name: deepseek-r1-distill-qwen-1.5b-qnn-npu
 path: ./
-isArchived: true
-tags:
-  capabilities: reasoning
-  supportsReasoning: 'true'
-  contextLength: 4096
 system_metadata:
   alias: deepseek-r1-1.5b
-  publisher: Microsoft
   directoryPath: v2
   foundryLocal: hide
   inputModalities:
   - text
   license: MIT
-  licenseDescription: This model is provided under the License Terms available at <https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B/blob/main/LICENSE>.
+  licenseDescription: This model is provided under the License Terms available at
+    <https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B/blob/main/LICENSE>.
   maxOutputTokens: 2048
+  minFLVersion: 0.0.0
   outputModalities:
   - text
+  platformCapabilities:
+    enableMaap: false
   promptTemplate: '{"assistant": "{Content}", "prompt": "\\u003C\\uFF5CUser\\uFF5C\\u003E{Content}\\u003C\\uFF5CAssistant\\uFF5C\\u003E"}'
+  publisher: Microsoft
+  reasoningEnd: </think>
+  reasoningStart: <think>
   tasks:
     inferenceTasks:
     - chat-completion
-  platformCapabilities:
-    enableMaap: false
-  reasoningStart: <think>
-  reasoningEnd: </think>
-  minFLVersion: 0.0.0
+tags:
+  capabilities: reasoning
+  contextLength: 4096
+  supportsReasoning: 'true'
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/deepseek-r1-distill-qwen-1.5b/versions/1
   variantMetadata:
+    device: npu
+    executionProvider: QNNExecutionProvider
+    fileSizeBytes: 1632077086
     modelType: ONNX
     quantization:
     - QuaRot
     - GPTQ
-    device: npu
-    executionProvider: QNNExecutionProvider
-    fileSizeBytes: 1632077086
     vRamFootprintBytes: 1632077086
 version: 2

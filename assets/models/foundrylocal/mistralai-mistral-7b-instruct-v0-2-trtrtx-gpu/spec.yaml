@@ -1,41 +1,43 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+isArchived: true
 name: mistralai-Mistral-7B-Instruct-v0-2-trtrtx-gpu
 path: ./
-isArchived: true
-tags:
-  contextLength: 32768
-  capabilities: ''
-  supportsReasoning: ''
 system_metadata:
   alias: mistral-7b-v0.2
-  publisher: Microsoft
   directoryPath: v2
   foundryLocal: ''
   inputModalities:
   - text
   license: apache-2.0
-  licenseDescription: This model is provided under the License Terms available at <https://www.apache.org/licenses/LICENSE-2.0.html>.
+  licenseDescription: This model is provided under the License Terms available at
+    <https://www.apache.org/licenses/LICENSE-2.0.html>.
   maxOutputTokens: 2048
+  minFLVersion: 0.0.0
   outputModalities:
   - text
-  promptTemplate: '{"system": "<s>", "user": "[INST]\n{Content}\n[/INST]", "assistant": "{Content}</s>", "prompt": "[INST]\n{Content}\n[/INST]"}'
+  platformCapabilities:
+    enableMaap: false
+  promptTemplate: '{"system": "<s>", "user": "[INST]\n{Content}\n[/INST]", "assistant":
+    "{Content}</s>", "prompt": "[INST]\n{Content}\n[/INST]"}'
+  publisher: Microsoft
+  reasoningEnd: ''
+  reasoningStart: ''
   tasks:
     inferenceTasks:
     - chat-completion
-  platformCapabilities:
-    enableMaap: false
-  reasoningStart: ''
-  reasoningEnd: ''
-  minFLVersion: 0.0.0
+tags:
+  capabilities: ''
+  contextLength: 32768
+  supportsReasoning: ''
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/mistralai-Mistral-7B-Instruct-v0-2/versions/6
   variantMetadata:
-    modelType: ONNX
-    quantization:
-    - RTN
     device: gpu
     executionProvider: NvTensorRTRTXExecutionProvider
     fileSizeBytes: 4275154109
+    modelType: ONNX
+    quantization:
+    - RTN
     vRamFootprintBytes: 4275154109
 version: 2

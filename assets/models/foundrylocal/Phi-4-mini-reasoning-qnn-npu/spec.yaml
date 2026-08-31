@@ -1,49 +1,52 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+isArchived: true
 name: Phi-4-mini-reasoning-qnn-npu
 path: ./
-isArchived: true
-tags:
-  capabilities: reasoning
-  supportsReasoning: 'true'
-  contextLength: 4096
 system_metadata:
   alias: phi-4-mini-reasoning
-  publisher: Microsoft
   directoryPath: v2
   foundryLocal: hide
   inputModalities:
   - text
   license: MIT
-  licenseDescription: This model is provided under the License Terms available at <https://huggingface.co/microsoft/Phi-4-mini-reasoning/blob/main/LICENSE>.
+  licenseDescription: This model is provided under the License Terms available at
+    <https://huggingface.co/microsoft/Phi-4-mini-reasoning/blob/main/LICENSE>.
   maxOutputTokens: 2048
+  minFLVersion: 0.0.0
   outputModalities:
   - text
-  promptTemplate: '{"system": "<|system|>Your name is Phi, an AI math expert developed by Microsoft. {Content}<|end|>", "user": "<|user|>{Content}<|end|>", "assistant": "<|assistant|>{Content}<|end|>", "prompt": "<|user|>{Content}<|end|><|assistant|>"}'
+  platformCapabilities:
+    enableMaap: false
+  promptTemplate: '{"system": "<|system|>Your name is Phi, an AI math expert developed
+    by Microsoft. {Content}<|end|>", "user": "<|user|>{Content}<|end|>", "assistant":
+    "<|assistant|>{Content}<|end|>", "prompt": "<|user|>{Content}<|end|><|assistant|>"}'
+  publisher: Microsoft
+  reasoningEnd: ''
+  reasoningStart: ''
   supportsToolCalling: true
+  tasks:
+    inferenceTasks:
+    - chat-completion
   toolCallEnd: <|/tool_call|>
   toolCallStart: <|tool_call|>
   toolRegisterEnd: <|/tool|>
   toolRegisterStart: <|tool|>
   toolResponseEnd: <|tool_response|>
   toolResponseStart: <|tool_response|>
-  tasks:
-    inferenceTasks:
-    - chat-completion
-  platformCapabilities:
-    enableMaap: false
-  reasoningStart: ''
-  reasoningEnd: ''
-  minFLVersion: 0.0.0
+tags:
+  capabilities: reasoning
+  contextLength: 4096
+  supportsReasoning: 'true'
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/Phi-4-mini-reasoning/versions/1
   variantMetadata:
+    device: npu
+    executionProvider: QNNExecutionProvider
+    fileSizeBytes: 2982936576
     modelType: ONNX
     quantization:
     - QuaRot
     - GPTQ
-    device: npu
-    executionProvider: QNNExecutionProvider
-    fileSizeBytes: 2982936576
     vRamFootprintBytes: 2982936576
 version: 2
