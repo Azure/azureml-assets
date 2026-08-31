@@ -4,6 +4,7 @@ path: ./
 isArchived: true
 system_metadata:
   foundryLocal: ''
+  deploymentOptions: ['Foundry Local on Devices']
 version: 1
 description: |
   # Qwen3 Embedding 0.6B
