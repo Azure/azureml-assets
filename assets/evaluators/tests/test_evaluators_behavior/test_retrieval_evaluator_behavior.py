@@ -5,6 +5,7 @@
 
 import asyncio
 import json
+from types import SimpleNamespace
 
 import pytest
 from azure.ai.evaluation._exceptions import EvaluationException
@@ -228,6 +229,76 @@ class TestRetrievalConversationContextExtraction:
                 "context": '{"sourceData": {"snippet": "The warranty is 24 months."}}',
             }
         ]
+
+    def test_conversation_object_uses_tool_context_extraction(self):
+        """Conversation model objects expose messages through an attribute."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        messages = [
+            {"role": "user", "content": "What is the warranty?"},
+            {"role": "tool", "content": "The warranty is 24 months."},
+        ]
+
+        inputs = evaluator._convert_kwargs_to_eval_input(
+            conversation=SimpleNamespace(messages=messages),
+        )
+
+        assert inputs == [
+            {
+                "query": "What is the warranty?",
+                "context": "The warranty is 24 months.",
+            }
+        ]
+
+    @pytest.mark.parametrize("messages", [None, [], "not-a-list"])
+    def test_invalid_messages_are_rejected(self, messages):
+        """Invalid conversation message collections produce a user error."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+
+        if messages is None:
+            with pytest.raises(EvaluationException):
+                evaluator._convert_kwargs_to_eval_input(messages=messages)
+        else:
+            with pytest.raises(EvaluationException, match="non-empty list"):
+                evaluator._convert_kwargs_to_eval_input(messages=messages)
+
+    def test_explicit_query_overrides_single_derived_query(self):
+        """An explicitly mapped query wins for a single derived retrieval turn."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        messages = [
+            {"role": "user", "content": "Derived query"},
+            {"role": "tool", "content": "Retrieved context"},
+        ]
+
+        inputs = evaluator._convert_kwargs_to_eval_input(
+            messages=messages,
+            query="Explicit query",
+        )
+
+        assert inputs == [{"query": "Explicit query", "context": "Retrieved context"}]
+
+    def test_context_helpers_handle_defensive_input_shapes(self):
+        """Helper branches safely normalize malformed and scalar message content."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+
+        assert evaluator._extract_retrieval_turns(
+            [None, {"role": "user", "content": "Question"}, {"role": "tool", "content": 42}]
+        ) == []
+        assert evaluator._get_latest_user_query([{"role": "assistant", "content": "Answer"}]) == ""
+        assert evaluator._extract_message_text(None) == ""
+        assert evaluator._extract_message_text(
+            ["ignored", {"type": "tool_call"}, {"type": "text", "text": "kept"}]
+        ) == "kept"
+        assert evaluator._extract_tool_message_context(None) == []
+        assert evaluator._extract_tool_message_context(
+            [
+                "plain output",
+                None,
+                {"type": "tool_call"},
+                {"output": 7},
+            ]
+        ) == ["plain output", "7"]
+        assert evaluator._stringify_tool_output(" output ") == "output"
+        assert evaluator._stringify_tool_output(None) == ""
 
     def test_messages_without_tool_output_are_not_applicable(self):
         """Conversation input without retrieval evidence returns a user-facing skip."""
