@@ -21,6 +21,7 @@ RUN /opt/miniconda/bin/python -m pip install --upgrade --no-cache-dir 'cryptogra
     'cryptography>=50.0.0' 'GitPython>=3.1.55' 'setuptools>=83.0.0' 'distributed>=2026.1.0' \
     'bokeh>=3.8.2' \
     'onnx>=1.21.0' \
+    'numpy==1.23.5' \
     'pyarrow==23.0.1' \
     'torch==2.13.0' \
     'msgpack>=1.2.1' \
@@ -36,6 +37,7 @@ COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:2025
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 ENV ENABLE_METADATA=true
+ENV AUTOML_ENABLE_SAFE_FORECASTING_MODEL_EXPORT=true
 
 RUN apt-get update && \
     apt-get install --only-upgrade -y --no-install-recommends \
@@ -68,6 +70,15 @@ RUN apt-get update && \
         libc6 \
         libc-bin && \
     rm -rf /var/lib/apt/lists/*
+
+# azureml-automl-runtime requires numpy<=1.23.5, while skops 0.14 declares
+# numpy>=1.25. The skops.io paths used by this environment are validated against
+# numpy 1.23.5 below, so install skops without changing the supported AutoML stack.
+COPY skops_compatibility_test.py .
+RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --no-deps \
+    'skops==0.14.0' && \
+    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH python skops_compatibility_test.py && \
+    rm skops_compatibility_test.py
 
 RUN rm -rf /opt/miniconda/pkgs/
 
