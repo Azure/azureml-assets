@@ -11,9 +11,6 @@ system_metadata:
     - Standard_NC8as_T4_v3
     - Standard_NC16as_T4_v3
     - Standard_NC64as_T4_v3
-    - Standard_NC6s_v3
-    - Standard_NC12s_v3
-    - Standard_NC24s_v3
     - Standard_NC24ads_A100_v4
     - Standard_NC48ads_A100_v4
     - Standard_NC96ads_A100_v4
@@ -40,9 +37,6 @@ system_metadata:
     - Standard_NC8as_T4_v3
     - Standard_NC16as_T4_v3
     - Standard_NC64as_T4_v3
-    - Standard_NC6s_v3
-    - Standard_NC12s_v3
-    - Standard_NC24s_v3
     - Standard_NC24ads_A100_v4
     - Standard_NC48ads_A100_v4
     - Standard_NC96ads_A100_v4

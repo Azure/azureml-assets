@@ -28,10 +28,6 @@ system_metadata:
   SKU:
     evaluationRecommendedSkus:
     - Standard_DS5_v2
-    - Standard_NC6s_v3
-    - Standard_NC12s_v3
-    - Standard_NC24s_v3
-    - Standard_NC24rs_v3
     - Standard_ND40rs_v2
     - Standard_ND96asr_v4
     - Standard_ND96amsr_A100_v4
@@ -52,7 +48,7 @@ system_metadata:
     - Standard_NC96ads_A100_v4
     - Standard_ND96asr_v4
     - Standard_ND96amsr_A100_v4
-    evaluationMinSkuSpec: 6|0|56|112
+    evaluationMinSkuSpec: 16|0|56|112
     inferenceMinSkuSpec: 4|1|28|64
     finetuneMinSkuSpec: 24|1|220|64
   publisher: Microsoft
@@ -81,10 +77,6 @@ system_metadata:
     - Standard_ND96amsr_A100_v4
     evaluationComputes:
     - Standard_DS5_v2
-    - Standard_NC6s_v3
-    - Standard_NC12s_v3
-    - Standard_NC24s_v3
-    - Standard_NC24rs_v3
     - Standard_ND40rs_v2
     - Standard_ND96asr_v4
     - Standard_ND96amsr_A100_v4

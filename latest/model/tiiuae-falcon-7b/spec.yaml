@@ -22,7 +22,6 @@ system_metadata:
     - text-generation
   SKU:
     evaluationRecommendedSkus:
-    - Standard_NC24s_v3
     - Standard_ND40rs_v2
     - Standard_ND96asr_v4
     - Standard_ND96amsr_A100_v4
@@ -31,13 +30,12 @@ system_metadata:
     - Standard_ND96asr_v4
     - Standard_ND96amsr_A100_v4
     finetuneRecommendedSkus:
-    - Standard_NC24s_v3
     - Standard_ND40rs_v2
     - Standard_ND96asr_v4
     - Standard_ND96amsr_A100_v4
-    evaluationMinSkuSpec: 24|4|448|2900
+    evaluationMinSkuSpec: 40|8|672|2900
     inferenceMinSkuSpec: 40|8|672|2900
-    finetuneMinSkuSpec: 24|4|448|2900
+    finetuneMinSkuSpec: 40|8|672|2900
   publisher: tiiuae
   hiddenLayerScanned: true
   huggingFaceModelId: tiiuae/falcon-7b
@@ -51,12 +49,10 @@ system_metadata:
     - Standard_ND96asr_v4
     - Standard_ND96amsr_A100_v4
     finetuneComputes:
-    - Standard_NC24s_v3
     - Standard_ND40rs_v2
     - Standard_ND96asr_v4
     - Standard_ND96amsr_A100_v4
     evaluationComputes:
-    - Standard_NC24s_v3
     - Standard_ND40rs_v2
     - Standard_ND96asr_v4
     - Standard_ND96amsr_A100_v4

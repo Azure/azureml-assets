@@ -17,14 +17,11 @@ system_metadata:
     - Standard_ND96amsr_A100_v4
     - Standard_ND96asr_v4
     finetuneRecommendedSkus:
-    - Standard_NC6s_v3
-    - Standard_NC12s_v3
-    - Standard_NC24s_v3
     - Standard_ND40rs_v2
     - Standard_ND96amsr_A100_v4
     - Standard_ND96asr_v4
     inferenceMinSkuSpec: 96|8|900|2900
-    finetuneMinSkuSpec: 6|1|112|736
+    finetuneMinSkuSpec: 40|8|672|2900
   publisher: Runway
   hiddenLayerScanned: true
   huggingFaceModelId: runwayml/stable-diffusion-v1-5
@@ -34,9 +31,6 @@ system_metadata:
     - Standard_ND96amsr_A100_v4
     - Standard_ND96asr_v4
     finetuneComputes:
-    - Standard_NC6s_v3
-    - Standard_NC12s_v3
-    - Standard_NC24s_v3
     - Standard_ND40rs_v2
     - Standard_ND96amsr_A100_v4
     - Standard_ND96asr_v4

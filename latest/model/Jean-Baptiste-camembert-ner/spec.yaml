@@ -51,11 +51,8 @@ system_metadata:
     - Standard_E48s_v3
     - Standard_E64s_v3
     - Standard_NC4as_T4_v3
-    - Standard_NC6s_v3
     - Standard_NC8as_T4_v3
-    - Standard_NC12s_v3
     - Standard_NC16as_T4_v3
-    - Standard_NC24s_v3
     - Standard_NC64as_T4_v3
     - Standard_NC24ads_A100_v4
     - Standard_NC48ads_A100_v4
@@ -95,11 +92,8 @@ system_metadata:
     - Standard_E48s_v3
     - Standard_E64s_v3
     - Standard_NC4as_T4_v3
-    - Standard_NC6s_v3
     - Standard_NC8as_T4_v3
-    - Standard_NC12s_v3
     - Standard_NC16as_T4_v3
-    - Standard_NC24s_v3
     - Standard_NC64as_T4_v3
     - Standard_NC24ads_A100_v4
     - Standard_NC48ads_A100_v4
@@ -108,14 +102,12 @@ system_metadata:
     - Standard_ND96amsr_A100_v4
     - Standard_ND40rs_v2
     finetuneRecommendedSkus:
-    - Standard_NC24s_v3
-    - Standard_NC24rs_v3
     - Standard_ND40rs_v2
     - Standard_ND96amsr_A100_v4
     - Standard_ND96asr_v4
     evaluationMinSkuSpec: 4|0|28|56
     inferenceMinSkuSpec: 4|0|28|56
-    finetuneMinSkuSpec: 24|4|448|2900
+    finetuneMinSkuSpec: 40|8|672|2900
   hiddenLayerScanned: true
   huggingFaceModelId: Jean-Baptiste/camembert-ner-medium
   license: MIT
@@ -152,11 +144,8 @@ system_metadata:
     - Standard_E48s_v3
     - Standard_E64s_v3
     - Standard_NC4as_T4_v3
-    - Standard_NC6s_v3
     - Standard_NC8as_T4_v3
-    - Standard_NC12s_v3
     - Standard_NC16as_T4_v3
-    - Standard_NC24s_v3
     - Standard_NC64as_T4_v3
     - Standard_NC24ads_A100_v4
     - Standard_NC48ads_A100_v4
@@ -165,8 +154,6 @@ system_metadata:
     - Standard_ND96amsr_A100_v4
     - Standard_ND40rs_v2
     finetuneComputes:
-    - Standard_NC24s_v3
-    - Standard_NC24rs_v3
     - Standard_ND40rs_v2
     - Standard_ND96amsr_A100_v4
     - Standard_ND96asr_v4
@@ -201,11 +188,8 @@ system_metadata:
     - Standard_E48s_v3
     - Standard_E64s_v3
     - Standard_NC4as_T4_v3
-    - Standard_NC6s_v3
     - Standard_NC8as_T4_v3
-    - Standard_NC12s_v3
     - Standard_NC16as_T4_v3
-    - Standard_NC24s_v3
     - Standard_NC64as_T4_v3
     - Standard_NC24ads_A100_v4
     - Standard_NC48ads_A100_v4
