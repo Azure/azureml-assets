@@ -136,7 +136,7 @@ system_metadata:
     - Standard_ND96asr_v4
     - Standard_ND96amsr_A100_v4
     - Standard_ND40rs_v2
-    inferenceMinSkuSpec: 6|0|56|112
+    inferenceMinSkuSpec: 8|0|56|112
   hiddenLayerScanned: true
   huggingFaceModelId: openai/whisper-large
   license: MIT
