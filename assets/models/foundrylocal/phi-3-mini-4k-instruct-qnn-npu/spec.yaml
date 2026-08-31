@@ -1,45 +1,42 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-isArchived: true
 name: phi-3-mini-4k-instruct-qnn-npu
 path: ./
+isArchived: true
+tags:
+  contextLength: 4096
+  capabilities: ''
+  supportsReasoning: ''
 system_metadata:
   alias: phi-3-mini-4k
+  publisher: Microsoft
   directoryPath: v4
   foundryLocal: ''
   inputModalities:
   - text
   license: MIT
-  licenseDescription: This model is provided under the License Terms available at
-    <https://huggingface.co/microsoft/phi-3-mini-4k-instruct/blob/main/LICENSE>.
+  licenseDescription: This model is provided under the License Terms available at <https://huggingface.co/microsoft/phi-3-mini-4k-instruct/blob/main/LICENSE>.
   maxOutputTokens: 2048
-  minFLVersion: 0.0.0
   outputModalities:
   - text
-  platformCapabilities:
-    enableMaap: false
-  promptTemplate: '{"system": "<|system|>Your name is Phi, an AI math expert developed
-    by Microsoft. {Content}<|end|>", "user": "<|user|>{Content}<|end|>", "assistant":
-    "<|assistant|>{Content}<|end|>", "prompt": "<|user|>{Content}<|end|><|assistant|>"}'
-  publisher: Microsoft
-  reasoningEnd: ''
-  reasoningStart: ''
+  promptTemplate: '{"system": "<|system|>Your name is Phi, an AI math expert developed by Microsoft. {Content}<|end|>", "user": "<|user|>{Content}<|end|>", "assistant": "<|assistant|>{Content}<|end|>", "prompt": "<|user|>{Content}<|end|><|assistant|>"}'
   tasks:
     inferenceTasks:
     - chat-completion
-tags:
-  capabilities: ''
-  contextLength: 4096
-  supportsReasoning: ''
+  platformCapabilities:
+    enableMaap: false
+  reasoningStart: ''
+  reasoningEnd: ''
+  minFLVersion: 0.0.0
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/Phi-3-mini-4k-instruct/versions/15
   variantMetadata:
-    device: npu
-    executionProvider: QNNExecutionProvider
-    fileSizeBytes: 3799250963
     modelType: ONNX
     quantization:
     - QuaRot
     - GPTQ
+    device: npu
+    executionProvider: QNNExecutionProvider
+    fileSizeBytes: 3799250963
     vRamFootprintBytes: 3799250963
 version: 4

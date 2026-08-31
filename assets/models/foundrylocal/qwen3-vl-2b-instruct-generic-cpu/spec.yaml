@@ -1,51 +1,49 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-isArchived: true
 name: qwen3-vl-2b-instruct-generic-cpu
 path: ./
+isArchived: true
+tags:
+  capabilities: reasoning,tool-calling
+  supportsReasoning: 'true'
+  contextLength: 262144
 system_metadata:
   alias: qwen3-vl-2b-instruct
+  publisher: Microsoft
   directoryPath: v2
   foundryLocal: ''
   inputModalities:
   - text
   - image
   license: apache-2.0
-  licenseDescription: This model is provided under the License Terms available at
-    <https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct/blob/main/LICENSE>.
+  licenseDescription: This model is provided under the License Terms available at <https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct/blob/main/LICENSE>.
   maxOutputTokens: 2048
-  minFLVersion: 0.0.0
   outputModalities:
   - text
-  platformCapabilities:
-    enableMaap: false
-  promptTemplate: '{"system": "<|im_start|>system\n{Content}<|im_end|>", "user": "<|im_start|>user\n{Content}<|im_end|>",
-    "assistant": "<|im_start|>assistant\n{Content}<|im_end|>", "prompt": "<|im_start|>user\n{Content}<|im_end|>\n<|im_start|>assistant"}'
-  publisher: Microsoft
-  reasoningEnd: </think>
-  reasoningStart: <think>
+  promptTemplate: '{"system": "<|im_start|>system\n{Content}<|im_end|>", "user": "<|im_start|>user\n{Content}<|im_end|>", "assistant": "<|im_start|>assistant\n{Content}<|im_end|>", "prompt": "<|im_start|>user\n{Content}<|im_end|>\n<|im_start|>assistant"}'
   supportsToolCalling: true
-  tasks:
-    inferenceTasks:
-    - vision-language-chat
   toolCallEnd: </tool_call>
   toolCallStart: <tool_call>
   toolRegisterEnd: </tools>
   toolRegisterStart: <tools>
   toolResponseEnd: </tool_response>
   toolResponseStart: <tool_response>
-tags:
-  capabilities: reasoning,tool-calling
-  contextLength: 262144
-  supportsReasoning: 'true'
+  tasks:
+    inferenceTasks:
+    - vision-language-chat
+  platformCapabilities:
+    enableMaap: false
+  reasoningStart: <think>
+  reasoningEnd: </think>
+  minFLVersion: 0.0.0
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/qwen3-vl-2b-instruct/versions/1
   variantMetadata:
-    device: cpu
-    executionProvider: CPUExecutionProvider
-    fileSizeBytes: 1441082168
     modelType: ONNX
     quantization:
     - RTN
+    device: cpu
+    executionProvider: CPUExecutionProvider
+    fileSizeBytes: 1441082168
     vRamFootprintBytes: 1441082168
 version: 2

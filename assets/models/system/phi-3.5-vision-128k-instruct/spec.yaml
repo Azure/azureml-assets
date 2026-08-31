@@ -1,33 +1,46 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-isArchived: true
 name: Phi-3.5-vision-instruct
 path: ./
+isArchived: true
+tags:
+  _aml_system_vanity_registry: azureml-phi
+  model_specific_defaults:
+    apply_deepspeed: 'true'
+    deepspeed_stage: 2
+    apply_lora: 'true'
+    apply_ort: 'false'
+    precision: 16
+    ignore_mismatched_sizes: 'false'
+    num_train_epochs: 1
+    per_device_train_batch_size: 1
+    per_device_eval_batch_size: 1
+    gradient_accumulation_steps: 1
+    learning_rate: 5e-6
+    lr_scheduler_type: cosine
+    logging_strategy: steps
+    logging_steps: 10
+    save_total_limit: 1
 system_metadata:
+  deploymentOptions:
+  - UnifiedEndpointMaaS
+  - MaaP
+  - ServerlessMaaS
+  languages:
+  - en
+  sharedComputeCapacityEnabled: true
   SKU:
-    inferenceMinSkuSpec: 24|1|220|64
     inferenceRecommendedSkus:
     - Standard_NC24ads_A100_v4
     - Standard_NC48ads_A100_v4
     - Standard_NC96ads_A100_v4
     - Standard_ND96amsr_A100_v4
+    inferenceMinSkuSpec: 24|1|220|64
+  publisher: Microsoft
   benchmark: quality
-  deploymentOptions:
-  - UnifiedEndpointMaaS
-  - MaaP
-  - ServerlessMaaS
-  deprecation:
-    finetuneDeprecationDate: '2025-06-30T00:00:00.000000Z'
-    finetuneRetirementDate: '2025-08-30T00:00:00.000000Z'
-    inferenceDeprecationDate: '2025-06-30T00:00:00.000000Z'
-    inferenceLegacyDate: '2025-06-09T00:00:00.000000Z'
-    inferenceRetirementDate: '2025-08-30T00:00:00.000000Z'
   displayName: Phi-3.5-vision instruct (128k)
   evaluation: evaluation.md
-  featured: true
   freePlayground: true
   hiddenLayerScanned: true
-  inferenceSupportedEnvs:
-  - vllm
   inputModalities:
   - text
   - image
@@ -35,8 +48,6 @@ system_metadata:
   - Multimodal
   - Reasoning
   - Low latency
-  languages:
-  - en
   license: MIT
   licenseDescription: 'Microsoft.
 
@@ -79,40 +90,29 @@ system_metadata:
     SOFTWARE.'
   maxOutputTokens: 4096
   notes: notes.md
-  platformCapabilities:
-    enableBatch: false
-    maasInference: true
   playgroundRateLimitTier: low
-  publisher: Microsoft
-  sharedComputeCapacityEnabled: true
   summary: Refresh of Phi-3-vision model.
+  textContextWindow: 131072
+  trainingDataDate: August 2024
+  featured: true
+  tasks:
+    inferenceTasks:
+    - chat-completion
   supportedComputes:
     inferenceComputes:
     - Standard_NC24ads_A100_v4
     - Standard_NC48ads_A100_v4
     - Standard_ND96amsr_A100_v4
     - Standard_NC96ads_A100_v4
-  tasks:
-    inferenceTasks:
-    - chat-completion
-  textContextWindow: 131072
-  trainingDataDate: August 2024
-tags:
-  _aml_system_vanity_registry: azureml-phi
-  model_specific_defaults:
-    apply_deepspeed: 'true'
-    apply_lora: 'true'
-    apply_ort: 'false'
-    deepspeed_stage: 2
-    gradient_accumulation_steps: 1
-    ignore_mismatched_sizes: 'false'
-    learning_rate: 5e-6
-    logging_steps: 10
-    logging_strategy: steps
-    lr_scheduler_type: cosine
-    num_train_epochs: 1
-    per_device_eval_batch_size: 1
-    per_device_train_batch_size: 1
-    precision: 16
-    save_total_limit: 1
+  deprecation:
+    finetuneDeprecationDate: '2025-06-30T00:00:00.000000Z'
+    finetuneRetirementDate: '2025-08-30T00:00:00.000000Z'
+    inferenceDeprecationDate: '2025-06-30T00:00:00.000000Z'
+    inferenceLegacyDate: '2025-06-09T00:00:00.000000Z'
+    inferenceRetirementDate: '2025-08-30T00:00:00.000000Z'
+  inferenceSupportedEnvs:
+  - vllm
+  platformCapabilities:
+    enableBatch: false
+    maasInference: true
 version: 2

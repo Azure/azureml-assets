@@ -1,42 +1,41 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-isArchived: true
 name: openai-whisper-tiny-generic-cpu
 path: ./
+isArchived: true
+tags:
+  contextLength: 448
+  capabilities: ''
+  supportsReasoning: ''
 system_metadata:
   alias: whisper-tiny
+  publisher: Microsoft
   directoryPath: v4
   foundryLocal: ''
   inputModalities:
   - audio
   license: apache-2.0
-  licenseDescription: This model is provided under the License Terms available at
-    https://www.apache.org/licenses/LICENSE-2.0.html.
+  licenseDescription: This model is provided under the License Terms available at https://www.apache.org/licenses/LICENSE-2.0.html.
   maxOutputTokens: 2048
-  minFLVersion: 0.0.0
   outputModalities:
   - text
-  platformCapabilities:
-    enableMaap: false
   promptTemplate: '{"prompt": "<|startoftranscript|> <|en|> <|transcribe|> <|notimestamps|>"}'
-  publisher: Microsoft
-  reasoningEnd: ''
-  reasoningStart: ''
   tasks:
     inferenceTasks:
     - automatic-speech-recognition
-tags:
-  capabilities: ''
-  contextLength: 448
-  supportsReasoning: ''
+  platformCapabilities:
+    enableMaap: false
+  reasoningStart: ''
+  reasoningEnd: ''
+  minFLVersion: 0.0.0
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml/models/openai-whisper-tiny/versions/1
   variantMetadata:
-    device: cpu
-    executionProvider: CPUExecutionProvider
-    fileSizeBytes: 138106077
     modelType: ONNX
     quantization:
     - RTN
+    device: cpu
+    executionProvider: CPUExecutionProvider
+    fileSizeBytes: 138106077
     vRamFootprintBytes: 138106077
 version: 4

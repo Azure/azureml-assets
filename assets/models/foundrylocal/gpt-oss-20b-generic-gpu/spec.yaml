@@ -1,41 +1,40 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-isArchived: true
 name: gpt-oss-20b-generic-gpu
 path: ./
+isArchived: true
+tags:
+  contextLength: 131072
+  capabilities: reasoning
+  supportsReasoning: ''
 system_metadata:
   alias: gpt-oss-20b
+  publisher: Microsoft
   directoryPath: v1
   foundryLocal: ''
   inputModalities:
   - text
   license: MIT
-  licenseDescription: This model is provided under the License Terms available at
-    <https://huggingface.co/openai/gpt-oss-20b/blob/main/LICENSE>.
+  licenseDescription: This model is provided under the License Terms available at <https://huggingface.co/openai/gpt-oss-20b/blob/main/LICENSE>.
   maxOutputTokens: 2048
-  minFLVersion: 0.0.0
   outputModalities:
   - text
-  platformCapabilities:
-    enableMaap: false
-  publisher: Microsoft
-  reasoningEnd: ''
-  reasoningStart: ''
   tasks:
     inferenceTasks:
     - chat-completion
-tags:
-  capabilities: reasoning
-  contextLength: 131072
-  supportsReasoning: ''
+  platformCapabilities:
+    enableMaap: false
+  reasoningStart: ''
+  reasoningEnd: ''
+  minFLVersion: 0.0.0
 variantInfo:
   parents:
   - assetId: azureml://registries/azureml-openai-oss/models/gpt-oss-20b/versions/11
   variantMetadata:
-    device: gpu
-    executionProvider: WebGPUExecutionProvider
-    fileSizeBytes: 12651956521
     modelType: ONNX
     quantization:
     - RTN
+    device: gpu
+    executionProvider: WebGPUExecutionProvider
+    fileSizeBytes: 12651956521
     vRamFootprintBytes: 12651956521
 version: 1
