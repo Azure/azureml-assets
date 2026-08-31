@@ -15,9 +15,6 @@ system_metadata:
   SKU:
     inferenceRecommendedSkus:
     - Standard_NC4as_T4_v3
-    - Standard_NC6s_v3
-    - Standard_NC12s_v3
-    - Standard_NC24s_v3
     - Standard_NC16as_T4_v3
     - Standard_NC64as_T4_v3
     - Standard_NC8as_T4_v3
@@ -27,11 +24,8 @@ system_metadata:
     - Standard_ND96asr_v4
     finetuneRecommendedSkus:
     - Standard_NC4as_T4_v3
-    - Standard_NC6s_v3
     - Standard_NC8as_T4_v3
-    - Standard_NC12s_v3
     - Standard_NC16as_T4_v3
-    - Standard_NC24s_v3
     - Standard_NC64as_T4_v3
     - Standard_NC96ads_A100_v4
     - Standard_ND96asr_v4
@@ -45,9 +39,6 @@ system_metadata:
   supportedComputes:
     inferenceComputes:
     - Standard_NC4as_T4_v3
-    - Standard_NC6s_v3
-    - Standard_NC12s_v3
-    - Standard_NC24s_v3
     - Standard_NC16as_T4_v3
     - Standard_NC64as_T4_v3
     - Standard_NC8as_T4_v3
@@ -57,11 +48,8 @@ system_metadata:
     - Standard_ND96asr_v4
     finetuneComputes:
     - Standard_NC4as_T4_v3
-    - Standard_NC6s_v3
     - Standard_NC8as_T4_v3
-    - Standard_NC12s_v3
     - Standard_NC16as_T4_v3
-    - Standard_NC24s_v3
     - Standard_NC64as_T4_v3
     - Standard_NC96ads_A100_v4
     - Standard_ND96asr_v4
