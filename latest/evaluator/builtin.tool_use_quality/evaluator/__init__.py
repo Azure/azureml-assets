@@ -1,4 +1,4 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Tool Use Composite Evaluator implementation package."""
+"""Tool Use Quality Evaluator implementation package."""
