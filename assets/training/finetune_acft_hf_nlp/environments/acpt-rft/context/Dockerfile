@@ -172,6 +172,8 @@ RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir "accelerate==1.14.0" && 
     --index-url https://download.pytorch.org/whl/cu129 && \
 /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps \
     flashinfer-python==0.6.13 flashinfer-cubin==0.6.13 && \
+/opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps \
+    nvidia-nccl-cu12==2.29.7 && \
 /opt/conda/envs/ptca/bin/pip uninstall -y torchcodec nvidia-nccl-cu13 && \
     /opt/conda/envs/ptca/bin/python /tmp/verl_rft_compat_patches.py && \
     rm -f /tmp/verl_rft_compat_patches.py
