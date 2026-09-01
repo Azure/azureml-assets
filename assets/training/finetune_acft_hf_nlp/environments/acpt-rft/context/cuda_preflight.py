@@ -15,6 +15,7 @@ EXPECTED_VERSIONS = {
     "torchvision": "0.28.0",
     "vllm": "0.26.0",
     "openai": "2.25.0",
+    "nvidia-nccl-cu12": "2.28.9",
 }
 EXPECTED_CUDA = "12.9"
 
@@ -109,7 +110,9 @@ def main() -> int:
             raise RuntimeError(f"{package_name} must be absent because {reason}")
     print(
         f"Validated torch={torch.__version__}, torchvision={torchvision.__version__}, "
-        f"vllm={vllm.__version__}; torchaudio is intentionally absent",
+        f"vllm={vllm.__version__}, "
+        f"nccl={normalized_version('nvidia-nccl-cu12')}; "
+        "torchaudio is intentionally absent",
         file=sys.stderr,
         flush=True,
     )
