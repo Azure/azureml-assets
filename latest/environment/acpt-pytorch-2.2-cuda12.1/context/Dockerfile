@@ -58,16 +58,22 @@ RUN apt-get update && \
         dotnet-host-8.0 \
         dotnet-hostfxr-8.0 \
         dotnet-runtime-8.0 \
+        curl \
         libasound2 \
         libasound2-data \
         libc-bin \
         libc-dev-bin \
         libc6 \
         libc6-dev \
+        libcurl3-gnutls \
+        libcurl4 \
         libgssapi-krb5-2 \
         libk5crypto3 \
         libkrb5-3 \
         libkrb5support0 \
+        libperl5.34 \
+        libssl-dev \
+        libssl3 \
         libsystemd0 \
         libudev1 \
         libpam-modules \
@@ -76,6 +82,10 @@ RUN apt-get update && \
         libpam0g \
         libsqlite3-0 \
         locales \
+        openssl \
+        perl \
+        perl-base \
+        perl-modules-5.34 \
         tar \
         udev \
         wget && \
@@ -89,6 +99,8 @@ RUN apt-get update && \
         rsyslog \
         runit \
         unzip && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade --no-install-recommends \
+        libpng16-16 && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
     cp /var/configuration/nginx.conf /etc/nginx/sites-available/app && \

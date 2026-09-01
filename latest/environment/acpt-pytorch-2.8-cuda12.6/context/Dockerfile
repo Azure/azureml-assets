@@ -44,13 +44,25 @@ RUN printf 'Acquire::Retries "5";\n' > /etc/apt/apt.conf.d/80-retries && \
         libpam-modules \
         libpam-modules-bin \
         libpam-runtime \
+        libnginx-mod-http-echo \
+        libnginx-mod-http-geoip2 \
         libnghttp2-14 \
+        libperl5.34 \
+        libpng16-16 \
         libpython3.10-minimal \
         libpython3.10-stdlib \
+        libssl-dev \
+        libssl3 \
         libsqlite3-0 \
         libsystemd0 \
         libudev1 \
         locales \
+        nginx-common \
+        nginx-light \
+        openssl \
+        perl \
+        perl-base \
+        perl-modules-5.34 \
         dotnet-host-8.0 \
         dotnet-hostfxr-8.0 \
         dotnet-runtime-8.0 \

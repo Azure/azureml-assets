@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04:20260810.v1
+FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04:20260901.v1
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/automl
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
@@ -62,6 +62,12 @@ RUN apt-get update && \
         libpam0g \
         libpam-modules \
         libpam-modules-bin \
+        libssl3 \
+        openssl \
+        libperl5.34 \
+        perl \
+        perl-base \
+        perl-modules-5.34 \
         rsyslog \
         libc-dev-bin \
         libc6-dev \

@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.8-ubuntu24.04:20260810.v1
+FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.8-ubuntu24.04:20260901.v1
 
 USER root
 # Editable sources live under /opt so AML/Singularity jobs (uid 9000) can
@@ -180,19 +180,24 @@ RUN cd /opt/slime/slime/backends/megatron_utils/kernels/int4_qat && \
 # Upgrade vulnerable Ubuntu packages inherited from or installed by this image.
 RUN apt-get update && \
     apt-get install -y --no-install-recommends --only-upgrade \
+        curl \
         libgssapi-krb5-2 \
         libk5crypto3 \
         libkrb5-3 \
         libkrb5support0 \
         libarchive13t64 \
+        libcurl3t64-gnutls \
+        libcurl4t64 \
         libpam-modules \
         libpam-modules-bin \
         libpam-runtime \
         libpam0g \
+        libssl3t64 \
         libsqlite3-0 \
         nginx \
         nginx-common \
         nginx-light \
+        openssl \
         rsyslog \
         tar \
         wget && \

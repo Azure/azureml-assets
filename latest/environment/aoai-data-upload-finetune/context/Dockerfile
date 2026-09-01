@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260810.v1
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260901.v1
 
 # Upgrade OS packages to pull current Ubuntu security patches.
 # The current openmpi5.0-ubuntu24.04 base plus apt upgrade contains the required
