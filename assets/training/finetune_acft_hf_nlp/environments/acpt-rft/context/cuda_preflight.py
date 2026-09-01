@@ -61,6 +61,17 @@ def topology_exports(torch_module) -> dict[str, str]:
     return exports
 
 
+def attention_exports() -> dict[str, str]:
+    flash_attn = importlib.import_module(
+        "vllm.vllm_flash_attn.flash_attn_interface"
+    )
+    if flash_attn.FA2_AVAILABLE or flash_attn.FA3_AVAILABLE:
+        return {}
+    if "VLLM_ATTENTION_BACKEND" in os.environ:
+        return {}
+    return {"VLLM_ATTENTION_BACKEND": "TRITON_ATTN"}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -103,7 +114,9 @@ def main() -> int:
     exports = {}
     if not args.skip_cuda:
         importlib.import_module("vllm._C_stable_libtorch")
-        importlib.import_module("vllm.v1.worker.worker_base")
+        exports.update(attention_exports())
+        os.environ.update(exports)
+        importlib.import_module("vllm.lora.lora_model")
         torch.cuda.init()
         print(
             f"CUDA devices: {torch.cuda.device_count()}; "
@@ -111,10 +124,17 @@ def main() -> int:
             file=sys.stderr,
             flush=True,
         )
-        exports = topology_exports(torch)
-        if exports:
+        topology = topology_exports(torch)
+        exports.update(topology)
+        if topology:
             print(
                 "GPU peer access is incomplete; using NCCL socket transport.",
+                file=sys.stderr,
+                flush=True,
+            )
+        if exports.get("VLLM_ATTENTION_BACKEND") == "TRITON_ATTN":
+            print(
+                "vLLM FA2/FA3 extensions are unavailable; using Triton attention.",
                 file=sys.stderr,
                 flush=True,
             )

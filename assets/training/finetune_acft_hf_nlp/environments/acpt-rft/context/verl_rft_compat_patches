@@ -168,6 +168,24 @@ _VLLM_ROTARY_NEW = '''        self.apply_rotary_emb_flash_attn = None
                 # acceleration; fall back to vLLM's native rotary.
                 self.apply_rotary_emb_flash_attn = None'''
 
+_VLLM_FLASH_ATTN_OLD = '''if not (FA2_AVAILABLE or FA3_AVAILABLE):
+    raise ImportError(
+        "vllm.vllm_flash_attn requires the CUDA flash attention extensions "
+        "(_vllm_fa2_C or _vllm_fa3_C). On ROCm, use upstream flash_attn."
+    )'''
+_VLLM_FLASH_ATTN_NEW = '''if not (FA2_AVAILABLE or FA3_AVAILABLE):
+    # ACFT-RFT-COMPAT: the CUDA 12.9 stable-ABI vLLM wheel can load its core
+    # extension with newer PyTorch, while its non-stable FA2/FA3 extensions
+    # cannot. Keep imports functional so runtime preflight can select Triton.
+    import warnings
+
+    warnings.warn(
+        "vLLM FA2/FA3 extensions are unavailable; use a compatible fallback "
+        "attention backend.",
+        RuntimeWarning,
+        stacklevel=2,
+    )'''
+
 
 # --------------------------------------------------------------------------------------
 # The image vendors a newer (post-0.8.0) vLLM rollout subsystem onto a verl 0.7.1 worker
@@ -367,6 +385,7 @@ def main():
 
     # vLLM <-> flash-attn 4 / transformers FA integration
     _replace_if_present("vllm.model_executor.layers.rotary_embedding.common", _VLLM_ROTARY_OLD, _VLLM_ROTARY_NEW)
+    _replace("vllm.vllm_flash_attn", _VLLM_FLASH_ATTN_OLD, _VLLM_FLASH_ATTN_NEW)
     _replace("transformers.integrations.flash_attention", _TF_SAUX_OLD, _TF_SAUX_NEW)
 
     # verl 0.7.1 worker layer <-> vendored post-0.8.0 vLLM rollout
