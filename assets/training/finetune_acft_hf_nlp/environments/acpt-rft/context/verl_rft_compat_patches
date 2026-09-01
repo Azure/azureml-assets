@@ -244,6 +244,22 @@ _VERL_ACTOR_ATTN_NEW = '''        attn_implementation = override_model_config.ge
             os.getenv("VERL_ACTOR_ATTENTION_IMPLEMENTATION", "flash_attention_2"),
         )'''
 
+_VLLM_LORA_BASE_WEIGHT_OLD = '''            else:
+                can_skip_module = self._can_skip(prefix + ".")
+                can_skip_param = self._can_skip(prefix)'''
+_VLLM_LORA_BASE_WEIGHT_NEW = '''            elif child_prefix == "weight" and "base_layer" in child_modules:
+                # ACFT-RFT-COMPAT: live LoRA synchronization sends the base
+                # embedding as embed_tokens.weight, while vLLM wraps it under
+                # embed_tokens.base_layer.weight.
+                yield from self._load_module(
+                    self._get_qualname(base_prefix, "base_layer"),
+                    child_modules["base_layer"],
+                    child_weights,
+                )
+            else:
+                can_skip_module = self._can_skip(prefix + ".")
+                can_skip_param = self._can_skip(prefix)'''
+
 _VERL_DISPATCH_OLD = '''        else:
             return self.inference_engine.execute_method(method, *args, **kwargs)'''
 _VERL_DISPATCH_NEW = '''        else:
@@ -404,6 +420,11 @@ def main():
     _replace("verl.workers.rollout.vllm_rollout", _VERL_INIT_OLD, _VERL_INIT_NEW)
     _replace("verl.workers.rollout.base", _VERL_REGISTRY_OLD, _VERL_REGISTRY_NEW)
     _replace("verl.utils.fsdp_utils", _VERL_FSDP2_OLD, _VERL_FSDP2_NEW)
+    _replace(
+        "vllm.model_executor.models.utils",
+        _VLLM_LORA_BASE_WEIGHT_OLD,
+        _VLLM_LORA_BASE_WEIGHT_NEW,
+    )
     _replace("verl.workers.rollout.vllm_rollout.vllm_rollout", _VERL_DISPATCH_OLD, _VERL_DISPATCH_NEW)
 
     # verl async worker server-mode methods (two anchors in one file)
