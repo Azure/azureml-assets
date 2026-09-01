@@ -14,3 +14,4 @@ openmim==0.3.9
 platformdirs==4.3.6
 filelock>=3.20.1
 sqlparse>=0.6.0  # pinned transitive dep of azureml-metrics[image]/mlflow; fixes GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr, GHSA-3496-9g83-7v6x, GHSA-pwgv-4x5q-6m9f
+msgpack>=1.2.1  # pinned transitive dep of azureml-core; fixes GHSA-6v7p-g79w-8964
