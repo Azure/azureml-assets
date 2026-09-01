@@ -2,10 +2,12 @@
 """Validate the ACFT RFT CUDA stack and emit topology-safe NCCL settings."""
 
 import argparse
+import ctypes
 import importlib
 import importlib.metadata
 import importlib.util
 import os
+from pathlib import Path
 import shlex
 import sys
 
@@ -21,6 +23,26 @@ EXPECTED_VERSIONS = {
 }
 EXPECTED_CUDA = "12.9"
 EXPECTED_NCCL = (2, 29, 7)
+
+
+def preload_nccl() -> tuple[Path, dict[str, str]]:
+    distribution = importlib.metadata.distribution("nvidia-nccl-cu12")
+    library = Path(
+        distribution.locate_file("nvidia/nccl/lib/libnccl.so.2")
+    ).resolve()
+    if not library.is_file():
+        raise RuntimeError(f"NCCL library is missing: {library}")
+
+    ctypes.CDLL(str(library), mode=ctypes.RTLD_GLOBAL)
+    library_dir = str(library.parent)
+    current_path = os.environ.get("LD_LIBRARY_PATH", "")
+    path_entries = current_path.split(os.pathsep) if current_path else []
+    if path_entries and path_entries[0] == library_dir:
+        return library, {}
+
+    value = os.pathsep.join([library_dir, *path_entries])
+    os.environ["LD_LIBRARY_PATH"] = value
+    return library, {"LD_LIBRARY_PATH": value}
 
 
 def normalized_version(package_name: str) -> str:
@@ -95,6 +117,7 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    nccl_library, exports = preload_nccl()
     import torch
     import torchvision
     import vllm
@@ -124,7 +147,6 @@ def main() -> int:
         flush=True,
     )
 
-    exports = {}
     if not args.skip_cuda:
         importlib.import_module("vllm._C_stable_libtorch")
         exports.update(attention_exports())
@@ -139,7 +161,8 @@ def main() -> int:
             )
         print(
             f"CUDA devices: {torch.cuda.device_count()}; "
-            f"device 0: {torch.cuda.get_device_name(0)}; NCCL {actual_nccl}",
+            f"device 0: {torch.cuda.get_device_name(0)}; NCCL {actual_nccl} "
+            f"from {nccl_library}",
             file=sys.stderr,
             flush=True,
         )
