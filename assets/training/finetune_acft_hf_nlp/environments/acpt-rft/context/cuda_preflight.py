@@ -11,8 +11,8 @@ import sys
 
 
 EXPECTED_VERSIONS = {
-    "torch": "2.13.0",
-    "torchvision": "0.28.0",
+    "torch": "2.11.0",
+    "torchvision": "0.26.0",
     "vllm": "0.26.0",
     "openai": "2.25.0",
     "nvidia-nccl-cu12": "2.28.9",
@@ -99,7 +99,7 @@ def main() -> int:
     if importlib.util.find_spec("vllm._C_stable_libtorch") is None:
         raise RuntimeError("vLLM stable native extension is not installed")
     for package_name, reason in {
-        "torchaudio": "no torch 2.13-compatible release exists",
+        "torchaudio": "it is unused by this image",
         "torchcodec": "its vLLM dependency wheel requires CUDA 13",
     }.items():
         try:
