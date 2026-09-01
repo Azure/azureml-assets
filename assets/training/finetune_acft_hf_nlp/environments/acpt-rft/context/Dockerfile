@@ -170,6 +170,8 @@ RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir "accelerate==1.14.0" && 
     /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps \
         torch==2.13.0 torchvision==0.28.0 \
         --index-url https://download.pytorch.org/whl/cu129 && \
+    /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps \
+        nvidia-nccl-cu12==2.28.9 && \
     /opt/conda/envs/ptca/bin/pip uninstall -y torchcodec && \
     /opt/conda/envs/ptca/bin/python /tmp/verl_rft_compat_patches.py && \
     rm -f /tmp/verl_rft_compat_patches.py
