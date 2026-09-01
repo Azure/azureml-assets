@@ -11,10 +11,10 @@ ENV PYTHONIOENCODING=utf-8
 ENV PIP_NO_COLOR=1
 ENV PIP_PROGRESS_BAR=off
 
-# Upgrade vulnerable Ubuntu packages when this image variant includes them.
+# Upgrade vulnerable Ubuntu packages inherited from the base image when this image variant includes them.
 RUN set -eux; \
     apt-get update; \
-    os_security_packages="curl gzip libarchive13 libc-bin libc-dev-bin libc6 libc6-dev libasound2 libasound2-data libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libgssapi-krb5-2 libk5crypto3 libkrb5-3 libkrb5support0 libnghttp2-14 libnginx-mod-http-echo libnginx-mod-http-geoip2 libpam-modules libpam-modules-bin libpam-runtime libpam0g libpython3.10-minimal libpython3.10-stdlib libpython3.12-minimal libpython3.12-stdlib libsqlite3-0 libxml2 nginx nginx-common nginx-light openssh-client openssh-server openssh-sftp-server python3.10 python3.10-minimal python3.12 python3.12-minimal rsyslog tar wget"; \
+    os_security_packages="curl gzip libarchive13 libc-bin libc-dev-bin libc6 libc6-dev libasound2 libasound2-data libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libgssapi-krb5-2 libk5crypto3 libkrb5-3 libkrb5support0 libnghttp2-14 libnginx-mod-http-echo libnginx-mod-http-geoip2 libpam-modules libpam-modules-bin libpam-runtime libpam0g libperl5.34 libperl5.38 libpython3.10-minimal libpython3.10-stdlib libpython3.12-minimal libpython3.12-stdlib libsqlite3-0 libssl3 libssl3t64 libxml2 nginx nginx-common nginx-light openssh-client openssh-server openssh-sftp-server openssl perl perl-base perl-modules-5.34 perl-modules-5.38 python3.10 python3.10-minimal python3.12 python3.12-minimal rsyslog tar wget"; \
     installed_os_packages=""; \
     for package in $os_security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
