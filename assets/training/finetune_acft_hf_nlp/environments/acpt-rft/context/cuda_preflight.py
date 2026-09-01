@@ -14,6 +14,7 @@ EXPECTED_VERSIONS = {
     "torch": "2.13.0",
     "torchvision": "0.28.0",
     "vllm": "0.26.0",
+    "openai": "2.25.0",
 }
 EXPECTED_CUDA = "12.9"
 
@@ -77,6 +78,7 @@ def main() -> int:
     import torch
     import torchvision
     import vllm
+    from openai.types.responses import NamespaceTool  # noqa: F401
 
     validate_versions(torch)
     if importlib.util.find_spec("vllm._C_stable_libtorch") is None:
