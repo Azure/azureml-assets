@@ -69,7 +69,10 @@ def attention_exports() -> dict[str, str]:
         return {}
     if "VLLM_ATTENTION_BACKEND" in os.environ:
         return {}
-    return {"VLLM_ATTENTION_BACKEND": "TRITON_ATTN"}
+    return {
+        "VLLM_ATTENTION_BACKEND": "TRITON_ATTN",
+        "VERL_ACTOR_ATTENTION_IMPLEMENTATION": "sdpa",
+    }
 
 
 def main() -> int:
