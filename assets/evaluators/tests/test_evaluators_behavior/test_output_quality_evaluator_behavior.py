@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Behavioral tests for the Quality Composite Evaluator."""
+"""Behavioral tests for the Output Quality Evaluator."""
 
 import asyncio
 import os
@@ -11,7 +11,7 @@ import pytest
 from azure.ai.evaluation import AzureOpenAIModelConfiguration
 from azure.ai.evaluation._exceptions import EvaluationException
 
-from ...builtin.quality_composite.evaluator._quality_composite import QualityCompositeEvaluator, _EVALUATORS
+from ...builtin.output_quality.evaluator._output_quality import OutputQualityEvaluator, _EVALUATORS
 
 VALID_QUERY = "How do I reset my account password?"
 VALID_RESPONSE = "Open account settings, select Security, and choose Reset password."
@@ -59,7 +59,7 @@ def _make_evaluator(**init_kwargs):
         azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
         azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
     )
-    return QualityCompositeEvaluator(model_config=model_config, **init_kwargs)
+    return OutputQualityEvaluator(model_config=model_config, **init_kwargs)
 
 
 def _mock_flows(evaluator, llm_output):
@@ -74,8 +74,8 @@ def _mock_flows(evaluator, llm_output):
 
 
 @pytest.mark.unittest
-class TestQualityCompositeEvaluatorBehavior:
-    """Behavioral tests for the QualityCompositeEvaluator."""
+class TestOutputQualityEvaluatorBehavior:
+    """Behavioral tests for the OutputQualityEvaluator."""
 
     # region routing
 
@@ -133,28 +133,32 @@ class TestQualityCompositeEvaluatorBehavior:
 
     # region output shape and aggregation
 
-    def test_primary_score_and_raw_evaluator_objects_are_nested(self):
-        """Aggregate output keeps raw member results only in the nested evaluator map."""
+    def test_primary_score_and_member_results_are_flattened(self):
+        """Aggregate output includes nested member results and converter-compatible flat keys."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
         result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE)
-        assert result["quality_composite"] == 1
-        assert result["quality_composite_threshold"] == 1
-        assert result["quality_composite_result"] == "pass"
-        assert result["quality_composite_passed"] is True
-        evaluators = result["quality_composite_evaluators"]
-        assert "evaluators" not in result["quality_composite_properties"]
+        assert result["output_quality"] == 1
+        assert result["output_quality_threshold"] == 1
+        assert result["output_quality_result"] == "pass"
+        assert result["output_quality_passed"] is True
+        evaluators = result["output_quality_evaluators"]
+        assert "evaluators" not in result["output_quality_properties"]
         assert evaluators["fluency"]["threshold"] == 3
         assert evaluators["fluency"]["passed"] is True
         for name in _EVALUATOR_NAMES:
             assert name not in result
             assert evaluators[name]["status"] == "completed"
+            for field in ("score", "reason", "threshold", "status"):
+                assert result[f"{name}_{field}"] == evaluators[name][field]
+            assert result[f"{name}_result"] == "pass"
+            assert f"{name}_passed" not in result
 
     def test_multi_turn_raw_failed_turn_is_preserved(self):
         """Multi-turn raw evaluator results preserve their failed-turn metadata."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output(failed_turn=1))
         result = evaluator(messages=VALID_MESSAGES)
         for name in _EVALUATOR_NAMES:
-            assert result["quality_composite_evaluators"][name]["failed_turn"] == 1
+            assert result["output_quality_evaluators"][name]["failed_turn"] == 1
 
     def test_default_thresholds_match_member_defaults(self):
         """Default aggregate thresholds match the member evaluator defaults."""
@@ -182,14 +186,15 @@ class TestQualityCompositeEvaluatorBehavior:
             _all_completed_llm_output(score_overrides={"fluency": 3}),
         )
         result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE)
-        assert result["quality_composite"] == 0
-        assert result["quality_composite_threshold"] == 1
-        assert result["quality_composite_result"] == "fail"
-        assert result["quality_composite_passed"] is False
-        assert result["quality_composite_evaluators"]["fluency"]["score"] == 3
-        assert result["quality_composite_evaluators"]["fluency"]["threshold"] == 4
-        assert result["quality_composite_evaluators"]["fluency"]["passed"] is False
-        assert result["quality_composite_evaluators"]["coherence"]["score"] == 5
+        assert result["output_quality"] == 0
+        assert result["output_quality_threshold"] == 1
+        assert result["output_quality_result"] == "fail"
+        assert result["output_quality_passed"] is False
+        assert result["output_quality_evaluators"]["fluency"]["score"] == 3
+        assert result["output_quality_evaluators"]["fluency"]["threshold"] == 4
+        assert result["output_quality_evaluators"]["fluency"]["passed"] is False
+        assert result["output_quality_evaluators"]["coherence"]["score"] == 5
+        assert result["fluency_result"] == "fail"
 
     # endregion
 
@@ -199,18 +204,22 @@ class TestQualityCompositeEvaluatorBehavior:
         """An all-skipped member result returns an aggregate not-applicable result."""
         evaluator = _mock_flows(_make_evaluator(), _all_skipped_llm_output())
         result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE)
-        assert result["quality_composite"] is None
-        assert result["quality_composite_threshold"] == 1
-        assert result["quality_composite_result"] == "not_applicable"
-        assert result["quality_composite_status"] == "skipped"
-        assert result["quality_composite_passed"] is None
+        assert result["output_quality"] is None
+        assert result["output_quality_threshold"] == 1
+        assert result["output_quality_result"] == "not_applicable"
+        assert result["output_quality_status"] == "skipped"
+        assert result["output_quality_passed"] is None
         for name in _EVALUATOR_NAMES:
-            assert result["quality_composite_evaluators"][name]["score"] is None
-            assert result["quality_composite_evaluators"][name]["threshold"] == next(
+            assert result["output_quality_evaluators"][name]["score"] is None
+            assert result["output_quality_evaluators"][name]["threshold"] == next(
                 evaluator["default_threshold"] for evaluator in _EVALUATORS if evaluator["name"] == name
             )
-            assert result["quality_composite_evaluators"][name]["status"] == "skipped"
-            assert result["quality_composite_evaluators"][name]["passed"] is None
+            assert result["output_quality_evaluators"][name]["status"] == "skipped"
+            assert result["output_quality_evaluators"][name]["passed"] is None
+            assert result[f"{name}_score"] is None
+            assert result[f"{name}_status"] == "skipped"
+            assert f"{name}_result" not in result
+            assert f"{name}_passed" not in result
 
     def test_intermediate_response_returns_not_applicable(self):
         """An intermediate function-call response is skipped without invoking the LLM."""
@@ -229,8 +238,8 @@ class TestQualityCompositeEvaluatorBehavior:
             }
         ]
         result = evaluator(query=VALID_QUERY, response=intermediate_response)
-        assert result["quality_composite"] is None
-        assert result["quality_composite_status"] == "skipped"
+        assert result["output_quality"] is None
+        assert result["output_quality_status"] == "skipped"
         evaluator._flow.assert_not_called()
 
     def test_mixed_skipped_and_completed_members_pass(self):
@@ -243,9 +252,9 @@ class TestQualityCompositeEvaluatorBehavior:
         }
         evaluator = _mock_flows(_make_evaluator(), llm_output)
         result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE)
-        assert result["quality_composite"] == 1
-        assert result["quality_composite_evaluators"]["groundedness"]["status"] == "skipped"
-        assert result["quality_composite_evaluators"]["fluency"]["status"] == "completed"
+        assert result["output_quality"] == 1
+        assert result["output_quality_evaluators"]["groundedness"]["status"] == "skipped"
+        assert result["output_quality_evaluators"]["fluency"]["status"] == "completed"
 
     def test_missing_member_output_is_treated_as_skipped(self):
         """An omitted member output is represented as a skipped evaluator."""
@@ -253,9 +262,9 @@ class TestQualityCompositeEvaluatorBehavior:
         del llm_output["llm_output"]["task_completion"]
         evaluator = _mock_flows(_make_evaluator(), llm_output)
         result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE)
-        assert result["quality_composite_evaluators"]["task_completion"]["score"] is None
-        assert result["quality_composite_evaluators"]["task_completion"]["status"] == "skipped"
-        assert result["quality_composite_evaluators"]["fluency"]["status"] == "completed"
+        assert result["output_quality_evaluators"]["task_completion"]["score"] is None
+        assert result["output_quality_evaluators"]["task_completion"]["status"] == "skipped"
+        assert result["output_quality_evaluators"]["fluency"]["status"] == "completed"
 
     # endregion
 
@@ -329,9 +338,9 @@ class TestQualityCompositeEvaluatorBehavior:
         assert asyncio.run(evaluator._the_super_real_call()) == {}
 
         evaluator._convert_kwargs_to_eval_input = MagicMock(return_value=[{"response": VALID_RESPONSE}] * 2)
-        evaluator._do_eval = AsyncMock(return_value={"quality_composite": 1})
-        evaluator._aggregate_results = MagicMock(return_value={"quality_composite": 1})
-        assert asyncio.run(evaluator._the_super_real_call()) == {"quality_composite": 1}
+        evaluator._do_eval = AsyncMock(return_value={"output_quality": 1})
+        evaluator._aggregate_results = MagicMock(return_value={"output_quality": 1})
+        assert asyncio.run(evaluator._the_super_real_call()) == {"output_quality": 1}
 
         evaluator._convert_kwargs_to_eval_input = MagicMock(side_effect=ValueError("invalid input"))
         with pytest.raises(ValueError, match="invalid input"):

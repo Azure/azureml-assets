@@ -7,16 +7,13 @@ system_metadata:
   sharedComputeCapacityEnabled: true
   SKU:
     inferenceRecommendedSkus:
-    - Standard_NC6s_v3
-    - Standard_NC12s_v3
-    - Standard_NC24s_v3
     - Standard_NC24ads_A100_v4
     - Standard_NC48ads_A100_v4
     - Standard_NC96ads_A100_v4
     - Standard_ND96asr_v4
     - Standard_ND96amsr_A100_v4
     - Standard_ND40rs_v2
-    inferenceMinSkuSpec: 6|1|112|64
+    inferenceMinSkuSpec: 24|1|220|64
   publisher: Paige
   hiddenLayerScanned: true
   industry: health-and-life-sciences
@@ -50,9 +47,6 @@ system_metadata:
     - zero-shot-image-classification
   supportedComputes:
     inferenceComputes:
-    - Standard_NC6s_v3
-    - Standard_NC12s_v3
-    - Standard_NC24s_v3
     - Standard_NC24ads_A100_v4
     - Standard_NC48ads_A100_v4
     - Standard_NC96ads_A100_v4
