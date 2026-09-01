@@ -234,7 +234,7 @@ class TestToolUseQualityEvaluatorBehavior:
             assert result["tool_use_quality_evaluators"][name]["passed"] is None
             assert result[f"{name}_score"] is None
             assert result[f"{name}_status"] == "skipped"
-            assert f"{name}_result" not in result
+            assert result[f"{name}_result"] == "not_applicable"
             assert f"{name}_passed" not in result
 
     def test_mixed_skip_and_completed_evaluators(self):
@@ -292,17 +292,48 @@ class TestToolUseQualityEvaluatorBehavior:
         with pytest.raises(EvaluationException):
             evaluator(response=VALID_RESPONSE, tool_definitions=VALID_TOOL_DEFINITIONS)
 
-    def test_tool_definitions_required_for_query_response(self):
-        """Omitting tool_definitions raises because tool definitions are required for tool-use quality."""
+    def test_missing_tool_definitions_returns_not_applicable_for_query_response(self):
+        """Omitting tool_definitions returns not_applicable with all flat keys present."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
-        with pytest.raises(EvaluationException):
-            evaluator(query=VALID_QUERY, response=VALID_RESPONSE)
+        result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE)
+        assert result["tool_use_quality"] is None
+        assert result["tool_use_quality_result"] == "not_applicable"
+        assert result["tool_use_quality_passed"] is None
+        assert result["tool_use_quality_status"] == "skipped"
+        for name in _EVALUATOR_NAMES:
+            assert result[f"{name}_score"] is None
+            assert result[f"{name}_status"] == "skipped"
+            assert result[f"{name}_result"] == "not_applicable"
+            assert result[f"{name}_reason"] is not None
+            assert result[f"{name}_threshold"] is not None
+        evaluator._flow.assert_not_called()
+        evaluator._multi_turn_flow.assert_not_called()
 
-    def test_tool_definitions_required_for_messages(self):
-        """Omitting tool_definitions raises for multi-turn tool-use quality as well."""
+    def test_missing_tool_definitions_returns_not_applicable_for_messages(self):
+        """Omitting tool_definitions returns not_applicable for multi-turn with all flat keys."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
-        with pytest.raises(EvaluationException):
-            evaluator(messages=VALID_MESSAGES)
+        result = evaluator(messages=VALID_MESSAGES)
+        assert result["tool_use_quality"] is None
+        assert result["tool_use_quality_result"] == "not_applicable"
+        assert result["tool_use_quality_passed"] is None
+        for name in _EVALUATOR_NAMES:
+            assert result[f"{name}_score"] is None
+            assert result[f"{name}_status"] == "skipped"
+            assert result[f"{name}_result"] == "not_applicable"
+        evaluator._flow.assert_not_called()
+        evaluator._multi_turn_flow.assert_not_called()
+
+    def test_empty_tool_definitions_returns_not_applicable(self):
+        """An empty tool_definitions list returns not_applicable with all flat keys."""
+        evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
+        result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE, tool_definitions=[])
+        assert result["tool_use_quality"] is None
+        assert result["tool_use_quality_result"] == "not_applicable"
+        for name in _EVALUATOR_NAMES:
+            assert result[f"{name}_score"] is None
+            assert result[f"{name}_status"] == "skipped"
+            assert result[f"{name}_result"] == "not_applicable"
+        evaluator._flow.assert_not_called()
 
     def test_tool_definitions_invalid_format_raises(self):
         """Malformed tool_definitions (missing required 'name') raises EvaluationException."""
@@ -349,21 +380,36 @@ class TestToolUseQualityEvaluatorBehavior:
         """The direct evaluation path requires both query and response."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
         with pytest.raises(EvaluationException):
-            asyncio.run(evaluator._do_eval({"response": VALID_RESPONSE}))
+            asyncio.run(evaluator._do_eval({"response": VALID_RESPONSE, "tool_definitions": VALID_TOOL_DEFINITIONS}))
+
+    def test_do_eval_missing_tool_definitions_returns_not_applicable(self):
+        """The direct evaluation path flattens missing tool definitions as not applicable."""
+        evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
+        result = asyncio.run(evaluator._do_eval({"query": VALID_QUERY, "response": VALID_RESPONSE}))
+
+        assert result["tool_use_quality_result"] == "not_applicable"
+        for name in _EVALUATOR_NAMES:
+            assert result[f"{name}_result"] == "not_applicable"
+        evaluator._flow.assert_not_called()
+        evaluator._multi_turn_flow.assert_not_called()
 
     def test_super_real_call_handles_empty_multiple_and_conversion_errors(self):
         """The shared call path handles empty, multiple, and invalid converted inputs."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output())
+        td = VALID_TOOL_DEFINITIONS
+
         evaluator._convert_kwargs_to_eval_input = MagicMock(return_value=[])
-        assert asyncio.run(evaluator._the_super_real_call()) == {}
+        empty_result = asyncio.run(evaluator._the_super_real_call(tool_definitions=td))
+        assert empty_result["tool_use_quality"] is None
+        assert empty_result["tool_use_quality_result"] == "not_applicable"
 
         evaluator._convert_kwargs_to_eval_input = MagicMock(return_value=[{"response": VALID_RESPONSE}] * 2)
         evaluator._do_eval = AsyncMock(return_value={"tool_use_quality": 1})
         evaluator._aggregate_results = MagicMock(return_value={"tool_use_quality": 1})
-        assert asyncio.run(evaluator._the_super_real_call()) == {"tool_use_quality": 1}
+        assert asyncio.run(evaluator._the_super_real_call(tool_definitions=td)) == {"tool_use_quality": 1}
 
         evaluator._convert_kwargs_to_eval_input = MagicMock(side_effect=ValueError("invalid input"))
         with pytest.raises(ValueError, match="invalid input"):
-            asyncio.run(evaluator._the_super_real_call())
+            asyncio.run(evaluator._the_super_real_call(tool_definitions=td))
 
     # endregion

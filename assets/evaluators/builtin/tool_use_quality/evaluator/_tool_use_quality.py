@@ -466,7 +466,7 @@ class ToolUseQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
     _PROMPTY_FILE = "tool_use_quality.prompty"
     _MULTI_TURN_PROMPTY_FILE = "tool_use_quality_multi_turn.prompty"
     _RESULT_KEY = "tool_use_quality"
-    _OPTIONAL_PARAMS = ["messages"]
+    _OPTIONAL_PARAMS = ["messages", "tool_definitions"]
     _EVALUATORS = _EVALUATORS
 
     _validator: ValidatorInterface
@@ -505,7 +505,7 @@ class ToolUseQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         # Initialize input validator (supports both query/response and messages)
         self._validator = MessagesOrQueryResponseInputValidator(
             error_target=ExtendedErrorTarget.TOOL_USE_QUALITY_EVALUATOR,
-            optional_tool_definitions=False,
+            optional_tool_definitions=True,
             enforce_tool_definitions=True,
         )
 
@@ -709,8 +709,6 @@ class ToolUseQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             f"{self._RESULT_KEY}_properties": aggregate_properties,
             f"{self._RESULT_KEY}_evaluators": normalized_evaluators,
         }
-        # The SDK converter derives `passed` from `<member>_result`; it does not
-        # recognize `<member>_passed`, and skipped members must remain unset.
         for name, member_output in normalized_evaluators.items():
             member_passed = member_output.get("passed")
             result[f"{name}_score"] = member_output.get("score")
@@ -719,6 +717,8 @@ class ToolUseQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             result[f"{name}_status"] = member_output.get("status")
             if member_passed is not None:
                 result[f"{name}_result"] = EVALUATION_PASS_FAIL_MAPPING[member_passed]
+            else:
+                result[f"{name}_result"] = "not_applicable"
 
         result.update({f"{self._RESULT_KEY}_{key}": value for key, value in token_metadata.items()})
         return result
@@ -806,7 +806,7 @@ class ToolUseQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         if len(per_turn_results) == 1:
             return per_turn_results[0]
         if len(per_turn_results) == 0:
-            return {}
+            return self._return_not_applicable_result("No evaluable inputs were produced.")
         # Otherwise, aggregate results.
         return self._aggregate_results(per_turn_results=per_turn_results)
 
@@ -822,6 +822,11 @@ class ToolUseQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         :return: The evaluation result.
         :rtype: Dict
         """
+        if not eval_input.get("tool_definitions"):
+            return self._return_not_applicable_result(
+                "No tool definitions provided. Tool use quality evaluation requires tool_definitions."
+            )
+
         if self._should_use_conversation_level(eval_input):
             return await self._do_eval_conversation_level(eval_input)
 
