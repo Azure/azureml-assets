@@ -2,7 +2,9 @@
 """Validate the ACFT RFT CUDA stack and emit topology-safe NCCL settings."""
 
 import argparse
+import importlib
 import importlib.metadata
+import importlib.util
 import os
 import shlex
 import sys
@@ -75,9 +77,10 @@ def main() -> int:
     import torch
     import torchvision
     import vllm
-    import vllm._C_stable_libtorch
 
     validate_versions(torch)
+    if importlib.util.find_spec("vllm._C_stable_libtorch") is None:
+        raise RuntimeError("vLLM stable native extension is not installed")
     try:
         importlib.metadata.version("torchaudio")
     except importlib.metadata.PackageNotFoundError:
@@ -95,6 +98,7 @@ def main() -> int:
 
     exports = {}
     if not args.skip_cuda:
+        importlib.import_module("vllm._C_stable_libtorch")
         torch.cuda.init()
         print(
             f"CUDA devices: {torch.cuda.device_count()}; "
