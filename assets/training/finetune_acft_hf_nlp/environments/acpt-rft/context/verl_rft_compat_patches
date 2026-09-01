@@ -251,9 +251,12 @@ _VLLM_LORA_BASE_WEIGHT_NEW = '''            elif child_prefix == "weight" and "b
                 # ACFT-RFT-COMPAT: live LoRA synchronization sends the base
                 # embedding as embed_tokens.weight, while vLLM wraps it under
                 # embed_tokens.base_layer.weight.
-                yield from self._load_module(
-                    self._get_qualname(base_prefix, "base_layer"),
-                    child_modules["base_layer"],
+                base_layer_params = dict(
+                    child_modules["base_layer"].named_parameters(recurse=False)
+                )
+                yield from self._load_param(
+                    self._get_qualname(base_prefix, "base_layer.weight"),
+                    base_layer_params["weight"],
                     child_weights,
                 )
             else:
