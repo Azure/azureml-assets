@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.retrieval"
-version: 13
+version: 14
 displayName: "Retrieval-Evaluator"
 description: "Measures how effectively the system retrieves relevant data or content. Higher scores mean better recall of useful information. It’s best used for the quality of search in information retrieval and retrieval augmented generation, when you don't have ground truth for chunk retrieval rankings. Use the retrieval score when you want to assess to what extent the context chunks retrieved are highly relevant and ranked at the top for answering your users' queries."
 evaluatorType: "builtin"
@@ -8,6 +8,7 @@ evaluatorSubType: "code"
 categories: ["quality"]
 tags:
   provider: "Microsoft"
+supportedEvaluationLevels: ["conversation", "turn"]
 initParameterSchema:
   type: "object"
   properties:
@@ -26,7 +27,13 @@ dataMappingSchema:
       type: "string"
     context:
       type: "string"
-  required: ["query", "context"]
+    messages:
+      type: "array"
+      items:
+        type: "object"
+  anyOf:
+    - required: ["query", "context"]
+    - required: ["messages"]
 outputSchema:
   retrieval:
     type: "ordinal"
