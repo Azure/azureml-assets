@@ -63,17 +63,19 @@ def topology_exports(torch_module) -> dict[str, str]:
 
 
 def attention_exports() -> dict[str, str]:
+    exports = {}
+    if "VERL_ACTOR_ATTENTION_IMPLEMENTATION" not in os.environ:
+        exports["VERL_ACTOR_ATTENTION_IMPLEMENTATION"] = "sdpa"
+
     flash_attn = importlib.import_module(
         "vllm.vllm_flash_attn.flash_attn_interface"
     )
     if flash_attn.FA2_AVAILABLE or flash_attn.FA3_AVAILABLE:
-        return {}
+        return exports
     if "VLLM_ATTENTION_BACKEND" in os.environ:
-        return {}
-    return {
-        "VLLM_ATTENTION_BACKEND": "TRITON_ATTN",
-        "VERL_ACTOR_ATTENTION_IMPLEMENTATION": "sdpa",
-    }
+        return exports
+    exports["VLLM_ATTENTION_BACKEND"] = "TRITON_ATTN"
+    return exports
 
 
 def main() -> int:

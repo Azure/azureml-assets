@@ -239,8 +239,8 @@ _VERL_ACTOR_ATTN_OLD = (
 )
 _VERL_ACTOR_ATTN_NEW = '''        attn_implementation = override_model_config.get(
             "attn_implementation",
-            # ACFT-RFT-COMPAT: runtime preflight selects SDPA when the vLLM wheel's
-            # non-stable FA2/FA3 extensions cannot load with the image's PyTorch ABI.
+    # ACFT-RFT-COMPAT: runtime preflight selects a Transformers backend
+    # independently from the vLLM rollout attention backend.
             os.getenv("VERL_ACTOR_ATTENTION_IMPLEMENTATION", "flash_attention_2"),
         )'''
 
