@@ -15,12 +15,12 @@ EXPECTED_VERSIONS = {
     "torchvision": "0.26.0",
     "vllm": "0.26.0",
     "openai": "2.25.0",
-    "nvidia-nccl-cu12": "2.28.9",
+    "nvidia-nccl-cu12": "2.29.7",
     "flashinfer-python": "0.6.13",
     "flashinfer-cubin": "0.6.13",
 }
 EXPECTED_CUDA = "12.9"
-EXPECTED_NCCL = (2, 28, 9)
+EXPECTED_NCCL = (2, 29, 7)
 
 
 def normalized_version(package_name: str) -> str:
