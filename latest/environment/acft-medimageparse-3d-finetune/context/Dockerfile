@@ -56,9 +56,3 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir -r r
 # azureml-mlflow metadata caps it below the patched release, fixes GHSA-g6cj-pr64-35w5.
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --no-deps --upgrade \
         "cryptography==50.0.0"
-
-# The base miniconda prefix ships its own cryptography, which the conda env above
-# never touches; the scanner reports it separately, so patch it directly for
-# GHSA-g6cj-pr64-35w5.
-RUN /opt/miniconda/bin/pip install --no-cache-dir --no-deps --upgrade \
-        "cryptography==50.0.0"

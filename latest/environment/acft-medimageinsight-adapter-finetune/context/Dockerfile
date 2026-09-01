@@ -4,6 +4,7 @@ USER root
 
 RUN apt-get -y update && apt-get -y upgrade \
  && apt-get -y install --only-upgrade \
+        curl \
         dotnet-hostfxr-8.0 \
         dotnet-host-8.0 \
         dotnet-runtime-8.0 \
@@ -12,8 +13,18 @@ RUN apt-get -y update && apt-get -y upgrade \
         libk5crypto3 \
         libkrb5-3 \
         libkrb5support0 \
+        libcurl3-gnutls \
+        libcurl4 \
         liblzma5 \
+        libperl5.34 \
+        libpng16-16 \
         libsqlite3-0 \
+        libssl-dev \
+        libssl3 \
+        openssl \
+        perl \
+        perl-base \
+        perl-modules-5.34 \
         tar \
         wget \
         xz-utils \
@@ -22,7 +33,9 @@ RUN apt-get -y update && apt-get -y upgrade \
 
 # Install required PyPI packages.
 COPY requirements.txt .
-RUN pip install -r requirements.txt --no-cache-dir
+RUN pip install -r requirements.txt --no-cache-dir && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/setuptools-70.3.0.dist-info \
+           /opt/conda/envs/ptca/lib/python3.10/site-packages/msgpack-1.1*.dist-info
 
 # torch is a direct training dependency; install CUDA 12.6 PyTorch wheels to
 # override vulnerable torch from the ACPT base image (GHSA-vgrw-7cvw-pwgx,
@@ -87,6 +100,7 @@ RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.1
     rm -rf /opt/conda/lib/python3.14/site-packages/cryptography-48.0.1.dist-info \
            /opt/conda/lib/python3.14/site-packages/pydantic_settings-2.12*.dist-info \
            /opt/conda/lib/python3.14/site-packages/pydantic__settings-2.12*.dist-info \
-           /opt/conda/lib/python3.14/site-packages/msgpack-1.1*.dist-info
+           /opt/conda/lib/python3.14/site-packages/msgpack-1.1*.dist-info \
+           /opt/conda/lib/python3.14/site-packages/setuptools-70.3.0.dist-info
 
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/

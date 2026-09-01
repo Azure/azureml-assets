@@ -2,11 +2,9 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202608.2
 
 USER root
-# These packages are inherited unpatched from the ACPT base image, whose tag lags the
-# Ubuntu 22.04 security archive. Remove this --only-upgrade list once the base image
-# ships the fixed versions on its own.
+# Upgrade inherited OS packages to current Ubuntu 22.04 security archive versions.
 RUN apt-get -y update \
- && apt-get install -y --only-upgrade \
+ && apt-get install -y --no-install-recommends --only-upgrade \
     libc-dev-bin libc6-dev locales libc6 libc-bin \
     libpam-runtime libpam0g libpam-modules libpam-modules-bin \
     libkrb5support0 libgssapi-krb5-2 libk5crypto3 libkrb5-3 \
@@ -14,18 +12,27 @@ RUN apt-get -y update \
     libasound2 libasound2-data \
     dotnet-hostfxr-8.0 dotnet-runtime-8.0 dotnet-host-8.0 \
     libsystemd0 libudev1 udev \
+    libpng16-16 \
+    curl libcurl4 libcurl3-gnutls \
+    libperl5.34 perl perl-modules-5.34 perl-base \
+    libssl-dev libssl3 openssl \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
-# setuptools: pinned from the ACPT base conda env; fixes GHSA-h35f-9h28-mq5c.
-RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'setuptools>=83.0.0'
-
-# aiohttp and cryptography: pinned transitive deps inherited from the ACPT base conda env; fixes GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, GHSA-mfx4-hv73-q22v, and GHSA-g6cj-pr64-35w5.
+# setuptools, msgpack, aiohttp and cryptography: pinned transitive deps from the ACPT base
+# conda envs; fixes GHSA-5rjg-fvgr-3xxf, GHSA-h35f-9h28-mq5c, GHSA-6v7p-g79w-8964,
+# GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, GHSA-mfx4-hv73-q22v, and GHSA-g6cj-pr64-35w5.
+# Both interpreter prefixes must be patched or the untouched env keeps the vulnerable copy.
 RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade \
+    'setuptools>=83.0.0' \
+    'msgpack>=1.2.1' \
     'aiohttp>=3.14.3' \
-    'cryptography>=50.0.0,<51'
+    'cryptography>=50.0.0,<51' \
+ && conda run -n ptca python -m pip install --no-cache-dir --upgrade \
+    'setuptools>=83.0.0' \
+    'msgpack>=1.2.1'
 
 # transformers: fix GHSA-69w3-r845-3855 (CVE-2026-1839, arbitrary code execution in Trainer).
 # --no-deps keeps the pinned HF stack intact (transformers is a direct requirements.txt pin).
@@ -65,3 +72,13 @@ RUN pip install --no-cache-dir 'pyarrow>=23.0.1'
 # torchvision and torchaudio are upgraded with torch to keep the CUDA PyTorch stack compatible.
 RUN pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 \
     'torch==2.13.0' 'torchvision==0.28.0' 'torchaudio==2.11.0'
+
+RUN find /opt/conda -type d \( \
+        -name 'setuptools-70.3.0.dist-info' -o \
+        -name 'setuptools-70.3.0-py*.egg-info' -o \
+        -name 'setuptools-81.0.0.dist-info' -o \
+        -name 'setuptools-81.0.0-py*.egg-info' -o \
+        -name 'msgpack-1.1.2.dist-info' \
+    \) -prune -exec rm -rf {} + \
+ && conda clean -a -y \
+ && rm -rf /opt/conda/pkgs/ /opt/miniconda/pkgs/

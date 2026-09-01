@@ -7,22 +7,9 @@ USER root
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-acft-hf-nlp-data-import
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
-# sudo is expected by Singularity inside the image
-# Security: upgrade all OS packages and install security-patched system libraries.
-# `apt-get -y upgrade` brings every base-image package to its latest noble-updates
-# / noble-security version. The explicit installs below add packages that are NOT
-# present in the openmpi5.0-ubuntu24.04 base image:
-#   - sudo:        required by Singularity (see comment above)
-#   - locales:     downstream Python locale support
-#   - libssl-dev:  build-time headers for Python C extensions / wheel builds
-#   - sqlite3:     CLI used by some downstream tooling
-# Packages that USED to be in this list (libxml2, libc-bin, libc-dev, libc6,
-# dpkg, dpkg-dev, libdpkg-perl, libssl3, openssl) were removed because they are
-# all already installed by the base image and `apt-get -y upgrade` covers their
-# security patches — re-listing them was redundant.
-# The final `--only-upgrade` list documents security-sensitive OS packages that
-# must remain at the current noble-security patch level even when inherited from
-# the base image.
+# sudo is expected by Singularity inside the image.
+# Upgrade OS packages to the latest noble-updates/noble-security versions, then
+# keep security-sensitive inherited packages at the current patched level.
 RUN apt-get update && ACCEPT_EULA=Y apt-get -y upgrade && \
 apt-get install -y sudo locales libssl-dev sqlite3 && \
 apt-get install -y --only-upgrade \
@@ -36,10 +23,13 @@ apt-get install -y --only-upgrade \
     libk5crypto3 \
     libkrb5-3 \
     libkrb5support0 \
+    libssl-dev \
+    libssl3t64 \
     libsqlite3-0 \
     nginx \
     nginx-common \
     nginx-light \
+    openssl \
     sqlite3 \
     tar \
     wget \
@@ -48,22 +38,9 @@ apt-get install -y --only-upgrade \
     && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Security: upgrade pip in BASE miniconda (/opt/miniconda) to fix CVE-2026-6357
-# (GHSA-jp4c-xjxw-mgf9). The base miniconda is independent of the Python 3.10 env
-# created below; the vulnerability scanner reports pip from any Python installation
-# in the image, so both must be patched. pip has no upstream parent package to bump,
-# so a direct override is the only fix. Tag 20260507.v1+ already ships pip 26.1.1
-# in the base, making this a no-op for newer bases.
-# idna (GHSA-65pc-fj4g-8rjx): bump to >=3.15 in base miniconda (Python 3.12 env)
-# since the scanner reports idna from opt/miniconda regardless of the conda env below.
-# cryptography (GHSA-g6cj-pr64-35w5): the base miniconda ships its own copy that the
-# Python 3.10 env created below never touches, and the scanner reports it separately,
-# so it needs a direct override here as well.
-# Remove pip's informational vendored-version manifests because VCM reports stale
-# setuptools/msgpack entries from them even when the installed packages are fixed.
-# pip>=26.1 ships bom.cdx.json in addition to vendor.txt, so both must be deleted.
-RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'pip>=26.1' 'idna>=3.15' 'cryptography>=50.0.0' && \
-    find /opt/miniconda \( -path '*/pip/_vendor/vendor.txt' -o -path '*/pip/_vendor/bom.cdx.json' \) -delete && \
+# Remove pip's informational vendored-version manifests because VCM can report
+# stale vendored package entries even when the installed packages are patched.
+RUN find /opt/miniconda \( -path '*/pip/_vendor/vendor.txt' -o -path '*/pip/_vendor/bom.cdx.json' \) -delete && \
     rm -rf /root/.cache/pip
 
 # Provision the Python 3.10 conda env. The conda channel now provides a patched

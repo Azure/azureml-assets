@@ -2,56 +2,35 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly
 
 USER root
 
-# OS packages: pinned inherited deps from the ACPT base image; fixes
-# USN-8533-1, USN-8538-1, USN-8543-1, USN-8553-1, USN-8477-3,
-# USN-8565-1, USN-8572-1, USN-8585-1, USN-8601-1, USN-8611-1, and USN-8626-1.
-# wget and the dotnet-* packages are upgraded rather than pinned: the jammy archive
-# has already superseded the versions that were pinned here and only keeps the newest
-# build, so an exact pin fails with "Version ... was not found". --only-upgrade means
-# these are upgraded to the current (patched) archive version when present.
+# OS packages inherited from the ACPT base image but still below current
+# Ubuntu security versions; fixes USN-8678-1, USN-8670-2, USN-8651-1, and USN-8675-1.
 RUN apt-get update && apt-get install -y --no-install-recommends --only-upgrade \
-    openssh-client=1:8.9p1-3ubuntu0.16 \
-    libasound2=1.2.6.1-1ubuntu1.2 \
-    libasound2-data=1.2.6.1-1ubuntu1.2 \
-    wget \
-    dotnet-hostfxr-8.0 \
-    dotnet-runtime-8.0 \
-    dotnet-host-8.0 \
-    tar=1.34+dfsg-1ubuntu0.1.22.04.6 \
-    libsqlite3-0=3.37.2-2ubuntu0.7 \
-    libkrb5support0=1.19.2-2ubuntu0.8 \
-    libgssapi-krb5-2=1.19.2-2ubuntu0.8 \
-    libk5crypto3=1.19.2-2ubuntu0.8 \
-    libkrb5-3=1.19.2-2ubuntu0.8 \
-    libpam-runtime=1.4.0-11ubuntu2.7 \
-    libpam0g=1.4.0-11ubuntu2.7 \
-    libpam-modules=1.4.0-11ubuntu2.7 \
-    libpam-modules-bin=1.4.0-11ubuntu2.7 \
-    libc-dev-bin=2.35-0ubuntu3.14 \
-    libc6-dev=2.35-0ubuntu3.14 \
-    locales=2.35-0ubuntu3.14 \
-    libc6=2.35-0ubuntu3.14 \
-    libc-bin=2.35-0ubuntu3.14 \
-    libsystemd0 \
-    libudev1 \
-    udev \
+    libssl-dev=3.0.2-0ubuntu1.29 \
+    libssl3=3.0.2-0ubuntu1.29 \
+    openssl=3.0.2-0ubuntu1.29 \
+    libcurl4=7.81.0-1ubuntu1.27 \
+    curl=7.81.0-1ubuntu1.27 \
+    libcurl3-gnutls=7.81.0-1ubuntu1.27 \
+    libperl5.34=5.34.0-3ubuntu1.8 \
+    perl=5.34.0-3ubuntu1.8 \
+    perl-modules-5.34=5.34.0-3ubuntu1.8 \
+    perl-base=5.34.0-3ubuntu1.8 \
  && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-RUN pip install -r requirements.txt --no-cache-dir
 # openmim still imports pkg_resources, which is removed from setuptools>=82.
 # Keep a temporary compatibility pin for mim installation, then restore setuptools.
-RUN /opt/conda/bin/python -m pip install --no-cache-dir 'setuptools<82' \
- && conda run -n ptca python -m pip install --no-cache-dir 'setuptools<82'
-
 # Note: mmdet should be installed via mim to access the model zoo config folder.
-RUN mim install mmdet==3.3.0
 # Temporary workaround for https://github.com/open-mmlab/mmdetection/issues/11668 (when mmdet updated, remove lines below)
-RUN mim install mmcv==2.2.0 -f https://download.openmmlab.com/mmcv/dist/cu118/torch2.2/index.html --no-cache-dir
 # setuptools: pinned inherited dep from the ACPT base image; fixes GHSA-h35f-9h28-mq5c.
-RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'setuptools==83.0.0' \
- && conda run -n ptca python -m pip install --no-cache-dir --upgrade 'setuptools==83.0.0'
-RUN sed -i 's/2.2.0/2.3.0/' /opt/conda/envs/ptca/lib/python3.10/site-packages/mmdet/__init__.py
+RUN pip install -r requirements.txt --no-cache-dir \
+ && /opt/conda/bin/python -m pip install --no-cache-dir 'setuptools<82' \
+ && conda run -n ptca python -m pip install --no-cache-dir 'setuptools<82' \
+ && mim install mmdet==3.3.0 \
+ && mim install mmcv==2.2.0 -f https://download.openmmlab.com/mmcv/dist/cu118/torch2.2/index.html --no-cache-dir \
+ && /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'setuptools==83.0.0' \
+ && conda run -n ptca python -m pip install --no-cache-dir --upgrade 'setuptools==83.0.0' \
+ && sed -i 's/2.2.0/2.3.0/' /opt/conda/envs/ptca/lib/python3.10/site-packages/mmdet/__init__.py
 
 # onnx-weekly: pinned transitive dep of azureml-acft-accelerator; it caps
 # onnx<=1.17.0, fixes GHSA-3r9x-f23j-gc73 and GHSA-hqmj-h5c6-369m.
@@ -82,5 +61,9 @@ RUN conda run -n ptca python -m pip uninstall -y torchaudio \
 RUN conda config --system --set solver classic \
  && /opt/conda/bin/python3.13 -m pip uninstall -y py-rattler conda-rattler-solver 2>/dev/null || true \
  && rm -rf /opt/conda/lib/python3.13/site-packages/rattler* /opt/conda/lib/python3.13/site-packages/conda_rattler_solver* /opt/conda/lib/python3.13/site-packages/py_rattler* /opt/conda/conda-meta/py-rattler-*.json /opt/conda/conda-meta/conda-rattler-solver-*.json
+
+# pip vendor metadata keeps stale bundled package versions in the SBOM after pip upgrades.
+RUN find /opt/conda -path '*/site-packages/pip/_vendor/bom.cdx.json' -delete \
+ && find /opt/conda -path '*/site-packages/pip/_vendor/vendor.txt' -delete
 
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/

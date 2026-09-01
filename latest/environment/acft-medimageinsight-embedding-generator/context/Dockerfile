@@ -54,6 +54,22 @@ RUN pip install --no-cache-dir --upgrade 'pip>=26.1.2,<27' && \
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
+# ptca env torch is inherited from the ACPT torch280 base image; pin the patched CUDA build for
+# GHSA-qfhq-4f3w-5fph, GHSA-vgrw-7cvw-pwgx, and GHSA-rrmf-rvhw-rf47. Keep torchvision aligned
+# with torch; remove torchaudio because no compatible 2.13 CUDA wheel is available.
+RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade \
+        --progress-bar off \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.13.0+cu126' \
+        'torchvision==0.28.0+cu126' && \
+    /opt/conda/envs/ptca/bin/python -m pip uninstall -y torchaudio && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/torch-2.8*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.10/site-packages/torch-2.10*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.10/site-packages/torchvision-0.23*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.10/site-packages/torchvision-0.25*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.10/site-packages/torchaudio \
+           /opt/conda/envs/ptca/lib/python3.10/site-packages/torchaudio-*.dist-info
+
 # ptca-env (py3.10) transitive deps pip won't auto-upgrade; no parent floors the safe versions:
 # Mako>=1.3.11 (GHSA-v92g-xgxw-vvmm), GitPython>=3.1.58 (GHSA-x2qx-6953-8485, GHSA-rpm5-65cw-6hj4,
 # GHSA-2f96-g7mh-g2hx, GHSA-956x-8gvw-wg5v, GHSA-v396-v7q4-x2qj, GHSA-94p4-4cq8-9g67,
