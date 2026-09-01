@@ -20,6 +20,7 @@ EXPECTED_VERSIONS = {
     "flashinfer-cubin": "0.6.13",
 }
 EXPECTED_CUDA = "12.9"
+EXPECTED_NCCL = (2, 28, 9)
 
 
 def normalized_version(package_name: str) -> str:
@@ -106,6 +107,7 @@ def main() -> int:
     for package_name, reason in {
         "torchaudio": "it is unused by this image",
         "torchcodec": "its vLLM dependency wheel requires CUDA 13",
+        "nvidia-nccl-cu13": "the image uses the CUDA 12 NCCL package",
     }.items():
         try:
             importlib.metadata.version(package_name)
@@ -129,9 +131,15 @@ def main() -> int:
         os.environ.update(exports)
         importlib.import_module("vllm.lora.lora_model")
         torch.cuda.init()
+        actual_nccl = torch.cuda.nccl.version()
+        if actual_nccl != EXPECTED_NCCL:
+            raise RuntimeError(
+                f"Loaded NCCL {actual_nccl} does not match expected "
+                f"NCCL {EXPECTED_NCCL}"
+            )
         print(
             f"CUDA devices: {torch.cuda.device_count()}; "
-            f"device 0: {torch.cuda.get_device_name(0)}",
+            f"device 0: {torch.cuda.get_device_name(0)}; NCCL {actual_nccl}",
             file=sys.stderr,
             flush=True,
         )
