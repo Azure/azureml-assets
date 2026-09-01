@@ -44,11 +44,11 @@ COPY utils /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/vllm/uti
 # vLLM's default PyPI wheel is built for CUDA 13. Install the official CUDA 12.9
 # wheel so A100 v4 hosts with a CUDA 12.8 driver can load vllm._C.
 RUN pip install --no-cache-dir "${VLLM_WHEEL}"
-# Keep native Torch packages on one CUDA lineage. torchvision 0.28 is the
-# matching release for torch 2.13. torchaudio has no 2.13 release, is unused by
-# this image, and must not remain inherited at an incompatible ABI.
+# Keep native Torch packages on the CUDA lineage vLLM 0.26 was built against.
+# torchaudio is unused by this image and must not remain inherited at a
+# potentially incompatible ABI.
 RUN pip install --no-cache-dir --force-reinstall \
-        torch==2.13.0 torchvision==0.28.0 \
+        torch==2.11.0 torchvision==0.26.0 \
         --index-url https://download.pytorch.org/whl/cu129 && \
     pip uninstall -y torchaudio
 # vllm's resolver can upgrade numpy, but verl 0.7.1 requires numpy<2.
@@ -167,12 +167,10 @@ COPY vllm_rollout /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/workers
 # target anchor is missing. Run in the training conda env.
 COPY verl_rft_compat_patches /tmp/verl_rft_compat_patches.py
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir "accelerate==1.14.0" && \
-    /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps \
-        torch==2.13.0 torchvision==0.28.0 \
-        --index-url https://download.pytorch.org/whl/cu129 && \
-    /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps \
-        nvidia-nccl-cu12==2.28.9 && \
-    /opt/conda/envs/ptca/bin/pip uninstall -y torchcodec && \
+/opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps \
+    torch==2.11.0 torchvision==0.26.0 \
+    --index-url https://download.pytorch.org/whl/cu129 && \
+/opt/conda/envs/ptca/bin/pip uninstall -y torchcodec && \
     /opt/conda/envs/ptca/bin/python /tmp/verl_rft_compat_patches.py && \
     rm -f /tmp/verl_rft_compat_patches.py
 COPY cuda_preflight.py /opt/conda/envs/ptca/bin/acft-rft-cuda-preflight
