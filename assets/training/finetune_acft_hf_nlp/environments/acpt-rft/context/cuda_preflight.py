@@ -81,14 +81,16 @@ def main() -> int:
     validate_versions(torch)
     if importlib.util.find_spec("vllm._C_stable_libtorch") is None:
         raise RuntimeError("vLLM stable native extension is not installed")
-    try:
-        importlib.metadata.version("torchaudio")
-    except importlib.metadata.PackageNotFoundError:
-        pass
-    else:
-        raise RuntimeError(
-            "torchaudio must be absent because no torch 2.13-compatible release exists"
-        )
+    for package_name, reason in {
+        "torchaudio": "no torch 2.13-compatible release exists",
+        "torchcodec": "its vLLM dependency wheel requires CUDA 13",
+    }.items():
+        try:
+            importlib.metadata.version(package_name)
+        except importlib.metadata.PackageNotFoundError:
+            pass
+        else:
+            raise RuntimeError(f"{package_name} must be absent because {reason}")
     print(
         f"Validated torch={torch.__version__}, torchvision={torchvision.__version__}, "
         f"vllm={vllm.__version__}; torchaudio is intentionally absent",
@@ -99,6 +101,7 @@ def main() -> int:
     exports = {}
     if not args.skip_cuda:
         importlib.import_module("vllm._C_stable_libtorch")
+        importlib.import_module("vllm.v1.worker.worker_base")
         torch.cuda.init()
         print(
             f"CUDA devices: {torch.cuda.device_count()}; "
