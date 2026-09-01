@@ -16,6 +16,8 @@ EXPECTED_VERSIONS = {
     "vllm": "0.26.0",
     "openai": "2.25.0",
     "nvidia-nccl-cu12": "2.28.9",
+    "flashinfer-python": "0.6.13",
+    "flashinfer-cubin": "0.6.13",
 }
 EXPECTED_CUDA = "12.9"
 
@@ -95,6 +97,7 @@ def main() -> int:
     import torch
     import torchvision
     import vllm
+    import flashinfer  # noqa: F401
     from openai.types.responses import NamespaceTool  # noqa: F401
 
     validate_versions(torch)

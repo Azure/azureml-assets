@@ -170,6 +170,8 @@ RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir "accelerate==1.14.0" && 
 /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps \
     torch==2.11.0 torchvision==0.26.0 \
     --index-url https://download.pytorch.org/whl/cu129 && \
+/opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps \
+    flashinfer-python==0.6.13 flashinfer-cubin==0.6.13 && \
 /opt/conda/envs/ptca/bin/pip uninstall -y torchcodec && \
     /opt/conda/envs/ptca/bin/python /tmp/verl_rft_compat_patches.py && \
     rm -f /tmp/verl_rft_compat_patches.py
