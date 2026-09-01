@@ -4,11 +4,9 @@ ENV PIP_PROGRESS_BAR=off
 
 # Apply OS security updates not yet covered by the base image.
 # libpam and glibc packages are inherited from the base image; fixes USN-8601-1 and USN-8611-1.
-# libsystemd0, libudev1 and udev are likewise inherited unpatched from the base image;
-# fixes USN-8626-1. Upgraded rather than pinned so the build tracks the security archive.
-# wget is upgraded rather than pinned for the same reason: the jammy archive has already
-# superseded the version that was pinned here and only keeps the newest build, so an
-# exact pin fails with "Version ... was not found".
+# libsystemd0, libudev1 and udev are inherited from the base image; fixes USN-8626-1.
+# OpenSSL, curl, and Perl packages are inherited from the base image; fixes USN-8678-1,
+# USN-8670-2, and USN-8675-1.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libpam-runtime=1.4.0-11ubuntu2.7 \
         libpam0g=1.4.0-11ubuntu2.7 \
@@ -33,6 +31,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libasound2=1.2.6.1-1ubuntu1.2 \
         libasound2-data=1.2.6.1-1ubuntu1.2 \
         openssh-client=1:8.9p1-3ubuntu0.16 \
+        libssl-dev=3.0.2-0ubuntu1.29 \
+        libssl3=3.0.2-0ubuntu1.29 \
+        openssl=3.0.2-0ubuntu1.29 \
+        libcurl4=7.81.0-1ubuntu1.27 \
+        curl=7.81.0-1ubuntu1.27 \
+        libcurl3-gnutls=7.81.0-1ubuntu1.27 \
+        libperl5.34=5.34.0-3ubuntu1.8 \
+        perl=5.34.0-3ubuntu1.8 \
+        perl-modules-5.34=5.34.0-3ubuntu1.8 \
+        perl-base=5.34.0-3ubuntu1.8 \
  && apt-get install -y --only-upgrade libsystemd0 libudev1 udev \
  && rm -rf /var/lib/apt/lists/*
 

@@ -28,9 +28,9 @@ RUN pip install --no-cache-dir accelerate==1.10.0
 RUN pip install --no-cache-dir sglang==0.5.11
 RUN pip install --no-cache-dir sglang-kernel==0.4.2
 
-RUN pip uninstall -y mlflow 
+RUN pip uninstall -y mlflow
 RUN pip install --no-cache-dir --force-reinstall "mlflow>=3.2.0,<4.0.0"
-# Upgrade wandb to latest; remove wandb-core Go binary to fix GO-2026-4864..4947
+# Upgrade wandb to latest; remove wandb-core Go binary to fix GO-2026-4864..4947.
 # wandb 0.26.1 ships wandb-core compiled with Go 1.26.1 (needs 1.26.2); no fixed wandb release yet.
 # Removing the binary forces wandb to use its Python backend (safe fallback).
 RUN pip install --no-cache-dir --upgrade "wandb>=0.26.0" && \
@@ -46,7 +46,7 @@ RUN pip install --no-cache-dir vllm==0.26.0
 RUN pip install --no-cache-dir --no-deps torch==2.13.0
 # vllm's resolver can upgrade numpy, but verl 0.7.1 requires numpy<2.
 RUN pip install --no-cache-dir numpy==1.26.4
-# Keep xgrammar at the patched floor even when pulled transitively by vllm.
+# Keep xgrammar at the patched floor when pulled transitively by vllm; fixes GHSA-7rgv-gqhr-fxg3.
 RUN pip install --no-cache-dir 'xgrammar>=0.1.32'
 RUN pip install openai==2.14.0
 RUN pip install --force-reinstall --no-cache-dir --no-build-isolation git+https://github.com/deepseek-ai/DeepGEMM.git@c9f8b34dcdacc20aa746b786f983492c51072870

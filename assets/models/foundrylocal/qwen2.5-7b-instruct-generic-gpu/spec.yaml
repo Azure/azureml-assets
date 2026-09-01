@@ -11,6 +11,7 @@ system_metadata:
   publisher: Microsoft
   directoryPath: v4
   foundryLocal: ''
+  deploymentOptions: ['Foundry Local on Devices']
   inputModalities:
   - text
   license: apache-2.0
