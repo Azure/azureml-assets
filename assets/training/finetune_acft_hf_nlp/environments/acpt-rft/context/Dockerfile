@@ -55,7 +55,7 @@ RUN pip install --no-cache-dir --force-reinstall \
 RUN pip install --no-cache-dir numpy==1.26.4
 # Keep xgrammar at the patched floor when pulled transitively by vllm; fixes GHSA-7rgv-gqhr-fxg3.
 RUN pip install --no-cache-dir 'xgrammar>=0.1.32'
-RUN pip install openai==2.14.0
+RUN pip install openai==2.25.0
 RUN pip install --force-reinstall --no-cache-dir --no-build-isolation git+https://github.com/deepseek-ai/DeepGEMM.git@c9f8b34dcdacc20aa746b786f983492c51072870
 RUN pip install --no-cache-dir 'flash-attn-4>=4.0.0b9'
 # Security overrides for pip-installed packages whose parent packages do not pin them safely.
