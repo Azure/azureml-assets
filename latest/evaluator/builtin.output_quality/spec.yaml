@@ -4,10 +4,7 @@ name: "builtin.output_quality"
 version: 1
 displayName: "Output-Quality-Evaluator-(Preview)"
 description: "A composite evaluator that batches fluency, coherence, intent_resolution,
-  task_adherence, groundedness, and task_completion into a single LLM call. The primary
-  output_quality score fails when any evaluated evaluator fails, while the evaluator
-  keys preserve the LLM results and derived pass/fail fields. Supports single-turn
-  query/response and multi-turn messages inputs."
+  task_adherence, groundedness, and task_completion into a single LLM call."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
 categories: ["quality", "agents"]
