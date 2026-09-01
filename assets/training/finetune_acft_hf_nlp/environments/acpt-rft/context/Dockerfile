@@ -181,6 +181,7 @@ COPY cuda_preflight.py /opt/conda/envs/ptca/bin/acft-rft-cuda-preflight
 RUN chmod +x /opt/conda/envs/ptca/bin/acft-rft-cuda-preflight && \
     /opt/conda/envs/ptca/bin/acft-rft-cuda-preflight --skip-cuda
 RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
-ENV PYTHONHASHSEED=random \
+ENV LD_LIBRARY_PATH=/opt/conda/envs/ptca/lib/python3.10/site-packages/nvidia/nccl/lib:${LD_LIBRARY_PATH} \
+    PYTHONHASHSEED=random \
     PYTHONDONTWRITEBYTECODE=1
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/ /opt/conda/pkgs/
