@@ -180,19 +180,24 @@ RUN cd /opt/slime/slime/backends/megatron_utils/kernels/int4_qat && \
 # Upgrade vulnerable Ubuntu packages inherited from or installed by this image.
 RUN apt-get update && \
     apt-get install -y --no-install-recommends --only-upgrade \
+        curl \
         libgssapi-krb5-2 \
         libk5crypto3 \
         libkrb5-3 \
         libkrb5support0 \
         libarchive13t64 \
+        libcurl3t64-gnutls \
+        libcurl4t64 \
         libpam-modules \
         libpam-modules-bin \
         libpam-runtime \
         libpam0g \
+        libssl3t64 \
         libsqlite3-0 \
         nginx \
         nginx-common \
         nginx-light \
+        openssl \
         rsyslog \
         tar \
         wget && \
