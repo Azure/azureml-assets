@@ -269,7 +269,14 @@ _VERL_DISPATCH_NEW = '''        else:
             # ACFT-RFT-COMPAT: vLLM 0.20.1 removed WorkerWrapperBase.execute_method; use
             # vLLM's run_method() dispatcher (getattr(obj, method)(*args, **kwargs)).
             from vllm.v1.serial_utils import run_method
-            return run_method(self.inference_engine, method, args, kwargs)'''
+            from vllm.v1.outputs import AsyncModelRunnerOutput
+
+            result = run_method(self.inference_engine, method, args, kwargs)
+            if isinstance(result, AsyncModelRunnerOutput):
+                # Match vLLM's native executor contract: synchronize the CUDA
+                # event before the result crosses the ZeroMQ pickle boundary.
+                return result.get_output()
+            return result'''
 
 # Worker server-mode methods the vendored async vLLM HTTP server calls on the hybrid
 # worker actors (two anchors in verl.workers.fsdp_workers).
