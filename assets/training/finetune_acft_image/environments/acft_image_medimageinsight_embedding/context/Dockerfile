@@ -23,10 +23,18 @@ RUN apt-get -y update && \
         libpam-modules-bin \
         libpam-runtime \
         libpam0g \
+        libperl5.34 \
+        libpng16-16 \
         libpython3.10-minimal \
         libpython3.10-stdlib \
         libsqlite3-0 \
+        libssl-dev \
+        libssl3 \
+        openssl \
         openssh-client \
+        perl \
+        perl-base \
+        perl-modules-5.34 \
         python3.10 \
         python3.10-minimal \
         tar \
@@ -53,13 +61,11 @@ RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade \
            /opt/conda/envs/ptca/lib/python3.10/site-packages/torchaudio \
            /opt/conda/envs/ptca/lib/python3.10/site-packages/torchaudio-*.dist-info
 
-# mlflow 3.5.0 has CVEs (CVE-2025-14287, CVE-2026-2033, CVE-2026-2635, GHSA-fh64-r2vc-xvhr);
-# upgrade after requirements install. azureml-mlflow 1.62.0.post2 pins mlflow-skinny<=3.9.0,
-# so mlflow must be upgraded separately (post-pip-install) to avoid resolver conflict.
-# mlflow 3.15.0 additionally fixes GHSA-7gwp-5pfp-969j and GHSA-2cm6-r77w-6g96.
+# Install patched mlflow after requirements because azureml-mlflow can constrain
+# mlflow-skinny. mlflow 3.15.0 fixes GHSA-7gwp-5pfp-969j and GHSA-2cm6-r77w-6g96.
 RUN pip install --progress-bar off --no-cache-dir mlflow==3.15.0
-# fastmcp + mcp were installed as regular deps of mlflow 3.5.0 (fastmcp -> mcp) but orphaned after
-# mlflow 3.11.1 (fastmcp moved to optional "mcp" extra); uninstall both to remove vulnerable packages
+# fastmcp + mcp are not required by the base training workload; remove them if an
+# upstream package pulled them in to avoid retaining vulnerable optional packages.
 RUN pip uninstall -y fastmcp mcp
 
 # Override vulnerable transitive deps in the ptca env (Python 3.10) that pip won't auto-upgrade:
@@ -108,5 +114,15 @@ RUN pip install --progress-bar off --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitP
 # cryptography: transitive dep of ACPT base image and AzureML requirements; fixes GHSA-537c-gmf6-5ccf
 #   and GHSA-g6cj-pr64-35w5.
 # pydantic-settings: transitive dep of AzureML requirements that can downgrade the patched base; fixes GHSA-4xgf-cpjx-pc3j.
-RUN /opt/conda/bin/python -m pip install --progress-bar off --no-cache-dir --upgrade 'urllib3>=2.7.0' 'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.3' 'PyJWT>=2.13.0' 'setuptools>=83.0.0' 'py-rattler>=0.24.0' 'cryptography>=50.0.0' 'pydantic-settings>=2.14.2' && \
-    rm -rf /opt/conda/lib/python3.14/site-packages/setuptools-82.0.0.dist-info
+# msgpack: pip-vendored metadata in the base image reports 1.1.2; fixes GHSA-6v7p-g79w-8964.
+RUN /opt/conda/bin/python -m pip install --progress-bar off --no-cache-dir --upgrade 'urllib3>=2.7.0' 'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.3' 'PyJWT>=2.13.0' 'setuptools>=83.0.0' 'msgpack>=1.2.1' 'py-rattler>=0.24.0' 'cryptography>=50.0.0' 'pydantic-settings>=2.14.2' && \
+    find / -xdev -path '*/site-packages/pip/_vendor/bom.cdx.json' -type f -delete && \
+    find /opt /root -type d \( \
+        -name 'setuptools-70.3.0.dist-info' -o \
+        -name 'setuptools-70.3.0-py*.egg-info' -o \
+        -name 'setuptools-82.0.0.dist-info' -o \
+        -name 'msgpack-1.1.2.dist-info' -o \
+        -name 'msgpack-1.1.2.egg-info' \
+    \) -prune -exec rm -rf {} + && \
+    find /opt /root -path '*/_vendor/vendor.txt' -type f -exec \
+        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +

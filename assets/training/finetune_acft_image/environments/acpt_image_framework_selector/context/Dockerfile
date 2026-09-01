@@ -17,9 +17,17 @@ RUN apt-get -y update && apt-get -y upgrade && \
         libk5crypto3 \
         libkrb5-3 \
         libkrb5support0 \
+        libperl5.34 \
+        libpng16-16 \
+        libssl-dev \
+        libssl3 \
         liblzma5 \
         libnghttp2-14 \
         libsqlite3-0 \
+        openssl \
+        perl \
+        perl-base \
+        perl-modules-5.34 \
         tar \
         wget \
         xz-utils && \
@@ -83,14 +91,31 @@ RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
 #   required.
 # - cryptography>=50.0.0: pinned transitive dep brought in by the ACPT base
 #   image; fixes GHSA-537c-gmf6-5ccf and GHSA-g6cj-pr64-35w5.
+# - msgpack: pinned transitive dep of azureml-mlflow -> mlflow-skinny; brought
+#   in by requirements.txt, fixes GHSA-6v7p-g79w-8964.
 # - torch: inherited from the ACPT torch280 base image; fixes
 #   GHSA-rrmf-rvhw-rf47. torchvision is upgraded with torch to keep the CUDA
 #   PyTorch stack compatible.
 RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade \
         'urllib3>=2.7.0' 'aiohttp>=3.14.3' 'starlette>=1.0.1' 'click>=8.3.3' \
-        'pyarrow>=23.0.1' 'cryptography>=50.0.0' && \
+        'pyarrow>=23.0.1' 'cryptography>=50.0.0' 'msgpack>=1.2.1' && \
     conda run -n ptca python -m pip install --no-cache-dir --upgrade \
         --index-url https://download.pytorch.org/whl/cu126 \
         'torch==2.13.0' 'torchvision==0.28.0'
+
+# Update duplicate base-image Python env metadata that VCM scans.
+RUN for py in /opt/conda/bin/python /opt/conda/envs/*/bin/python; do \
+        if [ -x "$py" ]; then \
+            "$py" -m pip install --no-cache-dir --upgrade \
+                'setuptools>=83.0.0' \
+                'msgpack>=1.2.1'; \
+        fi; \
+    done && \
+    find /opt -type d \( \
+        -name 'setuptools-70.3.0.dist-info' -o \
+        -name 'setuptools-70.3.0.egg-info' -o \
+        -name 'msgpack-1.1.2.dist-info' -o \
+        -name 'msgpack-1.1.2.egg-info' \
+    \) -prune -exec rm -rf {} +
 
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
