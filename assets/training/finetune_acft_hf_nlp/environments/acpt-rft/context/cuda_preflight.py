@@ -22,10 +22,11 @@ EXPECTED_VERSIONS = {
     "flashinfer-cubin": "0.6.13",
 }
 EXPECTED_CUDA = "12.9"
-EXPECTED_NCCL = (2, 29, 7)
+EXPECTED_TORCH_NCCL = (2, 28, 9)
+EXPECTED_RUNTIME_NCCL = (2, 29, 7)
 
 
-def preload_nccl() -> tuple[Path, dict[str, str]]:
+def preload_nccl() -> tuple[Path, ctypes.CDLL, dict[str, str]]:
     distribution = importlib.metadata.distribution("nvidia-nccl-cu12")
     library = Path(
         distribution.locate_file("nvidia/nccl/lib/libnccl.so.2")
@@ -33,16 +34,31 @@ def preload_nccl() -> tuple[Path, dict[str, str]]:
     if not library.is_file():
         raise RuntimeError(f"NCCL library is missing: {library}")
 
-    ctypes.CDLL(str(library), mode=ctypes.RTLD_GLOBAL)
+    handle = ctypes.CDLL(str(library), mode=ctypes.RTLD_GLOBAL)
     library_dir = str(library.parent)
     current_path = os.environ.get("LD_LIBRARY_PATH", "")
     path_entries = current_path.split(os.pathsep) if current_path else []
     if path_entries and path_entries[0] == library_dir:
-        return library, {}
+        return library, handle, {}
 
     value = os.pathsep.join([library_dir, *path_entries])
     os.environ["LD_LIBRARY_PATH"] = value
-    return library, {"LD_LIBRARY_PATH": value}
+    return library, handle, {"LD_LIBRARY_PATH": value}
+
+
+def nccl_runtime_version(handle: ctypes.CDLL) -> tuple[int, int, int]:
+    version = ctypes.c_int()
+    get_version = handle.ncclGetVersion
+    get_version.argtypes = [ctypes.POINTER(ctypes.c_int)]
+    get_version.restype = ctypes.c_int
+    result = get_version(ctypes.byref(version))
+    if result != 0:
+        raise RuntimeError(f"ncclGetVersion failed with result {result}")
+    return (
+        version.value // 10000,
+        (version.value % 10000) // 100,
+        version.value % 100,
+    )
 
 
 def normalized_version(package_name: str) -> str:
@@ -117,7 +133,13 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    nccl_library, exports = preload_nccl()
+    nccl_library, nccl_handle, exports = preload_nccl()
+    runtime_nccl = nccl_runtime_version(nccl_handle)
+    if runtime_nccl != EXPECTED_RUNTIME_NCCL:
+        raise RuntimeError(
+            f"Loaded NCCL {runtime_nccl} from {nccl_library} does not match "
+            f"expected runtime NCCL {EXPECTED_RUNTIME_NCCL}"
+        )
     import torch
     import torchvision
     import vllm
@@ -153,15 +175,16 @@ def main() -> int:
         os.environ.update(exports)
         importlib.import_module("vllm.lora.lora_model")
         torch.cuda.init()
-        actual_nccl = torch.cuda.nccl.version()
-        if actual_nccl != EXPECTED_NCCL:
+        torch_nccl = torch.cuda.nccl.version()
+        if torch_nccl != EXPECTED_TORCH_NCCL:
             raise RuntimeError(
-                f"Loaded NCCL {actual_nccl} does not match expected "
-                f"NCCL {EXPECTED_NCCL}"
+                f"Torch was built against NCCL {torch_nccl}, expected "
+                f"{EXPECTED_TORCH_NCCL}"
             )
         print(
             f"CUDA devices: {torch.cuda.device_count()}; "
-            f"device 0: {torch.cuda.get_device_name(0)}; NCCL {actual_nccl} "
+            f"device 0: {torch.cuda.get_device_name(0)}; "
+            f"Torch NCCL ABI {torch_nccl}; runtime NCCL {runtime_nccl} "
             f"from {nccl_library}",
             file=sys.stderr,
             flush=True,
