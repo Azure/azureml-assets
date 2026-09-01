@@ -233,6 +233,17 @@ _VERL_FSDP2_NEW = '''    if isinstance(fsdp_transformer_layer_cls_to_wrap, str):
 
     assert len(fsdp_transformer_layer_cls_to_wrap) > 0 and fsdp_transformer_layer_cls_to_wrap[0] is not None'''
 
+_VERL_ACTOR_ATTN_OLD = (
+    '        attn_implementation = override_model_config.get('
+    '"attn_implementation", "flash_attention_2")'
+)
+_VERL_ACTOR_ATTN_NEW = '''        attn_implementation = override_model_config.get(
+            "attn_implementation",
+            # ACFT-RFT-COMPAT: runtime preflight selects SDPA when the vLLM wheel's
+            # non-stable FA2/FA3 extensions cannot load with the image's PyTorch ABI.
+            os.getenv("VERL_ACTOR_ATTENTION_IMPLEMENTATION", "flash_attention_2"),
+        )'''
+
 _VERL_DISPATCH_OLD = '''        else:
             return self.inference_engine.execute_method(method, *args, **kwargs)'''
 _VERL_DISPATCH_NEW = '''        else:
@@ -410,6 +421,8 @@ def main():
             src = src.replace(anchor, new, 1)
         _write(fsdp_workers_path, src)
         print("[ok]   patched: verl.workers.fsdp_workers")
+
+    _replace("verl.workers.fsdp_workers", _VERL_ACTOR_ATTN_OLD, _VERL_ACTOR_ATTN_NEW)
 
     # verl actor forward <-> flash-attn 4 / activation offload
     _replace("verl.utils.attention_utils", _VERL_BERT_OLD, _VERL_BERT_NEW)
