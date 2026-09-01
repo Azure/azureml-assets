@@ -1,9 +1,9 @@
 type: "evaluator"
 id: "azureml://registries/azureml/evaluators/builtin.tool_use_quality/versions/1"
 name: "builtin.tool_use_quality"
-version: 1
+version: 2
 displayName: "Tool-Use-Quality-Evaluator-(Preview)"
-description: "A composite evaluator that batches the tool_call_accuracy, tool_call_success, tool_input_accuracy, tool_output_utilization, and tool_selection evaluators into a single LLM call. The primary tool_use_quality score fails when any evaluated evaluator fails, while the evaluator keys preserve the LLM results and derived pass/fail fields. Supports both single-turn (query/response) and multi-turn (messages) agent interactions."
+description: "A composite evaluator that batches the tool_call_accuracy, tool_call_success, tool_input_accuracy, tool_output_utilization, and tool_selection evaluators into a single LLM call."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
 categories: ["agents"]
