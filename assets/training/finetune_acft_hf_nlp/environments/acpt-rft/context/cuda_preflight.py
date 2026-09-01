@@ -75,7 +75,7 @@ def main() -> int:
     import torch
     import torchvision
     import vllm
-    import vllm._C
+    import vllm._C_stable_libtorch
 
     validate_versions(torch)
     try:
