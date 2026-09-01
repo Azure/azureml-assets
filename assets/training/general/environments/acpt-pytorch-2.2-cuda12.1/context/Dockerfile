@@ -10,7 +10,12 @@ ENV PIP_PROGRESS_BAR=off
 # pydantic-settings>=2.14.2: pinned transitive dep present in the base image; fixes GHSA-4xgf-cpjx-pc3j.
 # msgpack>=1.2.1: pinned transitive dep present in the base image; fixes GHSA-6v7p-g79w-8964.
 # aiohttp>=3.14.3: pinned transitive dep present in the base image; fixes GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, and GHSA-mfx4-hv73-q22v.
-# torch stack: override vulnerable ACPT base torch 2.8.0+cu126; fixes GHSA-rrmf-rvhw-rf47, GHSA-vgrw-7cvw-pwgx, and GHSA-qfhq-4f3w-5fph.
+# NOT FIXED HERE - torch (GHSA-rrmf-rvhw-rf47, GHSA-vgrw-7cvw-pwgx, GHSA-qfhq-4f3w-5fph):
+#   torch is owned by the ACPT base image (aifx/acpt/stable-ubuntu2204-cu126-py310-torch280),
+#   which ships a matched torch/torchvision/torchaudio set plus a transformers build compiled
+#   against it. torch 2.13.0 has no matching torchaudio release, and torchvision 0.28.0 (its
+#   only compatible companion) removes torchvision.io.VideoReader, which the base-image
+#   transformers still imports. These CVEs must be remediated in the ACPT base image.
 RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' 'setuptools>=82.0.1' && \
     conda install -n base -c conda-forge -y 'pip>=26.1' 'setuptools>=82.0.1' && \
     conda run -n base python -m pip install --upgrade --no-cache-dir \
@@ -32,12 +37,6 @@ RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' 'setuptools>=82.0.1' && 
         'aiohttp>=3.14.3' && \
     conda clean -a -y && \
     rm -rf /opt/conda/pkgs
-
-RUN conda run -n ptca python -m pip install --upgrade --no-cache-dir \
-        --index-url https://download.pytorch.org/whl/cu126 \
-        'torch==2.13.0+cu126' \
-        'torchvision==0.28.0+cu126' \
-        'torchaudio==2.11.0+cu126'
 
 # Install pip dependencies (runs in default PTCA conda env)
 COPY requirements.txt .
