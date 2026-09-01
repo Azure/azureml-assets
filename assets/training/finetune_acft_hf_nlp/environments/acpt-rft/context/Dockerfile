@@ -167,6 +167,9 @@ COPY vllm_rollout /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/workers
 # target anchor is missing. Run in the training conda env.
 COPY verl_rft_compat_patches /tmp/verl_rft_compat_patches.py
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir "accelerate==1.14.0" && \
+    /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps \
+        torch==2.13.0 torchvision==0.28.0 \
+        --index-url https://download.pytorch.org/whl/cu129 && \
     /opt/conda/envs/ptca/bin/python /tmp/verl_rft_compat_patches.py && \
     rm -f /tmp/verl_rft_compat_patches.py
 COPY cuda_preflight.py /opt/conda/envs/ptca/bin/acft-rft-cuda-preflight
