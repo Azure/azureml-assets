@@ -38,7 +38,7 @@ jobs:
         with:
           forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
       - name: Use Python 3.10
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@7f4fc3e22c37d6ff65e88745f38bd3157c663f7c # v4.9.1
         with:
           python-version: '3.10'
 
@@ -48,7 +48,7 @@ jobs:
       - name: Run unit tests
         run: python -m pytest --junitxml=${{ env.pytest_report_folder }}/${{ env.pytest_report_file }} ${{ env.testsRootPath }} --strict-markers -v -s -m "unit" -o log_level=DEBUG -n 8
       - name: Upload test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: ${{ env.pytest_report_folder }}
@@ -68,7 +68,7 @@ jobs:
       steps:
         - name: Download test results
           id: download-artifact
-          uses: actions/download-artifact@v4
+          uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
           with:
             name: ${{ env.pytest_report_folder }}
             path: ${{ env.pytest_report_folder }}
@@ -76,7 +76,7 @@ jobs:
 
         - name: Publish test results
           if: steps.download-artifact.outputs.download-path != ''
-          uses: EnricoMi/publish-unit-test-result-action@v2
+          uses: EnricoMi/publish-unit-test-result-action@d0a4676d0e0b938bc201470d88276b7c74c712b3 # v2.24.0
           with:
             check_name: Test Results for ${{ github.workflow }}
             junit_files: ${{ env.pytest_report_folder }}/**/*.xml

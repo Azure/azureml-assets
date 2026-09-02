@@ -13,13 +13,13 @@ runs:
   steps:
     - name: Clone branch
       if: "!fromJSON(inputs.forked-pr)"
-      uses: actions/checkout@v3
+      uses: actions/checkout@a37ce9120846195fa4ece8f58b268e6043cb2f26 # v3.7.0
       with:
         fetch-depth: ${{ inputs.fetch-depth }}
     
     - name: Clone forked PR
       if: fromJSON(inputs.forked-pr)
-      uses: actions/checkout@v3
+      uses: actions/checkout@a37ce9120846195fa4ece8f58b268e6043cb2f26 # v3.7.0
       with:
         ref: refs/pull/${{ github.event.number }}/merge
         fetch-depth: ${{ inputs.fetch-depth }}
