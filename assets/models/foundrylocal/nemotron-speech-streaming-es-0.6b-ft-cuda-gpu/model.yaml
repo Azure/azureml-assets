@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/models/nemotron-speech-streaming-es-0.6b-ft/onnx/cuda/v1
+  container_path: foundrylocal/models/nemotron-speech-streaming-es-0.6b-ft/onnx/cuda/v2
   storage_name: foundrylocalassetdata
   type: azureblob
 publish:
