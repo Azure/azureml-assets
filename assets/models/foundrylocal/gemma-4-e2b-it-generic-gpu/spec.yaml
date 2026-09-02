@@ -9,7 +9,7 @@ tags:
 system_metadata:
   alias: gemma-4-e2b-it
   publisher: Microsoft
-  directoryPath: v1
+  directoryPath: v2
   foundryLocal: ''
   deploymentOptions: ['Foundry Local on Devices']
   inputModalities:
@@ -46,6 +46,6 @@ variantInfo:
     - RTN
     device: gpu
     executionProvider: WebGPUExecutionProvider
-    fileSizeBytes: 7377541854
-    vRamFootprintBytes: 7377541854
-version: 1
+    fileSizeBytes: 7377474676
+    vRamFootprintBytes: 7377474676
+version: 2
