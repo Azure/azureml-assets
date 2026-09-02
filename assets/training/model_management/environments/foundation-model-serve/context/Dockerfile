@@ -19,8 +19,7 @@ RUN rm -rf /opt/nvidia/nsight-compute || true
 ENV LD_LIBRARY_PATH=/usr/local/cuda/compat:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64
 
 # git is needed by some pip editable installs / VCS deps.
-# Also upgrade all other pre-installed OS packages (curl, nginx, openssl, perl,
-# p11-kit, etc.) since the base image can lag behind upstream security patches.
+# Also upgrade all other pre-installed OS packages
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends git && \
