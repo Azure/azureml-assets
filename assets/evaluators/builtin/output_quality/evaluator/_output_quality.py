@@ -333,7 +333,6 @@ install_cached_token_capture()
 
 def _create_extended_error_target():
     """Create an extended ErrorTarget enum for OutputQualityEvaluator."""
-
     existing_members = {member.name: member.value for member in ErrorTarget}
     existing_members["OUTPUT_QUALITY_EVALUATOR"] = "OutputQualityEvaluator"
     return Enum("ExtendedErrorTarget", existing_members)
