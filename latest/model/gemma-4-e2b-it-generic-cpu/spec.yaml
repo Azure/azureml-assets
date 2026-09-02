@@ -9,7 +9,7 @@ tags:
 system_metadata:
   alias: gemma-4-e2b-it
   publisher: Microsoft
-  directoryPath: v1
+  directoryPath: v2
   foundryLocal: ''
   deploymentOptions: ['Foundry Local on Devices']
   inputModalities:
@@ -48,9 +48,9 @@ variantInfo:
     - RTN
     device: cpu
     executionProvider: CPUExecutionProvider
-    fileSizeBytes: 6324928641
-    vRamFootprintBytes: 6324928641
-version: 1
+    fileSizeBytes: 6324928525
+    vRamFootprintBytes: 6324928525
+version: 2
 description: |-
   This model is an optimized version of Gemma 4 E2B IT for local inference on CPU and mobile devices. This optimized model is published here in ONNX format to run on CPU and mobile targets, with the precision best suited to this target.
 

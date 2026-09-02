@@ -9,7 +9,7 @@ tags:
 system_metadata:
   alias: nemotron-3.5-asr-streaming-0.6b
   publisher: Microsoft
-  directoryPath: v2
+  directoryPath: v3
   foundryLocal: ''
   deploymentOptions: ['Foundry Local on Devices']
   inputModalities:
@@ -40,9 +40,9 @@ variantInfo:
     - RTN
     device: gpu
     executionProvider: CUDAExecutionProvider
-    fileSizeBytes: 793344782
-    vRamFootprintBytes: 793344782
-version: 2
+    fileSizeBytes: 793344835
+    vRamFootprintBytes: 793344835
+version: 3
 description: |
   This model is an optimized version of nemotron-3.5-asr-streaming-0.6b to enable local inference on GPUs. This model uses RTN quantization.
 
