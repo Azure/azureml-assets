@@ -174,6 +174,25 @@ class TestToolUseQualityEvaluatorBehavior:
             assert result["tool_use_quality_evaluators"][name] is not None
         assert result["tool_use_quality_evaluators"]["tool_call_accuracy"]["failed_turn"] is None
 
+    @pytest.mark.parametrize("input_kwargs", [
+        {
+            "query": VALID_QUERY,
+            "response": VALID_RESPONSE,
+            "tool_definitions": VALID_TOOL_DEFINITIONS,
+        },
+        {"messages": VALID_MESSAGES, "tool_definitions": VALID_TOOL_DEFINITIONS},
+    ])
+    def test_cached_tokens_are_exposed_for_both_flow_types(self, input_kwargs):
+        """Cached prompt tokens are available to the SDK converter for either Prompty flow."""
+        llm_output = _all_completed_llm_output()
+        llm_output["cached_tokens"] = 128
+        evaluator = _mock_flows(_make_evaluator(), llm_output)
+
+        result = evaluator(**input_kwargs)
+
+        assert result["tool_use_quality_cached_tokens"] == 128
+        assert result["tool_use_quality_properties"]["cached_tokens"] == 128
+
     def test_thresholds_default_to_standalone_evaluator_defaults(self):
         """Default thresholds match each standalone evaluator's default."""
         evaluator = _make_evaluator()

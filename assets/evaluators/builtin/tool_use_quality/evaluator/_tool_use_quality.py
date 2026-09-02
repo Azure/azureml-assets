@@ -1,7 +1,5 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-import contextvars
-import functools
 import os
 import logging
 from enum import Enum
@@ -22,6 +20,11 @@ from azure.ai.evaluation._evaluators._common._validators import (
     ValidatorInterface,
     ConversationValidator,
     ToolDefinitionsValidator,
+)
+from ..._cached_token_capture import (
+    clear_cached_tokens,
+    get_cached_tokens,
+    install_cached_token_capture,
 )
 
 # ---------------------------------------------------------------------------
@@ -415,72 +418,7 @@ logger = logging.getLogger(__name__)
 # count for the current async context.
 # ---------------------------------------------------------------------------
 
-_CACHED_TOKENS: contextvars.ContextVar[Optional[int]] = contextvars.ContextVar(
-    "tool_use_quality_cached_tokens", default=None
-)
-
-_CACHED_TOKEN_CAPTURE_INSTALLED = False
-
-
-def _extract_cached_tokens(response: Any) -> Optional[int]:
-    """Read ``usage.prompt_tokens_details.cached_tokens`` from a chat completion.
-
-    :param response: A chat completion response object or mapping.
-    :type response: Any
-    :return: The cached prompt token count, or None when the field is absent.
-    :rtype: Optional[int]
-    """
-    usage = response.get("usage") if isinstance(response, dict) else getattr(response, "usage", None)
-    if usage is None:
-        return None
-    details = (
-        usage.get("prompt_tokens_details")
-        if isinstance(usage, dict)
-        else getattr(usage, "prompt_tokens_details", None)
-    )
-    if details is None:
-        return None
-    cached = (
-        details.get("cached_tokens")
-        if isinstance(details, dict)
-        else getattr(details, "cached_tokens", None)
-    )
-    return cached if isinstance(cached, int) and not isinstance(cached, bool) else None
-
-
-def _install_cached_token_capture() -> None:
-    """Wrap ``AsyncCompletions.create`` so cached prompt tokens are observable."""
-    global _CACHED_TOKEN_CAPTURE_INSTALLED  # pylint: disable=global-statement
-    if _CACHED_TOKEN_CAPTURE_INSTALLED:
-        return
-    try:
-        from openai.resources.chat.completions import AsyncCompletions  # pylint: disable=import-outside-toplevel
-    except ImportError:  # pragma: no cover - openai is a hard dependency of the prompty flows
-        _CACHED_TOKEN_CAPTURE_INSTALLED = True
-        return
-
-    original_create = getattr(AsyncCompletions, "create", None)
-    if original_create is None or getattr(original_create, "_captures_cached_tokens", False):
-        _CACHED_TOKEN_CAPTURE_INSTALLED = True
-        return
-
-    @functools.wraps(original_create)
-    async def create(self, *args, **kwargs):
-        response = await original_create(self, *args, **kwargs)
-        try:
-            cached = _extract_cached_tokens(response)
-            if cached is not None:
-                _CACHED_TOKENS.set(cached)
-        except Exception:  # pragma: no cover - telemetry must never break evaluation
-            logger.debug("Failed to capture cached prompt tokens.", exc_info=True)
-        return response
-
-    create._captures_cached_tokens = True  # type: ignore[attr-defined]  # pylint: disable=protected-access
-    AsyncCompletions.create = create  # type: ignore[method-assign]
-    _CACHED_TOKEN_CAPTURE_INSTALLED = True
-
-
-_install_cached_token_capture()
+install_cached_token_capture()
 
 
 # Create extended ErrorTarget enum with the new member
@@ -826,7 +764,7 @@ class ToolUseQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
     @staticmethod
     def _get_token_metadata(prompty_output: Dict) -> Dict:
         """Extract token usage and model metadata from the prompty output dict."""
-        cached_tokens = prompty_output.get("cached_tokens", _CACHED_TOKENS.get())
+        cached_tokens = prompty_output.get("cached_tokens", get_cached_tokens())
         metadata = {
             "prompt_tokens": prompty_output.get("input_token_count", 0),
             "completion_tokens": prompty_output.get("output_token_count", 0),
@@ -911,7 +849,7 @@ class ToolUseQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         """
         # Clear any cached-token value carried over from a previous LLM call so a
         # stale count is never attributed to this evaluation.
-        _CACHED_TOKENS.set(None)
+        clear_cached_tokens()
         if not eval_input.get("tool_definitions"):
             return self._return_not_applicable_result(
                 "No tool definitions provided. Tool use quality evaluation requires tool_definitions."

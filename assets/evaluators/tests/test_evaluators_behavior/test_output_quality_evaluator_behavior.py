@@ -153,6 +153,21 @@ class TestOutputQualityEvaluatorBehavior:
             assert result[f"{name}_result"] == "pass"
             assert f"{name}_passed" not in result
 
+    @pytest.mark.parametrize("input_kwargs", [
+        {"query": VALID_QUERY, "response": VALID_RESPONSE},
+        {"messages": VALID_MESSAGES},
+    ])
+    def test_cached_tokens_are_exposed_for_both_flow_types(self, input_kwargs):
+        """Cached prompt tokens are available to the SDK converter for either Prompty flow."""
+        llm_output = _all_completed_llm_output()
+        llm_output["cached_tokens"] = 128
+        evaluator = _mock_flows(_make_evaluator(), llm_output)
+
+        result = evaluator(**input_kwargs)
+
+        assert result["output_quality_cached_tokens"] == 128
+        assert result["output_quality_properties"]["cached_tokens"] == 128
+
     def test_multi_turn_raw_failed_turn_is_preserved(self):
         """Multi-turn raw evaluator results preserve their failed-turn metadata."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output(failed_turn=1))
