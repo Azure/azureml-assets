@@ -1,5 +1,5 @@
 ---
-name: Tool Use Composite Evaluator (Multi-Turn)
+name: Tool Use Quality Evaluator (Multi-Turn)
 description: >
   Multi-turn variant of the tool use composite evaluator. Scores ALL FIVE
   prod tool evaluators (tool_call_accuracy, tool_call_success,

@@ -62,6 +62,12 @@ RUN apt-get update && \
         libpam0g \
         libpam-modules \
         libpam-modules-bin \
+        libssl3 \
+        openssl \
+        libperl5.34 \
+        perl \
+        perl-base \
+        perl-modules-5.34 \
         rsyslog \
         libc-dev-bin \
         libc6-dev \

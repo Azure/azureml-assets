@@ -154,9 +154,9 @@ RUN apt-get update && \
     rm -rf /tmp/openssh-install.log /var/lib/apt/lists/*
 
 # Upgrade vulnerable OS packages installed by the Ubuntu/CUDA/inferencing base layers:
-# OpenSSL (USN-8414-1), systemd (USN-8626-1), xz-utils (USN-8362-1),
+# OpenSSL (USN-8678-1), systemd (USN-8626-1), xz-utils (USN-8362-1),
 # libgcrypt (USN-8319-1), libarchive (USN-8292-1), GnuTLS (USN-8284-1),
-# and PAM (USN-8601-1).
+# PAM (USN-8601-1), and Perl (USN-8675-1).
 RUN apt-get update && \
     apt-get install --only-upgrade -y --no-install-recommends \
         libarchive13 \
@@ -169,11 +169,15 @@ RUN apt-get update && \
         libpam-runtime \
         libpam-systemd \
         libpam0g \
+        libperl5.34 \
         libssl-dev \
         libssl3 \
         libsystemd0 \
         libudev1 \
         openssl \
+        perl \
+        perl-base \
+        perl-modules-5.34 \
         systemd \
         systemd-sysv \
         systemd-timesyncd \
@@ -182,7 +186,7 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /tmp/os-security-upgrade.log /var/lib/apt/lists/*
 
-# USN-8458-1: nginx packages >= 1.18.0-6ubuntu14.16. nginx-light is installed in the
+# USN-8563-3: nginx packages >= 1.18.0-6ubuntu14.19. nginx-light is installed in the
 # inferencing layer above (after the top apt-get upgrade), so the nginx packages are
 # re-upgraded here.
 RUN apt-get update && \
@@ -195,7 +199,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Upgrade current Ubuntu USN fixes for packages installed by the CUDA and inferencing layers,
-# including rsyslog (USN-8598-1) installed by the inferencing layer above.
+# including curl (USN-8651-1/USN-8670-2) and rsyslog (USN-8598-1).
 RUN apt-get update && \
     apt-get install --only-upgrade -y --no-install-recommends \
         curl \
@@ -230,7 +234,8 @@ RUN HOROVOD_WITH_TENSORFLOW=1  HOROVOD_CUDA_HOME=/usr/local/cuda pip  install --
 RUN conda run -p $CONDA_PREFIX conda install -c conda-forge openssl
 
 # Security vulnerability fixes in the conda env:
-# cryptography>=46.0.7,<47 fixes GHSA-m959-cc7f-wv43 and GHSA-p423-j2cm-9vmq while staying compatible with pyOpenSSL
+# cryptography>=50.0.0 fixes GHSA-537c-gmf6-5ccf, GHSA-m2h6-j472-rp4c,
+# GHSA-g6cj-pr64-35w5, GHSA-jwv3-5hgf-82ww, GHSA-m959-cc7f-wv43, and GHSA-p423-j2cm-9vmq
 # setuptools>=83.0.0 fixes GHSA-58pv-8j8x-9vj2, GHSA-5rjg-fvgr-3xxf, and GHSA-h35f-9h28-mq5c
 # requests>=2.33.0 fixes GHSA-gc5v-m9x4-r6x2
 # pillow>=12.2.0 fixes GHSA-whj4-6x5x-4v2j
@@ -245,7 +250,7 @@ RUN conda run -p $CONDA_PREFIX conda install -c conda-forge openssl
 # GHSA-prg7-hcfm-mfcr, GHSA-3496-9g83-7v6x, and GHSA-pwgv-4x5q-6m9f
 # PyJWT>=2.13.0 fixes GHSA-993g-76c3-p5m4 and GHSA-jq35-7prp-9v3f
 # pyarrow>=23.0.1,<24 fixes GHSA-rgxp-2hwp-jwgg while staying compatible with azureml-dataset-runtime
-RUN conda run -p $CONDA_PREFIX pip install --upgrade 'pip>=26.1' 'cryptography>=46.0.7,<47' 'setuptools>=83.0.0' 'protobuf>=5.29.6,<6' 'requests>=2.33.0' 'pillow>=12.2.0' 'starlette>=1.0.1' 'idna>=3.15' 'msgpack>=1.2.1' 'GitPython>=3.1.58' 'sqlparse>=0.6.0' 'PyJWT>=2.13.0' 'pyarrow>=23.0.1,<24' && \
+RUN conda run -p $CONDA_PREFIX pip install --upgrade 'pip>=26.1' 'cryptography>=50.0.0' 'setuptools>=83.0.0' 'protobuf>=5.29.6,<6' 'requests>=2.33.0' 'pillow>=12.2.0' 'starlette>=1.0.1' 'idna>=3.15' 'msgpack>=1.2.1' 'GitPython>=3.1.58' 'sqlparse>=0.6.0' 'PyJWT>=2.13.0' 'pyarrow>=23.0.1,<24' && \
     find $CONDA_PREFIX \( -iname '*setuptools*70.3.0*' -o -iname '*msgpack*1.1.2*' -o -path '*/pip/_vendor/bom.cdx.json' \) -exec rm -rf {} +
 
 # Upgrade vulnerable packages in the base miniconda env (python3.10)

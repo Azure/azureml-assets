@@ -9,8 +9,9 @@ tags:
 system_metadata:
   alias: nemotron-3.5-asr-streaming-0.6b
   publisher: Microsoft
-  directoryPath: v2
+  directoryPath: v3
   foundryLocal: ''
+  deploymentOptions: ['Foundry Local on Devices']
   inputModalities:
   - audio
   license: MIT
@@ -36,6 +37,6 @@ variantInfo:
     - RTN
     device: gpu
     executionProvider: CUDAExecutionProvider
-    fileSizeBytes: 793344782
-    vRamFootprintBytes: 793344782
-version: 2
+    fileSizeBytes: 793344835
+    vRamFootprintBytes: 793344835
+version: 3

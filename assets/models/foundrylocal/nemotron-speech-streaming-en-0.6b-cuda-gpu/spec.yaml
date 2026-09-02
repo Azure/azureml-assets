@@ -9,8 +9,9 @@ tags:
 system_metadata:
   alias: nemotron-speech-streaming-en-0.6b
   publisher: Microsoft
-  directoryPath: v1
+  directoryPath: v2
   foundryLocal: ''
+  deploymentOptions: ['Foundry Local on Devices']
   inputModalities:
   - audio
   license: MIT
@@ -36,6 +37,6 @@ variantInfo:
     - RTN
     device: gpu
     executionProvider: CUDAExecutionProvider
-    fileSizeBytes: 730746955
-    vRamFootprintBytes: 730746955
-version: 1
+    fileSizeBytes: 730747008
+    vRamFootprintBytes: 730747008
+version: 2

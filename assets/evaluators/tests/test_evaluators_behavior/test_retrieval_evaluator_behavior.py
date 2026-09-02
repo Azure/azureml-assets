@@ -4,8 +4,11 @@
 """Behavioral tests for Retrieval Evaluator — None score handling."""
 
 import asyncio
+import json
+from types import SimpleNamespace
 
 import pytest
+from azure.ai.evaluation._exceptions import EvaluationException
 
 from .base_validator_unit_test import (
     CorePromptyValidatorUnitTests,
@@ -79,3 +82,231 @@ class TestRetrievalDoEvalBranches:
             )
         )
         assert result["retrieval_score"] == 5
+
+
+@pytest.mark.unittest
+class TestRetrievalConversationContextExtraction:
+    """Covers retrieval context extraction from conversation tool outputs."""
+
+    def test_custom_knowledge_base_result_is_extracted_without_tool_filtering(self):
+        """Nested Azure AI Search references from a custom tool remain intact."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        reference = {
+            "type": "azureBlob",
+            "sourceData": {
+                "blob_url": "https://example.test/x-t5.md",
+                "snippet": "The X-T5 warranty is 24 months.",
+            },
+            "rerankerScore": 3.990096,
+        }
+        messages = [
+            {
+                "role": "user",
+                "content": [{"type": "text", "text": "What is the warranty period?"}],
+            },
+            {
+                "role": "assistant",
+                "content": [
+                    {
+                        "type": "tool_call",
+                        "tool_call_id": "call-1",
+                        "name": "knowledge_base_retrieve",
+                        "arguments": {"query": "X-T5 warranty"},
+                    }
+                ],
+            },
+            {
+                "role": "tool",
+                "tool_call_id": "call-1",
+                "content": [{"type": "tool_result", "tool_result": [reference]}],
+            },
+            {
+                "role": "assistant",
+                "content": [{"type": "text", "text": "The warranty is 24 months."}],
+            },
+        ]
+
+        inputs = evaluator._convert_kwargs_to_eval_input(messages=messages)
+
+        assert len(inputs) == 1
+        assert inputs[0]["query"] == "What is the warranty period?"
+        assert json.loads(inputs[0]["context"]) == [reference]
+
+    def test_openapi_and_search_outputs_are_grouped_by_user_turn(self):
+        """Specialized tool output types are extracted in chronological order."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        messages = [
+            {
+                "role": "user",
+                "content": [{"type": "input_text", "text": "What is the capital?"}],
+            },
+            {
+                "role": "tool",
+                "content": [
+                    {
+                        "type": "openapi_call_output",
+                        "output": {"country": "France", "capital": "Paris"},
+                    }
+                ],
+            },
+            {
+                "role": "user",
+                "content": [{"type": "text", "text": "What is its population?"}],
+            },
+            {
+                "role": "tool",
+                "content": [
+                    {
+                        "type": "azure_ai_search_call_output",
+                        "output": [{"content": "Paris has over two million residents."}],
+                    }
+                ],
+            },
+        ]
+
+        inputs = evaluator._convert_kwargs_to_eval_input(messages=messages)
+
+        assert inputs == [
+            {
+                "query": "What is the capital?",
+                "context": '{"capital": "Paris", "country": "France"}',
+            },
+            {
+                "query": "What is its population?",
+                "context": '[{"content": "Paris has over two million residents."}]',
+            },
+        ]
+
+    def test_explicit_context_takes_precedence_over_tool_outputs(self):
+        """Explicitly mapped context retains existing turn-level behavior."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        messages = [
+            {
+                "role": "user",
+                "content": [{"type": "text", "text": "What is the warranty?"}],
+            },
+            {
+                "role": "tool",
+                "content": [{"type": "tool_result", "tool_result": "Derived context"}],
+            },
+        ]
+
+        inputs = evaluator._convert_kwargs_to_eval_input(
+            messages=messages,
+            context="Explicit context",
+        )
+
+        assert inputs == [{"query": "What is the warranty?", "context": "Explicit context"}]
+
+    def test_conversation_wrapper_uses_tool_context_extraction(self):
+        """The documented conversation input follows the same messages path."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        messages = [
+            {
+                "role": "user",
+                "content": [{"type": "text", "text": "What is the warranty?"}],
+            },
+            {
+                "role": "tool",
+                "content": [
+                    {
+                        "type": "tool_result",
+                        "tool_result": {
+                            "sourceData": {"snippet": "The warranty is 24 months."}
+                        },
+                    }
+                ],
+            },
+        ]
+
+        inputs = evaluator._convert_kwargs_to_eval_input(
+            conversation={"messages": messages},
+        )
+
+        assert inputs == [
+            {
+                "query": "What is the warranty?",
+                "context": '{"sourceData": {"snippet": "The warranty is 24 months."}}',
+            }
+        ]
+
+    def test_conversation_object_uses_tool_context_extraction(self):
+        """Conversation model objects expose messages through an attribute."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        messages = [
+            {"role": "user", "content": "What is the warranty?"},
+            {"role": "tool", "content": "The warranty is 24 months."},
+        ]
+
+        inputs = evaluator._convert_kwargs_to_eval_input(
+            conversation=SimpleNamespace(messages=messages),
+        )
+
+        assert inputs == [
+            {
+                "query": "What is the warranty?",
+                "context": "The warranty is 24 months.",
+            }
+        ]
+
+    @pytest.mark.parametrize("messages", [None, [], "not-a-list"])
+    def test_invalid_messages_are_rejected(self, messages):
+        """Invalid conversation message collections produce a user error."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+
+        if messages is None:
+            with pytest.raises(EvaluationException):
+                evaluator._convert_kwargs_to_eval_input(messages=messages)
+        else:
+            with pytest.raises(EvaluationException, match="non-empty list"):
+                evaluator._convert_kwargs_to_eval_input(messages=messages)
+
+    def test_explicit_query_overrides_single_derived_query(self):
+        """An explicitly mapped query wins for a single derived retrieval turn."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        messages = [
+            {"role": "user", "content": "Derived query"},
+            {"role": "tool", "content": "Retrieved context"},
+        ]
+
+        inputs = evaluator._convert_kwargs_to_eval_input(
+            messages=messages,
+            query="Explicit query",
+        )
+
+        assert inputs == [{"query": "Explicit query", "context": "Retrieved context"}]
+
+    def test_context_helpers_handle_defensive_input_shapes(self):
+        """Helper branches safely normalize malformed and scalar message content."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+
+        assert evaluator._extract_retrieval_turns(
+            [None, {"role": "user", "content": "Question"}, {"role": "tool", "content": 42}]
+        ) == []
+        assert evaluator._get_latest_user_query([{"role": "assistant", "content": "Answer"}]) == ""
+        assert evaluator._extract_message_text(None) == ""
+        assert evaluator._extract_message_text(
+            ["ignored", {"type": "tool_call"}, {"type": "text", "text": "kept"}]
+        ) == "kept"
+        assert evaluator._extract_tool_message_context(None) == []
+        assert evaluator._extract_tool_message_context(
+            [
+                "plain output",
+                None,
+                {"type": "tool_call"},
+                {"output": 7},
+            ]
+        ) == ["plain output", "7"]
+        assert evaluator._stringify_tool_output(" output ") == "output"
+        assert evaluator._stringify_tool_output(None) == ""
+
+    def test_messages_without_tool_output_are_not_applicable(self):
+        """Conversation input without retrieval evidence returns a user-facing skip."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "Hello"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "Hi"}]},
+        ]
+
+        with pytest.raises(EvaluationException, match="No valid context"):
+            evaluator._convert_kwargs_to_eval_input(messages=messages)
