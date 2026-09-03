@@ -3,6 +3,7 @@ name: qwen2.5-coder-0.5b-instruct
 path: ./
 isArchived: true
 system_metadata:
+  previewType: hideUI
   foundryLocal: ''
   deploymentOptions: ['Foundry Local on Devices']
 version: 1

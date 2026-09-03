@@ -3,6 +3,7 @@ name: deepseek-r1-distill-llama-8b
 path: ./
 isArchived: true
 system_metadata:
+  previewType: hideUI
   foundryLocal: hide
   deploymentOptions: ['Foundry Local on Devices']
 version: 1
