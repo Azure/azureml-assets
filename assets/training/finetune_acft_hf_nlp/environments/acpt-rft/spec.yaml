@@ -1,7 +1,8 @@
 $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 
 description: >-
-  Environment used by Multi-Strategy Reinforcement Finetuning Trainer
+  Environment used by Multi-Strategy Reinforcement Finetuning Trainer,
+  with a validated CUDA 12.9 Torch and vLLM runtime for A100 v4 compute.
 
 name: "{{asset.name}}"
 version: "{{asset.version}}"

@@ -1,4 +1,5 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+ARG VLLM_WHEEL=https://github.com/vllm-project/vllm/releases/download/v0.26.0/vllm-0.26.0%2Bcu129-cp38-abi3-manylinux_2_28_x86_64.whl
 USER root
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade --fix-missing || \
@@ -40,15 +41,21 @@ COPY __init__ /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/rewar
 COPY azure_grader /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/reward_score/azure_grader.py
 COPY azure_python_grader /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/reward_score/azure_python_grader.py
 COPY utils /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/vllm/utils.py
-# vllm is a direct top-level runtime dependency in this image; pin the patched release.
-RUN pip install --no-cache-dir vllm==0.26.0
-# vllm can override torch; reinstall torch after vllm to fix GHSA-rrmf-rvhw-rf47 / VCM 5014621.
-RUN pip install --no-cache-dir --no-deps torch==2.13.0
+# vLLM's default PyPI wheel is built for CUDA 13. Install the official CUDA 12.9
+# wheel so A100 v4 hosts with a CUDA 12.8 driver can load vllm._C.
+RUN pip install --no-cache-dir "${VLLM_WHEEL}"
+# Keep native Torch packages on the CUDA lineage vLLM 0.26 was built against.
+# torchaudio is unused by this image and must not remain inherited at a
+# potentially incompatible ABI.
+RUN pip install --no-cache-dir --force-reinstall \
+        torch==2.11.0 torchvision==0.26.0 \
+        --index-url https://download.pytorch.org/whl/cu129 && \
+    pip uninstall -y torchaudio
 # vllm's resolver can upgrade numpy, but verl 0.7.1 requires numpy<2.
 RUN pip install --no-cache-dir numpy==1.26.4
 # Keep xgrammar at the patched floor when pulled transitively by vllm; fixes GHSA-7rgv-gqhr-fxg3.
 RUN pip install --no-cache-dir 'xgrammar>=0.1.32'
-RUN pip install openai==2.14.0
+RUN pip install openai==2.25.0
 RUN pip install --force-reinstall --no-cache-dir --no-build-isolation git+https://github.com/deepseek-ai/DeepGEMM.git@c9f8b34dcdacc20aa746b786f983492c51072870
 RUN pip install --no-cache-dir 'flash-attn-4>=4.0.0b9'
 # Security overrides for pip-installed packages whose parent packages do not pin them safely.
@@ -160,9 +167,21 @@ COPY vllm_rollout /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/workers
 # target anchor is missing. Run in the training conda env.
 COPY verl_rft_compat_patches /tmp/verl_rft_compat_patches.py
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir "accelerate==1.14.0" && \
+/opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps \
+    torch==2.11.0 torchvision==0.26.0 \
+    --index-url https://download.pytorch.org/whl/cu129 && \
+/opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps \
+    flashinfer-python==0.6.13 flashinfer-cubin==0.6.13 && \
+/opt/conda/envs/ptca/bin/pip uninstall -y torchcodec nvidia-nccl-cu13 && \
+/opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps \
+    nvidia-nccl-cu12==2.29.7 && \
     /opt/conda/envs/ptca/bin/python /tmp/verl_rft_compat_patches.py && \
     rm -f /tmp/verl_rft_compat_patches.py
+COPY cuda_preflight.py /opt/conda/envs/ptca/bin/acft-rft-cuda-preflight
+RUN chmod +x /opt/conda/envs/ptca/bin/acft-rft-cuda-preflight && \
+    /opt/conda/envs/ptca/bin/acft-rft-cuda-preflight --skip-cuda
 RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
-ENV PYTHONHASHSEED=random \
+ENV LD_LIBRARY_PATH=/opt/conda/envs/ptca/lib/python3.10/site-packages/nvidia/nccl/lib:${LD_LIBRARY_PATH} \
+    PYTHONHASHSEED=random \
     PYTHONDONTWRITEBYTECODE=1
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/ /opt/conda/pkgs/

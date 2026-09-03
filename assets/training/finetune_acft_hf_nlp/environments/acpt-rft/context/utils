@@ -56,9 +56,10 @@ class VLLMHijack:
                 # For some models like Qwen2VL, we need to use hf_to_vllm_mapper
                 # to ensure correct loading of lora weights.
                 model = self._adapter_manager.model
-                hf_to_vllm_mapper = None
-                if hasattr(model, "hf_to_vllm_mapper") and model.hf_to_vllm_mapper is not None:
-                    hf_to_vllm_mapper = model.hf_to_vllm_mapper
+                hf_to_vllm_mapper = getattr(model, "hf_to_vllm_mapper", None)
+                if hf_to_vllm_mapper is not None:
+                    hf_to_vllm_mapper = hf_to_vllm_mapper.get_unstacked_mapper()
+                lora_skip_prefixes = getattr(model, "lora_skip_prefixes", None)
                 # vLLM 0.13.0 compatibility: lora_extra_vocab_size was removed
                 lora_extra_vocab_size = getattr(self.lora_config, 'lora_extra_vocab_size', 0)
 
@@ -74,6 +75,7 @@ class VLLMHijack:
                         dtype=self.lora_config.lora_dtype,
                         model_vocab_size=self.vocab_size + lora_extra_vocab_size,
                         weights_mapper=hf_to_vllm_mapper,
+                        skip_prefixes=lora_skip_prefixes,
                     )
                 else:
                     lora = self._lora_model_cls.from_local_checkpoint(
