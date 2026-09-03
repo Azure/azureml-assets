@@ -11,6 +11,7 @@ import pytest
 from azure.ai.evaluation import AzureOpenAIModelConfiguration
 from azure.ai.evaluation._exceptions import EvaluationException
 
+from ...builtin.output_quality.evaluator import _output_quality as output_quality_module
 from ...builtin.output_quality.evaluator._output_quality import OutputQualityEvaluator, _EVALUATORS
 
 VALID_QUERY = "How do I reset my account password?"
@@ -152,6 +153,122 @@ class TestOutputQualityEvaluatorBehavior:
                 assert result[f"{name}_{field}"] == evaluators[name][field]
             assert result[f"{name}_result"] == "pass"
             assert f"{name}_passed" not in result
+
+    @pytest.mark.parametrize("input_kwargs", [
+        {"query": VALID_QUERY, "response": VALID_RESPONSE},
+        {"messages": VALID_MESSAGES},
+    ])
+    def test_cached_tokens_are_exposed_for_both_flow_types(self, input_kwargs):
+        """Cached prompt tokens are available to the SDK converter for either Prompty flow."""
+        llm_output = _all_completed_llm_output()
+        llm_output["cached_tokens"] = 128
+        evaluator = _mock_flows(_make_evaluator(), llm_output)
+
+        result = evaluator(**input_kwargs)
+
+        assert result["output_quality_cached_tokens"] == 128
+        assert result["output_quality_properties"]["cached_tokens"] == 128
+        assert (
+            result["output_quality_properties"][
+                output_quality_module.PROMPT_CACHE_CACHED_TOKENS_PROPERTY
+            ]
+            == 128
+        )
+
+    def test_cached_token_capture_helpers_are_self_contained(self, monkeypatch):
+        """The evaluator file captures cached tokens without package-local imports."""
+
+        class Details:
+            cached_tokens = 19
+
+        class Usage:
+            prompt_tokens_details = Details()
+
+        class Response:
+            usage = Usage()
+
+        assert output_quality_module._extract_cached_tokens(
+            {"usage": {"prompt_tokens_details": {"cached_tokens": 17}}}
+        ) == 17
+        assert output_quality_module._extract_cached_tokens(Response()) == 19
+        assert output_quality_module._extract_cached_tokens({}) is None
+        assert output_quality_module._extract_cached_tokens({"usage": {}}) is None
+        assert output_quality_module._extract_cached_tokens(
+            {"usage": {"prompt_tokens_details": {"cached_tokens": True}}}
+        ) is None
+
+        from openai.resources.chat.completions import AsyncCompletions
+
+        async def fake_create(self):
+            return {"usage": {"prompt_tokens_details": {"cached_tokens": 23}}}
+
+        monkeypatch.setattr(AsyncCompletions, "create", fake_create)
+        output_quality_module.install_cached_token_capture()
+
+        async def call_wrapped_create():
+            output_quality_module.clear_cached_tokens()
+            await AsyncCompletions.create(object())
+            return output_quality_module.get_cached_tokens()
+
+        assert asyncio.run(call_wrapped_create()) == 23
+        output_quality_module.install_cached_token_capture()
+
+    def test_cached_token_capture_survives_tracing_recovery(self, monkeypatch):
+        """Recovery of a tracing wrapper must not drop cached-token capture."""
+        from openai.resources.chat.completions import AsyncCompletions
+
+        async def untraced_create(self):
+            return {"usage": {"prompt_tokens_details": {"cached_tokens": 43}}}
+
+        async def traced_create(self):
+            return {"usage": {"prompt_tokens_details": {"cached_tokens": 41}}}
+
+        traced_create._original = untraced_create
+
+        monkeypatch.setattr(AsyncCompletions, "create", traced_create)
+        output_quality_module.install_cached_token_capture()
+        installed_create = AsyncCompletions.create
+
+        async def call_create():
+            output_quality_module.clear_cached_tokens()
+            await AsyncCompletions.create(object())
+            return output_quality_module.get_cached_tokens()
+
+        assert asyncio.run(call_create()) == 41
+
+        # Simulate another concurrent run recovering the pre-tracing method.
+        AsyncCompletions.create = installed_create._original
+
+        assert asyncio.run(call_create()) == 43
+
+    def test_cached_token_capture_reuses_existing_wrapper(self, monkeypatch):
+        """A second install registers this module's context var on the existing wrapper."""
+        from openai.resources.chat.completions import AsyncCompletions
+
+        async def raw_create(self):
+            return {"usage": {"prompt_tokens_details": {"cached_tokens": 61}}}
+
+        monkeypatch.setattr(AsyncCompletions, "create", raw_create)
+        output_quality_module.install_cached_token_capture()
+        first_wrapper = AsyncCompletions.create
+
+        output_quality_module.install_cached_token_capture()
+
+        assert AsyncCompletions.create is first_wrapper
+
+        async def call_create():
+            output_quality_module.clear_cached_tokens()
+            await AsyncCompletions.create(object())
+            return output_quality_module.get_cached_tokens()
+
+        assert asyncio.run(call_create()) == 61
+
+    def test_cached_token_capture_install_ignores_missing_create(self, monkeypatch):
+        """A missing OpenAI create method is ignored during capture installation."""
+        from openai.resources.chat.completions import AsyncCompletions
+
+        monkeypatch.setattr(AsyncCompletions, "create", None)
+        output_quality_module.install_cached_token_capture()
 
     def test_multi_turn_raw_failed_turn_is_preserved(self):
         """Multi-turn raw evaluator results preserve their failed-turn metadata."""
