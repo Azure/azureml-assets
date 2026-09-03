@@ -22,4 +22,4 @@ GitPython>=3.1.55  # pinned transitive dep of wandb; fixes GHSA-2f96-g7mh-g2hx/G
 azureml-core==1.61.0.post4
 azureml-dataset-runtime==1.62.0.post1
 azureml-defaults==1.62.0
-azureml-mlflow==1.62.0.post5
+azureml-mlflow==1.62.0.post6
