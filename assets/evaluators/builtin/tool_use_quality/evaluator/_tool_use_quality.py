@@ -417,6 +417,10 @@ logger = logging.getLogger(__name__)
 _CACHED_TOKENS: contextvars.ContextVar[Optional[int]] = contextvars.ContextVar(
     "evaluator_cached_tokens", default=None
 )
+# Vienna/ACA prompt-cache enrichment reads this property name from evaluator
+# result properties and moves it into ``sample.usage.cached_tokens``.
+PROMPT_CACHE_CACHED_TOKENS_PROPERTY = "_raisvc_prompt_cache_cached_tokens"
+
 _CAPTURE_MARKER = "_azureml_assets_captures_cached_tokens"
 _CAPTURE_CONTEXTVARS = "_azureml_assets_cached_token_contextvars"
 
@@ -442,12 +446,30 @@ def _extract_cached_tokens(response: Any) -> Optional[int]:
 
 
 def _register_cached_token_contextvar(create) -> None:
-    contextvars_list = getattr(create, _CAPTURE_CONTEXTVARS, None)
-    if contextvars_list is None:
-        contextvars_list = []
-        setattr(create, _CAPTURE_CONTEXTVARS, contextvars_list)
+    """Register this module's context var on an already installed capture wrapper."""
+    contextvars_list = getattr(create, _CAPTURE_CONTEXTVARS)
     if _CACHED_TOKENS not in contextvars_list:
         contextvars_list.append(_CACHED_TOKENS)
+
+
+def _make_capture_wrapper(delegate, registered_contextvars):
+    """Wrap ``delegate`` so cached prompt tokens land in the registered context vars."""
+    # ``updated=()`` keeps ``functools.wraps`` from copying the tracing wrapper's
+    # ``_original`` attribute onto this wrapper; otherwise the SDK/promptflow
+    # ``recover_openai_api()`` call could restore the untraced method and silently
+    # drop cached-token capture while an evaluation is still running.
+    @functools.wraps(delegate, updated=())
+    async def create(self, *args, **kwargs):
+        response = await delegate(self, *args, **kwargs)
+        cached_tokens = _extract_cached_tokens(response)
+        if cached_tokens is not None:
+            for contextvar in registered_contextvars:
+                contextvar.set(cached_tokens)
+        return response
+
+    setattr(create, _CAPTURE_MARKER, True)
+    setattr(create, _CAPTURE_CONTEXTVARS, registered_contextvars)
+    return create
 
 
 def install_cached_token_capture() -> None:
@@ -457,25 +479,28 @@ def install_cached_token_capture() -> None:
     except ImportError:  # pragma: no cover - openai is a hard dependency of the prompty flows
         return
 
-    original_create = getattr(AsyncCompletions, "create", None)
-    if original_create is None:
+    current_create = getattr(AsyncCompletions, "create", None)
+    if current_create is None:
         return
-    if getattr(original_create, _CAPTURE_MARKER, False):
-        _register_cached_token_contextvar(original_create)
+    if getattr(current_create, _CAPTURE_MARKER, False):
+        _register_cached_token_contextvar(current_create)
         return
 
-    @functools.wraps(original_create)
-    async def create(self, *args, **kwargs):
-        response = await original_create(self, *args, **kwargs)
-        cached_tokens = _extract_cached_tokens(response)
-        if cached_tokens is not None:
-            for contextvar in getattr(create, _CAPTURE_CONTEXTVARS, []):
-                contextvar.set(cached_tokens)
-        return response
+    registered_contextvars = [_CACHED_TOKENS]
+    wrapped_create = _make_capture_wrapper(current_create, registered_contextvars)
 
-    setattr(create, _CAPTURE_MARKER, True)
-    _register_cached_token_contextvar(create)
-    AsyncCompletions.create = create
+    # Tracing wrappers expose the pre-tracing method through ``_original`` and
+    # restore it during recovery. Point that recovery target at a capture wrapper
+    # so a concurrent run's recovery cannot strip cached-token capture.
+    recovery_target = getattr(current_create, "_original", None)
+    if recovery_target is not None:
+        setattr(
+            wrapped_create,
+            "_original",
+            _make_capture_wrapper(recovery_target, registered_contextvars),
+        )
+
+    AsyncCompletions.create = wrapped_create
 
 
 def clear_cached_tokens() -> None:
@@ -848,6 +873,7 @@ class ToolUseQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         # did not return cached-token telemetry at all.
         if cached_tokens is not None:
             metadata["cached_tokens"] = cached_tokens
+            metadata[PROMPT_CACHE_CACHED_TOKENS_PROPERTY] = cached_tokens
         return metadata
 
     @override

@@ -168,6 +168,12 @@ class TestOutputQualityEvaluatorBehavior:
 
         assert result["output_quality_cached_tokens"] == 128
         assert result["output_quality_properties"]["cached_tokens"] == 128
+        assert (
+            result["output_quality_properties"][
+                output_quality_module.PROMPT_CACHE_CACHED_TOKENS_PROPERTY
+            ]
+            == 128
+        )
 
     def test_cached_token_capture_helpers_are_self_contained(self, monkeypatch):
         """The evaluator file captures cached tokens without package-local imports."""
@@ -206,6 +212,56 @@ class TestOutputQualityEvaluatorBehavior:
 
         assert asyncio.run(call_wrapped_create()) == 23
         output_quality_module.install_cached_token_capture()
+
+    def test_cached_token_capture_survives_tracing_recovery(self, monkeypatch):
+        """Recovery of a tracing wrapper must not drop cached-token capture."""
+        from openai.resources.chat.completions import AsyncCompletions
+
+        async def untraced_create(self):
+            return {"usage": {"prompt_tokens_details": {"cached_tokens": 43}}}
+
+        async def traced_create(self):
+            return {"usage": {"prompt_tokens_details": {"cached_tokens": 41}}}
+
+        traced_create._original = untraced_create
+
+        monkeypatch.setattr(AsyncCompletions, "create", traced_create)
+        output_quality_module.install_cached_token_capture()
+        installed_create = AsyncCompletions.create
+
+        async def call_create():
+            output_quality_module.clear_cached_tokens()
+            await AsyncCompletions.create(object())
+            return output_quality_module.get_cached_tokens()
+
+        assert asyncio.run(call_create()) == 41
+
+        # Simulate another concurrent run recovering the pre-tracing method.
+        AsyncCompletions.create = installed_create._original
+
+        assert asyncio.run(call_create()) == 43
+
+    def test_cached_token_capture_reuses_existing_wrapper(self, monkeypatch):
+        """A second install registers this module's context var on the existing wrapper."""
+        from openai.resources.chat.completions import AsyncCompletions
+
+        async def raw_create(self):
+            return {"usage": {"prompt_tokens_details": {"cached_tokens": 61}}}
+
+        monkeypatch.setattr(AsyncCompletions, "create", raw_create)
+        output_quality_module.install_cached_token_capture()
+        first_wrapper = AsyncCompletions.create
+
+        output_quality_module.install_cached_token_capture()
+
+        assert AsyncCompletions.create is first_wrapper
+
+        async def call_create():
+            output_quality_module.clear_cached_tokens()
+            await AsyncCompletions.create(object())
+            return output_quality_module.get_cached_tokens()
+
+        assert asyncio.run(call_create()) == 61
 
     def test_cached_token_capture_install_ignores_missing_create(self, monkeypatch):
         """A missing OpenAI create method is ignored during capture installation."""
