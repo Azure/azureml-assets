@@ -1,5 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
+import contextvars
+import functools
 import os
 import logging
 from enum import Enum
@@ -20,11 +22,6 @@ from azure.ai.evaluation._evaluators._common._validators import (
     ValidatorInterface,
     ConversationValidator,
     ToolDefinitionsValidator,
-)
-from ..._cached_token_capture import (
-    clear_cached_tokens,
-    get_cached_tokens,
-    install_cached_token_capture,
 )
 
 # ---------------------------------------------------------------------------
@@ -406,7 +403,6 @@ else:
 
 logger = logging.getLogger(__name__)
 
-
 # ---------------------------------------------------------------------------
 # Cached-token capture.
 #
@@ -417,6 +413,80 @@ logger = logging.getLogger(__name__)
 # ``openai`` package, so we wrap that method once and stash the cached-token
 # count for the current async context.
 # ---------------------------------------------------------------------------
+
+_CACHED_TOKENS: contextvars.ContextVar[Optional[int]] = contextvars.ContextVar(
+    "evaluator_cached_tokens", default=None
+)
+_CAPTURE_MARKER = "_azureml_assets_captures_cached_tokens"
+_CAPTURE_CONTEXTVARS = "_azureml_assets_cached_token_contextvars"
+
+
+def _extract_cached_tokens(response: Any) -> Optional[int]:
+    """Read ``usage.prompt_tokens_details.cached_tokens`` from a response."""
+    usage = response.get("usage") if isinstance(response, dict) else getattr(response, "usage", None)
+    if usage is None:
+        return None
+    details = (
+        usage.get("prompt_tokens_details")
+        if isinstance(usage, dict)
+        else getattr(usage, "prompt_tokens_details", None)
+    )
+    if details is None:
+        return None
+    cached_tokens = (
+        details.get("cached_tokens")
+        if isinstance(details, dict)
+        else getattr(details, "cached_tokens", None)
+    )
+    return cached_tokens if isinstance(cached_tokens, int) and not isinstance(cached_tokens, bool) else None
+
+
+def _register_cached_token_contextvar(create) -> None:
+    contextvars_list = getattr(create, _CAPTURE_CONTEXTVARS, None)
+    if contextvars_list is None:
+        contextvars_list = []
+        setattr(create, _CAPTURE_CONTEXTVARS, contextvars_list)
+    if _CACHED_TOKENS not in contextvars_list:
+        contextvars_list.append(_CACHED_TOKENS)
+
+
+def install_cached_token_capture() -> None:
+    """Install an idempotent wrapper for this evaluator's Prompty calls."""
+    try:
+        from openai.resources.chat.completions import AsyncCompletions
+    except ImportError:  # pragma: no cover - openai is a hard dependency of the prompty flows
+        return
+
+    original_create = getattr(AsyncCompletions, "create", None)
+    if original_create is None:
+        return
+    if getattr(original_create, _CAPTURE_MARKER, False):
+        _register_cached_token_contextvar(original_create)
+        return
+
+    @functools.wraps(original_create)
+    async def create(self, *args, **kwargs):
+        response = await original_create(self, *args, **kwargs)
+        cached_tokens = _extract_cached_tokens(response)
+        if cached_tokens is not None:
+            for contextvar in getattr(create, _CAPTURE_CONTEXTVARS, []):
+                contextvar.set(cached_tokens)
+        return response
+
+    setattr(create, _CAPTURE_MARKER, True)
+    _register_cached_token_contextvar(create)
+    AsyncCompletions.create = create
+
+
+def clear_cached_tokens() -> None:
+    """Clear cached-token usage before starting an evaluator call."""
+    _CACHED_TOKENS.set(None)
+
+
+def get_cached_tokens() -> Optional[int]:
+    """Return cached-token usage captured in the current async context."""
+    return _CACHED_TOKENS.get()
+
 
 install_cached_token_capture()
 

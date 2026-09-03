@@ -11,6 +11,7 @@ import pytest
 from azure.ai.evaluation import AzureOpenAIModelConfiguration
 from azure.ai.evaluation._exceptions import EvaluationException
 
+from ...builtin.output_quality.evaluator import _output_quality as output_quality_module
 from ...builtin.output_quality.evaluator._output_quality import OutputQualityEvaluator, _EVALUATORS
 
 VALID_QUERY = "How do I reset my account password?"
@@ -167,6 +168,52 @@ class TestOutputQualityEvaluatorBehavior:
 
         assert result["output_quality_cached_tokens"] == 128
         assert result["output_quality_properties"]["cached_tokens"] == 128
+
+    def test_cached_token_capture_helpers_are_self_contained(self, monkeypatch):
+        """The evaluator file captures cached tokens without package-local imports."""
+
+        class Details:
+            cached_tokens = 19
+
+        class Usage:
+            prompt_tokens_details = Details()
+
+        class Response:
+            usage = Usage()
+
+        assert output_quality_module._extract_cached_tokens(
+            {"usage": {"prompt_tokens_details": {"cached_tokens": 17}}}
+        ) == 17
+        assert output_quality_module._extract_cached_tokens(Response()) == 19
+        assert output_quality_module._extract_cached_tokens({}) is None
+        assert output_quality_module._extract_cached_tokens({"usage": {}}) is None
+        assert output_quality_module._extract_cached_tokens(
+            {"usage": {"prompt_tokens_details": {"cached_tokens": True}}}
+        ) is None
+
+        from openai.resources.chat.completions import AsyncCompletions
+
+        async def fake_create(self):
+            return {"usage": {"prompt_tokens_details": {"cached_tokens": 23}}}
+
+        monkeypatch.setattr(AsyncCompletions, "create", fake_create)
+        output_quality_module.install_cached_token_capture()
+
+        async def call_wrapped_create():
+            output_quality_module.clear_cached_tokens()
+            await AsyncCompletions.create(object())
+            return output_quality_module.get_cached_tokens()
+
+        assert asyncio.run(call_wrapped_create()) == 23
+        output_quality_module.install_cached_token_capture()
+
+    def test_cached_token_capture_install_ignores_missing_create(self, monkeypatch):
+        """A missing OpenAI create method is ignored during capture installation."""
+        from openai.resources.chat.completions import AsyncCompletions
+
+        monkeypatch.setattr(AsyncCompletions, "create", None)
+        output_quality_module.install_cached_token_capture()
+
 
     def test_multi_turn_raw_failed_turn_is_preserved(self):
         """Multi-turn raw evaluator results preserve their failed-turn metadata."""
