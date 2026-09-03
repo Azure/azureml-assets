@@ -239,7 +239,6 @@ class TestToolUseQualityEvaluatorBehavior:
         monkeypatch.setattr(AsyncCompletions, "create", None)
         tool_use_quality_module.install_cached_token_capture()
 
-
     def test_thresholds_default_to_standalone_evaluator_defaults(self):
         """Default thresholds match each standalone evaluator's default."""
         evaluator = _make_evaluator()

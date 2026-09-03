@@ -214,7 +214,6 @@ class TestOutputQualityEvaluatorBehavior:
         monkeypatch.setattr(AsyncCompletions, "create", None)
         output_quality_module.install_cached_token_capture()
 
-
     def test_multi_turn_raw_failed_turn_is_preserved(self):
         """Multi-turn raw evaluator results preserve their failed-turn metadata."""
         evaluator = _mock_flows(_make_evaluator(), _all_completed_llm_output(failed_turn=1))
