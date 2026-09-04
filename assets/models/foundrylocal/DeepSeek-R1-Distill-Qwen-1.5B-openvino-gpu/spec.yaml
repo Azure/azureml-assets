@@ -7,6 +7,7 @@ tags:
   supportsReasoning: 'true'
   contextLength: 131072
 system_metadata:
+  previewType: hideUI
   alias: deepseek-r1-1.5b
   publisher: Microsoft
   directoryPath: v2

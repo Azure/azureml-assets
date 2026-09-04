@@ -7,6 +7,7 @@ tags:
   supportsReasoning: ''
   contextLength: 32768
 system_metadata:
+  previewType: hideUI
   alias: qwen2.5-14b
   publisher: Microsoft
   directoryPath: v2
