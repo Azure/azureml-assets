@@ -1,8 +1,8 @@
 # Shared Go toolchain version used across builder stages; compiled from source so the
 # trivy and oras binaries link a patched Go stdlib. Bump to the latest patched Go.
-ARG GO_VERSION=1.26.5
-ARG TRIVY_VERSION=0.72.0
-ARG ORAS_VERSION=1.3.2
+ARG GO_VERSION=1.26.8
+ARG TRIVY_VERSION=0.74.0
+ARG ORAS_VERSION=1.3.4
 
 # Mode toggles: "build" (compile from source with patched Go + deps) or
 # "install" (download the upstream release binary). Both default to "build"
@@ -31,7 +31,6 @@ ENV PATH=/usr/local/go/bin:$PATH
 RUN git clone --depth 1 --branch v${ORAS_VERSION} https://github.com/oras-project/oras.git /tmp/oras \
  && cd /tmp/oras \
  && go get golang.org/x/crypto@latest \
- && go get oras.land/oras-go/v2@v2.6.1 \
  && go mod tidy \
  && GOBIN=/out go install ./cmd/oras \
  && test -x /out/oras \
@@ -76,24 +75,20 @@ RUN curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go
  && rm /tmp/go.tar.gz
 ENV PATH=/usr/local/go/bin:$PATH
 # Build env replicates trivy's magefile (CGO disabled, jsonv2 experiment, version ldflag).
-# go get pins below patch modules that trivy v0.72.0 (the latest release) still lags and the
-# scanner flags in the built binary: x/net, x/text, grpc (GHSA-hrxh-6v49-42gf), moby/buildkit.
-# Drop a pin once the tagged release carries a fixed version.
+# No module pins are needed here: trivy v0.74.0's go.mod already carries fixed versions of
+# every dep previously pinned (x/crypto 0.55.0, x/mod 0.40.0, x/net 0.58.0, x/text 0.41.0,
+# grpc 1.82.1, moby/buildkit 0.32.2, oras-go/v2 2.6.2). Add a `go get pkg@version` below
+# only for a module a future tagged release still lags, and drop it once the release
+# catches up.
 RUN git clone --depth 1 --branch v${TRIVY_VERSION} https://github.com/aquasecurity/trivy.git /tmp/trivy \
  && cd /tmp/trivy \
- && go get oras.land/oras-go/v2@v2.6.1 \
- && go get golang.org/x/net@v0.56.0 \
- && go get golang.org/x/text@v0.39.0 \
- && go get google.golang.org/grpc@v1.82.1 \
- && go get github.com/moby/buildkit@v0.31.2 \
- && go mod tidy \
  && CGO_ENABLED=0 GOEXPERIMENT=jsonv2 go build \
       -ldflags="-s -w -X=github.com/aquasecurity/trivy/pkg/version/app.ver=${TRIVY_VERSION}" \
       -o /out/trivy ./cmd/trivy \
  && test -x /out/trivy \
  && /out/trivy --version \
  && echo "--- linked Go module versions (verifying CVE-fix pins) ---" \
- && go version -m /out/trivy | grep -E '(stdlib|oras-go|rekor|golang\.org/x/(crypto|net|text)|in-toto-golang|go-git/v5|go-billy/v5|containerd|grpc|buildkit)' \
+ && go version -m /out/trivy | grep -E '(stdlib|oras-go|rekor|golang\.org/x/(crypto|mod|net|text)|in-toto-golang|go-git/v5|go-billy/v5|containerd|grpc|buildkit)' \
  && rm -rf /tmp/trivy
 
 # =========================================
