@@ -9,7 +9,7 @@ tags:
 system_metadata:
   alias: gemma-4-e2b-it
   publisher: Microsoft
-  directoryPath: v2
+  directoryPath: v3
   foundryLocal: ''
   deploymentOptions: ['Foundry Local on Devices']
   inputModalities:
@@ -48,9 +48,9 @@ variantInfo:
     - RTN
     device: gpu
     executionProvider: CUDAExecutionProvider
-    fileSizeBytes: 6182900994
-    vRamFootprintBytes: 6182900994
-version: 2
+    fileSizeBytes: 6182881980
+    vRamFootprintBytes: 6182881980
+version: 3
 description: |-
   This model is an optimized version of Gemma 4 E2B IT for local inference on CUDA GPUs. This optimized model is published here in ONNX format to run on CUDA-capable GPU devices, with the precision best suited to this target.
 
