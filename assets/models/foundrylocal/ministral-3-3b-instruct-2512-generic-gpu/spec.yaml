@@ -9,7 +9,7 @@ tags:
 system_metadata:
   alias: ministral-3-3b-instruct-2512
   publisher: Microsoft
-  directoryPath: v1
+  directoryPath: v2
   foundryLocal: ''
   deploymentOptions: ['Foundry Local on Devices']
   inputModalities:
@@ -45,6 +45,6 @@ variantInfo:
     - RTN
     device: gpu
     executionProvider: WebGPUExecutionProvider
-    fileSizeBytes: 3857775303
-    vRamFootprintBytes: 3857775303
-version: 1
+    fileSizeBytes: 3857775187
+    vRamFootprintBytes: 3857775187
+version: 2
