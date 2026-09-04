@@ -10,7 +10,7 @@ system_metadata:
   previewType: hideUI
   alias: ministral-3-3b-instruct-2512
   publisher: Microsoft
-  directoryPath: v1
+  directoryPath: v2
   foundryLocal: ''
   deploymentOptions: ['Foundry Local on Devices']
   inputModalities:
@@ -46,6 +46,6 @@ variantInfo:
     - RTN
     device: cpu
     executionProvider: CPUExecutionProvider
-    fileSizeBytes: 4919876920
-    vRamFootprintBytes: 4919876920
-version: 1
+    fileSizeBytes: 4919876804
+    vRamFootprintBytes: 4919876804
+version: 2

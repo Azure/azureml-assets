@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/models/ministral-3-3b-Instruct-2512/onnx/webgpu/v1
+  container_path: foundrylocal/models/ministral-3-3b-Instruct-2512/onnx/webgpu/v2
   storage_name: foundrylocalassetdata
   type: azureblob
 publish:
