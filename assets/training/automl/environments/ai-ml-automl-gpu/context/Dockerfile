@@ -16,21 +16,10 @@ ENV ENABLE_METADATA=true
 
 RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
 
-# Pull current Ubuntu security errata; install build deps for LightGBM/XGBoost.
-# Temporary base-image remediation for PAM/glibc (USN-8601-1 and USN-8611-1).
-# Remove the explicit upgrades once the base image includes the patched packages.
+# Patch Ubuntu packages still vulnerable in the base image; install build deps for LightGBM/XGBoost.
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get install -y --only-upgrade \
-        libpam-runtime \
-        libpam0g \
-        libpam-modules \
-        libpam-modules-bin \
-        libc-bin \
-        libc-dev-bin \
-        libc6 \
-        libc6-dev \
-        locales && \
+        libgcrypt20 && \
     apt-get install -y --no-install-recommends \
         cmake \
         libboost-dev \
