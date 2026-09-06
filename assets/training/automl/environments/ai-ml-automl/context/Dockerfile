@@ -14,7 +14,7 @@ ENV PIP_PROGRESS_BAR=off
 # Upgrade vulnerable Ubuntu packages inherited from the base image when this image variant includes them.
 RUN set -eux; \
     apt-get update; \
-    os_security_packages="curl gzip libarchive13 libc-bin libc-dev-bin libc6 libc6-dev libasound2 libasound2-data libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libgssapi-krb5-2 libk5crypto3 libkrb5-3 libkrb5support0 libnghttp2-14 libnginx-mod-http-echo libnginx-mod-http-geoip2 libpam-modules libpam-modules-bin libpam-runtime libpam0g libperl5.34 libperl5.38 libpython3.10-minimal libpython3.10-stdlib libpython3.12-minimal libpython3.12-stdlib libsqlite3-0 libssl3 libssl3t64 libxml2 nginx nginx-common nginx-light openssh-client openssh-server openssh-sftp-server openssl perl perl-base perl-modules-5.34 perl-modules-5.38 python3.10 python3.10-minimal python3.12 python3.12-minimal rsyslog tar wget"; \
+    os_security_packages="curl gzip libarchive13 libc-bin libc-dev-bin libc6 libc6-dev libasound2 libasound2-data libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libgcrypt20 libgssapi-krb5-2 libk5crypto3 libkrb5-3 libkrb5support0 libnghttp2-14 libnginx-mod-http-echo libnginx-mod-http-geoip2 libpam-modules libpam-modules-bin libpam-runtime libpam0g libperl5.34 libperl5.38 libpython3.10-minimal libpython3.10-stdlib libpython3.12-minimal libpython3.12-stdlib libsqlite3-0 libssl3 libssl3t64 libxml2 nginx nginx-common nginx-light openssh-client openssh-server openssh-sftp-server openssl perl perl-base perl-modules-5.34 perl-modules-5.38 python3.10 python3.10-minimal python3.12 python3.12-minimal rsyslog tar wget"; \
     installed_os_packages=""; \
     for package in $os_security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
@@ -33,7 +33,7 @@ RUN conda create -q -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     conda clean -q -a -y
 
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --progress-bar off --upgrade \
-    'pip>=26.1.2' \
+    'pip>=26.2.0' \
     'msgpack>=1.2.1' \
     'setuptools>=83.0.0'
 
@@ -163,7 +163,7 @@ RUN set -eux; \
     test -z "$(grep -RIlE 'setuptools.*70\.3\.0|msgpack.*1\.1\.2|pkg:pypi/(setuptools@70\.3\.0|msgpack@1\.1\.2)' /azureml-envs 2>/dev/null | head -n 1)"
 
 # Patch the PTCA conda environment when present.
-# pip>=26.1.2 fixes GHSA-wf93-45jw-7689; VCM reads the conda-meta record, so
+# pip>=26.2.0 fixes GHSA-qwm4-qh6w-59xr; VCM reads the conda-meta record, so
 #   conda must update it.
 # msgpack>=1.2.1 fixes GHSA-6v7p-g79w-8964 in inherited PTCA environments.
 # setuptools>=83.0.0 fixes GHSA-h35f-9h28-mq5c in Python prefixes that carry older setuptools.
@@ -172,7 +172,7 @@ RUN set -eux; \
 #   GHSA-qfhq-4f3w-5fph in inherited PTCA environments.
 RUN set -eux; \
     if [ -d /opt/conda/envs/ptca ]; then \
-        conda install -p /opt/conda/envs/ptca -c conda-forge -y 'pip>=26.1.2'; \
+        conda install -p /opt/conda/envs/ptca -c conda-forge -y 'pip>=26.2.0'; \
         conda run -p /opt/conda/envs/ptca python -m pip install --no-cache-dir --progress-bar off --upgrade 'torch==2.13.0' 'msgpack>=1.2.1' 'setuptools>=83.0.0' 'cryptography>=50.0.0' 'GitPython>=3.1.58' 'sqlparse>=0.6.0'; \
     fi; \
     find /opt /root /tmp -path '*/_vendor/vendor.txt' -type f -exec \
