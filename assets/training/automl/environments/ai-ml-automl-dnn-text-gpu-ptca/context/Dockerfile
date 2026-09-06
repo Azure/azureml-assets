@@ -2,6 +2,7 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 
 USER root:root
 
+# Upgrade Ubuntu security fixes inherited from the ACPT base image.
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
@@ -26,10 +27,10 @@ RUN pip install \
     accelerate==1.12.0 \
     deepspeed~=0.15.1
 
-# Override transformers to fix GHSA-69w3-r845-3855
-# Root cause: azureml-automl-dnn-nlp==1.62.0 is the latest release as of
-# 2026-05-26 and pins transformers==4.53.0, so direct override is required.
-RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.5.4'
+# Override transformers to fix GHSA-69w3-r845-3855 and GHSA-xrqw-3rrv-vx5w.
+# Root cause: azureml-automl-dnn-nlp pins transformers below the patched
+# version, so direct override is required.
+RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.10.0'
 
 # Vulnerability patches for ptca environment (python 3.10 at /opt/conda/envs/ptca)
 # pip -> >=26.1.2 (GHSA-jp4c-xjxw-mgf9, CVE-2026-6357,
