@@ -288,6 +288,78 @@ class TestIFEvalEvaluatorBehavior(BaseCodeEvaluatorRunner):
         result_data = self._extract_and_print_result(results, "empty_instruction_list")
         self.assert_fail(result_data)
 
+    # ==================== JSON RESPONSE SUPPORT TESTS ====================
+
+    def test_plain_string_response_still_works(self):
+        """A plain string response (not JSON message list) is used as-is."""
+        results = self._run_evaluation(
+            response=self.NO_COMMA_RESPONSE,
+            instruction_id_list='["punctuation:no_comma"]',
+            instruction_kwargs='[{}]',
+        )
+        result_data = self._extract_and_print_result(results, "plain_string_response")
+        self.assert_pass(result_data)
+
+    def test_json_encoded_message_list_response(self):
+        """A JSON-encoded list of chat messages is parsed and flattened to plain text."""
+        import json
+
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "Reply without commas."}]},
+            {
+                "role": "assistant",
+                "content": [
+                    {
+                        "type": "tool_call",
+                        "tool_call_id": "c1",
+                        "name": "lookup",
+                        "arguments": {"q": "comma, rule"},
+                    }
+                ],
+            },
+            {"role": "tool", "tool_call_id": "c1", "content": [{"type": "tool_result", "tool_result": "n/a"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": self.NO_COMMA_RESPONSE}]},
+        ]
+        results = self._run_evaluation(
+            response=json.dumps(messages),
+            instruction_id_list='["punctuation:no_comma"]',
+            instruction_kwargs='[{}]',
+        )
+        result_data = self._extract_and_print_result(results, "json_encoded_message_list_response")
+        self.assert_pass(result_data)
+
+    def test_json_response_excludes_tool_call_and_result_content(self):
+        """Tool call/result content (which contains a comma) must not leak into the response."""
+        import json
+
+        messages = [
+            {
+                "role": "assistant",
+                "content": [
+                    {
+                        "type": "tool_call",
+                        "tool_call_id": "c1",
+                        "name": "search_docs",
+                        "arguments": {"query": "a, b, c"},
+                    }
+                ],
+            },
+            {
+                "role": "tool",
+                "tool_call_id": "c1",
+                "content": [{"type": "tool_result", "tool_result": "found, results, here"}],
+            },
+            {"role": "assistant", "content": [{"type": "text", "text": self.NO_COMMA_RESPONSE}]},
+        ]
+        results = self._run_evaluation(
+            response=json.dumps(messages),
+            instruction_id_list='["punctuation:no_comma"]',
+            instruction_kwargs='[{}]',
+        )
+        result_data = self._extract_and_print_result(results, "json_response_excludes_tool_content")
+        # If the tool call/result commas leaked into the scored text, this would fail.
+        self.assert_pass(result_data)
+
 
 @pytest.mark.unittest
 class TestIFEvalInstructionCheckers:

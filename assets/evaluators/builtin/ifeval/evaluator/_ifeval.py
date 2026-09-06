@@ -21,7 +21,66 @@ from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
 
 from ._instructions import get_checker
 
+try:  # azure-ai-evaluation >= 1.18.1
+    from azure.ai.evaluation._common.utils import _preprocess_messages
+except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
+    from azure.ai.evaluation._evaluators._common._base_prompty_eval import _preprocess_messages
+
 logger = logging.getLogger(__name__)
+
+
+def _extract_final_text_response(messages):
+    """Extract only the plain text of assistant messages, dropping tool calls/results.
+
+    Iterates the preprocessed messages and collects the ``text`` content of every
+    ``assistant`` role message, ignoring any ``tool_call``/``tool_result`` content blocks
+    and any non-assistant messages (e.g. ``tool`` role messages). This ensures only the
+    final plain-text agent response is used for evaluation, never intermediate tool call
+    or tool result content.
+
+    :param messages: The preprocessed list of chat-message dicts.
+    :type messages: list
+    :return: The joined plain text of all assistant messages, or an empty string if none.
+    :rtype: str
+    """
+    text_lines = []
+    for msg in messages:
+        if isinstance(msg, dict) and msg.get("role") == "assistant":
+            for content in msg.get("content", []) or []:
+                if isinstance(content, dict) and "text" in content and content.get("type", "text") == "text":
+                    text_lines.append(content["text"])
+    return "\n".join(text_lines)
+
+
+def _parse_response_for_evaluation(response):
+    """Flatten ``response`` into a plain string, parsing a JSON-encoded list of messages if needed.
+
+    If ``response`` is a string, attempt to ``json.loads`` it. When it (or an already-parsed
+    ``response``) is a list of chat-message dicts, only the plain text of assistant messages
+    is extracted (tool calls, tool results, and other message types are dropped). Any other
+    input (a plain string that is not JSON, or a string/list that fails to parse or yields no
+    assistant text) is returned unchanged.
+
+    :param response: The raw response value from the eval input.
+    :type response: Any
+    :return: A plain string ready for deterministic scoring.
+    :rtype: str
+    """
+    parsed = response
+    if isinstance(response, str):
+        try:
+            parsed = json.loads(response)
+        except (ValueError, TypeError):
+            return response
+    if isinstance(parsed, list):
+        try:
+            messages = _preprocess_messages(parsed)
+            text = _extract_final_text_response(messages)
+            if text:
+                return text
+        except Exception:
+            logger.debug("Could not extract plain text from response messages; falling back to original response")
+    return response
 
 
 class IFEvalEvaluator(EvaluatorBase):
@@ -111,7 +170,7 @@ class IFEvalEvaluator(EvaluatorBase):
         :return: The evaluation result with strict and loose scores.
         :rtype: Dict
         """
-        response = eval_input.get("response", "")
+        response = _parse_response_for_evaluation(eval_input.get("response", ""))
         instruction_id_list = self._parse_json_field(
             eval_input.get("instruction_id_list"), "instruction_id_list"
         )

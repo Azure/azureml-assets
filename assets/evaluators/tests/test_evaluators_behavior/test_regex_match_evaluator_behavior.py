@@ -190,6 +190,80 @@ class TestRegexMatchEvaluatorBehavior(BaseCodeEvaluatorRunner):
         result_data = self._extract_and_print_result(results, "whitespace_response")
         self.assert_fail(result_data)
 
+    # ==================== JSON RESPONSE SUPPORT TESTS ====================
+
+    def test_plain_string_response_still_works(self):
+        """A plain string response (not JSON) is used as-is."""
+        evaluator = RegexMatchEvaluator(patterns=self.SIMPLE_PATTERN)
+        results = self._run_evaluation_with_evaluator(
+            evaluator,
+            response=self.MATCHING_RESPONSE,
+        )
+        result_data = self._extract_and_print_result(results, "plain_string_response")
+        self.assert_pass(result_data)
+
+    def test_json_encoded_message_list_response(self):
+        """A JSON-encoded list of chat messages is parsed and flattened to plain text."""
+        import json
+
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "What's the answer?"}]},
+            {
+                "role": "assistant",
+                "content": [
+                    {
+                        "type": "tool_call",
+                        "tool_call_id": "c1",
+                        "name": "lookup",
+                        "arguments": {"q": "answer"},
+                    }
+                ],
+            },
+            {"role": "tool", "tool_call_id": "c1", "content": [{"type": "tool_result", "tool_result": "n/a"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": self.MATCHING_RESPONSE}]},
+        ]
+        evaluator = RegexMatchEvaluator(patterns=self.SIMPLE_PATTERN)
+        results = self._run_evaluation_with_evaluator(
+            evaluator,
+            response=json.dumps(messages),
+        )
+        result_data = self._extract_and_print_result(results, "json_encoded_message_list_response")
+        self.assert_pass(result_data)
+
+    def test_json_response_excludes_tool_call_and_result_content(self):
+        """Tool call/result content must never leak into the flattened response text."""
+        import json
+
+        messages = [
+            {
+                "role": "assistant",
+                "content": [
+                    {
+                        "type": "tool_call",
+                        "tool_call_id": "c1",
+                        "name": "search_docs",
+                        "arguments": {"query": "ANSWER: A"},
+                    }
+                ],
+            },
+            {
+                "role": "tool",
+                "tool_call_id": "c1",
+                "content": [{"type": "tool_result", "tool_result": "ANSWER: A"}],
+            },
+            {"role": "assistant", "content": [{"type": "text", "text": self.MATCHING_RESPONSE}]},
+        ]
+        evaluator = RegexMatchEvaluator(patterns=self.SIMPLE_PATTERN)
+        results = self._run_evaluation_with_evaluator(
+            evaluator,
+            response=json.dumps(messages),
+        )
+        result_data = self._extract_and_print_result(results, "json_response_excludes_tool_content")
+        # If the tool content "ANSWER: A" leaked in, the pattern would still find
+        # "ANSWER: B" in the final text and pass; verify it passes cleanly on the
+        # final assistant text alone.
+        self.assert_pass(result_data)
+
     # ==================== HELPER METHOD ====================
 
     def _run_evaluation_with_evaluator(self, evaluator, **kwargs):

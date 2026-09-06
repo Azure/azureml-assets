@@ -370,3 +370,73 @@ class TestBBEHEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "trailing_question_mark")
         self.assert_pass(result_data)
+
+    # ==================== JSON RESPONSE SUPPORT TESTS ====================
+
+    def test_plain_string_response_still_works(self):
+        """A plain string response (not JSON) is used as-is."""
+        results = self._run_evaluation(
+            response=self.SIMPLE_RESPONSE,
+            ground_truth=self.SIMPLE_ANSWER,
+        )
+        result_data = self._extract_and_print_result(results, "plain_string_response")
+        self.assert_pass(result_data)
+
+    def test_json_encoded_message_list_response(self):
+        """A JSON-encoded list of chat messages is parsed and flattened to plain text."""
+        import json
+
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "Is this correct?"}]},
+            {
+                "role": "assistant",
+                "content": [
+                    {
+                        "type": "tool_call",
+                        "tool_call_id": "c1",
+                        "name": "lookup",
+                        "arguments": {"q": "yes"},
+                    }
+                ],
+            },
+            {"role": "tool", "tool_call_id": "c1", "content": [{"type": "tool_result", "tool_result": "n/a"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": self.SIMPLE_RESPONSE}]},
+        ]
+        results = self._run_evaluation(
+            response=json.dumps(messages),
+            ground_truth=self.SIMPLE_ANSWER,
+        )
+        result_data = self._extract_and_print_result(results, "json_encoded_message_list_response")
+        self.assert_pass(result_data)
+
+    def test_json_response_excludes_tool_call_and_result_content(self):
+        """Tool call/result content must never leak into the flattened response text."""
+        import json
+
+        messages = [
+            {
+                "role": "assistant",
+                "content": [
+                    {
+                        "type": "tool_call",
+                        "tool_call_id": "c1",
+                        "name": "search_docs",
+                        "arguments": {"query": "The answer is: no"},
+                    }
+                ],
+            },
+            {
+                "role": "tool",
+                "tool_call_id": "c1",
+                "content": [{"type": "tool_result", "tool_result": "The answer is: no"}],
+            },
+            {"role": "assistant", "content": [{"type": "text", "text": self.SIMPLE_RESPONSE}]},
+        ]
+        results = self._run_evaluation(
+            response=json.dumps(messages),
+            ground_truth=self.SIMPLE_ANSWER,
+        )
+        result_data = self._extract_and_print_result(results, "json_response_excludes_tool_content")
+        # If the tool call/result text ("no") leaked in, this would fail; it must pass.
+        self.assert_pass(result_data)
+

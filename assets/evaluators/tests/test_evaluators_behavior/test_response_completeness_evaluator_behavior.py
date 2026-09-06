@@ -564,6 +564,58 @@ class TestResponseCompletenessEvaluatorBehavior(BasePromptyEvaluatorRunner):
         result_data = self._extract_and_print_result(results, "ground-truth-as-list")
         self.assert_pass_or_fail(result_data)
 
+    # ==================== JSON RESPONSE SUPPORT TESTS ====================
+
+    def test_plain_string_response_still_works(self) -> None:
+        """A plain string response (not JSON) should keep working as before."""
+        results = self._run_evaluation(
+            response="Python is a programming language created by Guido van Rossum.",
+            ground_truth="Python is a programming language created by Guido van Rossum.",
+        )
+        result_data = self._extract_and_print_result(results, "plain-string-response")
+        self.assert_pass(result_data)
+
+    def test_json_encoded_message_list_response_reaches_flow(self) -> None:
+        """A JSON-encoded list of chat messages is parsed and the final assistant text reaches the flow.
+
+        Response Completeness passes the preprocessed conversation (not a flattened string) to
+        its prompty flow, same as it already does for a plain List[dict] response - this mirrors
+        that pre-existing behavior, just parsing the JSON-encoded string into the list first.
+        """
+        import json
+
+        final_answer = "Python is a programming language created by Guido van Rossum."
+        json_response = json.dumps(
+            [
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "lookup",
+                            "arguments": {"q": "python creator"},
+                        }
+                    ],
+                },
+                {
+                    "tool_call_id": "call_1",
+                    "role": "tool",
+                    "content": [{"type": "tool_result", "tool_result": {"info": "not the real answer"}}],
+                },
+                {
+                    "role": "assistant",
+                    "content": [{"type": "text", "text": final_answer}],
+                },
+            ]
+        )
+        _, captured = self._run_and_capture_flow_input(
+            response=json_response,
+            ground_truth=final_answer,
+        )
+        flow_input_json = json.dumps(captured, default=str)
+        assert final_answer in flow_input_json, "final assistant text did not reach the flow"
+
 
 # region Not-applicable handling tests (util-fix regression)
 

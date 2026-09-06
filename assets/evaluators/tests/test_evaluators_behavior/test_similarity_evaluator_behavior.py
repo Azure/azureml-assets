@@ -298,6 +298,59 @@ class TestSimilarityEvaluatorBehavior(BasePromptyEvaluatorRunner):
         result_data = self._extract_and_print_result(results, "Dict Ground Truth Type")
         self.assert_pass(result_data)
 
+    # ==================== JSON RESPONSE SUPPORT TESTS ====================
+
+    def test_plain_string_response_still_works(self):
+        """A plain string response (not JSON) should keep working as before."""
+        results = self._run_evaluation(
+            query=self.VALID_QUERY,
+            response=self.PERFECT_RESPONSE,
+            ground_truth=self.PERFECT_GROUND_TRUTH,
+        )
+        result_data = self._extract_and_print_result(results, "Plain String Response")
+        self.assert_pass(result_data)
+
+    def test_json_encoded_message_list_response_reaches_flow(self):
+        """A JSON-encoded list of chat messages is parsed and the final assistant text reaches the flow.
+
+        Similarity passes the preprocessed conversation (not a flattened string) to its prompty
+        flow, same as it already does for a plain List[dict] response - this mirrors that
+        pre-existing behavior, just parsing the JSON-encoded string into the list first.
+        """
+        import json
+
+        json_response = json.dumps(
+            [
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "lookup",
+                            "arguments": {"q": "ribosomes"},
+                        }
+                    ],
+                },
+                {
+                    "tool_call_id": "call_1",
+                    "role": "tool",
+                    "content": [{"type": "tool_result", "tool_result": {"info": "not the real answer"}}],
+                },
+                {
+                    "role": "assistant",
+                    "content": [{"type": "text", "text": self.PERFECT_RESPONSE}],
+                },
+            ]
+        )
+        _, captured = self._run_and_capture_flow_input(
+            query=self.VALID_QUERY,
+            response=json_response,
+            ground_truth=self.PERFECT_GROUND_TRUTH,
+        )
+        flow_input_json = json.dumps(captured, default=str)
+        assert self.PERFECT_RESPONSE in flow_input_json, "final assistant text did not reach the flow"
+
     # ==================== OUTPUT STRUCTURE TESTS ====================
 
     def test_output_contains_required_keys(self):
