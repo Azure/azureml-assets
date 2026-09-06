@@ -37,6 +37,7 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 ENV ENABLE_METADATA=true
 
+# Upgrade vulnerable OS packages inherited from the base image.
 RUN apt-get update && \
     apt-get install --only-upgrade -y --no-install-recommends \
         tar \
@@ -63,6 +64,7 @@ RUN apt-get update && \
         libpam-modules \
         libpam-modules-bin \
         libssl3 \
+        libgcrypt20 \
         openssl \
         libperl5.34 \
         perl \
