@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202608.2
 
 ENV PIP_PROGRESS_BAR=off
 
@@ -10,12 +10,6 @@ ENV PIP_PROGRESS_BAR=off
 # pydantic-settings>=2.14.2: pinned transitive dep present in the base image; fixes GHSA-4xgf-cpjx-pc3j.
 # msgpack>=1.2.1: pinned transitive dep present in the base image; fixes GHSA-6v7p-g79w-8964.
 # aiohttp>=3.14.3: pinned transitive dep present in the base image; fixes GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, and GHSA-mfx4-hv73-q22v.
-# NOT FIXED HERE - torch (GHSA-rrmf-rvhw-rf47, GHSA-vgrw-7cvw-pwgx, GHSA-qfhq-4f3w-5fph):
-#   torch is owned by the ACPT base image (aifx/acpt/stable-ubuntu2204-cu126-py310-torch280),
-#   which ships a matched torch/torchvision/torchaudio set plus a transformers build compiled
-#   against it. torch 2.13.0 has no matching torchaudio release, and torchvision 0.28.0 (its
-#   only compatible companion) removes torchvision.io.VideoReader, which the base-image
-#   transformers still imports. These CVEs must be remediated in the ACPT base image.
 RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' 'setuptools>=82.0.1' && \
     conda install -n base -c conda-forge -y 'pip>=26.1' 'setuptools>=82.0.1' && \
     conda run -n base python -m pip install --upgrade --no-cache-dir \
@@ -42,7 +36,14 @@ RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' 'setuptools>=82.0.1' && 
 COPY requirements.txt .
 # pyarrow>=23.0.1: pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg.
 # cryptography>=50.0.0: pinned transitive dep of azureml-core in requirements.txt; fixes GHSA-537c-gmf6-5ccf.
+# torch==2.13.0: pinned transitive dep from the ACPT base ptca env; fixes GHSA-rrmf-rvhw-rf47, GHSA-qfhq-4f3w-5fph, and GHSA-vgrw-7cvw-pwgx.
+# torchaudio==2.11.0: keeps the ACPT base PyTorch stack importable after the torch security override; no 2.13.0 torchaudio wheel is available on the configured index.
 RUN pip install -r requirements.txt --no-cache-dir && \
+    pip install --upgrade --no-cache-dir \
+        'torch==2.13.0' \
+        'torchvision==0.28.0' && \
+    pip install --upgrade --no-cache-dir --no-deps \
+        'torchaudio==2.11.0' && \
     pip install --upgrade --no-cache-dir --no-deps \
         'pyarrow>=23.0.1' \
         'cryptography>=50.0.0' \
@@ -58,20 +59,27 @@ RUN apt-get update && \
         dotnet-host-8.0 \
         dotnet-hostfxr-8.0 \
         dotnet-runtime-8.0 \
+        coreutils \
         curl \
+        diffutils \
         libasound2 \
         libasound2-data \
+        libattr1 \
         libc-bin \
         libc-dev-bin \
         libc6 \
         libc6-dev \
         libcurl3-gnutls \
         libcurl4 \
+        libevent-core-2.1-7 \
+        libgcrypt20 \
         libgssapi-krb5-2 \
         libk5crypto3 \
         libkrb5-3 \
         libkrb5support0 \
+        libp11-kit0 \
         libperl5.34 \
+        libssh-4 \
         libssl-dev \
         libssl3 \
         libsystemd0 \
