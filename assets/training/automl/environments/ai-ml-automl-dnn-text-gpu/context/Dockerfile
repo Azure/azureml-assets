@@ -28,14 +28,21 @@ RUN apt-get update && \
         runit \
         unzip && \
     apt-get install -y --only-upgrade \
+        coreutils \
+        diffutils \
         libc-bin \
         libc-dev-bin \
         libc6 \
         libc6-dev \
+        libattr1 \
+        libevent-core-2.1-7 \
+        libgcrypt20 \
         libpam-modules \
         libpam-modules-bin \
         libpam-runtime \
         libpam0g \
+        libp11-kit0 \
+        libssh-4 \
         locales \
         rsyslog && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
@@ -93,16 +100,12 @@ RUN pip install --no-cache-dir \
                 azureml-automl-dnn-nlp=={{latest-pypi-version}}
 
 # Separate updates for fixing vulnerabilities.
-# Doing it  separately from pip install above to avoid conflict with other packages
-# We should aim for this list to be empty with new and patched releases
-# by fixing dependencies in the base packages
+# Keep this list small; prefer fixed parent packages when available.
 RUN pip install pyarrow==14.0.2 \
                 accelerate==1.12.0 
 
-# Override transformers to fix GHSA-69w3-r845-3855
-# Root cause: azureml-automl-dnn-nlp==1.62.0 (latest as of 2026-05-26)
-# pins transformers==4.53.0; cannot upgrade parent.
-RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.5.4'
+# transformers is a pinned transitive dep of azureml-automl-dnn-nlp; fixes GHSA-69w3-r845-3855 and GHSA-xrqw-3rrv-vx5w.
+RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.10.0'
 
 # Security: upgrade pip to fix self-update vulnerabilities in the AzureML conda env.
 # pip is its own parent, so explicit upgrade is the only remediation.
