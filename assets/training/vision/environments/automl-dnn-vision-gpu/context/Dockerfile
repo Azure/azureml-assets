@@ -12,18 +12,24 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 /artifacts /var/
 # Install runtime OS packages and pin vulnerable base packages to patched Ubuntu USN versions.
-# libsystemd0/libudev1/udev fix USN-8626-1 inherited from the base image.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get install -y --no-install-recommends \
+        coreutils=8.32-4.1ubuntu1.4 \
         curl=7.81.0-1ubuntu1.27 \
+        diffutils=1:3.8-0ubuntu2.1 \
+        libattr1=1:2.5.1-1ubuntu0.1 \
         libsystemd0=249.11-0ubuntu3.22 \
         libudev1=249.11-0ubuntu3.22 \
         libcurl3-gnutls=7.81.0-1ubuntu1.27 \
         libcurl4=7.81.0-1ubuntu1.27 \
+        libevent-core-2.1-7=2.1.12-stable-1ubuntu0.1 \
+        libgcrypt20=1.9.4-3ubuntu3.3 \
         libnghttp2-14=1.43.0-1ubuntu0.4 \
         libnginx-mod-http-echo=1.18.0-6ubuntu14.20 \
         libnginx-mod-http-geoip2=1.18.0-6ubuntu14.20 \
+        libp11-kit0=0.24.0-6ubuntu0.1 \
+        libssh-4=0.9.6-2ubuntu0.22.04.8 \
         libunwind8 \
         libsqlite3-0=3.37.2-2ubuntu0.7 \
         libxml2=2.9.13+dfsg-1ubuntu0.12 \
@@ -36,10 +42,10 @@ RUN apt-get update && \
         libgssapi-krb5-2=1.19.2-2ubuntu0.8 \
         libk5crypto3=1.19.2-2ubuntu0.8 \
         libkrb5-3=1.19.2-2ubuntu0.8 \
-        libpam-runtime=1.4.0-11ubuntu2.7 \
-        libpam0g=1.4.0-11ubuntu2.7 \
-        libpam-modules=1.4.0-11ubuntu2.7 \
-        libpam-modules-bin=1.4.0-11ubuntu2.7 \
+        libpam-runtime=1.4.0-11ubuntu2.8 \
+        libpam0g=1.4.0-11ubuntu2.8 \
+        libpam-modules=1.4.0-11ubuntu2.8 \
+        libpam-modules-bin=1.4.0-11ubuntu2.8 \
         psmisc \
         rsyslog=8.2112.0-2ubuntu2.4 \
         runit \
