@@ -1,10 +1,12 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260901.v1
 
 # Upgrade OS packages to pull current Ubuntu security patches.
-# The current openmpi5.0-ubuntu24.04 base plus apt upgrade contains the required
-# Ubuntu security fixes, including the systemd packages from USN-8626-1.
+# libgcrypt20 is inherited from the openmpi base image; pin to the
+# USN-8711-1 patched version for CVE-2024-2236.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade \
+        libgcrypt20=1.10.3-2ubuntu0.2 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
