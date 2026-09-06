@@ -10,8 +10,7 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 ENV ENABLE_METADATA=true
 
-# Pick up patched Ubuntu packages when the parent image or apt-installed
-# dependencies contain vulnerable versions.
+# Pick up patched Ubuntu packages from the parent image and apt-installed dependencies.
 RUN set -eux; \
     apt-get update; \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade; \
@@ -19,6 +18,7 @@ RUN set -eux; \
         curl \
         libcurl3-gnutls \
         libcurl4 \
+        libgcrypt20 \
         liblzma5 \
         libnghttp2-14 \
         libnginx-mod-http-echo \
