@@ -264,6 +264,18 @@ class TestRegexMatchEvaluatorBehavior(BaseCodeEvaluatorRunner):
         # final assistant text alone.
         self.assert_pass(result_data)
 
+    def test_json_response_extraction_failure_falls_back_to_original(self):
+        """If message extraction raises, the original (unparsed) response is used instead of crashing."""
+        import json
+        from unittest.mock import patch
+        from ...builtin.regex_match.evaluator import _regex_match
+
+        messages = [{"role": "assistant", "content": [{"type": "text", "text": self.MATCHING_RESPONSE}]}]
+        with patch.object(_regex_match, "_preprocess_messages", side_effect=RuntimeError("boom")):
+            result = _regex_match._parse_response_for_evaluation(json.dumps(messages))
+        # Falls back to the original (still JSON-encoded) response string, unchanged.
+        assert result == json.dumps(messages)
+
     # ==================== HELPER METHOD ====================
 
     def _run_evaluation_with_evaluator(self, evaluator, **kwargs):

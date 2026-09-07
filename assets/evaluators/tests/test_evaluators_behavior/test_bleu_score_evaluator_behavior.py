@@ -672,4 +672,3 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner, SingleScoreCodeEva
         # If tool call/result text leaked in, the BLEU score would be dragged down
         # significantly by the unrelated tool content; it should still score high.
         self.assert_score_in_range(result_data, min_score=0.9)
-

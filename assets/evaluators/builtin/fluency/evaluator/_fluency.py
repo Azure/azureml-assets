@@ -101,7 +101,7 @@ def _extract_final_text_response(response):
     for msg in response:
         if isinstance(msg, dict) and msg.get("role") == "assistant":
             for content in msg.get("content", []) or []:
-                if isinstance(content, dict) and "text" in content and content.get("type", "text") == "text":
+                if isinstance(content, dict) and "text" in content:
                     text_lines.append(content["text"])
     return "\n".join(text_lines)
 

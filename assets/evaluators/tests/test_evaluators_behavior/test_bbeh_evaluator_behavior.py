@@ -440,3 +440,14 @@ class TestBBEHEvaluatorBehavior(BaseCodeEvaluatorRunner):
         # If the tool call/result text ("no") leaked in, this would fail; it must pass.
         self.assert_pass(result_data)
 
+    def test_json_response_extraction_failure_falls_back_to_original(self):
+        """If message extraction raises, the original (unparsed) response is used instead of crashing."""
+        import json
+        from unittest.mock import patch
+        from ...builtin.bbeh.evaluator import _bbeh
+
+        messages = [{"role": "assistant", "content": [{"type": "text", "text": self.SIMPLE_RESPONSE}]}]
+        with patch.object(_bbeh, "_preprocess_messages", side_effect=RuntimeError("boom")):
+            result = _bbeh._parse_response_for_evaluation(json.dumps(messages))
+        # Falls back to the original (still JSON-encoded) response string, unchanged.
+        assert result == json.dumps(messages)
