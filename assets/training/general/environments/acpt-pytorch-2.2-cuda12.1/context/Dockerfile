@@ -40,11 +40,14 @@ RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' 'setuptools>=82.0.1' && 
 
 # Install pip dependencies (runs in default PTCA conda env)
 COPY requirements.txt .
-# pyarrow>=23.0.1: pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg.
+# pyarrow>=23.0.1,<24: pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg
+# while preserving the parent package's compatibility ceiling.
+# numpy<1.27: scipy 1.10.1 compatibility ceiling; prevents transitive security overrides from selecting NumPy 2.x.
 # cryptography>=50.0.0: pinned transitive dep of azureml-core in requirements.txt; fixes GHSA-537c-gmf6-5ccf.
 RUN pip install -r requirements.txt --no-cache-dir && \
     pip install --upgrade --no-cache-dir \
-        'pyarrow>=23.0.1' \
+        'numpy<1.27' \
+        'pyarrow>=23.0.1,<24' \
         'cryptography>=50.0.0' \
         'setuptools>=83.0.0' && \
     conda run -n base python -m pip install --upgrade --no-cache-dir 'setuptools>=83.0.0'
