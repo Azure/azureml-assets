@@ -156,12 +156,4 @@ RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d"
 
 RUN rm -rf /opt/conda/pkgs/
-
-# Remove stale pip vendored dependency metadata that scanners otherwise report
-# as setuptools 70.3.0 and msgpack 1.1.2 after the real packages are patched.
-RUN set -eux; \
-    find / -xdev -path '*/site-packages/pip/_vendor/bom.cdx.json' -type f -delete; \
-    find /opt /azureml-envs /root -type d \( -name 'setuptools-70.3.0.dist-info' -o -name 'msgpack-1.1.2.dist-info' \) -prune -exec rm -rf {} +; \
-    find /opt /azureml-envs /root -path '*/_vendor/vendor.txt' -type f -exec \
-        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +
 # end pip install

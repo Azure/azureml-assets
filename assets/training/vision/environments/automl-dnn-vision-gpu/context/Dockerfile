@@ -67,16 +67,7 @@ ENV ENABLE_METADATA=true
 COPY conda_dependencies.yaml .
 RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
-    conda clean -afy && \
-    find $AZUREML_CONDA_ENVIRONMENT_PATH /root -type d \( -name 'setuptools-70.3.0.dist-info' -o -name 'msgpack-1.1.2.dist-info' \) -prune -exec rm -rf {} + && \
-    rm -f $AZUREML_CONDA_ENVIRONMENT_PATH/conda-meta/setuptools-70*.json \
-          $AZUREML_CONDA_ENVIRONMENT_PATH/conda-meta/msgpack-python-1.1*.json \
-          $AZUREML_CONDA_ENVIRONMENT_PATH/conda-meta/msgpack-1.1*.json \
-          $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pip/_vendor/bom.cdx.json && \
-    if [ -f $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pip/_vendor/vendor.txt ]; then \
-        sed -i -e 's/msgpack==1.1.2/msgpack==1.2.1/' -e 's/setuptools==70.3.0/setuptools==83.0.0/' \
-            $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pip/_vendor/vendor.txt; \
-    fi
+    conda clean -afy
 
 # Install packages with torch packages separately to reduce layer size
 RUN pip install --no-cache-dir \
@@ -104,16 +95,7 @@ RUN pip install --no-cache-dir --upgrade 'onnx>=1.21.0'
 RUN /opt/conda/bin/conda install -n base -c conda-forge 'pip>=26.1' -y && \
     /opt/conda/bin/pip install --no-cache-dir --upgrade 'requests>=2.33.0' 'urllib3>=2.7.0' 'aiohttp>=3.14.0' 'wheel>=0.46.2' \
     'setuptools>=83.0.0' 'cryptography>=46.0.7' 'PyJWT>=2.12.0' \
-    'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3' 'pydantic-settings>=2.14.2' 'msgpack>=1.2.1' && \
-    find /opt/conda /root -type d \( -name 'setuptools-70.3.0.dist-info' -o -name 'msgpack-1.1.2.dist-info' \) -prune -exec rm -rf {} + && \
-    rm -f /opt/conda/conda-meta/setuptools-70*.json \
-          /opt/conda/conda-meta/msgpack-python-1.1*.json \
-          /opt/conda/conda-meta/msgpack-1.1*.json \
-          /opt/conda/lib/python3.13/site-packages/pip/_vendor/bom.cdx.json && \
-    if [ -f /opt/conda/lib/python3.13/site-packages/pip/_vendor/vendor.txt ]; then \
-        sed -i -e 's/msgpack==1.1.2/msgpack==1.2.1/' -e 's/setuptools==70.3.0/setuptools==83.0.0/' \
-            /opt/conda/lib/python3.13/site-packages/pip/_vendor/vendor.txt; \
-    fi
+    'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3' 'pydantic-settings>=2.14.2' 'msgpack>=1.2.1'
 # Security: fix ptca conda env (python 3.10).
 # torch==2.13.0: pinned transitive dep from ACPT ptca env; fixes GHSA-rrmf-rvhw-rf47.
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade torch==2.13.0 torchvision==0.28.0
@@ -122,16 +104,7 @@ RUN /opt/conda/bin/conda install -n ptca -c conda-forge 'pip>=26.1' -y && \
     /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'filelock>=3.20.3' \
     'wheel>=0.46.2' 'setuptools>=83.0.0' 'protobuf>=6.33.5' \
     'pillow>=12.2.0' 'onnx>=1.21.0' 'requests>=2.33.0' 'urllib3>=2.7.0' \
-    'aiohttp>=3.14.0' 'pytest>=9.0.3' 'idna>=3.15' 'msgpack>=1.2.1' && \
-    find /opt/conda/envs/ptca /root -type d \( -name 'setuptools-70.3.0.dist-info' -o -name 'msgpack-1.1.2.dist-info' \) -prune -exec rm -rf {} + && \
-    rm -f /opt/conda/envs/ptca/conda-meta/setuptools-70*.json \
-          /opt/conda/envs/ptca/conda-meta/msgpack-python-1.1*.json \
-          /opt/conda/envs/ptca/conda-meta/msgpack-1.1*.json \
-          /opt/conda/envs/ptca/lib/python3.10/site-packages/pip/_vendor/bom.cdx.json && \
-    if [ -f /opt/conda/envs/ptca/lib/python3.10/site-packages/pip/_vendor/vendor.txt ]; then \
-        sed -i -e 's/msgpack==1.1.2/msgpack==1.2.1/' -e 's/setuptools==70.3.0/setuptools==83.0.0/' \
-            /opt/conda/envs/ptca/lib/python3.10/site-packages/pip/_vendor/vendor.txt; \
-    fi
+    'aiohttp>=3.14.0' 'pytest>=9.0.3' 'idna>=3.15' 'msgpack>=1.2.1'
 
 # Fix security vulnerabilities in active conda env (azureml-automl-dnn-vision-gpu, python 3.10)
 # aiohttp, bokeh, distributed, protobuf, cryptography, filelock, setuptools, PyJWT, urllib3, pillow,
@@ -149,17 +122,5 @@ RUN /opt/conda/bin/conda install -n ptca -c conda-forge 'pip>=26.1' -y && \
 RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' 'distributed>=2026.1.0' 'protobuf>=6.33.5' 'cryptography>=46.0.7' \
     'filelock>=3.20.3' 'setuptools>=83.0.0' 'PyJWT>=2.12.0' 'urllib3>=2.7.0' 'pillow>=12.2.0' \
     'onnx>=1.21.0' 'requests>=2.33.0' 'python-dotenv>=1.2.2' \
-    'bokeh>=3.8.2' 'idna>=3.15' 'click>=8.3.3' 'pyarrow>=23.0.1' 'GitPython>=3.1.58' 'sqlparse>=0.6.0' 'msgpack>=1.2.1' && \
-    rm -f $AZUREML_CONDA_ENVIRONMENT_PATH/conda-meta/setuptools-70*.json \
-          $AZUREML_CONDA_ENVIRONMENT_PATH/conda-meta/msgpack-python-1.1*.json \
-          $AZUREML_CONDA_ENVIRONMENT_PATH/conda-meta/msgpack-1.1*.json \
-          $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pip/_vendor/bom.cdx.json && \
-    if [ -f $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pip/_vendor/vendor.txt ]; then \
-        sed -i -e 's/msgpack==1.1.2/msgpack==1.2.1/' -e 's/setuptools==70.3.0/setuptools==83.0.0/' \
-            $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pip/_vendor/vendor.txt; \
-    fi
-RUN rm -rf /opt/conda/pkgs/pip-*/site-packages/pip/_vendor/bom.cdx.json && \
-    find /opt/conda/pkgs /root -type d \( -name 'setuptools-70.3.0.dist-info' -o -name 'msgpack-1.1.2.dist-info' \) -prune -exec rm -rf {} + && \
-    find /opt/conda/pkgs -path '*/site-packages/pip/_vendor/vendor.txt' -exec \
-        sed -i -e 's/msgpack==1.1.2/msgpack==1.2.1/' -e 's/setuptools==70.3.0/setuptools==83.0.0/' {} +
+    'bokeh>=3.8.2' 'idna>=3.15' 'click>=8.3.3' 'pyarrow>=23.0.1' 'GitPython>=3.1.58' 'sqlparse>=0.6.0' 'msgpack>=1.2.1'
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH

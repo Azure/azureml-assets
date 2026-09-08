@@ -136,14 +136,3 @@ RUN /opt/conda/bin/pip install --no-cache-dir --upgrade \
            /opt/conda/pkgs/python-dotenv-1.2.1-* \
            /opt/conda/pkgs/msgpack-1.1.2-* \
            /opt/conda/pkgs/setuptools-70.3.0-*
-
-# Remove stale vendored metadata that scanners otherwise report as installed packages.
-RUN set -eux; \
-    find /opt /root /tmp -path '*/pip/_vendor/bom.cdx.json' -type f -delete; \
-    find /opt /root /tmp -path '*/_vendor/vendor.txt' -type f -exec \
-        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +; \
-    for metadata in $(find /opt /root /tmp -type f \( -name METADATA -o -name PKG-INFO \) 2>/dev/null); do \
-        if grep -Eq '^Name: (setuptools|msgpack)$' "$metadata" && grep -Eq '^Version: (70\.3\.0|1\.1\.2)$' "$metadata"; then \
-            rm -rf "$(dirname "$metadata")"; \
-        fi; \
-    done

@@ -137,30 +137,7 @@ RUN pip install --no-deps --force-reinstall 'onnxmltools==1.14.0'
 RUN pip install --no-deps --force-reinstall 'pandas==2.0.0'
 COPY patch_automl_pandas2_sparse.py /tmp/patch_automl_pandas2_sparse.py
 RUN python /tmp/patch_automl_pandas2_sparse.py && \
-    rm /tmp/patch_automl_pandas2_sparse.py && \
-    find / -xdev -path '*/site-packages/pip/_vendor/bom.cdx.json' -type f -delete && \
-    for metadata in $(find /azureml-envs /tmp /root -type f \( -name METADATA -o -name PKG-INFO \) 2>/dev/null); do \
-        if grep -Eq '^Name: (setuptools|msgpack)$' "$metadata" && grep -Eq '^Version: (70\.3\.0|1\.1\.2)$' "$metadata"; then \
-            rm -rf "$(dirname "$metadata")"; \
-        fi; \
-    done && \
-    find / -xdev -path '*/_vendor/vendor.txt' -type f -exec \
-        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} + && \
-    find /azureml-envs -path '*/azureml/automl/core/validated_*_requirements.txt' -type f -exec \
-        sed -i -E 's/msgpack<=1\.1\.2/msgpack>=1.2.1/g' {} + && \
-    find /azureml-envs -type f \( -name WHEEL -o -name METADATA -o -name PKG-INFO \) -exec \
-        sed -i -E 's/setuptools \(70\.3\.0\)/setuptools (83.0.0)/g' {} + && \
-    site_packages="$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages"; \
-    rm -rf "$site_packages/pip/_vendor/msgpack" "$site_packages/pip/_vendor/pkg_resources"; \
-    if [ -d "$site_packages/msgpack" ]; then cp -a "$site_packages/msgpack" "$site_packages/pip/_vendor/msgpack"; fi; \
-    if [ -d "$site_packages/pkg_resources" ]; then cp -a "$site_packages/pkg_resources" "$site_packages/pip/_vendor/pkg_resources"; fi; \
-    "$AZUREML_CONDA_ENVIRONMENT_PATH/bin/python" -m pip --version
-
-RUN set -eux; \
-    find /azureml-envs -path '*/pip/_vendor/bom.cdx.json' -type f -delete; \
-    grep -RIlE 'setuptools|msgpack|70\.3\.0|1\.1\.2' /azureml-envs 2>/dev/null | \
-        xargs -r sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g; s/pkg:pypi\/setuptools@70\.3\.0/pkg:pypi\/setuptools@83.0.0/g; s/pkg:pypi\/msgpack@1\.1\.2/pkg:pypi\/msgpack@1.2.1/g; s/msgpack<=1\.1\.2/msgpack>=1.2.1/g; s/setuptools \(70\.3\.0\)/setuptools (83.0.0)/g'; \
-    test -z "$(grep -RIlE 'setuptools.*70\.3\.0|msgpack.*1\.1\.2|pkg:pypi/(setuptools@70\.3\.0|msgpack@1\.1\.2)' /azureml-envs 2>/dev/null | head -n 1)"
+    rm /tmp/patch_automl_pandas2_sparse.py
 
 # Patch the PTCA conda environment when present.
 # pip>=26.2.0 fixes GHSA-qwm4-qh6w-59xr; VCM reads the conda-meta record, so
@@ -174,7 +151,4 @@ RUN set -eux; \
     if [ -d /opt/conda/envs/ptca ]; then \
         conda install -p /opt/conda/envs/ptca -c conda-forge -y 'pip>=26.2.0'; \
         conda run -p /opt/conda/envs/ptca python -m pip install --no-cache-dir --progress-bar off --upgrade 'torch==2.13.0' 'msgpack>=1.2.1' 'setuptools>=83.0.0' 'cryptography>=50.0.0' 'GitPython>=3.1.58' 'sqlparse>=0.6.0'; \
-    fi; \
-    find /opt /root /tmp -path '*/_vendor/vendor.txt' -type f -exec \
-        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +; \
-    find /opt -path '*/pip/_vendor/bom.cdx.json' -type f -delete
+    fi
