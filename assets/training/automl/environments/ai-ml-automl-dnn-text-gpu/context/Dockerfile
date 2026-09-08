@@ -99,10 +99,8 @@ RUN pip install --no-cache-dir \
                 azureml-train-automl-runtime=={{latest-pypi-version}} \
                 azureml-automl-dnn-nlp=={{latest-pypi-version}}
 
-# Separate updates for fixing vulnerabilities.
-# Keep this list small; prefer fixed parent packages when available.
-RUN pip install pyarrow==14.0.2 \
-                accelerate==1.12.0 
+# Separate updates for package compatibility after AzureML dependency resolution.
+RUN pip install --no-cache-dir accelerate==1.12.0
 
 # transformers is a pinned transitive dep of azureml-automl-dnn-nlp; fixes GHSA-69w3-r845-3855 and GHSA-xrqw-3rrv-vx5w.
 RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.10.0'

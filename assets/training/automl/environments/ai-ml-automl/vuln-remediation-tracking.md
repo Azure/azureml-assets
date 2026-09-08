@@ -11,10 +11,10 @@ Base SBOM/finding files used for manual verification:
 
 Remediated image finding files used for manual verification:
 
-- `ai-ml-automl-dnn-text-gpu/sbom.json` when an SBOM referrer is available
+- `ai-ml-automl-dnn-text-gpu/sbom.json`
 - `ai-ml-automl-dnn-text-gpu/vulnerabilities.json`
 
-Note: `vcm image sbom download` found no SBOM referrer for the latest matching base tag in MCR and no SBOM referrer for the rebuilt ACR tag during this run. The asset-local base evidence for `biweekly.202608.2` was used for classification, and direct VCM vulnerability evaluation was used for the rebuilt ACR tag.
+Note: `vcm image sbom download` found no SBOM referrer for the latest matching base tag in MCR. The asset-local base evidence for `biweekly.202608.2` was used for classification, and the rebuilt ACR tag's SBOM was attached and evaluated with VCM.
 
 | Finding | Package(s) | Source classification | Base image status | Changed file(s) | Patched/pinned version |
 | --- | --- | --- | --- | --- | --- |
