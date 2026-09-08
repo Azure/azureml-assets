@@ -3,6 +3,7 @@ name: ministral-3-3b-instruct-2512
 path: ./
 isArchived: true
 system_metadata:
+  previewType: hideUI
   foundryLocal: ''
   deploymentOptions: ['Foundry Local on Devices']
 version: 1

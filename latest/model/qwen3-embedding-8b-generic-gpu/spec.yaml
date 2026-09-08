@@ -7,6 +7,7 @@ tags:
   supportsReasoning: 'false'
   contextLength: 32768
 system_metadata:
+  previewType: hideUI
   alias: qwen3-embedding-8b
   publisher: Microsoft
   directoryPath: v1
