@@ -18,9 +18,9 @@ COPY conda_dependencies.yaml .
 RUN conda create -p $CONDA_PREFIX -q -y python=3.10 pip=26.2.1 'pandas~=1.5.3' 'scipy~=1.10.0' 'numpy~=1.22.0' -c conda-forge -c anaconda && \
     conda clean -a -y
 
-# Step 2: Install pip packages separately (pip resolver uses less memory than conda's SAT solver)
-# starlette>=1.0.1 (GHSA-86qp-5c8j-p5mr) / idna>=3.15 (GHSA-65pc-fj4g-8rjx): transitive via fastapi / requests; drop when parent bumps
-# msgpack>=1.2.1 / setuptools>=83.0.0: transitive during AzureML dependency resolution; build isolation is disabled so vulnerable build dependencies are never added in this image layer.
+# Step 2: Install pip packages separately (pip resolver uses less memory than conda's SAT solver).
+# starlette>=1.0.1 / idna>=3.15: pinned transitive deps of fastapi / requests; fix GHSA-86qp-5c8j-p5mr and GHSA-65pc-fj4g-8rjx.
+# msgpack>=1.2.1 / setuptools>=83.0.0: pinned transitive deps of distributed / AzureML packages; fix GHSA-6v7p-g79w-8964, GHSA-5rjg-fvgr-3xxf, and GHSA-h35f-9h28-mq5c.
 RUN printf '%s\n' 'msgpack>=1.2.1' 'setuptools>=83.0.0' > /tmp/pip-security-constraints.txt && \
     conda run -p $CONDA_PREFIX pip install --no-cache-dir \
     --no-build-isolation \
@@ -49,7 +49,9 @@ RUN printf '%s\n' 'msgpack>=1.2.1' 'setuptools>=83.0.0' > /tmp/pip-security-cons
     rm conda_dependencies.yaml /tmp/pip-security-constraints.txt
 
 # Security vulnerability fixes for transitive dependencies.
+# aiohttp>=3.14.0: pinned transitive dep of distributed; fixes GHSA-8495-4g3g-x7pr.
 # cryptography>=50.0.0: pinned transitive dep of azureml-mlflow / azureml-core; fixes GHSA-537c-gmf6-5ccf and GHSA-g6cj-pr64-35w5.
+# distributed>=2026.1.0: pinned transitive dep of azureml-mlflow / mlflow; fixes GHSA-9q34-5785-65x5.
 # GitPython>=3.1.55: pinned transitive dep of azureml-mlflow; fixes GHSA-fjr4-x663-mwxc, GHSA-6p8h-3wgx-97gf, GHSA-r9mr-m37c-5fr3, GHSA-94p4-4cq8-9g67.
 # msgpack>=1.2.1: pinned transitive dep of distributed; fixes GHSA-6v7p-g79w-8964.
 # pyarrow>=23.0.1: pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg.
