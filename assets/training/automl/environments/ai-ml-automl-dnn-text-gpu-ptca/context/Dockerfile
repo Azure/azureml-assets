@@ -30,7 +30,7 @@ RUN pip install \
 # Override transformers to fix GHSA-69w3-r845-3855 and GHSA-xrqw-3rrv-vx5w.
 # Root cause: azureml-automl-dnn-nlp pins transformers below the patched
 # version, so direct override is required.
-RUN pip install --no-cache-dir 'transformers[sentencepiece,torch]==5.10.0'
+RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.10.0'
 
 # Vulnerability patches for ptca environment (python 3.10 at /opt/conda/envs/ptca)
 # pip -> >=26.1.2 (GHSA-jp4c-xjxw-mgf9, CVE-2026-6357,
