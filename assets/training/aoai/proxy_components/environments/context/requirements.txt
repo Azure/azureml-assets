@@ -1,11 +1,11 @@
-openai==1.28.0
+openai==1.55.3
 pandas==2.2.0
 azureml-mlflow=={{latest-pypi-version}}
 azure-mgmt-cognitiveservices==13.5.0
 azure-identity>=1.16.1
 jsonlines==4.0.0
 azureml-telemetry=={{latest-pypi-version}}
-pydantic==2.7.0
+pydantic==2.13.5
 azure-keyvault-secrets==4.8.0
 requests==2.34.2
 # pinned transitive dep of azureml-mlflow; introduced by this image, fixes GHSA-hmq2-w58f-27jc, GHSA-hh9p-6wh2-4mfc, GHSA-jm78-9fvv-mhgr, GHSA-wvpp-8hx9-p66j, GHSA-9rj7-rf2p-w77r, and GHSA-4gmw-gg2m-w46p.
