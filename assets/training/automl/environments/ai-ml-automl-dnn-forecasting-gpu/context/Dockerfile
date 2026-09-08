@@ -1,7 +1,6 @@
 FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04:{{latest-image-tag}}
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl-dnn-forecasting-gpu
-# Prepend path to AzureML conda environment
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
 COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/ /var/mlflow_resources/
@@ -9,13 +8,18 @@ COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:2025
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 ENV ENABLE_METADATA=true
+ENV PIP_NO_COLOR=1
+ENV PIP_PROGRESS_BAR=off
 
 # Pick up patched Ubuntu packages from the parent image and apt-installed dependencies.
 RUN set -eux; \
     apt-get update; \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade; \
     for package in \
+        coreutils \
         curl \
+        diffutils \
+        libattr1 \
         libcurl3-gnutls \
         libcurl4 \
         libgcrypt20 \
@@ -26,6 +30,8 @@ RUN set -eux; \
         libssl3 \
         libsystemd0 \
         libudev1 \
+        libp11-kit0 \
+        libssh-4 \
         nginx-common \
         nginx-light \
         openssh-client \
