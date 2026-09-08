@@ -64,7 +64,7 @@ RUN apt-get update && \
         libpam-modules \
         libpam-modules-bin \
         libssl3 \
-        libgcrypt20 \
+        libgcrypt20=1.9.4-3ubuntu3.3 \
         openssl \
         libperl5.34 \
         perl \
