@@ -3,14 +3,11 @@ FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04:{{latest-image-ta
 USER root
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl-dnn-gpu
-# Prepend path to AzureML conda environment
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
 COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/ /var/mlflow_resources/
 
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
-# ENV AML_APP_ROOT="/var/mlflow_resources"
-# ENV AZUREML_ENTRY_SCRIPT="mlflow_score_script.py"
 
 ENV ENABLE_METADATA=true
 
@@ -29,14 +26,10 @@ RUN apt-get update && \
 
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 'conda-forge::pip>=26.1,<27' conda-forge::tzdata -y
 
-###############################
-# Pre-Build LightGBM
-###############################
+# Pre-build LightGBM.
 RUN pip install --upgrade lightgbm==4.6.0
 
-###############################
-# Install GPU LightGBM and XgBoost
-###############################
+# Install GPU LightGBM and XGBoost.
 RUN pip install --upgrade --force-reinstall xgboost==1.5.2 pandas==1.5.3
 
 # Security: upgrade pip to fix CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9). Three pip
@@ -57,7 +50,6 @@ RUN conda install -n base 'conda-forge::pip>=26.1,<27' -y && \
     conda clean -a -y && \
     rm -rf /opt/miniconda/pkgs/pip-26.0* /opt/miniconda/pkgs/pip-26.0.1*
 
-# begin conda create
 # Install cudatoolkit via conda (not available on pip; single-package solve is trivial)
 RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     cudatoolkit=10.0.130 \
@@ -73,12 +65,9 @@ RUN pip install --no-cache-dir \
     'scipy==1.10.1' \
     'psutil>5.0.0,<6.0.0' \
     'pip>=26.1,<27'
-# end conda create
 
-# begin pip install
-# Install pip dependencies
+# Install AzureML dependencies.
 RUN pip install \
-                # begin pypi dependencies
                 azureml-core=={{latest-pypi-version}} \
                 azureml-mlflow=={{latest-pypi-version}} \
                 azureml-pipeline-core=={{latest-pypi-version}} \
@@ -100,7 +89,6 @@ RUN pip install --no-cache-dir \
                 azureml-train-automl-runtime=={{latest-pypi-version}}
 
 RUN pip install --no-cache-dir --upgrade --no-deps 'azure-identity>=1.25.1'
-                # end pypi dependencies
 
 # ============================
 # Vulnerability security fixes - transitive dependency overrides
