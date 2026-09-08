@@ -40,8 +40,9 @@ RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.1
 #   re-flag them.
 # setuptools 81.0.0 -> >=83.0.0 (GHSA-h35f-9h28-mq5c, GHSA-58pv-8j8x-9vj2):
 #   setuptools is a build dependency with no parent that pins it.
-# torch 2.8.0+cu126 -> >=2.10.0 (GHSA-vgrw-7cvw-pwgx, GHSA-qfhq-4f3w-5fph):
-#   inherited from the ACPT base image ptca conda environment.
+# NOT FIXED HERE - torch (GHSA-vgrw-7cvw-pwgx, GHSA-qfhq-4f3w-5fph):
+#   owned by the ACPT base image as a matched torch/torchvision/torchaudio stack;
+#   overriding torch alone breaks the companion packages and AzureML NLP runtime.
 # numpy<2 is NOT a security floor: onnx pulls ml_dtypes, which as of 0.6.0 requires
 #   numpy>=2.0.0. Without this cap pip silently upgrades numpy to 2.x, leaving the
 #   prebuilt pandas wheel binary-incompatible so the image fails on import pandas with
@@ -70,7 +71,6 @@ RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.1
 RUN conda install -p /opt/conda/envs/ptca -c conda-forge -y 'pip>=26.1.2' && \
     /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
     'setuptools>=83.0.0' \
-    'torch>=2.10.0' \
     'numpy<2' \
     'onnx>=1.21.0' \
     'bokeh>=3.8.2' \

@@ -135,11 +135,10 @@ RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3'
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3'
 RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3' 'cryptography>=50.0.0'
 
-# torch is pinned by the ACPT base image in the ptca env and by
-# azureml-automl-dnn-nlp in this AzureML env; upgrade both for GHSA-rrmf-rvhw-rf47,
-# GHSA-vgrw-7cvw-pwgx, and GHSA-qfhq-4f3w-5fph while keeping CUDA 12.6 wheels.
-RUN pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 'torch==2.13.0+cu126'
-RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 'torch==2.13.0+cu126'
+# NOT FIXED HERE - torch (GHSA-rrmf-rvhw-rf47, GHSA-vgrw-7cvw-pwgx,
+# GHSA-qfhq-4f3w-5fph) is owned by the ACPT base image and AzureML NLP runtime
+# as matched torch/torchvision/torchaudio stacks. Overriding torch alone breaks
+# those companion packages; these findings require patched parent releases.
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'setuptools>=83.0.0'
 
 # Apply the same setuptools security fix in the AzureML and base conda envs.
