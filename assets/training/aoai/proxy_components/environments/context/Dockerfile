@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260901.v1
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
 
 # Upgrade OS packages to pull current Ubuntu security patches.
 # libgcrypt20 is inherited from the openmpi base image; pin to the
@@ -14,4 +14,4 @@ COPY requirements.txt .
 
 # pinned transitive dep of azure-identity via msal; azureml-mlflow caps cryptography below the patched version, fixes GHSA-g6cj-pr64-35w5.
 RUN pip install -r requirements.txt --no-cache-dir \
-    && pip install "cryptography>=50.0.0" --no-cache-dir --no-deps
+    && pip install "cryptography>=50.0.0" --no-cache-dir

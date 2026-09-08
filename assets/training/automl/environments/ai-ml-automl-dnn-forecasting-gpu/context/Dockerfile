@@ -16,10 +16,7 @@ RUN set -eux; \
     apt-get update; \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade; \
     for package in \
-        coreutils \
         curl \
-        diffutils \
-        libattr1 \
         libcurl3-gnutls \
         libcurl4 \
         libgcrypt20 \
@@ -30,8 +27,6 @@ RUN set -eux; \
         libssl3 \
         libsystemd0 \
         libudev1 \
-        libp11-kit0 \
-        libssh-4 \
         nginx-common \
         nginx-light \
         openssh-client \
@@ -57,10 +52,7 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'pip>=26.1' && \
-    find /opt/miniconda -path '*/pip/_vendor/bom.cdx.json' -type f -delete && \
-    find /opt/miniconda -path '*/_vendor/vendor.txt' -type f -exec \
-        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +
+RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'pip>=26.1'
 
 # Create conda environment; packages are installed via pip to avoid solver OOM.
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
@@ -77,10 +69,7 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
     'psutil>=5.2.2,<6.0.0' \
     'pip>=26.1' \
     'setuptools>=83.0.0' \
-    'wheel>=0.46.2' && \
-    find "$AZUREML_CONDA_ENVIRONMENT_PATH" -path '*/pip/_vendor/bom.cdx.json' -type f -delete && \
-    find "$AZUREML_CONDA_ENVIRONMENT_PATH" -path '*/_vendor/vendor.txt' -type f -exec \
-        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +
+    'wheel>=0.46.2'
 
 # Install AzureML dependencies with security constraints for transitive packages
 # pulled in by the AzureML AutoML stack.
@@ -118,7 +107,7 @@ RUN printf '%s\n' \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz' \
                 'py-cpuinfo==5.0.0' 
 
-RUN pip install --no-cache-dir --upgrade --no-deps 'azure-identity>=1.25.1'
+RUN pip install --no-cache-dir --upgrade 'azure-identity>=1.25.1'
 
 # Install packages with torch packages separately to reduce layer size
 RUN pip install --no-cache-dir -c /tmp/security-constraints.txt \
@@ -167,9 +156,3 @@ RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  CMAKE_LIBRARY_PATH=/usr/local/cuda/targets/x86_64-linux/lib:/usr/local/cuda-12.6/targets/x86_64-linux/lib \
  pip install --no-cache-dir --no-build-isolation \
  git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d"
-
-RUN set -eux; \
-    find / -xdev -path '*/site-packages/pip/_vendor/bom.cdx.json' -type f -delete; \
-    find /opt /azureml-envs -path '*/_vendor/vendor.txt' -type f -exec \
-        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +; \
-    rm -rf /opt/miniconda/pkgs/

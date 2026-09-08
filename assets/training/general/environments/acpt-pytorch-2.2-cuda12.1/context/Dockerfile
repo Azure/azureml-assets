@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202608.2
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 ENV PIP_PROGRESS_BAR=off
 
@@ -41,16 +41,12 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir && \
     pip install --upgrade --no-cache-dir \
         'torch==2.13.0' \
-        'torchvision==0.28.0' && \
-    pip install --upgrade --no-cache-dir --no-deps \
-        'torchaudio==2.11.0' && \
-    pip install --upgrade --no-cache-dir --no-deps \
+        'torchvision==0.28.0' \
+        'torchaudio==2.11.0' \
         'pyarrow>=23.0.1' \
         'cryptography>=50.0.0' \
         'setuptools>=83.0.0' && \
-    conda run -n base python -m pip install --upgrade --no-cache-dir --no-deps 'setuptools>=83.0.0' && \
-    rm -rf /opt/conda/lib/python3.14/site-packages/setuptools-82.0.0.dist-info && \
-    find /opt/conda \( -path '*/pip/_vendor/vendor.txt' -o -path '*/pip/_vendor/bom.cdx.json' \) -delete
+    conda run -n base python -m pip install --upgrade --no-cache-dir 'setuptools>=83.0.0'
 
 # Inference requirements.
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/

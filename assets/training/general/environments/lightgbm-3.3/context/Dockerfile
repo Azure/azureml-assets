@@ -76,5 +76,4 @@ RUN PIP_CONSTRAINT=/tmp/pip-security-constraints.txt conda run -p $CONDA_PREFIX 
     PIP_CONSTRAINT=/tmp/pip-security-constraints.txt conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
         'aiohttp>=3.14.0' 'protobuf>=6.33.5' 'distributed>=2026.1.0' 'GitPython>=3.1.58' 'cryptography>=50.0.0' 'sqlparse>=0.6.0' 'idna>=3.15' 'starlette>=1.0.1' 'pyarrow>=23.0.1' 'setuptools>=84.0.0' 'msgpack>=1.2.2' && \
     PIP_CONSTRAINT=/tmp/pip-security-constraints.txt /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'cryptography>=50.0.0' 'h2>=4.4.1' 'idna>=3.15' && \
-    find $CONDA_PREFIX /opt/miniconda -path '*/site-packages/pip/_vendor/bom.cdx.json' -delete -o -path '*/site-packages/pip/_vendor/vendor.txt' -delete -o -path '*/pkgs/pip-*/site-packages/pip/_vendor/bom.cdx.json' -delete -o -path '*/pkgs/pip-*/site-packages/pip/_vendor/vendor.txt' -delete && \
     rm conda_dependencies.yaml /tmp/pip-security-constraints.txt

@@ -1,10 +1,19 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}} AS builder
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
 
 WORKDIR /
 
 ENV CONDA_PREFIX=/azureml-envs/sklearn-1.5
 ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
 ENV PATH=$CONDA_PREFIX/bin:$PATH
+
+# This is needed for mpi to locate libpython
+ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
+
+# Upgrade OS packages to pick up current Ubuntu security errata.
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Environment setup is split into two stages (conda create + pip install) because the
 # original single-step `conda env create -f conda_dependencies.yaml` combines conda's
@@ -13,9 +22,11 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 # conda and pip dependencies together. Splitting them avoids the memory spike.
 
 # Step 1: Create conda env with only conda-channel packages (small, fast solve)
-# pip>=26.2.0 fixes GHSA-qwm4-qh6w-59xr.
 COPY conda_dependencies.yaml .
-RUN conda create -p $CONDA_PREFIX -q -y python=3.10 pip=26.2.1 'pandas~=1.5.3' 'scipy~=1.10.0' 'numpy~=1.22.0' -c conda-forge -c anaconda && \
+RUN conda install -n base -c conda-forge --freeze-installed --force-reinstall -y pip=26.2.0 && \
+    /opt/miniconda/bin/python -m pip install --no-cache-dir --force-reinstall pip==26.2.0 && \
+    conda create -p $CONDA_PREFIX -q -y python=3.10 pip=26.2.0 pandas=2.2.3 'scipy~=1.10.0' numpy=1.26.4 -c conda-forge -c anaconda && \
+    conda run -p $CONDA_PREFIX python -m pip install --no-cache-dir --force-reinstall pip==26.2.0 && \
     conda clean -a -y
 
 # Step 2: Install pip packages separately (pip resolver uses less memory than conda's SAT solver).
@@ -58,26 +69,7 @@ RUN printf '%s\n' 'msgpack>=1.2.1' 'setuptools>=83.0.0' > /tmp/pip-security-cons
 # setuptools>=83.0.0: pinned transitive build/runtime dep of AzureML packages; fixes GHSA-5rjg-fvgr-3xxf and GHSA-h35f-9h28-mq5c.
 # sqlparse>=0.6.0: pinned transitive dep of azureml-mlflow / mlflow; fixes GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr, GHSA-3496-9g83-7v6x, GHSA-pwgv-4x5q-6m9f.
 RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
-    'aiohttp>=3.14.0' 'cryptography>=50.0.0' 'distributed>=2026.1.0' 'GitPython>=3.1.55' 'msgpack>=1.2.1' 'pyarrow>=23.0.1' 'setuptools>=83.0.0' 'sqlparse>=0.6.0' && \
-    rm -f $CONDA_PREFIX/lib/python*/site-packages/pip/_vendor/bom.cdx.json $CONDA_PREFIX/lib/python*/site-packages/pip/_vendor/vendor.txt
+    'aiohttp>=3.14.0' 'pyOpenSSL==26.4.0' 'cryptography>=50.0.0,<51' 'distributed>=2026.1.0' 'GitPython>=3.1.55' 'msgpack>=1.2.1' 'pyarrow>=23.0.1,<24' 'setuptools>=83.0.0' 'sqlparse>=0.6.0'
 
-FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
-
-WORKDIR /
-
-ENV CONDA_PREFIX=/azureml-envs/sklearn-1.5
-ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
-ENV PATH=$CONDA_PREFIX/bin:$PATH
-
-# This is needed for mpi to locate libpython
-ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
-
-# Upgrade OS packages to pick up current Ubuntu security errata.
-# libgcrypt20 is inherited from the base image; pin until the base image carries USN-8711-1 / CVE-2024-2236.
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade libgcrypt20=1.10.3-2ubuntu0.2 && \
-    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-COPY --from=builder /azureml-envs /azureml-envs
+# idna and cryptography are also installed in the base Miniconda prefix.
+RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'idna>=3.15' 'cryptography>=50.0.0'
