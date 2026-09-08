@@ -105,7 +105,7 @@ RUN printf '%s\n' \
                 'xgboost==3.2.0' \
                 'GitPython>=3.1.55' \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz' \
-                'py-cpuinfo==5.0.0' 
+                'py-cpuinfo==5.0.0'
 
 RUN pip install --no-cache-dir --upgrade 'azure-identity>=1.25.1'
 
