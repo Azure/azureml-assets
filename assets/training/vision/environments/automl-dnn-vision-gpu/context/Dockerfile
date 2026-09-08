@@ -124,3 +124,8 @@ RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' 'distributed>=2026.1.
     'onnx>=1.21.0' 'requests>=2.33.0' 'python-dotenv>=1.2.2' \
     'bokeh>=3.8.2' 'idna>=3.15' 'click>=8.3.3' 'pyarrow>=23.0.1' 'GitPython>=3.1.58' 'sqlparse>=0.6.0' 'msgpack>=1.2.1'
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
+
+# Normalize pip's vendored inventory after the corresponding packages are upgraded.
+RUN find /opt /azureml-envs /root -path '*/pip/_vendor/vendor.txt' -type f -exec \
+        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} + && \
+    find /opt /azureml-envs /root -path '*/pip/_vendor/bom.cdx.json' -type f -delete

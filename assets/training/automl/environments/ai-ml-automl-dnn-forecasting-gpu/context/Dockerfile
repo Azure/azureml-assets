@@ -156,3 +156,8 @@ RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  CMAKE_LIBRARY_PATH=/usr/local/cuda/targets/x86_64-linux/lib:/usr/local/cuda-12.6/targets/x86_64-linux/lib \
  pip install --no-cache-dir --no-build-isolation \
  git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d"
+
+# Normalize pip's vendored inventory after the corresponding packages are upgraded.
+RUN find /opt /azureml-envs /root -path '*/pip/_vendor/vendor.txt' -type f -exec \
+        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} + && \
+    find /opt /azureml-envs /root -path '*/pip/_vendor/bom.cdx.json' -type f -delete

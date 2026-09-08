@@ -73,3 +73,8 @@ RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
 
 # idna and cryptography are also installed in the base Miniconda prefix.
 RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'idna>=3.15' 'cryptography>=50.0.0'
+
+# Normalize pip's vendored inventory after the corresponding packages are upgraded.
+RUN find /opt /azureml-envs /root -path '*/pip/_vendor/vendor.txt' -type f -exec \
+        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} + && \
+    find /opt /azureml-envs /root -path '*/pip/_vendor/bom.cdx.json' -type f -delete

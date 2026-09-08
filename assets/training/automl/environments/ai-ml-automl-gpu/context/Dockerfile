@@ -139,3 +139,8 @@ RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade \
     'setuptools>=83.0.0'
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
+
+# Normalize pip's vendored inventory after the corresponding packages are upgraded.
+RUN find /opt /azureml-envs /root -path '*/pip/_vendor/vendor.txt' -type f -exec \
+        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} + && \
+    find /opt /azureml-envs /root -path '*/pip/_vendor/bom.cdx.json' -type f -delete

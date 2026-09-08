@@ -152,3 +152,8 @@ RUN set -eux; \
         conda install -p /opt/conda/envs/ptca -c conda-forge -y 'pip>=26.2.0'; \
         conda run -p /opt/conda/envs/ptca python -m pip install --no-cache-dir --progress-bar off --upgrade 'torch==2.13.0' 'msgpack>=1.2.1' 'setuptools>=83.0.0' 'cryptography>=50.0.0' 'GitPython>=3.1.58' 'sqlparse>=0.6.0'; \
     fi
+
+# Normalize pip's vendored inventory after the corresponding packages are upgraded.
+RUN find /opt /azureml-envs /root -path '*/pip/_vendor/vendor.txt' -type f -exec \
+        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} + && \
+    find /opt /azureml-envs /root -path '*/pip/_vendor/bom.cdx.json' -type f -delete
