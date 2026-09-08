@@ -38,6 +38,7 @@ RUN set -eux; \
         dnsutils \
         git \
         git-lfs \
+        libgcrypt20 \
         libnuma-dev \
         ninja-build \
         nvtop \
@@ -188,6 +189,7 @@ RUN apt-get update && \
         libarchive13t64 \
         libcurl3t64-gnutls \
         libcurl4t64 \
+        libgcrypt20 \
         libpam-modules \
         libpam-modules-bin \
         libpam-runtime \
@@ -220,7 +222,7 @@ RUN python -m pip install --no-cache-dir \
         "pyarrow>=23.0.1" \
         "pyasn1>=0.6.4" \
         "pillow>=12.3.0" \
-        "transformers>=5.5.0,<=5.6.0" \
+        "transformers>=5.10.0" \
         "mcp[cli]>=1.28.1" \
         "wandb>=0.28.1" \
         "GitPython>=3.1.57" \
