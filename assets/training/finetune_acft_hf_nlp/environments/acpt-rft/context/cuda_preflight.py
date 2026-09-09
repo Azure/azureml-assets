@@ -30,6 +30,7 @@ EXPECTED_RUNTIME_NCCL = (2, 29, 7)
 
 
 def preload_nccl() -> tuple[Path, ctypes.CDLL, dict[str, str]]:
+    """Load and prioritize the packaged NCCL runtime."""
     distribution = importlib.metadata.distribution("nvidia-nccl-cu12")
     library = Path(
         distribution.locate_file("nvidia/nccl/lib/libnccl.so.2")
@@ -50,6 +51,7 @@ def preload_nccl() -> tuple[Path, ctypes.CDLL, dict[str, str]]:
 
 
 def nccl_runtime_version(handle: ctypes.CDLL) -> tuple[int, int, int]:
+    """Return the version reported by the loaded NCCL runtime."""
     version = ctypes.c_int()
     get_version = handle.ncclGetVersion
     get_version.argtypes = [ctypes.POINTER(ctypes.c_int)]
@@ -65,10 +67,12 @@ def nccl_runtime_version(handle: ctypes.CDLL) -> tuple[int, int, int]:
 
 
 def normalized_version(package_name: str) -> str:
+    """Return the package version without its local build suffix."""
     return importlib.metadata.version(package_name).split("+", 1)[0]
 
 
 def validate_versions(torch_module) -> None:
+    """Validate the pinned Python package and CUDA runtime versions."""
     for package_name, expected_version in EXPECTED_VERSIONS.items():
         actual_version = normalized_version(package_name)
         if actual_version != expected_version:
@@ -84,6 +88,7 @@ def validate_versions(torch_module) -> None:
 
 
 def unsupported_peer_pairs(torch_module) -> list[tuple[int, int]]:
+    """Return GPU pairs that do not support direct peer access."""
     device_count = torch_module.cuda.device_count()
     return [
         (source, target)
@@ -95,6 +100,7 @@ def unsupported_peer_pairs(torch_module) -> list[tuple[int, int]]:
 
 
 def topology_exports(torch_module) -> dict[str, str]:
+    """Return safe NCCL overrides for the detected GPU topology."""
     if not unsupported_peer_pairs(torch_module):
         return {}
 
@@ -107,6 +113,7 @@ def topology_exports(torch_module) -> dict[str, str]:
 
 
 def attention_exports() -> dict[str, str]:
+    """Return compatible actor and rollout attention backends."""
     exports = {}
     if "VERL_ACTOR_ATTENTION_IMPLEMENTATION" not in os.environ:
         exports["VERL_ACTOR_ATTENTION_IMPLEMENTATION"] = "sdpa"
@@ -123,6 +130,7 @@ def attention_exports() -> dict[str, str]:
 
 
 def main() -> int:
+    """Validate the runtime and emit optional shell exports."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--shell",
