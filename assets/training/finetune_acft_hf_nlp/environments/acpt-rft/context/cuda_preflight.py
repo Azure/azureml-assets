@@ -1,4 +1,7 @@
 #!/opt/conda/envs/ptca/bin/python
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """Validate the ACFT RFT CUDA stack and emit topology-safe NCCL settings."""
 
 import argparse
