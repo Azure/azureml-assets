@@ -27,7 +27,6 @@ from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
 from azure.ai.evaluation._common.constants import PROMPT_BASED_REASON_EVALUATORS
 from azure.ai.evaluation._common.utils import (
     parse_quality_evaluator_reason_score,
-    reformat_agent_response,
 )
 from azure.ai.evaluation._evaluators._common._validators import (
     ValidatorInterface,
@@ -56,6 +55,55 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
     )
 
 logger = logging.getLogger(__name__)
+
+
+def _parse_json_response_if_applicable(response):
+    """Parse ``response`` as JSON when it is a JSON-encoded string of chat messages.
+
+    If ``response`` is a string that successfully parses as JSON into a list, the parsed
+    list is returned so it can be handled by the existing message-list preprocessing path.
+    Any other input (a plain string, an already-parsed list, or a string that fails to
+    parse as JSON) is returned unchanged.
+
+    :param response: The raw response value from the eval input.
+    :type response: Any
+    :return: The parsed list of messages, or the original response if it is not a
+        JSON-encoded list.
+    :rtype: Any
+    """
+    if isinstance(response, str):
+        try:
+            parsed = json.loads(response)
+        except (ValueError, TypeError):
+            return response
+        if isinstance(parsed, list):
+            return parsed
+    return response
+
+
+def _extract_final_text_response(response):
+    """Flatten a preprocessed list of chat messages into plain assistant text.
+
+    Only the ``text`` content of ``assistant`` role messages is collected; tool
+    calls, tool results, and any other message types are dropped so the evaluator
+    only ever scores the final plain-text agent response. Non-list inputs (e.g. an
+    already plain-string response) are returned unchanged.
+
+    :param response: A preprocessed list of chat-message dicts, or a plain string.
+    :type response: Any
+    :return: The joined plain text of all assistant messages, or the original
+        ``response`` if it is not a list.
+    :rtype: Any
+    """
+    if not isinstance(response, list):
+        return response
+    text_lines = []
+    for msg in response:
+        if isinstance(msg, dict) and msg.get("role") == "assistant":
+            for content in msg.get("content", []) or []:
+                if isinstance(content, dict) and "text" in content:
+                    text_lines.append(content["text"])
+    return "\n".join(text_lines)
 
 
 class FluencyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
@@ -414,6 +462,8 @@ class FluencyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: The evaluation result.
         :rtype: Dict
         """
+        eval_input["response"] = _parse_json_response_if_applicable(eval_input.get("response"))
+
         if _is_intermediate_response(eval_input.get("response")):
             return self._return_not_applicable_result(
                 "Intermediate response. Please provide the agent's final response for evaluation.",
@@ -422,7 +472,7 @@ class FluencyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         if isinstance(eval_input.get("response"), list):
             eval_input["response"] = _preprocess_messages(eval_input["response"])
 
-        eval_input["response"] = reformat_agent_response(eval_input.get("response"), logger)
+        eval_input["response"] = _extract_final_text_response(eval_input.get("response"))
 
         result = await self._the_super_do_eval(eval_input)
 

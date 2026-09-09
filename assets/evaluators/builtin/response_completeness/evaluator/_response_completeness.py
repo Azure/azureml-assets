@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+import json
 import logging
 import math
 from typing import Dict, List, Union, Optional
@@ -45,6 +46,30 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
     )
 
 logger = logging.getLogger(__name__)
+
+
+def _parse_json_response_if_applicable(response):
+    """Parse ``response`` as JSON when it is a JSON-encoded string of chat messages.
+
+    If ``response`` is a string that successfully parses as JSON into a list, the parsed
+    list is returned so it can be handled by the existing message-list preprocessing path.
+    Any other input (a plain string, an already-parsed list, or a string that fails to
+    parse as JSON) is returned unchanged.
+
+    :param response: The raw response value from the eval input.
+    :type response: Any
+    :return: The parsed list of messages, or the original response if it is not a
+        JSON-encoded list.
+    :rtype: Any
+    """
+    if isinstance(response, str):
+        try:
+            parsed = json.loads(response)
+        except (ValueError, TypeError):
+            return response
+        if isinstance(parsed, list):
+            return parsed
+    return response
 
 
 @experimental
@@ -251,6 +276,8 @@ class ResponseCompletenessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 category=ErrorCategory.MISSING_FIELD,
                 target=ErrorTarget.COMPLETENESS_EVALUATOR,
             )
+
+        eval_input["response"] = _parse_json_response_if_applicable(eval_input.get("response"))
 
         if _is_intermediate_response(eval_input.get("response")):
             return self._return_not_applicable_result(

@@ -781,6 +781,80 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
 
         assert result_similar["f1_score"] > result_different["f1_score"]
 
+    # ==================== JSON RESPONSE SUPPORT TESTS ====================
+
+    def test_plain_string_response_still_works(self):
+        """A plain string response (not JSON) is used as-is."""
+        results = self._run_evaluation(
+            response=self.IDENTICAL_TEXT,
+            ground_truth=self.IDENTICAL_TEXT,
+            rouge_type=RougeType.ROUGE_1,
+        )
+        result_data = self._extract_and_print_result(results, "plain_string_response")
+        self.assert_all_pass(result_data)
+        assert result_data["f1_score"] == 1.0
+
+    def test_json_encoded_message_list_response(self):
+        """A JSON-encoded list of chat messages is parsed and flattened to plain text."""
+        import json
+
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "What is the fox doing?"}]},
+            {
+                "role": "assistant",
+                "content": [
+                    {
+                        "type": "tool_call",
+                        "tool_call_id": "c1",
+                        "name": "lookup",
+                        "arguments": {"q": "fox"},
+                    }
+                ],
+            },
+            {"role": "tool", "tool_call_id": "c1", "content": [{"type": "tool_result", "tool_result": "n/a"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": self.IDENTICAL_TEXT}]},
+        ]
+        results = self._run_evaluation(
+            response=json.dumps(messages),
+            ground_truth=self.IDENTICAL_TEXT,
+            rouge_type=RougeType.ROUGE_1,
+        )
+        result_data = self._extract_and_print_result(results, "json_encoded_message_list_response")
+        self.assert_all_pass(result_data)
+        assert result_data["f1_score"] == 1.0
+
+    def test_json_response_excludes_tool_call_and_result_content(self):
+        """Tool call/result content must never leak into the flattened response text."""
+        import json
+
+        messages = [
+            {
+                "role": "assistant",
+                "content": [
+                    {
+                        "type": "tool_call",
+                        "tool_call_id": "c1",
+                        "name": "search_docs",
+                        "arguments": {"query": "unrelated gibberish xyz"},
+                    }
+                ],
+            },
+            {
+                "role": "tool",
+                "tool_call_id": "c1",
+                "content": [{"type": "tool_result", "tool_result": "completely unrelated wording"}],
+            },
+            {"role": "assistant", "content": [{"type": "text", "text": self.IDENTICAL_TEXT}]},
+        ]
+        results = self._run_evaluation(
+            response=json.dumps(messages),
+            ground_truth=self.IDENTICAL_TEXT,
+            rouge_type=RougeType.ROUGE_1,
+        )
+        result_data = self._extract_and_print_result(results, "json_response_excludes_tool_content")
+        # If tool content leaked in, precision/recall/F1 would drop well below 1.0.
+        assert result_data["f1_score"] == 1.0
+
     # ==================== INTERNAL BRANCH COVERAGE TESTS ====================
     # ROUGE returns three sub-scores with a dict threshold, so it cannot reuse the
     # single-score coverage mixin. These white-box tests exercise the branches that
