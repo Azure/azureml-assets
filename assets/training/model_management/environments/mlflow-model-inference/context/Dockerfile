@@ -83,6 +83,9 @@ RUN conda clean -afy && \
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
     conda clean -a -y  
 
+# pip ships an internal bom.cdx.json documenting old vendored msgpack/setuptools
+RUN find / -path "*/pip/_vendor/bom.cdx.json" -delete 2>/dev/null || true
+
 RUN pip install pipdeptree
 
 USER dockeruser
