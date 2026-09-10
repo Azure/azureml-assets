@@ -168,6 +168,24 @@ _VLLM_ROTARY_NEW = '''        self.apply_rotary_emb_flash_attn = None
                 # acceleration; fall back to vLLM's native rotary.
                 self.apply_rotary_emb_flash_attn = None'''
 
+_VLLM_FLASH_ATTN_OLD = '''if not (FA2_AVAILABLE or FA3_AVAILABLE):
+    raise ImportError(
+        "vllm.vllm_flash_attn requires the CUDA flash attention extensions "
+        "(_vllm_fa2_C or _vllm_fa3_C). On ROCm, use upstream flash_attn."
+    )'''
+_VLLM_FLASH_ATTN_NEW = '''if not (FA2_AVAILABLE or FA3_AVAILABLE):
+    # ACFT-RFT-COMPAT: the CUDA 12.9 stable-ABI vLLM wheel can load its core
+    # extension with newer PyTorch, while its non-stable FA2/FA3 extensions
+    # cannot. Keep imports functional so runtime preflight can select Triton.
+    import warnings
+
+    warnings.warn(
+        "vLLM FA2/FA3 extensions are unavailable; use a compatible fallback "
+        "attention backend.",
+        RuntimeWarning,
+        stacklevel=2,
+    )'''
+
 
 # --------------------------------------------------------------------------------------
 # The image vendors a newer (post-0.8.0) vLLM rollout subsystem onto a verl 0.7.1 worker
@@ -215,13 +233,50 @@ _VERL_FSDP2_NEW = '''    if isinstance(fsdp_transformer_layer_cls_to_wrap, str):
 
     assert len(fsdp_transformer_layer_cls_to_wrap) > 0 and fsdp_transformer_layer_cls_to_wrap[0] is not None'''
 
+_VERL_ACTOR_ATTN_OLD = (
+    '        attn_implementation = override_model_config.get('
+    '"attn_implementation", "flash_attention_2")'
+)
+_VERL_ACTOR_ATTN_NEW = '''        attn_implementation = override_model_config.get(
+            "attn_implementation",
+    # ACFT-RFT-COMPAT: runtime preflight selects a Transformers backend
+    # independently from the vLLM rollout attention backend.
+            os.getenv("VERL_ACTOR_ATTENTION_IMPLEMENTATION", "flash_attention_2"),
+        )'''
+
+_VLLM_LORA_BASE_WEIGHT_OLD = '''            else:
+                can_skip_module = self._can_skip(prefix + ".")
+                can_skip_param = self._can_skip(prefix)'''
+_VLLM_LORA_BASE_WEIGHT_NEW = '''            elif child_prefix == "weight" and "base_layer" in child_modules:
+                # ACFT-RFT-COMPAT: live LoRA synchronization sends the base
+                # embedding as embed_tokens.weight, while vLLM wraps it under
+                # embed_tokens.base_layer.weight.
+                base_layer_params = dict(
+                    child_modules["base_layer"].named_parameters(recurse=False)
+                )
+                yield from self._load_param(
+                    self._get_qualname(base_prefix, "base_layer.weight"),
+                    base_layer_params["weight"],
+                    child_weights,
+                )
+            else:
+                can_skip_module = self._can_skip(prefix + ".")
+                can_skip_param = self._can_skip(prefix)'''
+
 _VERL_DISPATCH_OLD = '''        else:
             return self.inference_engine.execute_method(method, *args, **kwargs)'''
 _VERL_DISPATCH_NEW = '''        else:
             # ACFT-RFT-COMPAT: vLLM 0.20.1 removed WorkerWrapperBase.execute_method; use
             # vLLM's run_method() dispatcher (getattr(obj, method)(*args, **kwargs)).
             from vllm.v1.serial_utils import run_method
-            return run_method(self.inference_engine, method, args, kwargs)'''
+            from vllm.v1.outputs import AsyncModelRunnerOutput
+
+            result = run_method(self.inference_engine, method, args, kwargs)
+            if isinstance(result, AsyncModelRunnerOutput):
+                # Match vLLM's native executor contract: synchronize the CUDA
+                # event before the result crosses the ZeroMQ pickle boundary.
+                return result.get_output()
+            return result'''
 
 # Worker server-mode methods the vendored async vLLM HTTP server calls on the hybrid
 # worker actors (two anchors in verl.workers.fsdp_workers).
@@ -367,6 +422,7 @@ def main():
 
     # vLLM <-> flash-attn 4 / transformers FA integration
     _replace_if_present("vllm.model_executor.layers.rotary_embedding.common", _VLLM_ROTARY_OLD, _VLLM_ROTARY_NEW)
+    _replace("vllm.vllm_flash_attn", _VLLM_FLASH_ATTN_OLD, _VLLM_FLASH_ATTN_NEW)
     _replace("transformers.integrations.flash_attention", _TF_SAUX_OLD, _TF_SAUX_NEW)
 
     # verl 0.7.1 worker layer <-> vendored post-0.8.0 vLLM rollout
@@ -374,6 +430,11 @@ def main():
     _replace("verl.workers.rollout.vllm_rollout", _VERL_INIT_OLD, _VERL_INIT_NEW)
     _replace("verl.workers.rollout.base", _VERL_REGISTRY_OLD, _VERL_REGISTRY_NEW)
     _replace("verl.utils.fsdp_utils", _VERL_FSDP2_OLD, _VERL_FSDP2_NEW)
+    _replace(
+        "vllm.model_executor.models.utils",
+        _VLLM_LORA_BASE_WEIGHT_OLD,
+        _VLLM_LORA_BASE_WEIGHT_NEW,
+    )
     _replace("verl.workers.rollout.vllm_rollout.vllm_rollout", _VERL_DISPATCH_OLD, _VERL_DISPATCH_NEW)
 
     # verl async worker server-mode methods (two anchors in one file)
@@ -391,6 +452,8 @@ def main():
             src = src.replace(anchor, new, 1)
         _write(fsdp_workers_path, src)
         print("[ok]   patched: verl.workers.fsdp_workers")
+
+    _replace("verl.workers.fsdp_workers", _VERL_ACTOR_ATTN_OLD, _VERL_ACTOR_ATTN_NEW)
 
     # verl actor forward <-> flash-attn 4 / activation offload
     _replace("verl.utils.attention_utils", _VERL_BERT_OLD, _VERL_BERT_NEW)

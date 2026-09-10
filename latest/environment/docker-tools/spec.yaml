@@ -4,7 +4,7 @@ description: >-
   System environment with docker tools including Oras, Trivy.
 
 name: "docker-tools"
-version: "42"
+version: "43"
 
 build:
   path: "{{image.context.dir}}"
