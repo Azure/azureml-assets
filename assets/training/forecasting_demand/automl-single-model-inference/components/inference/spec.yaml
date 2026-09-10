@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.jso
 name: automl_forecasting_inference
 display_name: AutoML Forecasting Inference
 description: Inference component for AutoML Forecasting.
-version: 0.0.15
+version: 0.0.16
 type: command
 
 inputs:
@@ -11,7 +11,11 @@ inputs:
     description: "Test data folder with csv or parquet file."
   model_path:
     type: mlflow_model
-    description: "The trained AutoML Forecasting MLFLOW model."
+    description: >-
+      A safely serialized AutoML Forecasting MLflow model. Sklearn models must
+      be exported directly to a single .skops artifact and contain only types
+      trusted by skops. Legacy pickle and full-object PyTorch artifacts are not
+      supported by this component version.
   target_column_name:
     type: string
     description: "The name of the target column."
@@ -41,7 +45,7 @@ outputs:
     description: "The evaluation config file which can be consumed by the compute metrics component."
 
 code: ../../src
-environment: azureml://registries/azureml/environments/automl-gpu/versions/64
+environment: azureml://registries/azureml/environments/automl-gpu/labels/latest
 
 command: >-
   python inference.py
