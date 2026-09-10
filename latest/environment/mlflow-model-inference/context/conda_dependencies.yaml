@@ -4,9 +4,9 @@ channels:
 - anaconda
 dependencies:
 - python=3.12
-- h2>=4.3.0
+- h2>=4.4.1
 - pip:
-  - pip==26.1.2
+  - pip==26.2
   - azureml-inference-server-http==1.4.1
   - mlflow
   - scikit-learn
@@ -15,5 +15,5 @@ dependencies:
   - pandas
   - numpy
   - joblib
-  - h2==4.3.0
+  - h2==4.4.1
   - fastmcp==3.2.0
