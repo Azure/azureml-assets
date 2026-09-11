@@ -1,4 +1,5 @@
 extra_config: model.yaml
+version: 4
 spec: spec.yaml
 type: model
 categories: ["Local"]
