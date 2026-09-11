@@ -2,6 +2,7 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 
 USER root:root
 
+# Upgrade Ubuntu security fixes inherited from the ACPT base image.
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
@@ -26,10 +27,10 @@ RUN pip install \
     accelerate==1.12.0 \
     deepspeed~=0.15.1
 
-# Override transformers to fix GHSA-69w3-r845-3855
-# Root cause: azureml-automl-dnn-nlp==1.62.0 is the latest release as of
-# 2026-05-26 and pins transformers==4.53.0, so direct override is required.
-RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.5.4'
+# Override transformers to fix GHSA-69w3-r845-3855 and GHSA-xrqw-3rrv-vx5w.
+# Root cause: azureml-automl-dnn-nlp pins transformers below the patched
+# version, so direct override is required.
+RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.10.0'
 
 # Vulnerability patches for ptca environment (python 3.10 at /opt/conda/envs/ptca)
 # pip -> >=26.1.2 (GHSA-jp4c-xjxw-mgf9, CVE-2026-6357,
@@ -39,8 +40,9 @@ RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.5
 #   re-flag them.
 # setuptools 81.0.0 -> >=83.0.0 (GHSA-h35f-9h28-mq5c, GHSA-58pv-8j8x-9vj2):
 #   setuptools is a build dependency with no parent that pins it.
-# torch 2.8.0+cu126 -> >=2.10.0 (GHSA-vgrw-7cvw-pwgx, GHSA-qfhq-4f3w-5fph):
-#   inherited from the ACPT base image ptca conda environment.
+# NOT FIXED HERE - torch (GHSA-vgrw-7cvw-pwgx, GHSA-qfhq-4f3w-5fph):
+#   owned by the ACPT base image as a matched torch/torchvision/torchaudio stack;
+#   overriding torch alone breaks the companion packages and AzureML NLP runtime.
 # numpy<2 is NOT a security floor: onnx pulls ml_dtypes, which as of 0.6.0 requires
 #   numpy>=2.0.0. Without this cap pip silently upgrades numpy to 2.x, leaving the
 #   prebuilt pandas wheel binary-incompatible so the image fails on import pandas with
@@ -69,7 +71,6 @@ RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.5
 RUN conda install -p /opt/conda/envs/ptca -c conda-forge -y 'pip>=26.1.2' && \
     /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
     'setuptools>=83.0.0' \
-    'torch>=2.10.0' \
     'numpy<2' \
     'onnx>=1.21.0' \
     'bokeh>=3.8.2' \
@@ -135,14 +136,3 @@ RUN /opt/conda/bin/pip install --no-cache-dir --upgrade \
            /opt/conda/pkgs/python-dotenv-1.2.1-* \
            /opt/conda/pkgs/msgpack-1.1.2-* \
            /opt/conda/pkgs/setuptools-70.3.0-*
-
-# Remove stale vendored metadata that scanners otherwise report as installed packages.
-RUN set -eux; \
-    find /opt /root /tmp -path '*/pip/_vendor/bom.cdx.json' -type f -delete; \
-    find /opt /root /tmp -path '*/_vendor/vendor.txt' -type f -exec \
-        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +; \
-    for metadata in $(find /opt /root /tmp -type f \( -name METADATA -o -name PKG-INFO \) 2>/dev/null); do \
-        if grep -Eq '^Name: (setuptools|msgpack)$' "$metadata" && grep -Eq '^Version: (70\.3\.0|1\.1\.2)$' "$metadata"; then \
-            rm -rf "$(dirname "$metadata")"; \
-        fi; \
-    done

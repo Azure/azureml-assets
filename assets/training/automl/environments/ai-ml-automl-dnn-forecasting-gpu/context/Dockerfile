@@ -1,7 +1,6 @@
 FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04:{{latest-image-tag}}
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl-dnn-forecasting-gpu
-# Prepend path to AzureML conda environment
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
 COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/ /var/mlflow_resources/
@@ -9,9 +8,10 @@ COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:2025
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 ENV ENABLE_METADATA=true
+ENV PIP_NO_COLOR=1
+ENV PIP_PROGRESS_BAR=off
 
-# Pick up patched Ubuntu packages when the parent image or apt-installed
-# dependencies contain vulnerable versions.
+# Pick up patched Ubuntu packages from the parent image and apt-installed dependencies.
 RUN set -eux; \
     apt-get update; \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade; \
@@ -19,6 +19,7 @@ RUN set -eux; \
         curl \
         libcurl3-gnutls \
         libcurl4 \
+        libgcrypt20 \
         liblzma5 \
         libnghttp2-14 \
         libnginx-mod-http-echo \
@@ -51,10 +52,7 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'pip>=26.1' && \
-    find /opt/miniconda -path '*/pip/_vendor/bom.cdx.json' -type f -delete && \
-    find /opt/miniconda -path '*/_vendor/vendor.txt' -type f -exec \
-        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +
+RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'pip>=26.1'
 
 # Create conda environment; packages are installed via pip to avoid solver OOM.
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
@@ -71,10 +69,7 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
     'psutil>=5.2.2,<6.0.0' \
     'pip>=26.1' \
     'setuptools>=83.0.0' \
-    'wheel>=0.46.2' && \
-    find "$AZUREML_CONDA_ENVIRONMENT_PATH" -path '*/pip/_vendor/bom.cdx.json' -type f -delete && \
-    find "$AZUREML_CONDA_ENVIRONMENT_PATH" -path '*/_vendor/vendor.txt' -type f -exec \
-        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +
+    'wheel>=0.46.2'
 
 # Install AzureML dependencies with security constraints for transitive packages
 # pulled in by the AzureML AutoML stack.
@@ -110,9 +105,9 @@ RUN printf '%s\n' \
                 'xgboost==3.2.0' \
                 'GitPython>=3.1.55' \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz' \
-                'py-cpuinfo==5.0.0' 
+                'py-cpuinfo==5.0.0'
 
-RUN pip install --no-cache-dir --upgrade --no-deps 'azure-identity>=1.25.1'
+RUN pip install --no-cache-dir --upgrade 'azure-identity>=1.25.1'
 
 # Install packages with torch packages separately to reduce layer size
 RUN pip install --no-cache-dir -c /tmp/security-constraints.txt \
@@ -161,9 +156,3 @@ RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  CMAKE_LIBRARY_PATH=/usr/local/cuda/targets/x86_64-linux/lib:/usr/local/cuda-12.6/targets/x86_64-linux/lib \
  pip install --no-cache-dir --no-build-isolation \
  git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d"
-
-RUN set -eux; \
-    find / -xdev -path '*/site-packages/pip/_vendor/bom.cdx.json' -type f -delete; \
-    find /opt /azureml-envs -path '*/_vendor/vendor.txt' -type f -exec \
-        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +; \
-    rm -rf /opt/miniconda/pkgs/

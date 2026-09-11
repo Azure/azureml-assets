@@ -40,16 +40,19 @@ RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' 'setuptools>=82.0.1' && 
 
 # Install pip dependencies (runs in default PTCA conda env)
 COPY requirements.txt .
-# pyarrow>=23.0.1: pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg.
+# pyarrow>=23.0.1,<24: pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg
+# while preserving the parent package's compatibility ceiling.
+# numpy<1.27: scipy 1.10.1 compatibility ceiling; prevents transitive security overrides from selecting NumPy 2.x.
+# ml-dtypes<0.6: compatible with the NumPy ceiling; 0.6 requires NumPy 2.x.
 # cryptography>=50.0.0: pinned transitive dep of azureml-core in requirements.txt; fixes GHSA-537c-gmf6-5ccf.
 RUN pip install -r requirements.txt --no-cache-dir && \
-    pip install --upgrade --no-cache-dir --no-deps \
-        'pyarrow>=23.0.1' \
+    pip install --upgrade --no-cache-dir \
+        'numpy<1.27' \
+        'ml-dtypes<0.6' \
+        'pyarrow>=23.0.1,<24' \
         'cryptography>=50.0.0' \
         'setuptools>=83.0.0' && \
-    conda run -n base python -m pip install --upgrade --no-cache-dir --no-deps 'setuptools>=83.0.0' && \
-    rm -rf /opt/conda/lib/python3.14/site-packages/setuptools-82.0.0.dist-info && \
-    find /opt/conda \( -path '*/pip/_vendor/vendor.txt' -o -path '*/pip/_vendor/bom.cdx.json' \) -delete
+    conda run -n base python -m pip install --upgrade --no-cache-dir 'setuptools>=83.0.0'
 
 # Inference requirements.
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
@@ -58,20 +61,27 @@ RUN apt-get update && \
         dotnet-host-8.0 \
         dotnet-hostfxr-8.0 \
         dotnet-runtime-8.0 \
+        coreutils \
         curl \
+        diffutils \
         libasound2 \
         libasound2-data \
+        libattr1 \
         libc-bin \
         libc-dev-bin \
         libc6 \
         libc6-dev \
         libcurl3-gnutls \
         libcurl4 \
+        libevent-core-2.1-7 \
+        libgcrypt20 \
         libgssapi-krb5-2 \
         libk5crypto3 \
         libkrb5-3 \
         libkrb5support0 \
+        libp11-kit0 \
         libperl5.34 \
+        libssh-4 \
         libssl-dev \
         libssl3 \
         libsystemd0 \
