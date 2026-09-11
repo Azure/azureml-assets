@@ -7,9 +7,10 @@ tags:
   supportsReasoning: 'true'
   contextLength: 262144
 system_metadata:
+  previewType: hideUI
   alias: qwen3.5-4b
   publisher: Microsoft
-  directoryPath: v3
+  directoryPath: v4
   foundryLocal: ''
   deploymentOptions: ['Foundry Local on Devices']
   inputModalities:
@@ -45,6 +46,6 @@ variantInfo:
     - RTN
     device: gpu
     executionProvider: CUDAExecutionProvider
-    fileSizeBytes: 4384876649
-    vRamFootprintBytes: 4384876649
-version: 3
+    fileSizeBytes: 4384866247
+    vRamFootprintBytes: 4384866247
+version: 4

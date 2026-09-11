@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 
 name: medimageparse_3d_finetune
-version: 0.0.1
+version: 0.0.2
 
 
 type: command

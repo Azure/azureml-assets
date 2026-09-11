@@ -270,11 +270,14 @@ def execute_training(args):
                 / "checkpoints"
                 / "last.ckpt"
             )
+            # Must match the filename pickled into the base model's python_model.pkl
+            # (MedImageParseMLflowWrapper.vision_model_name): copy_catalog() reuses that
+            # wrapper verbatim, so a different name here makes the deployment fail to load.
             output_path = (
                 Path(args.mlflow_model_folder)
                 / "artifacts"
                 / "checkpoints"
-                / "boltzformer_focal_all.safetensors"
+                / "biomedparse_3D_AllData_MultiView_edge.safetensors"
             )
 
             logger.info("Starting conversion to HuggingFace format...")
