@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.response_completeness"
-version: 10
+version: 11
 displayName: "Response-Completeness-Evaluator-(Preview)"
 description: "Assesses whether the response covers all key aspects of the question. Higher scores indicate more thorough and complete answers. This evaluator is useful when evaluating chatbots, virtual assistants, and QA systems where full and informative responses are critical."
 evaluatorType: "builtin"
@@ -25,7 +25,11 @@ dataMappingSchema:
     ground_truth:
       type: "string"
     response:
-      type: "string"
+      anyOf:
+        - type: "string"
+        - type: "array"
+          items:
+            type: "object"
   required: ["ground_truth", "response"]
 outputSchema:
   response_completeness:

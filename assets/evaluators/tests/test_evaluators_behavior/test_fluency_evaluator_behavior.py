@@ -27,8 +27,8 @@ class TestFluencyEvaluatorBehavior(BaseEvaluatorBehaviorTest, BaseToolEvaluation
     """
 
     # region Expected flow inputs for each test
-    # Fluency calls reformat_agent_response() which extracts text-only content
-    # from assistant messages, so expected inputs are the reformatted strings.
+    # Fluency calls _extract_final_text_response() which extracts text-only content
+    # from assistant messages, so expected inputs are the flattened text strings.
     test_function_tool_local_calls_expected_flow_inputs = {
         "response": data.LOCAL_CALLS_IR_EXPECTED_FLOW_RESPONSE,
     }
@@ -94,6 +94,53 @@ class TestFluencyEvaluatorBehavior(BaseEvaluatorBehaviorTest, BaseToolEvaluation
 
     # Test Configs
     requires_query = False
+
+    # ==================== JSON RESPONSE SUPPORT TESTS ====================
+
+    def test_plain_string_response_still_works(self):
+        """A plain string response (not JSON) should keep working as before."""
+        results = self._run_evaluation(response="It is sunny today.")
+        result_data = self._extract_and_print_result(results, "Plain String Response")
+        self.assert_pass_or_fail(result_data)
+
+    def test_json_encoded_message_list_response_flattens_to_final_text(self):
+        """A JSON-encoded list of chat messages is parsed and only the final assistant text reaches the flow.
+
+        Fluency flattens the preprocessed conversation to plain assistant text before calling the
+        flow, so tool calls/results must never leak into what the flow receives.
+        """
+        import json
+
+        final_answer = "The current weather in Seattle is sunny with a high of 72 degrees."
+        json_response = json.dumps(
+            [
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "fetch_weather",
+                            "arguments": {"location": "Seattle"},
+                        }
+                    ],
+                },
+                {
+                    "tool_call_id": "call_1",
+                    "role": "tool",
+                    "content": [{"type": "tool_result", "tool_result": {"weather": "rainy, 40 degrees"}}],
+                },
+                {
+                    "role": "assistant",
+                    "content": [{"type": "text", "text": final_answer}],
+                },
+            ]
+        )
+        _, captured = self._run_and_capture_flow_input(response=json_response)
+        flow_input_json = json.dumps(captured, default=str)
+        assert final_answer in flow_input_json, "final assistant text did not reach the flow"
+        assert "rainy, 40 degrees" not in flow_input_json, "tool result content leaked into the flow"
+        assert "fetch_weather" not in flow_input_json, "tool call content leaked into the flow"
 
 
 # region None score handling tests
