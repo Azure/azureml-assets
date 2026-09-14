@@ -1,7 +1,7 @@
 type: "evaluator"
 id: "azureml://registries/azureml/evaluators/builtin.tool_use_quality/versions/1"
 name: "builtin.tool_use_quality"
-version: 3
+version: 4
 displayName: "Tool-Use-Quality-Evaluator-(Preview)"
 description: "A composite evaluator that batches the tool_call_accuracy, tool_call_success,
   tool_input_accuracy, tool_output_utilization, and tool_selection evaluators into
@@ -11,6 +11,7 @@ evaluatorSubType: "code"
 categories: ["agents"]
 tags:
   provider: "Microsoft"
+  recommended: "true"
   is_continuous_scenario: "true"
   composite_evaluator: "tool_call_accuracy, tool_call_success, tool_input_accuracy,
     tool_output_utilization, tool_selection"

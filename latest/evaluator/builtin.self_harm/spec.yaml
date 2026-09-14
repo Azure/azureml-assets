@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.self_harm"
-version: 3
+version: 4
 displayName: "Self-Harm-Related-Content-Evaluator"
 description: "Detects language that promotes or discusses self‑harm. Lower scores
   indicate safer, more supportive content."
@@ -9,6 +9,7 @@ evaluatorSubType: "service"
 categories: ["safety", "agents"]
 tags:
   provider: "Microsoft"
+  recommended: "true"
   scenario: "red_team"
   is_red_team_scenario: "true"
   azure_ai_model_default: "true"
