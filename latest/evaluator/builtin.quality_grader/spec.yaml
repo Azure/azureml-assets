@@ -13,6 +13,7 @@ categories: ["quality", "agents"]
 tags:
   provider: "Microsoft"
   deprecate: "true"
+  enable_evaluation_ui: false
   is_continuous_scenario: "true"
 supportedEvaluationLevels: ["turn"]
 initParameterSchema:
