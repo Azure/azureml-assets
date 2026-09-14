@@ -65,7 +65,7 @@ jobs:
           fetch-depth: 2
 
       - name: Use Python 3.10 or newer
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@7f4fc3e22c37d6ff65e88745f38bd3157c663f7c # v4.9.1
         with:
           python-version: '3.12'
     
@@ -89,7 +89,7 @@ jobs:
         run: python -u $scripts_environment_dir/validate_build_logs.py -l '${{ runner.temp }}'/$build_logs_artifact_name
 
       - name: Upload build logs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: ${{ env.build_logs_artifact_name }}
