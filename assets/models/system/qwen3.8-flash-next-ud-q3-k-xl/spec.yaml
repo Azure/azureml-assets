@@ -1,0 +1,26 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: qwen3.8-flash-next-ud-q3-k-xl
+path: ./
+version: 1
+system_metadata:
+  huggingFaceModelId: unsloth/Qwen3.8-Flash-Next-GGUF
+  publisher: Unsloth
+  displayName: Qwen3.8-Flash-Next UD-Q3_K_XL (3-bit)
+  summary: Qwen3.8-Flash-Next text model in Unsloth Dynamic 3-bit mixed-precision GGUF format.
+  license: custom
+  licenseDescription: >-
+    Subject to the Qwen Community License 1.0
+    <https://huggingface.co/Qwen/Qwen3.8-Flash-Next/blob/de4b8e4d43b917e7706784d8bb445c9af86a3540/LICENSE>,
+    including attribution and separate commercial-license conditions.
+  preview: true
+  inputModalities:
+  - text
+  outputModalities:
+  - text
+  tasks:
+    inferenceTasks:
+    - chat-completion
+  platformCapabilities:
+    enableMaap: false
+    enableBatch: false
+    maasInference: false

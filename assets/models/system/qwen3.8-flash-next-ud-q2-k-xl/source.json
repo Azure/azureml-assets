@@ -1,0 +1,29 @@
+{
+  "repository": "unsloth/Qwen3.8-Flash-Next-GGUF",
+  "revision": "38bb39ee97821de2c9009abb7e93950eec396e66",
+  "include": [
+    "README.md",
+    "UD-Q2_K_XL/*.gguf"
+  ],
+  "weight_size_bytes": 78869128864,
+  "weights": [
+    {
+      "path": "UD-Q2_K_XL/Qwen3.8-Flash-Next-UD-Q2_K_XL-00001-of-00003.gguf",
+      "size_bytes": 10946624,
+      "sha256": "a4f3b21e77353999829f2f767e9ac21ce9c71d29a74f2cc9eda48c9bf23c8b86"
+    },
+    {
+      "path": "UD-Q2_K_XL/Qwen3.8-Flash-Next-UD-Q2_K_XL-00002-of-00003.gguf",
+      "size_bytes": 49979779296,
+      "sha256": "2e3bf1ee7d2a04e261e9f342a2d968f696cce5941d082b0e434deb9b1edc12c6"
+    },
+    {
+      "path": "UD-Q2_K_XL/Qwen3.8-Flash-Next-UD-Q2_K_XL-00003-of-00003.gguf",
+      "size_bytes": 28878402944,
+      "sha256": "ec8c106759fdf4f463039c34c0707718d7d8908d53d892bd4f002e71620803f9"
+    }
+  ],
+  "required_notices": [
+    "https://huggingface.co/Qwen/Qwen3.8-Flash-Next/resolve/de4b8e4d43b917e7706784d8bb445c9af86a3540/LICENSE"
+  ]
+}

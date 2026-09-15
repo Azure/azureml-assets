@@ -1,0 +1,73 @@
+{
+  "repository": "nvidia/Qwen3.8-Flash-Next-NVFP4",
+  "revision": "fc694b54fb0174e0913e6adf86691ef85a4ead47",
+  "include": [
+    "README.md",
+    "*.jinja",
+    "*.json",
+    "*.txt",
+    "*.safetensors"
+  ],
+  "weight_size_bytes": 132680249378,
+  "weights": [
+    {
+      "path": "model-00001-of-00010.safetensors",
+      "size_bytes": 3115991696,
+      "sha256": "63fde954be6f08b49b876f4f70a0ad0bcfee71aff7b1faa33779b6b32feca2a2"
+    },
+    {
+      "path": "model-00002-of-00010.safetensors",
+      "size_bytes": 10005510304,
+      "sha256": "4dafaef62a908e49e0d92c7c2a3fa99f4d9651fdeeb0ca09f09a9b40095af4e0"
+    },
+    {
+      "path": "model-00003-of-00010.safetensors",
+      "size_bytes": 10005364728,
+      "sha256": "3218ddc129258e91a721a8e81329ca8f00588332ec721bd8d2cf7d20e324bf47"
+    },
+    {
+      "path": "model-00004-of-00010.safetensors",
+      "size_bytes": 10006060112,
+      "sha256": "55e2bdf6a3a1f6e65270787f65c63b2a2a56b308b54eb1fb318dfabc9b48b141"
+    },
+    {
+      "path": "model-00005-of-00010.safetensors",
+      "size_bytes": 10005362392,
+      "sha256": "d3c169d3694bfba846455d01e48f047d770f78d071c5a4d22f129389411d686e"
+    },
+    {
+      "path": "model-00006-of-00010.safetensors",
+      "size_bytes": 10005375328,
+      "sha256": "38f65a9d11090428e139cc60d0587e8e5433ea2ce79820883c583d7cfcc53130"
+    },
+    {
+      "path": "model-00007-of-00010.safetensors",
+      "size_bytes": 10005956544,
+      "sha256": "8cf3fa05c04cb2e060963b69bb01f7a7b9f43c58435fbe380836a0457a19cd3e"
+    },
+    {
+      "path": "model-00008-of-00010.safetensors",
+      "size_bytes": 10005375200,
+      "sha256": "53d1f80746aa0cc0a7c2f4836587002a8a4dd72c827432cd2e43abae3c3899e4"
+    },
+    {
+      "path": "model-00009-of-00010.safetensors",
+      "size_bytes": 5679113808,
+      "sha256": "eaff6a87ece6fbfd6ad0fbaa0a5cf9ff542f8076acba38e62410b1ed55e12cc3"
+    },
+    {
+      "path": "model-00010-of-00010.safetensors",
+      "size_bytes": 128587536,
+      "sha256": "0d49b0cf7c15bf9b5bd1e17403b36727315860a8f2a2e0f5a53655547084f640"
+    },
+    {
+      "path": "model-fp8-mtp-ple.safetensors",
+      "size_bytes": 53717551730,
+      "sha256": "3525520c8602d850003eb1960aec0b64291dae33b83f8b65dd639a451df78823"
+    }
+  ],
+  "required_notices": [
+    "https://huggingface.co/Qwen/Qwen3.8-Flash-Next/resolve/de4b8e4d43b917e7706784d8bb445c9af86a3540/LICENSE",
+    "https://www.nvidia.com/en-us/agreements/enterprise-software/nvidia-open-model-license/"
+  ]
+}

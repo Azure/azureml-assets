@@ -1,0 +1,30 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: qwen3.8-flash-next-nvfp4
+path: ./
+version: 1
+system_metadata:
+  huggingFaceModelId: nvidia/Qwen3.8-Flash-Next-NVFP4
+  publisher: NVIDIA
+  displayName: Qwen3.8-Flash-Next NVFP4
+  summary: Qwen3.8-Flash-Next with NVIDIA ModelOpt NVFP4 routed experts and BF16/FP8 components.
+  license: custom
+  licenseDescription: >-
+    Subject to the NVIDIA Open Model License
+    <https://www.nvidia.com/en-us/agreements/enterprise-software/nvidia-open-model-license/>
+    and the Qwen Community License 1.0
+    <https://huggingface.co/Qwen/Qwen3.8-Flash-Next/blob/de4b8e4d43b917e7706784d8bb445c9af86a3540/LICENSE>.
+    The Qwen license includes attribution and separate commercial-license conditions.
+  preview: true
+  inputModalities:
+  - text
+  - image
+  - video
+  outputModalities:
+  - text
+  tasks:
+    inferenceTasks:
+    - chat-completion
+  platformCapabilities:
+    enableMaap: false
+    enableBatch: false
+    maasInference: false

@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: huggingface/qwen3.8-flash-next-ud-q3-k-xl/38bb39ee97821de2c9009abb7e93950eec396e66
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model
