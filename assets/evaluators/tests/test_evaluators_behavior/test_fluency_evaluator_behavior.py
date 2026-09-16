@@ -15,7 +15,7 @@ from .base_validator_unit_test import (
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
 from ...builtin.fluency.evaluator._fluency import FluencyEvaluator
-from ..common.evaluator_mock_config import run_none_score_not_applicable
+from ..common.evaluator_mock_config import create_mocked_evaluator, run_none_score_not_applicable
 
 
 @pytest.mark.unittest
@@ -94,6 +94,21 @@ class TestFluencyEvaluatorBehavior(BaseEvaluatorBehaviorTest, BaseToolEvaluation
 
     # Test Configs
     requires_query = False
+
+    def test_messages_split_at_latest_user_turn(self):
+        """Messages input evaluates only the response after the latest user turn."""
+        evaluator = create_mocked_evaluator(FluencyEvaluator, "fluency")
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "Earlier question"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "Earlier answer"}]},
+            {"role": "user", "content": [{"type": "text", "text": "Latest question"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "Latest answer"}]},
+        ]
+
+        evaluator(messages=messages)
+
+        flow_input = evaluator._flow.call_args.kwargs
+        assert flow_input["response"] == "Latest answer"
 
 
 # region None score handling tests
