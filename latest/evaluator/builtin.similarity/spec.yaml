@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.similarity"
-version: 7
+version: 8
 displayName: "Similarity-Evaluator"
 description: "Measures how closely two pieces of text resemble each other in meaning.
   Higher scores indicate greater semantic similarity. It’s best used for NLP tasks
@@ -32,7 +32,13 @@ dataMappingSchema:
       type: "string"
     ground_truth:
       type: "string"
-  required: ["query", "response", "ground_truth"]
+    messages:
+      type: "array"
+      items:
+        type: "object"
+  anyOf:
+  - required: ["query", "response", "ground_truth"]
+  - required: ["messages", "ground_truth"]
 outputSchema:
   similarity:
     type: "ordinal"
