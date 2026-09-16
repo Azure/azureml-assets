@@ -42,7 +42,7 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
         )
         if latest_user_index == -1:
             raise ValueError("messages must contain at least one message with role 'user'.")
-        return messages[: latest_user_index + 1], messages[latest_user_index + 1 :]
+        return messages[: latest_user_index + 1], messages[latest_user_index + 1:]
 
 # Re-exported so the module keeps exposing the message-preprocessing helpers used
 # by the test suite; they are invoked indirectly through _preprocess_messages.
