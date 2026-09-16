@@ -14,12 +14,12 @@ inference:
     max_completion_tokens: 32000
 
 evaluator:
-  id: "azureml://registries/azureml/evaluators/builtin.regex_match/versions/4"
+  id: "azureml://registries/azureml/evaluators/builtin.regex_match/versions/3"
   testingCriteria:
     type: "azure_ai_evaluator"
     name: "TruthfulQA"
     evaluator_name: "builtin.regex_match"
-    evaluator_version: "4"
+    evaluator_version: "3"
     initialization_parameters:
       patterns:
         - '\A{{ground_truth}}\Z'
