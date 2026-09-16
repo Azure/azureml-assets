@@ -95,6 +95,7 @@ class TestRegexMatchEvaluatorBehavior(BaseCodeEvaluatorRunner):
         ],
     )
     def test_truthfulqa_exact_match(self, response, ground_truth, expected):
+        """Preserve exact-answer matching through the TruthfulQA benchmark spec."""
         spec_path = (
             Path(__file__).resolve().parents[3]
             / "benchmarkspecs" / "builtin" / "truthful_qa" / "spec.yaml"
