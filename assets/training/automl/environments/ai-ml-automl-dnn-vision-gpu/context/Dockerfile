@@ -106,7 +106,7 @@ RUN pip install --no-cache-dir --use-deprecated=legacy-resolver \
 RUN pip install --no-cache-dir --use-deprecated=legacy-resolver \
                 azureml-train-automl-client=={{latest-pypi-version}} \
                 azureml-train-automl-runtime=={{latest-pypi-version}} \
-                azureml-automl-dnn-vision=={{latest-pypi-version}}
+                azureml-automl-dnn-vision==1.62.0.post1
 
 # Vulnerability patches for conda environment
 # NOTE: cryptography>=48.0.1 (GHSA-537c-gmf6-5ccf): azureml-mlflow==1.62.0.post2
