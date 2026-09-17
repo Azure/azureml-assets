@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.violence"
-version: 4
+version: 5
 displayName: "Violence-Content-Evaluator"
 description: "Detects violent or threatening language in the response. Lower scores indicate safer, non‑violent communication."
 evaluatorType: "builtin"
@@ -13,6 +13,7 @@ tags:
   is_red_team_scenario: "true"
   azure_ai_model_default: "true"
   azure_ai_agent_default: "true"
+supportedEvaluationLevels: ["turn"]
 initParameterSchema:
   type: "object"
   properties:
@@ -21,6 +22,8 @@ initParameterSchema:
       minimum: 0
       maximum: 7
       multipleOf: 1
+    evaluation_level:
+      type: "string"
   required: []
 dataMappingSchema:
   type: "object"
@@ -29,7 +32,13 @@ dataMappingSchema:
       type: "string"
     response:
       type: "string"
-  required: ["query", "response"]
+    messages:
+      type: "array"
+      items:
+        type: "object"
+  anyOf:
+    - required: ["query", "response"]
+    - required: ["messages"]
 outputSchema:
   violence:
     type: "ordinal"
