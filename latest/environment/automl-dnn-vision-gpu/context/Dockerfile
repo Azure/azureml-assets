@@ -76,7 +76,7 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
 RUN pip install --no-cache-dir \
                 azureml-train-automl-client==1.62.0 \
                 azureml-train-automl-runtime==1.62.0 \
-                azureml-automl-dnn-vision==1.62.0
+                azureml-automl-dnn-vision==1.62.0.post1
 
 # Security: fix torch vulnerability GHSA-rrmf-rvhw-rf47 in the active conda env.
 RUN pip install --no-cache-dir --upgrade torch==2.13.0 torchvision==0.28.0

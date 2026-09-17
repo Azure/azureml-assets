@@ -1,4 +1,4 @@
-azureml-acft-accelerator==None
+azureml-acft-accelerator==0.0.91
 azureml_acft_common_components==0.0.91
 azureml-acft-contrib-hf-nlp==0.0.91
 azureml-evaluate-mlflow==0.0.91
