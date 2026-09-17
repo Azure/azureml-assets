@@ -4,6 +4,8 @@
 """Behavioral tests for RegexMatch Evaluator."""
 
 import pytest
+import yaml
+from pathlib import Path
 from typing import Any, Dict
 from ..common.base_code_evaluator_runner import BaseCodeEvaluatorRunner
 from ...builtin.regex_match.evaluator._regex_match import RegexMatchEvaluator
@@ -76,6 +78,42 @@ class TestRegexMatchEvaluatorBehavior(BaseCodeEvaluatorRunner):
     # endregion
 
     # ==================== BASIC PATTERN MATCHING TESTS ====================
+
+    @pytest.mark.parametrize(
+        "response,ground_truth,expected",
+        [
+            ("The Earth is round.", "The Earth is round.", True),
+            ("The Earth is flat.", "The Earth is round.", False),
+            ("the Earth is round.", "The Earth is round.", False),
+            (" The Earth is round.", "The Earth is round.", False),
+            ("The Earth is round. ", "The Earth is round.", False),
+            ("The Earth is round.\n", "The Earth is round.", False),
+            ("Answer: The Earth is round.", "The Earth is round.", False),
+            ("a+b (c) [d]. $5?", "a+b (c) [d]. $5?", True),
+            ("axb (c) [d]. $5?", "a+b (c) [d]. $5?", False),
+            ("First line\nSecond line", "First line\nSecond line", True),
+        ],
+    )
+    def test_truthfulqa_exact_match(self, response, ground_truth, expected):
+        """Preserve exact-answer matching through the TruthfulQA benchmark spec."""
+        spec_path = (
+            Path(__file__).resolve().parents[3]
+            / "benchmarkspecs" / "builtin" / "truthful_qa" / "spec.yaml"
+        )
+        spec = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
+        criteria = spec["evaluator"]["testingCriteria"]
+        assert criteria["type"] == "azure_ai_evaluator"
+        assert criteria["evaluator_name"] == "builtin.regex_match"
+        assert criteria["data_mapping"] == {
+            "ground_truth": "{{item.Best_Answer}}",
+            "response": "{{sample.output_text}}",
+        }
+        evaluator = RegexMatchEvaluator(**criteria["initialization_parameters"])
+        results = self._run_evaluation_with_evaluator(
+            evaluator, response=response, ground_truth=ground_truth,
+        )
+        result_data = self._extract_and_print_result(results, "truthfulqa_exact_match")
+        assert result_data["score"] is expected
 
     def test_pattern_matches_response(self):
         """Test successful pattern match in response."""

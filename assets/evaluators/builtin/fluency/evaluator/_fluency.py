@@ -6,7 +6,7 @@ import math
 import os
 import logging
 import re
-from typing import Dict, List, Union
+from typing import Dict, List, Tuple, Union
 
 from typing_extensions import overload, override
 
@@ -35,12 +35,25 @@ from azure.ai.evaluation._evaluators._common._validators import (
 )
 
 try:  # azure-ai-evaluation >= 1.18.1
-    from azure.ai.evaluation._common.utils import _is_intermediate_response, _preprocess_messages
+    from azure.ai.evaluation._common.utils import (
+        _is_intermediate_response,
+        _preprocess_messages,
+        _split_messages_at_latest_user,
+    )
 except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
     from azure.ai.evaluation._evaluators._common._base_prompty_eval import (
         _is_intermediate_response,
         _preprocess_messages,
     )
+
+    def _split_messages_at_latest_user(messages: List[dict]) -> Tuple[List[dict], List[dict]]:
+        latest_user_index = max(
+            (index for index, message in enumerate(messages) if message.get("role") == "user"),
+            default=-1,
+        )
+        if latest_user_index == -1:
+            raise ValueError("messages must contain at least one message with role 'user'.")
+        return messages[: latest_user_index + 1], messages[latest_user_index + 1:]
 
 # Re-exported so the module keeps exposing the message-preprocessing helpers used
 # by the test suite; they are invoked indirectly through _preprocess_messages.
@@ -181,6 +194,10 @@ class FluencyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :rtype: Dict[str, Union[float, Dict[str, List[float]]]]
         """
 
+    @overload
+    def __call__(self, *, messages: List[dict]) -> Dict[str, Union[str, float]]:
+        """Evaluate fluency using messages split at the latest user turn."""
+
     @override
     def __call__(  # pylint: disable=docstring-missing-param
         self,
@@ -259,6 +276,7 @@ class FluencyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         if isinstance(eval_input.get("query"), list):
             eval_input["query"] = _preprocess_messages(eval_input["query"])
         # Call the prompty flow to get the evaluation result.
+        eval_input.pop("messages", None)
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         score = math.nan
         reason = ""
@@ -334,6 +352,12 @@ class FluencyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: The evaluation result.
         :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
         """
+        messages = kwargs.pop("messages", None)
+        if messages is not None:
+            query_messages, response_messages = _split_messages_at_latest_user(messages)
+            kwargs["query"] = query_messages
+            kwargs["response"] = response_messages
+
         # Validate input before processing
         self._validator.validate_eval_input(kwargs)
 
