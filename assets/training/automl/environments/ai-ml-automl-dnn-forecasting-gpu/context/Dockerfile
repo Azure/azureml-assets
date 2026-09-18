@@ -54,7 +54,7 @@ RUN apt-get update && \
 RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'pip>=26.1' && \
     find /opt/miniconda -path '*/pip/_vendor/bom.cdx.json' -type f -delete && \
     find /opt/miniconda -path '*/_vendor/vendor.txt' -type f -exec \
-        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +
+        sed -i -E 's/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +
 
 # Create conda environment; packages are installed via pip to avoid solver OOM.
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
@@ -63,6 +63,10 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     conda clean -a -y
 
 # Install scientific packages plus packaging tools via pip.
+# Temporary compatibility pin: AutoML runtime and DNN forecasting callbacks still
+# import pkg_resources, removed in setuptools 82. This leaves GHSA-h35f-9h28-mq5c
+# unremediated and requires explicit security exception approval before merge/release.
+# Restore setuptools>=83 after both SDK packages migrate to importlib.resources.
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
     'numpy>=1.23.5,<1.24' \
     'scikit-learn==1.5.1' \
@@ -70,11 +74,11 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
     'scipy==1.10.1' \
     'psutil>=5.2.2,<6.0.0' \
     'pip>=26.1' \
-    'setuptools>=83.0.0' \
+    'setuptools==81.0.0' \
     'wheel>=0.46.2' && \
     find "$AZUREML_CONDA_ENVIRONMENT_PATH" -path '*/pip/_vendor/bom.cdx.json' -type f -delete && \
     find "$AZUREML_CONDA_ENVIRONMENT_PATH" -path '*/_vendor/vendor.txt' -type f -exec \
-        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +
+        sed -i -E 's/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +
 
 # Install AzureML dependencies with security constraints for transitive packages
 # pulled in by the AzureML AutoML stack.
@@ -91,8 +95,8 @@ RUN printf '%s\n' \
                 'pydantic-settings>=2.14.2' \
                 '# pyasn1 pinned transitive dep of azure-identity/msal; fixes GHSA-hm4w-wwcw-mr6r and GHSA-8ppf-4f7h-5ppj' \
                 'pyasn1>=0.6.4' \
-                '# setuptools pinned packaging tool in this conda env; fixes GHSA-h35f-9h28-mq5c' \
-                'setuptools>=83.0.0' \
+                '# Temporary pkg_resources compatibility exception, NOT a security floor; GHSA-h35f-9h28-mq5c remains unremediated and requires security approval before merge/release' \
+                'setuptools==81.0.0' \
                 '# sqlparse pinned transitive dep of mlflow-skinny; fixes GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr, GHSA-3496-9g83-7v6x, and GHSA-pwgv-4x5q-6m9f' \
                 'sqlparse>=0.6.0' \
                 > /tmp/security-constraints.txt && \
@@ -165,5 +169,5 @@ RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
 RUN set -eux; \
     find / -xdev -path '*/site-packages/pip/_vendor/bom.cdx.json' -type f -delete; \
     find /opt /azureml-envs -path '*/_vendor/vendor.txt' -type f -exec \
-        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +; \
+        sed -i -E 's/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +; \
     rm -rf /opt/miniconda/pkgs/

@@ -1,9 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-"""Simple Sklearn Test."""
+"""AutoML forecasting import smoke test followed by a simple sklearn job."""
 # imports
 import mlflow
 import argparse
+import importlib
 import pandas as pd
 
 from sklearn.linear_model import LinearRegression
@@ -13,6 +14,13 @@ from sklearn.model_selection import train_test_split
 # define functions
 def main(args):
     """Run and evaluate model."""
+    # Exercise the SDK paths that require pkg_resources before running sklearn.
+    for module in (
+        "azureml.automl.runtime.faults_verifier",
+        "azureml.contrib.automl.dnn.forecasting.callbacks._run_update_base",
+    ):
+        importlib.import_module(module)
+
     # enable auto logging
     mlflow.autolog()
     # setup parameters
