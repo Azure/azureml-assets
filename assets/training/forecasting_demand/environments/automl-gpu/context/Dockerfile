@@ -25,9 +25,6 @@ RUN /opt/miniconda/bin/python -m pip install --upgrade --no-cache-dir 'cryptogra
     'torch==2.13.0' \
     'msgpack>=1.2.1' \
     'sqlparse>=0.6.0' && \
-    rm -rf $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pip-26.1.1.dist-info && \
-    rm -f $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pip/_vendor/bom.cdx.json \
-        $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pip/_vendor/vendor.txt && \
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
     conda clean -a -y
 
@@ -37,6 +34,7 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 ENV ENABLE_METADATA=true
 
+# Upgrade vulnerable OS packages inherited from the base image.
 RUN apt-get update && \
     apt-get install --only-upgrade -y --no-install-recommends \
         tar \
@@ -63,6 +61,7 @@ RUN apt-get update && \
         libpam-modules \
         libpam-modules-bin \
         libssl3 \
+        libgcrypt20=1.9.4-3ubuntu3.3 \
         openssl \
         libperl5.34 \
         perl \

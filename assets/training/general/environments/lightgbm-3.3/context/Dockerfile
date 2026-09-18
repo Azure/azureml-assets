@@ -9,11 +9,12 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
-# Upgrade OS packages to pull current Ubuntu security patches.
-# The current openmpi5.0-ubuntu24.04 base plus apt upgrade contains the required
-# Ubuntu security fixes, including systemd packages from USN-8626-1.
+# Upgrade OS packages to pull current Ubuntu security patches. The current base
+# already contains most required fixes; libgcrypt20 is upgraded here for USN-8711-1.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade \
+        libgcrypt20=1.10.3-2ubuntu0.2 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -24,13 +25,35 @@ RUN apt-get update && \
 # conda and pip dependencies together. Splitting them avoids the memory spike.
 
 # Step 1: Create conda env with only conda-channel packages (small, fast solve)
-# pip=26.1.2: fixes GHSA-wf93-45jw-7689.
+# pip=26.2.1: fixes GHSA-qwm4-qh6w-59xr and avoids stale vulnerable vendored BOM metadata.
+# setuptools=84.0.0: pinned transitive dep seeded by conda/pip; fixes CVE-2025-47273 and CVE-2026-59890.
+# msgpack-python=1.2.2: pinned transitive dep of distributed/dask; fixes GHSA-6v7p-g79w-8964.
 COPY conda_dependencies.yaml .
-RUN conda create -p $CONDA_PREFIX -q -y python=3.10 pip=26.1.2 'pandas~=1.5.3' 'scipy~=1.10.0' 'numpy~=1.22.0' -c conda-forge -c anaconda && \
+RUN conda create -p $CONDA_PREFIX -q -y python=3.10 pip=26.2.1 setuptools=84.0.0 msgpack-python=1.2.2 'pandas~=1.5.3' 'scipy~=1.10.0' 'numpy~=1.22.0' -c conda-forge -c anaconda && \
     conda clean -a -y
 
 # Step 2: Install pip packages separately (pip resolver uses less memory than conda's SAT solver)
-RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
+# Security vulnerability fixes
+# GitPython>=3.1.58: pinned transitive dep of azureml-core; fixes GHSA-hmq2-w58f-27jc,
+#   GHSA-jm78-9fvv-mhgr, GHSA-hh9p-6wh2-4mfc, GHSA-4gmw-gg2m-w46p,
+#   GHSA-9rj7-rf2p-w77r, and GHSA-wvpp-8hx9-p66j.
+# cryptography>=50.0.0: pinned transitive dep of azureml-core/azureml-mlflow; fixes GHSA-g6cj-pr64-35w5.
+# sqlparse>=0.6.0: pinned transitive dep of Django pulled by azureml-core; fixes
+#   GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr, GHSA-3496-9g83-7v6x, and GHSA-pwgv-4x5q-6m9f.
+# aiohttp / protobuf / distributed / pyarrow: kept overrides to ensure latest patched versions;
+#   parent constraints (azureml-mlflow caps mlflow-skinny<=3.9.0 -> protobuf<7,
+#   dask~=2026.3.0 -> distributed<2026.3.1) would otherwise allow older patch
+#   levels with outstanding CVEs, so explicit floor pins are required.
+# pyarrow>=23.0.1: pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg.
+# starlette>=1.0.1 / idna>=3.15: transitive via fastapi / requests.
+# h2>=4.4.1: pinned transitive dep brought in by the base miniconda env; fixes GHSA-6hr6-w5qg-qmwg.
+# setuptools>=84.0.0 / msgpack>=1.2.2: pinned transitive deps introduced while
+# resolving distributed/dask and pip build dependencies; fix CVE-2025-47273,
+# CVE-2026-59890, and GHSA-6v7p-g79w-8964.
+# pip vendor inventory files are removed because VCM scans them as installed
+# packages even though they are non-runtime metadata.
+RUN printf "setuptools>=84.0.0\nmsgpack>=1.2.2\n" > /tmp/pip-security-constraints.txt
+RUN PIP_CONSTRAINT=/tmp/pip-security-constraints.txt conda run -p $CONDA_PREFIX pip install --no-cache-dir \
     azureml-core=={{latest-pypi-version}} \
     azureml-defaults=={{latest-pypi-version}} \
     azureml-mlflow=={{latest-pypi-version}} \
@@ -50,22 +73,7 @@ RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
     py-cpuinfo==5.0.0 \
     'torch-tb-profiler~=0.4.0' \
     'starlette>=1.0.1' && \
-    rm conda_dependencies.yaml
-
-# Security vulnerability fixes
-# GitPython>=3.1.58: pinned transitive dep of azureml-core; fixes GHSA-hmq2-w58f-27jc,
-#   GHSA-jm78-9fvv-mhgr, GHSA-hh9p-6wh2-4mfc, GHSA-4gmw-gg2m-w46p,
-#   GHSA-9rj7-rf2p-w77r, and GHSA-wvpp-8hx9-p66j.
-# cryptography>=50.0.0: pinned transitive dep of azureml-core/azureml-mlflow; fixes GHSA-g6cj-pr64-35w5.
-# sqlparse>=0.6.0: pinned transitive dep of Django pulled by azureml-core; fixes
-#   GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr, GHSA-3496-9g83-7v6x, and GHSA-pwgv-4x5q-6m9f.
-# aiohttp / protobuf / distributed / pyarrow: kept overrides to ensure latest patched versions;
-#   parent constraints (azureml-mlflow caps mlflow-skinny<=3.9.0 -> protobuf<7,
-#   dask~=2026.3.0 -> distributed<2026.3.1) would otherwise allow older patch
-#   levels with outstanding CVEs, so explicit floor pins are required.
-# pyarrow>=23.0.1: pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg.
-# starlette>=1.0.1 / idna>=3.15: transitive via fastapi / requests.
-# h2>=4.4.1: pinned transitive dep brought in by the base miniconda env; fixes GHSA-6hr6-w5qg-qmwg.
-RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
-    'aiohttp>=3.14.0' 'protobuf>=6.33.5' 'distributed>=2026.1.0' 'GitPython>=3.1.58' 'cryptography>=50.0.0' 'sqlparse>=0.6.0' 'idna>=3.15' 'starlette>=1.0.1' 'pyarrow>=23.0.1' && \
-    /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'cryptography>=50.0.0' 'h2>=4.4.1' 'idna>=3.15'
+    PIP_CONSTRAINT=/tmp/pip-security-constraints.txt conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
+        'aiohttp>=3.14.0' 'protobuf>=6.33.5' 'distributed>=2026.1.0' 'GitPython>=3.1.58' 'cryptography>=50.0.0' 'sqlparse>=0.6.0' 'idna>=3.15' 'starlette>=1.0.1' 'pyarrow>=23.0.1' 'setuptools>=84.0.0' 'msgpack>=1.2.2' && \
+    PIP_CONSTRAINT=/tmp/pip-security-constraints.txt /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'cryptography>=50.0.0' 'h2>=4.4.1' 'idna>=3.15' && \
+    rm conda_dependencies.yaml /tmp/pip-security-constraints.txt

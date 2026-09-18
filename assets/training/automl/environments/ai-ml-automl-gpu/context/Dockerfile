@@ -3,34 +3,20 @@ FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04:{{latest-image-ta
 USER root
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl-dnn-gpu
-# Prepend path to AzureML conda environment
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
 COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/ /var/mlflow_resources/
 
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
-# ENV AML_APP_ROOT="/var/mlflow_resources"
-# ENV AZUREML_ENTRY_SCRIPT="mlflow_score_script.py"
 
 ENV ENABLE_METADATA=true
 
 RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
 
-# Pull current Ubuntu security errata; install build deps for LightGBM/XGBoost.
-# Temporary base-image remediation for PAM/glibc (USN-8601-1 and USN-8611-1).
-# Remove the explicit upgrades once the base image includes the patched packages.
+# Patch Ubuntu packages still vulnerable in the base image; install build deps for LightGBM/XGBoost.
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get install -y --only-upgrade \
-        libpam-runtime \
-        libpam0g \
-        libpam-modules \
-        libpam-modules-bin \
-        libc-bin \
-        libc-dev-bin \
-        libc6 \
-        libc6-dev \
-        locales && \
+        libgcrypt20 && \
     apt-get install -y --no-install-recommends \
         cmake \
         libboost-dev \
@@ -40,14 +26,10 @@ RUN apt-get update && \
 
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 'conda-forge::pip>=26.1,<27' conda-forge::tzdata -y
 
-###############################
-# Pre-Build LightGBM
-###############################
+# Pre-build LightGBM.
 RUN pip install --upgrade lightgbm==4.6.0
 
-###############################
-# Install GPU LightGBM and XgBoost
-###############################
+# Install GPU LightGBM and XGBoost.
 RUN pip install --upgrade --force-reinstall xgboost==1.5.2 pandas==1.5.3
 
 # Security: upgrade pip to fix CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9). Three pip
@@ -68,7 +50,6 @@ RUN conda install -n base 'conda-forge::pip>=26.1,<27' -y && \
     conda clean -a -y && \
     rm -rf /opt/miniconda/pkgs/pip-26.0* /opt/miniconda/pkgs/pip-26.0.1*
 
-# begin conda create
 # Install cudatoolkit via conda (not available on pip; single-package solve is trivial)
 RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     cudatoolkit=10.0.130 \
@@ -84,12 +65,9 @@ RUN pip install --no-cache-dir \
     'scipy==1.10.1' \
     'psutil>5.0.0,<6.0.0' \
     'pip>=26.1,<27'
-# end conda create
 
-# begin pip install
-# Install pip dependencies
+# Install AzureML dependencies.
 RUN pip install \
-                # begin pypi dependencies
                 azureml-core=={{latest-pypi-version}} \
                 azureml-mlflow=={{latest-pypi-version}} \
                 azureml-pipeline-core=={{latest-pypi-version}} \
@@ -110,8 +88,7 @@ RUN pip install --no-cache-dir \
                 azureml-train-automl-client=={{latest-pypi-version}} \
                 azureml-train-automl-runtime=={{latest-pypi-version}}
 
-RUN pip install --no-cache-dir --upgrade --no-deps 'azure-identity>=1.25.1'
-                # end pypi dependencies
+RUN pip install --no-cache-dir --upgrade 'azure-identity>=1.25.1'
 
 # ============================
 # Vulnerability security fixes - transitive dependency overrides
@@ -155,20 +132,10 @@ RUN pip install --no-cache-dir --upgrade \
 # The base Miniconda prefix carries its own copies of these packages, which the
 # AzureML conda environment above never touches, so patch them explicitly.
 #
-# pip's vendored manifests inherited from the base image still record
-# setuptools==70.3.0 long after setuptools itself has been upgraded, and the
-# scanner reports that stale entry as GHSA-5rjg-fvgr-3xxf / CVE-2025-47273 with
-# an empty install path. pip vendors no setuptools code, only the name, so the
-# entry is inaccurate rather than a real component. Drop just that line from
-# vendor.txt so the genuinely vendored packages stay listed, and drop
-# bom.cdx.json, which merely duplicates vendor.txt in CycloneDX form.
 RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade \
     'cryptography>=50.0.0' \
     'msgpack>=1.2.1' \
     'pydantic-settings>=2.14.2' \
-    'setuptools>=83.0.0' && \
-    find /opt/miniconda $AZUREML_CONDA_ENVIRONMENT_PATH -path '*/pip/_vendor/vendor.txt' \
-        -exec sed -i '/^setuptools==/d' {} + && \
-    find /opt/miniconda $AZUREML_CONDA_ENVIRONMENT_PATH -path '*/pip/_vendor/bom.cdx.json' -delete
+    'setuptools>=83.0.0'
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
