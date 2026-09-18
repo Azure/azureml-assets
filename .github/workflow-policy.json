@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "exceptions": {
+    "assets-docs.yaml": {
+      "events": ["push", "schedule", "workflow_dispatch"],
+      "reason": "Publishes documentation from repository branches; no PR-triggered execution."
+    },
+    "assets-release.yaml": {
+      "events": ["push", "schedule", "workflow_dispatch"],
+      "reason": "Releases assets from repository branches; no PR-triggered execution."
+    },
+    "assets-validation.yaml": {
+      "events": ["pull_request", "push", "workflow_dispatch"],
+      "reason": "Existing ordinary-PR validation; fork runs have no repository secrets and skip Azure login."
+    },
+    "check-changed-files.yaml": {
+      "events": ["workflow_call"],
+      "reason": "Read-only reusable collector; execution policy belongs to its entry-point workflows."
+    },
+    "check-execution-context.yaml": {
+      "events": ["workflow_call"],
+      "reason": "The shared fork-rejection gate itself; its rejection and output contract are validated separately."
+    },
+    "check-new-assets.yaml": {
+      "events": ["pull_request", "workflow_dispatch"],
+      "reason": "Existing read-only ordinary-PR asset approval check; no privileged PR-target event."
+    },
+    "check-workflow-policy.yaml": {
+      "events": ["workflow_call"],
+      "reason": "Trusted-base reusable policy validator; its checkout and execution contract are validated separately."
+    },
+    "close-stale-items.yml": {
+      "events": ["schedule", "workflow_dispatch"],
+      "reason": "Repository maintenance without PR-triggered execution."
+    },
+    "codeql-analysis.yml": {
+      "events": ["push", "pull_request", "schedule"],
+      "reason": "Existing CodeQL analysis on ordinary PRs; fork credential restrictions remain in effect."
+    },
+    "evaluation-on-cloud-tests.yaml": {
+      "events": ["pull_request", "workflow_dispatch"],
+      "reason": "Existing ordinary-PR unit tests without Azure login; fork tokens remain restricted."
+    },
+    "scripts-syntax.yaml": {
+      "events": ["pull_request", "workflow_dispatch"],
+      "reason": "Read-only copyright, syntax and documentation checks intentionally run on fork PRs."
+    },
+    "training-model-eval-unittests.yaml": {
+      "events": ["pull_request", "workflow_dispatch"],
+      "reason": "Existing ordinary-PR unit tests without Azure login; fork tokens remain restricted."
+    },
+    "training-model-mgmt-unittests.yaml": {
+      "events": ["workflow_dispatch"],
+      "reason": "Manually dispatched tests; the commented-out PR trigger is not enabled."
+    },
+    "workflow-policy.yaml": {
+      "events": ["pull_request_target"],
+      "reason": "Read-only trusted-base entry point that inspects PR workflow blobs as data and never executes PR code."
+    }
+  }
+}

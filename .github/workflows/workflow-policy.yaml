@@ -1,0 +1,20 @@
+name: Workflow policy
+
+on:
+  pull_request_target:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - edited
+
+permissions:
+  contents: read
+
+jobs:
+  workflow-policy:
+    uses: ./.github/workflows/check-workflow-policy.yaml
+    permissions:
+      contents: read
