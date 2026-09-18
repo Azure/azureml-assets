@@ -1,4 +1,7 @@
 *     @azure/aml-assets
+/.github/workflows/ @azure/aml-assets
+/.github/workflow-policy.json @azure/aml-assets
+/scripts/validation/ @azure/aml-assets
 /assets/aml-benchmark/ @azure/aml-assets @azure/aml-benchmarking
 /assets/benchmark/ @azure/aml-assets @azure/aims
 /assets/responsibleai/ @azure/aml-assets @azure/aml-rai

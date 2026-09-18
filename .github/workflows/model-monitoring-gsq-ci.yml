@@ -94,9 +94,9 @@ jobs:
           path: ${{ env.pytest_report_folder }}
   report:
       name: Publish test results
-      if: always()
+      if: always() && needs.check-execution-context.result == 'success' && needs.check-execution-context.outputs.continue == 'true'
       runs-on: ubuntu-latest
-      needs: run-momo-tests
+      needs: [check-execution-context, run-momo-tests]
 
       permissions:
         # Required for EnricoMi/publish-unit-test-result-action
