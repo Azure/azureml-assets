@@ -4,14 +4,6 @@ on:
   pull_request:
     branches:
       - main
-  pull_request_target:
-    branches:
-      - main
-    types:
-      - opened
-      - labeled
-      - synchronize
-      - reopened
   workflow_dispatch:
     inputs:
       asset_dirs:

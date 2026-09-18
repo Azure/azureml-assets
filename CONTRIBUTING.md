@@ -12,3 +12,14 @@ instructions provided by the bot. You will only need to do this once across all 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/)
 or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+
+## Pull request CI policy
+
+Workflows that use [the shared execution-context check](.github/workflows/check-execution-context.yaml)
+only run their build and test jobs for pull requests from branches in this repository
+or supported manual runs. Fork pull requests fail that check before those jobs run.
+The `safe to test` label is deprecated and no longer authorizes testing a fork.
+
+For contributions that need these workflows, work with a maintainer to review the
+changes before moving them to an in-repository branch. Other fork-safe validation
+workflows are unchanged.
