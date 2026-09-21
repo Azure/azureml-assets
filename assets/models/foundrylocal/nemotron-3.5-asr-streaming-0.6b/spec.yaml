@@ -3,6 +3,7 @@ name: nemotron-3.5-asr-streaming-0.6b
 path: ./
 isArchived: true
 system_metadata:
+  previewType: hideUI
   foundryLocal: ''
   deploymentOptions: ['Foundry Local on Devices']
 version: 1

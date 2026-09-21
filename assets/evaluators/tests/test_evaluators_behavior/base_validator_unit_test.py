@@ -170,12 +170,13 @@ class _ValidatorUnitTestSupport:
             "ConversationValidator _convert_kwargs_to_eval_input _do_eval _drop_mcp_approval_messages"
             " _get_token_metadata _is_intermediate_response _normalize_function_call_types"
             " _preprocess_messages _real_call _return_not_applicable_result _the_super_do_eval"
-            " _the_super_real_call"
+            " _split_messages_at_latest_user _the_super_real_call"
         ),
         "relevance": (
             "ConversationValidator _convert_kwargs_to_eval_input _do_eval _drop_mcp_approval_messages"
             " _get_token_metadata _is_intermediate_response _normalize_function_call_types"
-            " _preprocess_messages _real_call _return_not_applicable_result _the_super_real_call"
+            " _preprocess_messages _real_call _return_not_applicable_result _split_messages_at_latest_user"
+            " _the_super_real_call"
         ),
         "retrieval": (
             "_convert_kwargs_to_eval_input _do_eval _drop_mcp_approval_messages _get_token_metadata"
@@ -185,12 +186,12 @@ class _ValidatorUnitTestSupport:
         "similarity": (
             "_convert_kwargs_to_eval_input _do_eval _drop_mcp_approval_messages _get_token_metadata"
             " _is_intermediate_response _normalize_function_call_types _preprocess_messages _real_call"
-            " _return_not_applicable_result _the_super_do_eval"
+            " _return_not_applicable_result _split_messages_at_latest_user _the_super_do_eval"
         ),
         "response_completeness": (
             "_convert_kwargs_to_eval_input _do_eval _drop_mcp_approval_messages _get_token_metadata"
             " _is_intermediate_response _normalize_function_call_types _preprocess_messages _real_call"
-            " _return_not_applicable_result"
+            " _return_not_applicable_result _split_messages_at_latest_user"
         ),
         "groundedness": (
             "ConversationValidator EvaluationLevel MessagesOrQueryResponseInputValidator _build_result"

@@ -7,6 +7,7 @@ tags:
   supportsReasoning: ''
   contextLength: 0
 system_metadata:
+  previewType: hideUI
   alias: parakeet-tdt-0.6b-v2
   publisher: Microsoft
   directoryPath: v1

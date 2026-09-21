@@ -198,6 +198,20 @@ class TestRetrievalConversationContextExtraction:
 
         assert inputs == [{"query": "What is the warranty?", "context": "Explicit context"}]
 
+    def test_explicit_context_uses_latest_user_message_as_query(self):
+        """Messages with explicit context derive the query from the latest user turn."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        messages = [
+            {"role": "user", "content": "Earlier question"},
+            {"role": "assistant", "content": "Earlier answer"},
+            {"role": "user", "content": "Latest question"},
+            {"role": "assistant", "content": "Latest answer"},
+        ]
+
+        inputs = evaluator._convert_kwargs_to_eval_input(messages=messages, context="Explicit context")
+
+        assert inputs == [{"query": "Latest question", "context": "Explicit context"}]
+
     def test_conversation_wrapper_uses_tool_context_extraction(self):
         """The documented conversation input follows the same messages path."""
         evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")

@@ -7,6 +7,7 @@ tags:
   supportsReasoning: ''
   contextLength: 131072
 system_metadata:
+  previewType: hideUI
   alias: mistral-nemo-12b-instruct
   publisher: Microsoft
   directoryPath: v1
