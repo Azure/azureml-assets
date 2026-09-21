@@ -1,7 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: smollm3-3b
 path: ./
-isArchived: true
 system_metadata:
   previewType: hideUI
   foundryLocal: ''
