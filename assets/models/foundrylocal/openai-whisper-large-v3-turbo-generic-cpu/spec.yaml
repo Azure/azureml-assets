@@ -7,6 +7,7 @@ tags:
   capabilities: ''
   supportsReasoning: ''
 system_metadata:
+  previewType: hideUI
   alias: whisper-large-v3-turbo
   publisher: Microsoft
   directoryPath: v4

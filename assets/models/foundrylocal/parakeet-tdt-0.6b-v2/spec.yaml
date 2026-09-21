@@ -3,6 +3,7 @@ name: parakeet-tdt-0.6b-v2
 path: ./
 isArchived: true
 system_metadata:
+  previewType: hideUI
   foundryLocal: ''
   deploymentOptions: ['Foundry Local on Devices']
 version: 1

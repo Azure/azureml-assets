@@ -15,6 +15,7 @@ from .base_validator_unit_test import (
     SuperDoEvalNotApplicableUnitTests,
 )
 from ..common.evaluator_mock_config import (
+    create_mocked_evaluator,
     run_none_score_not_applicable,
     run_intermediate_response_not_applicable,
 )
@@ -107,6 +108,23 @@ class TestRelevanceEvaluatorBehavior(BaseEvaluatorBehaviorTest, BaseToolEvaluati
     # endregion
 
     evaluator_type = RelevanceEvaluator
+
+    def test_messages_split_at_latest_user_turn(self):
+        """Messages input sends only messages after the latest user turn as the response."""
+        evaluator = create_mocked_evaluator(RelevanceEvaluator, "relevance")
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "Earlier question"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "Earlier answer"}]},
+            {"role": "user", "content": [{"type": "text", "text": "Latest question"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "Latest answer"}]},
+        ]
+
+        evaluator(messages=messages)
+
+        flow_input = evaluator._flow.call_args.kwargs
+        assert "Latest question" in str(flow_input["query"])
+        assert "Latest answer" not in str(flow_input["query"])
+        assert "Latest answer" in str(flow_input["response"])
 
 
 # region Not-applicable handling tests (skipped score + intermediate response)

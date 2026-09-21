@@ -46,7 +46,7 @@ ENV CONDA_PREFIX=${AZUREML_CONDA_ENVIRONMENT_PATH}
 WORKDIR /
 
 # When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference==0.2.59 --no-cache-dir
+RUN pip install llm-optimized-inference==0.2.60 --no-cache-dir
 
 RUN pip install --no-cache-dir --no-deps flashinfer-python==0.6.16.post4
 

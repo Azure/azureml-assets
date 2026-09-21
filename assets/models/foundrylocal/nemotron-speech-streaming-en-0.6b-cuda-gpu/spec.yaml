@@ -7,6 +7,7 @@ tags:
   supportsReasoning: ''
   contextLength: 0
 system_metadata:
+  previewType: hideUI
   alias: nemotron-speech-streaming-en-0.6b
   publisher: Microsoft
   directoryPath: v2

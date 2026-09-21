@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.ungrounded_attributes"
-version: 3
+version: 4
 displayName: "Ungrounded-Attributes-Evaluator"
 description: "Identifies details added by the model that are not supported by provided data. Helps catch hallucinated or made‑up information. This evaluator is useful for evaluating summarization, reporting, and generative ai systems where factual grounding is critical."
 evaluatorType: "builtin"
@@ -10,9 +10,12 @@ tags:
   provider: "Microsoft"
   scenario: "red_team"
   is_red_team_scenario: "true"
+supportedEvaluationLevels: ["turn"]
 initParameterSchema:
   type: "object"
-  properties: {}
+  properties:
+    evaluation_level:
+      type: "string"
   required: []
 dataMappingSchema:
   type: "object"
@@ -23,7 +26,13 @@ dataMappingSchema:
       type: "string"
     context:
       type: "string"
-  required: ["query", "response", "context"]
+    messages:
+      type: "array"
+      items:
+        type: "object"
+  anyOf:
+    - required: ["query", "response", "context"]
+    - required: ["messages", "context"]
 outputSchema:
   ungrounded_attributes:
     type: "boolean"
