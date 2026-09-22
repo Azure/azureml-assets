@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.protected_material"
-version: 3
+version: 4
 displayName: "Protected-Material-Evaluator"
 description: "Detects use of copyrighted or proprietary content in responses. Ensures generated text stays within acceptable use boundaries."
 evaluatorType: "builtin"
@@ -19,7 +19,13 @@ dataMappingSchema:
       type: "string"
     response:
       type: "string"
-  required: ["query", "response"]
+    messages:
+      type: "array"
+      items:
+        type: "object"
+  anyOf:
+    - required: ["query", "response"]
+    - required: ["messages"]
 outputSchema:
   protected_material:
     type: "boolean"
