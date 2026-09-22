@@ -4,6 +4,8 @@
 """Protect the shared CI policy against label-based fork approval."""
 
 from pathlib import Path
+import shlex
+import subprocess
 
 import pytest
 import yaml
@@ -109,3 +111,67 @@ def test_all_downstream_jobs_respect_rejection(name):
         if "always()" in job.get("if", ""):
             assert GATE_JOB in job["needs"]
             assert job["if"] == REPORT_GATE
+
+
+def test_assets_test_has_fixed_summary_check():
+    """Keep the required check separate from matrix job display names."""
+    jobs = load_workflow("assets-test.yaml")["jobs"]
+    assert jobs["test"]["name"] == "Test asset"
+    assert jobs["test-summary"]["name"] == "Test"
+    assert jobs["test-summary"]["if"] == REPORT_GATE
+    assert set(jobs["test-summary"]["needs"]) == {
+        GATE_JOB, "check-directory-file-changes", "setup", "test",
+    }
+
+
+@pytest.mark.parametrize(
+    "state,expected",
+    [
+        ({"CHANGES_RESULT": "success", "CHANGED_FILES": "assets/a", "SETUP_RESULT": "success",
+          "TEST_COUNT": "2", "TEST_RESULT": "success"}, 0),
+        ({"CHANGES_RESULT": "success", "CHANGED_FILES": "assets/a", "SETUP_RESULT": "success",
+          "TEST_COUNT": "2", "TEST_RESULT": "failure"}, 1),
+        ({"CHANGES_RESULT": "success", "CHANGED_FILES": "assets/a", "SETUP_RESULT": "success",
+          "TEST_COUNT": "2", "TEST_RESULT": "cancelled"}, 1),
+        ({"CHANGES_RESULT": "success", "CHANGED_FILES": "assets/a", "SETUP_RESULT": "failure",
+          "TEST_COUNT": "", "TEST_RESULT": "skipped"}, 1),
+        ({"CHANGES_RESULT": "success", "CHANGED_FILES": "assets/a", "SETUP_RESULT": "cancelled",
+          "TEST_COUNT": "", "TEST_RESULT": "skipped"}, 1),
+        ({"CHANGES_RESULT": "success", "CHANGED_FILES": "assets/a", "SETUP_RESULT": "skipped",
+          "TEST_COUNT": "", "TEST_RESULT": "skipped"}, 1),
+        ({"CHANGES_RESULT": "success", "CHANGED_FILES": "", "SETUP_RESULT": "skipped",
+          "TEST_COUNT": "", "TEST_RESULT": "skipped"}, 0),
+        ({"CHANGES_RESULT": "success", "CHANGED_FILES": "assets/a", "SETUP_RESULT": "success",
+          "TEST_COUNT": "0", "TEST_RESULT": "skipped"}, 0),
+        ({"CHANGES_RESULT": "success", "CHANGED_FILES": "assets/a", "SETUP_RESULT": "success",
+          "TEST_COUNT": "1", "TEST_RESULT": "skipped"}, 1),
+        ({"CHANGES_RESULT": "success", "CHANGED_FILES": "assets/a", "SETUP_RESULT": "success",
+          "TEST_COUNT": "", "TEST_RESULT": "skipped"}, 1),
+        ({"CHANGES_RESULT": "success", "CHANGED_FILES": "assets/a", "SETUP_RESULT": "success",
+          "TEST_COUNT": "invalid", "TEST_RESULT": "skipped"}, 1),
+        ({"CHANGES_RESULT": "success", "CHANGED_FILES": "assets/a", "SETUP_RESULT": "success",
+          "TEST_COUNT": "00", "TEST_RESULT": "skipped"}, 1),
+        ({"CHANGES_RESULT": "success", "CHANGED_FILES": "assets/a", "SETUP_RESULT": "success",
+          "TEST_COUNT": "01", "TEST_RESULT": "success"}, 1),
+        ({"CHANGES_RESULT": "failure", "CHANGED_FILES": "", "SETUP_RESULT": "skipped",
+          "TEST_COUNT": "", "TEST_RESULT": "skipped"}, 1),
+        ({"CHANGES_RESULT": "cancelled", "CHANGED_FILES": "", "SETUP_RESULT": "skipped",
+          "TEST_COUNT": "", "TEST_RESULT": "skipped"}, 1),
+    ],
+)
+def test_assets_test_summary_result(state, expected, tmp_path):
+    """Exercise successful, failed, cancelled and legitimate skip outcomes."""
+    step = load_workflow("assets-test.yaml")["jobs"]["test-summary"]["steps"][0]
+    environment = "\n".join(
+        f"export {name}={shlex.quote(value)}" for name, value in state.items()
+    )
+    script = tmp_path / "test-summary.sh"
+    script.write_text(f"{environment}\n{step['run']}", encoding="utf-8", newline="\n")
+    result = subprocess.run(
+        ["bash", script.name],
+        cwd=tmp_path,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == expected, result.stdout + result.stderr
