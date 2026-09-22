@@ -1,7 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen3-0.6b
 path: ./
-isArchived: true
 system_metadata:
   previewType: hideUI
   foundryLocal: ''
