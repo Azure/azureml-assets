@@ -28,14 +28,21 @@ RUN apt-get update && \
         runit \
         unzip && \
     apt-get install -y --only-upgrade \
+        coreutils \
+        diffutils \
         libc-bin \
         libc-dev-bin \
         libc6 \
         libc6-dev \
+        libattr1 \
+        libevent-core-2.1-7 \
+        libgcrypt20 \
         libpam-modules \
         libpam-modules-bin \
         libpam-runtime \
         libpam0g \
+        libp11-kit0 \
+        libssh-4 \
         locales \
         rsyslog && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
@@ -93,16 +100,12 @@ RUN pip install --no-cache-dir \
                 azureml-automl-dnn-nlp=={{latest-pypi-version}}
 
 # Separate updates for fixing vulnerabilities.
-# Doing it  separately from pip install above to avoid conflict with other packages
-# We should aim for this list to be empty with new and patched releases
-# by fixing dependencies in the base packages
+# Keep this list small; prefer fixed parent packages when available.
 RUN pip install pyarrow==14.0.2 \
                 accelerate==1.12.0 
 
-# Override transformers to fix GHSA-69w3-r845-3855
-# Root cause: azureml-automl-dnn-nlp==1.62.0 (latest as of 2026-05-26)
-# pins transformers==4.53.0; cannot upgrade parent.
-RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.5.4'
+# transformers is a pinned transitive dep of azureml-automl-dnn-nlp; fixes GHSA-69w3-r845-3855 and GHSA-xrqw-3rrv-vx5w.
+RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.10.0'
 
 # Security: upgrade pip to fix self-update vulnerabilities in the AzureML conda env.
 # pip is its own parent, so explicit upgrade is the only remediation.
@@ -132,11 +135,10 @@ RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3'
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3'
 RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3' 'cryptography>=50.0.0'
 
-# torch is pinned by the ACPT base image in the ptca env and by
-# azureml-automl-dnn-nlp in this AzureML env; upgrade both for GHSA-rrmf-rvhw-rf47,
-# GHSA-vgrw-7cvw-pwgx, and GHSA-qfhq-4f3w-5fph while keeping CUDA 12.6 wheels.
-RUN pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 'torch==2.13.0+cu126'
-RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 'torch==2.13.0+cu126'
+# NOT FIXED HERE - torch (GHSA-rrmf-rvhw-rf47, GHSA-vgrw-7cvw-pwgx,
+# GHSA-qfhq-4f3w-5fph) is owned by the ACPT base image and AzureML NLP runtime
+# as matched torch/torchvision/torchaudio stacks. Overriding torch alone breaks
+# those companion packages; these findings require patched parent releases.
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'setuptools>=83.0.0'
 
 # Apply the same setuptools security fix in the AzureML and base conda envs.
@@ -153,12 +155,4 @@ RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d"
 
 RUN rm -rf /opt/conda/pkgs/
-
-# Remove stale pip vendored dependency metadata that scanners otherwise report
-# as setuptools 70.3.0 and msgpack 1.1.2 after the real packages are patched.
-RUN set -eux; \
-    find / -xdev -path '*/site-packages/pip/_vendor/bom.cdx.json' -type f -delete; \
-    find /opt /azureml-envs /root -type d \( -name 'setuptools-70.3.0.dist-info' -o -name 'msgpack-1.1.2.dist-info' \) -prune -exec rm -rf {} +; \
-    find /opt /azureml-envs /root -path '*/_vendor/vendor.txt' -type f -exec \
-        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +
 # end pip install

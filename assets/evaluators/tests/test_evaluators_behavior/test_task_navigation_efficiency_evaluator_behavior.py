@@ -302,6 +302,34 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior(BaseCodeEvaluatorRunner):
         result_data = self._extract_and_print_result(results, "Alias - response only")
         self.assert_pass(result_data)
 
+    def test_messages_extracts_actions_after_latest_user(self):
+        """Messages input evaluates only assistant tool calls after the latest user turn."""
+        messages = [
+            {"role": "user", "content": "earlier query"},
+            {
+                "role": "assistant",
+                "content": [
+                    {
+                        "type": "tool_call",
+                        "tool_call_id": "ignored_call",
+                        "name": "ignored_tool",
+                        "arguments": {},
+                    }
+                ],
+            },
+            {"role": "user", "content": "latest query"},
+            *[message for message in self.VALID_ACTIONS if message["role"] == "assistant"],
+        ]
+
+        results = self._run_evaluation(
+            messages=messages,
+            expected_actions=self.VALID_EXPECTED_ACTIONS,
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+
+        result_data = self._extract_and_print_result(results, "Messages - latest turn actions")
+        self.assert_pass(result_data)
+
     def test_ground_truth_alias_only(self):
         """'ground_truth' alias maps to 'expected_actions' when expected_actions is absent."""
         results = self._run_evaluation(
