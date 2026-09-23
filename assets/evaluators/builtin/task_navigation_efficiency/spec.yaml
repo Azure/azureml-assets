@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.task_navigation_efficiency"
-version: 12
+version: 13
 displayName: "Task-Navigation-Efficiency-Evaluator"
 description: "Determines whether an agent’s sequence of steps (e.g., tool calls and parameters) matches an optimal or expected path of actions for completing a task. Use it to evaluate how effectively an agent follows expected sequence of actions and executes multi-step workflows."
 evaluatorType: "builtin"
@@ -23,6 +23,10 @@ dataMappingSchema:
         - type: "array"
           items:
             type: "object"
+    messages:
+      type: "array"
+      items:
+        type: "object"
     expected_actions:
       anyOf:
         - type: "array"
@@ -33,7 +37,9 @@ dataMappingSchema:
             { type: "array", items: { type: "string" } },
             { type: "object" }
           ]
-  required: ["actions", "expected_actions"]
+  anyOf:
+    - required: ["actions", "expected_actions"]
+    - required: ["messages", "expected_actions"]
 outputSchema:
   task_navigation_efficiency:
     type: "boolean"

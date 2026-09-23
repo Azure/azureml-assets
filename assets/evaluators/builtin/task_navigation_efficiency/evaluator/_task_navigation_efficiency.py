@@ -149,6 +149,26 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
     _INPUT_ALIASES = {"actions": "response", "expected_actions": "ground_truth"}
     """Canonical eval-input keys mapped to their accepted SDK-style aliases."""
 
+    @staticmethod
+    def _extract_response_from_messages(messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Return assistant messages after the latest user turn."""
+        latest_user_index = max(
+            (index for index, message in enumerate(messages) if message.get("role") == "user"),
+            default=-1,
+        )
+        if latest_user_index == -1:
+            raise EvaluationException(
+                "messages must contain at least one message with role 'user'.",
+                target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
+                category=ErrorCategory.INVALID_VALUE,
+                blame=ErrorBlame.USER_ERROR,
+            )
+        return [
+            message
+            for message in messages[latest_user_index + 1:]
+            if message.get("role") == "assistant"
+        ]
+
     @override
     def __init__(
         self,
@@ -204,6 +224,8 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         for canonical, alias in self._INPUT_ALIASES.items():
             if eval_input.get(canonical) is None and eval_input.get(alias) is not None:
                 eval_input[canonical] = eval_input[alias]
+        if eval_input.get("actions") is None and eval_input.get("messages") is not None:
+            eval_input["actions"] = self._extract_response_from_messages(eval_input["messages"])
 
     @override
     async def _real_call(self, **kwargs):
@@ -716,6 +738,15 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         :rtype: Dict[str, Union[float, str, Dict[str, float]]]
         """
 
+    @overload
+    def __call__(  # type: ignore
+        self,
+        *,
+        messages: List[Dict[str, Any]],
+        expected_actions: Union[List[str], Tuple[List[str], Dict[str, Dict[str, str]]]],
+    ) -> Dict[str, Union[float, str, Dict[str, float]]]:
+        """Evaluate tool calls from assistant messages after the latest user turn."""
+
     @override
     def __call__(
         self,
@@ -727,6 +758,8 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
 
         :keyword actions: The agent's actions containing tool calls.
         :paramtype actions: Union[str, List[Dict[str, Any]]]
+        :keyword messages: Conversation messages. Assistant messages after the latest user turn are evaluated.
+        :paramtype messages: List[Dict[str, Any]]
         :keyword expected_actions: List of expected tool/action steps or tuple of (tool names, parameters dict).
         :paramtype expected_actions: Union[List[str], Tuple[List[str], Dict[str, Dict[str, str]]]]
         :return: The task navigation efficiency scores and results.
