@@ -1,12 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: gpt-oss-20b-generic-gpu
 path: ./
-isArchived: true
 tags:
   contextLength: 131072
   capabilities: reasoning
   supportsReasoning: ''
 system_metadata:
+  previewType: hideUI
   alias: gpt-oss-20b
   publisher: Microsoft
   directoryPath: v1

@@ -1,12 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: mistral-nemo-12b-instruct-generic-gpu
 path: ./
-isArchived: true
 tags:
   capabilities: tool-calling
   supportsReasoning: ''
   contextLength: 131072
 system_metadata:
+  previewType: hideUI
   alias: mistral-nemo-12b-instruct
   publisher: Microsoft
   directoryPath: v1

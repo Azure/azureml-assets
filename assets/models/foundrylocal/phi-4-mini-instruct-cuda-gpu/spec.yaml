@@ -1,12 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Phi-4-mini-instruct-cuda-gpu
 path: ./
-isArchived: true
 tags:
   capabilities: tool-calling
   supportsReasoning: ''
   contextLength: 131072
 system_metadata:
+  previewType: hideUI
   alias: phi-4-mini
   publisher: Microsoft
   directoryPath: v5

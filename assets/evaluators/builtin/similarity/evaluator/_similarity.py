@@ -6,7 +6,7 @@ import logging
 import math
 import os
 import re
-from typing import Dict, Union
+from typing import Dict, List, Tuple, Union
 
 from typing_extensions import overload, override
 
@@ -27,12 +27,25 @@ from azure.ai.evaluation._common.constants import PROMPT_BASED_REASON_EVALUATORS
 from azure.ai.evaluation._common.utils import parse_quality_evaluator_reason_score
 
 try:  # azure-ai-evaluation >= 1.18.1
-    from azure.ai.evaluation._common.utils import _is_intermediate_response, _preprocess_messages
+    from azure.ai.evaluation._common.utils import (
+        _is_intermediate_response,
+        _preprocess_messages,
+        _split_messages_at_latest_user,
+    )
 except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
     from azure.ai.evaluation._evaluators._common._base_prompty_eval import (
         _is_intermediate_response,
         _preprocess_messages,
     )
+
+    def _split_messages_at_latest_user(messages: List[dict]) -> Tuple[List[dict], List[dict]]:
+        latest_user_index = max(
+            (index for index, message in enumerate(messages) if message.get("role") == "user"),
+            default=-1,
+        )
+        if latest_user_index == -1:
+            raise ValueError("messages must contain at least one message with role 'user'.")
+        return messages[: latest_user_index + 1], messages[latest_user_index + 1:]
 
 # Re-exported so the module keeps exposing the message-preprocessing helpers used
 # by the test suite; they are invoked indirectly through _preprocess_messages.
@@ -188,6 +201,10 @@ class SimilarityEvaluator(PromptyEvaluatorBase):
         :return: The similarity score.
         :rtype: Dict[str, float]
         """
+
+    @overload
+    def __call__(self, *, messages: List[dict], ground_truth: str) -> Dict[str, float]:
+        """Evaluate similarity using messages split at the latest user turn."""
 
     @override
     def __call__(  # pylint: disable=docstring-missing-param
@@ -399,6 +416,12 @@ class SimilarityEvaluator(PromptyEvaluatorBase):
         :return: The evaluation result.
         :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
         """
+        messages = kwargs.pop("messages", None)
+        if messages is not None:
+            query_messages, response_messages = _split_messages_at_latest_user(messages)
+            kwargs["query"] = query_messages
+            kwargs["response"] = response_messages
+
         # Convert inputs into list of evaluable inputs.
         try:
             eval_input_list = self._convert_kwargs_to_eval_input(**kwargs)

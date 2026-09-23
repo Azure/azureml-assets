@@ -1,12 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen3-14b-cuda-gpu
 path: ./
-isArchived: true
 tags:
   capabilities: reasoning,tool-calling
   supportsReasoning: 'true'
   contextLength: 40960
 system_metadata:
+  previewType: hideUI
   alias: qwen3-14b
   publisher: Microsoft
   directoryPath: v2

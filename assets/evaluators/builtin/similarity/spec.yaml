@@ -32,7 +32,13 @@ dataMappingSchema:
             type: "object"
     ground_truth:
       type: "string"
-  required: ["query", "response", "ground_truth"]
+    messages:
+      type: "array"
+      items:
+        type: "object"
+  anyOf:
+    - required: ["query", "response", "ground_truth"]
+    - required: ["messages", "ground_truth"]
 outputSchema:
   similarity:
     type: "ordinal"

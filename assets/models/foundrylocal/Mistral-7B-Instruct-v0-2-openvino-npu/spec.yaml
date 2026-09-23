@@ -1,12 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Mistral-7B-Instruct-v0-2-openvino-npu
 path: ./
-isArchived: true
 tags:
   contextLength: 4224
   capabilities: ''
   supportsReasoning: ''
 system_metadata:
+  previewType: hideUI
   alias: mistral-7b-v0.2
   publisher: Microsoft
   directoryPath: v3

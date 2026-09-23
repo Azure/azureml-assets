@@ -1,12 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: openai-whisper-small-generic-cpu
 path: ./
-isArchived: true
 tags:
   contextLength: 448
   capabilities: ''
   supportsReasoning: ''
 system_metadata:
+  previewType: hideUI
   alias: whisper-small
   publisher: Microsoft
   directoryPath: v4

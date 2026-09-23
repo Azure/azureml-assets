@@ -1,12 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: smollm3-3b-generic-gpu
 path: ./
-isArchived: true
 tags:
   capabilities: reasoning,tool-calling
   supportsReasoning: 'true'
   contextLength: 65536
 system_metadata:
+  previewType: hideUI
   alias: smollm3-3b
   publisher: Microsoft
   directoryPath: v1

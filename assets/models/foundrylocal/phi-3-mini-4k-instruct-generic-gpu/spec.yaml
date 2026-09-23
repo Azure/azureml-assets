@@ -1,12 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Phi-3-mini-4k-instruct-generic-gpu
 path: ./
-isArchived: true
 tags:
   contextLength: 4096
   capabilities: ''
   supportsReasoning: ''
 system_metadata:
+  previewType: hideUI
   alias: phi-3-mini-4k
   publisher: Microsoft
   directoryPath: v2

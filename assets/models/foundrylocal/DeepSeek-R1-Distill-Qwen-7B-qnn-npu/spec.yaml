@@ -1,12 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: deepseek-r1-distill-qwen-7b-qnn-npu
 path: ./
-isArchived: true
 tags:
   capabilities: reasoning
   supportsReasoning: 'true'
   contextLength: 4096
 system_metadata:
+  previewType: hideUI
   alias: deepseek-r1-7b
   publisher: Microsoft
   directoryPath: v2

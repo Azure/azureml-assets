@@ -1,12 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen2.5-7b-instruct-openvino-npu
 path: ./
-isArchived: true
 tags:
   capabilities: tool-calling
   supportsReasoning: ''
   contextLength: 4224
 system_metadata:
+  previewType: hideUI
   alias: qwen2.5-7b
   publisher: Microsoft
   directoryPath: v4

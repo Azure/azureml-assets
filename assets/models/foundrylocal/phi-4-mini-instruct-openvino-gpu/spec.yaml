@@ -1,12 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: phi-4-mini-instruct-openvino-gpu
 path: ./
-isArchived: true
 tags:
   capabilities: tool-calling
   supportsReasoning: ''
   contextLength: 4096
 system_metadata:
+  previewType: hideUI
   alias: phi-4-mini
   publisher: Microsoft
   directoryPath: v2

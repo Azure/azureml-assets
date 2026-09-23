@@ -1,12 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen2.5-14b-instruct-cuda-gpu
 path: ./
-isArchived: true
 tags:
   capabilities: tool-calling
   supportsReasoning: ''
   contextLength: 32768
 system_metadata:
+  previewType: hideUI
   alias: qwen2.5-14b
   publisher: Microsoft
   directoryPath: v4

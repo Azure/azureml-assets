@@ -4,7 +4,7 @@ on:
   workflow_call:
     outputs:
       continue:
-        description: Whether futher jobs should contine
+        description: Whether further jobs should continue
         value: ${{ jobs.check-execution-context.outputs.continue }}
       forked_pr:
         description: Whether the event is operating from a forked PR
@@ -22,26 +22,21 @@ jobs:
     permissions:
       # Required to clone repo
       contents: read
-      # pull-requests: write
 
     steps:
-      - name: Check event type
-        run: echo "continue=${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork == (github.event_name == 'pull_request_target') }}" >> $GITHUB_ENV
-      
-      - name: Check PR labels if forked
-        if: fromJSON(env.continue) && github.event.pull_request.head.repo.fork == true && !contains(github.event.pull_request.labels.*.name, 'safe to test')
+      # Some callers rely on job success rather than the continue output.
+      - name: Reject fork pull requests
+        if: github.event.pull_request && github.event.pull_request.head.repo.full_name != github.repository
         run: |
-          echo "::error::No PRs from a fork are allowed. Please create a PR from a branch. Join a group with write permissions if needed."
+          echo "::error::Fork pull requests cannot run these workflows. Submit a pull request from a branch in this repository."
           exit 1
 
-      # - name: Remove label
-      #   uses: actions-ecosystem/action-remove-labels@v1
-      #   with:
-      #     labels: 'safe to test'
-      
+      - name: Check event type
+        run: echo "continue=${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) }}" >> "$GITHUB_ENV"
+
       - name: Set forked PR flag
         if: fromJSON(env.continue)
-        run: echo "forked_pr=${{ github.event.pull_request.head.repo.fork == true }}" >> $GITHUB_ENV
+        run: echo "forked_pr=false" >> "$GITHUB_ENV"
 
     outputs:
       continue: ${{ env.continue }}

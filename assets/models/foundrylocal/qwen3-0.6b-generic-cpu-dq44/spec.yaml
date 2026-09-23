@@ -1,12 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen3-0.6b-generic-cpu-dq44
 path: ./
-isArchived: true
 tags:
   contextLength: 40960
   capabilities: reasoning
   supportsReasoning: 'true'
 system_metadata:
+  previewType: hideUI
   alias: qwen3-0.6b-generic-cpu-dq44
   publisher: Microsoft
   directoryPath: v2

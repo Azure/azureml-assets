@@ -1,12 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: phi-3.5-mini-instruct-qnn-npu
 path: ./
-isArchived: true
 tags:
   contextLength: 131072
   capabilities: ''
   supportsReasoning: ''
 system_metadata:
+  previewType: hideUI
   alias: phi-3.5-mini
   publisher: Microsoft
   directoryPath: v3

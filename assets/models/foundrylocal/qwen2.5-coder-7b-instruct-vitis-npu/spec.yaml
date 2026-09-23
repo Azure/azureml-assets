@@ -1,12 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen2.5-coder-7b-instruct-vitis-npu
 path: ./
-isArchived: true
 tags:
   capabilities: tool-calling
   supportsReasoning: ''
   contextLength: 32768
 system_metadata:
+  previewType: hideUI
   alias: qwen2.5-coder-7b
   publisher: Microsoft
   directoryPath: v2

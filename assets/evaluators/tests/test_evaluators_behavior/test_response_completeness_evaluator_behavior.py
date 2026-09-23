@@ -67,6 +67,22 @@ class TestResponseCompletenessEvaluatorBehavior(BasePromptyEvaluatorRunner):
         result_data = self._extract_and_print_result(results, "valid-string-inputs")
         self.assert_pass(result_data)
 
+    def test_messages_split_at_latest_user_turn(self) -> None:
+        """Messages input evaluates only the response after the latest user turn."""
+        evaluator = create_mocked_evaluator(ResponseCompletenessEvaluator, "response_completeness")
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "Earlier question"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "Earlier answer"}]},
+            {"role": "user", "content": [{"type": "text", "text": "Latest question"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "Latest answer"}]},
+        ]
+
+        evaluator(messages=messages, ground_truth="Latest answer")
+
+        flow_input = evaluator._flow.call_args.kwargs
+        assert "Latest answer" in str(flow_input["response"])
+        assert "Earlier answer" not in str(flow_input["response"])
+
     def test_valid_different_string_lengths(self) -> None:
         """Test case: Valid inputs with different string lengths.
 

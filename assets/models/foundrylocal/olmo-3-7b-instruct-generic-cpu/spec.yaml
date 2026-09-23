@@ -1,12 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: olmo-3-7b-instruct-generic-cpu
 path: ./
-isArchived: true
 tags:
   capabilities: tool-calling
   supportsReasoning: ''
   contextLength: 65536
 system_metadata:
+  previewType: hideUI
   alias: olmo-3-7b-instruct
   publisher: Microsoft
   directoryPath: v1

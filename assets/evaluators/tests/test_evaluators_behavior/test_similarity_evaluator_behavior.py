@@ -96,6 +96,23 @@ class TestSimilarityEvaluatorBehavior(BasePromptyEvaluatorRunner):
         result_data = self._extract_and_print_result(results, "All Valid")
         self.assert_pass(result_data)
 
+    def test_messages_split_at_latest_user_turn(self):
+        """Messages input uses history through the latest user turn as the query."""
+        evaluator = create_mocked_evaluator(SimilarityEvaluator, "similarity")
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "Earlier question"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "Earlier answer"}]},
+            {"role": "user", "content": [{"type": "text", "text": "Latest question"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "Latest answer"}]},
+        ]
+
+        evaluator(messages=messages, ground_truth=self.PERFECT_GROUND_TRUTH)
+
+        flow_input = evaluator._flow.call_args.kwargs
+        assert "Latest question" in str(flow_input["query"])
+        assert "Latest answer" not in str(flow_input["query"])
+        assert "Latest answer" in str(flow_input["response"])
+
     # ==================== PERFECT SIMILARITY TESTS ====================
 
     def test_identical_response_and_ground_truth(self):

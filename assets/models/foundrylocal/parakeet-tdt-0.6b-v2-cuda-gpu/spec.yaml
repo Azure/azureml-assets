@@ -1,12 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: parakeet-tdt-0.6b-v2-cuda-gpu
 path: ./
-isArchived: true
 tags:
   capabilities: ''
   supportsReasoning: ''
   contextLength: 0
 system_metadata:
+  previewType: hideUI
   alias: parakeet-tdt-0.6b-v2
   publisher: Microsoft
   directoryPath: v1
