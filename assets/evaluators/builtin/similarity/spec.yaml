@@ -25,7 +25,11 @@ dataMappingSchema:
     query:
       type: "string"
     response:
-      type: "string"
+      anyOf:
+        - type: "string"
+        - type: "array"
+          items:
+            type: "object"
     ground_truth:
       type: "string"
     messages:
