@@ -75,20 +75,25 @@ RUN curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go
  && rm /tmp/go.tar.gz
 ENV PATH=/usr/local/go/bin:$PATH
 # Build env replicates trivy's magefile (CGO disabled, jsonv2 experiment, version ldflag).
-# No module pins are needed here: trivy v0.74.0's go.mod already carries fixed versions of
-# every dep previously pinned (x/crypto 0.55.0, x/mod 0.40.0, x/net 0.58.0, x/text 0.41.0,
-# grpc 1.82.1, moby/buildkit 0.32.2, oras-go/v2 2.6.2). Add a `go get pkg@version` below
-# only for a module a future tagged release still lags, and drop it once the release
-# catches up.
+# Trivy v0.74.0 still needs these module fixes:
+# grpc 1.83.2: CVE-2026-84304, CVE-2026-84303, CVE-2026-84445.
+# x/crypto 0.56.0: CVE-2026-78662, CVE-2026-56855.
+# containerd/v2 2.3.5: CVE-2026-53495; swag/jsonutils 0.27.1: GHSA-xh24-9qpg-8w28.
+# Drop each override once the Trivy release includes that fixed version or newer.
 RUN git clone --depth 1 --branch v${TRIVY_VERSION} https://github.com/aquasecurity/trivy.git /tmp/trivy \
  && cd /tmp/trivy \
+ && go get google.golang.org/grpc@v1.83.2 \
+      golang.org/x/crypto@v0.56.0 \
+      github.com/containerd/containerd/v2@v2.3.5 \
+      github.com/go-openapi/swag/jsonutils@v0.27.1 \
+ && go mod tidy \
  && CGO_ENABLED=0 GOEXPERIMENT=jsonv2 go build \
       -ldflags="-s -w -X=github.com/aquasecurity/trivy/pkg/version/app.ver=${TRIVY_VERSION}" \
       -o /out/trivy ./cmd/trivy \
  && test -x /out/trivy \
  && /out/trivy --version \
  && echo "--- linked Go module versions (verifying CVE-fix pins) ---" \
- && go version -m /out/trivy | grep -E '(stdlib|oras-go|rekor|golang\.org/x/(crypto|mod|net|text)|in-toto-golang|go-git/v5|go-billy/v5|containerd|grpc|buildkit)' \
+ && go version -m /out/trivy | grep -E '(stdlib|oras-go|rekor|golang\.org/x/(crypto|mod|net|text)|in-toto-golang|go-git/v5|go-billy/v5|containerd|grpc|buildkit|go-openapi/swag/jsonutils)' \
  && rm -rf /tmp/trivy
 
 # =========================================
