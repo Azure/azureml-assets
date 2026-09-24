@@ -123,7 +123,12 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
             default=-1,
         )
         if latest_user_index == -1:
-            raise ValueError("messages must contain at least one message with role 'user'.")
+            raise EvaluationException(
+                message="messages must contain at least one message with role 'user'.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=ErrorTarget.TASK_ADHERENCE_EVALUATOR,
+            )
         return messages[: latest_user_index + 1], messages[latest_user_index + 1:]
 
     def _wrap_string_messages(query: str, response: str) -> Tuple[List[dict], List[dict]]:

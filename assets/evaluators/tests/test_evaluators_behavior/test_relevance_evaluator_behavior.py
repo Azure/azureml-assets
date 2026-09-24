@@ -3,7 +3,10 @@
 
 """Behavioral tests for Relevance Evaluator."""
 
+import asyncio
+
 import pytest
+from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
 from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest, _TurnLevelUtilE2ETests
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
@@ -20,6 +23,38 @@ from ..common.evaluator_mock_config import (
     run_intermediate_response_not_applicable,
 )
 from ...builtin.relevance.evaluator._relevance import RelevanceEvaluator
+
+
+@pytest.mark.unittest
+class TestRelevanceErrorCoverage:
+    """Cover deterministic relevance error responses."""
+
+    def test_do_eval_rejects_non_text_conversation_input(self):
+        """Missing query and response fields produce a classified user error."""
+        evaluator = create_mocked_evaluator(RelevanceEvaluator, "relevance")
+
+        with pytest.raises(EvaluationException) as exc_info:
+            asyncio.run(evaluator._do_eval({"messages": []}))
+
+        assert exc_info.value.blame == ErrorBlame.USER_ERROR
+        assert exc_info.value.category == ErrorCategory.INVALID_VALUE
+        assert exc_info.value.target == ErrorTarget.CONVERSATION
+
+    def test_do_eval_rejects_invalid_flow_output(self):
+        """A non-dictionary flow result produces a classified system error."""
+        evaluator = create_mocked_evaluator(RelevanceEvaluator, "relevance")
+
+        async def invalid_flow(timeout, **kwargs):
+            return {"llm_output": "invalid"}
+
+        evaluator._flow = invalid_flow
+
+        with pytest.raises(EvaluationException) as exc_info:
+            asyncio.run(evaluator._do_eval({"query": "question", "response": "answer"}))
+
+        assert exc_info.value.blame == ErrorBlame.SYSTEM_ERROR
+        assert exc_info.value.category == ErrorCategory.FAILED_EXECUTION
+        assert exc_info.value.target == ErrorTarget.RELEVANCE_EVALUATOR
 
 
 @pytest.mark.unittest

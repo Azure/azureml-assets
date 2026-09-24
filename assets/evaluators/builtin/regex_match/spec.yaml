@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.regex_match"
-version: 5
+version: 6
 displayName: "Regex-Match-Evaluator"
 description: "Evaluates whether a model response matches one or more regex patterns. Patterns can include {{ground_truth}} which is resolved per-row from the ground_truth parameter. Returns True if any pattern matches, False otherwise. Designed for benchmarking tasks where correctness is determined by pattern matching."
 evaluatorType: "builtin"
@@ -31,7 +31,13 @@ dataMappingSchema:
     ground_truth:
       type: "string"
       description: "The expected answer value used to resolve {{ground_truth}} in patterns."
-  required: ["response"]
+    messages:
+      type: "array"
+      items:
+        type: "object"
+  anyOf:
+    - required: ["response"]
+    - required: ["messages"]
 outputSchema:
   regex_match:
     type: "boolean"

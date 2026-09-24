@@ -628,14 +628,14 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner, SingleScoreCodeE
         self.assert_error(result_data)
 
     def test_invalid_response_type_list(self):
-        """Test with invalid response type (list)."""
+        """A list response with no assistant text degrades gracefully to a failing score."""
         results = self._run_evaluation(
             response=["hello", "world"],
             ground_truth=self.REFERENCE_TEXT,
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Invalid Response Type (list)")
-        self.assert_error(result_data)
+        self.assert_fail(result_data)
 
     def test_invalid_ground_truth_type_dict(self):
         """Test with invalid ground truth type (dict)."""
