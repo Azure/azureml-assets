@@ -16,9 +16,11 @@ Run inside the image's training conda env, e.g.:
     /opt/conda/envs/ptca/bin/python verl_rft_compat_patches.py
 """
 import io
+import importlib.util
 import os
 import sys
 import sysconfig
+import warnings
 
 MARKER = "ACFT-RFT-COMPAT"
 
@@ -108,29 +110,30 @@ def _append(modname, block, *, require):
 
 
 # --------------------------------------------------------------------------------------
-# kernels >= 0.13 made revision/version mandatory; transformers (<=5.12) registers its
-# hub kernels without either. Restore the historical default of revision="main" on both
-# the repository constructors and the runtime resolver so transformers imports and the
-# flash-attention hub fallback both work without changing package versions.
+# sglang 0.5.15 installs kernels 0.14.1, whose resolver still defaults a missing
+# revision/version to "main". Validate that behavior directly instead of patching source
+# anchors from kernels >=0.15, where the implementation changed.
 # --------------------------------------------------------------------------------------
-_KERNELS_REPO_OLD = '''        if revision is None and version is None:
-            raise ValueError("Either a revision or a version must be specified.")'''
-_KERNELS_REPO_NEW = '''        if revision is None and version is None:
-            # ACFT-RFT-COMPAT: transformers (<=5.12) registers hub kernels via
-            # LayerRepository/FuncRepository without a revision/version; kernels>=0.13
-            # made one mandatory. Restore the historical default of revision="main".
-            revision = "main"'''
-
-_KERNELS_RESOLVER_OLD = '''    else:
-        raise ValueError(
-            "A kernel version or revision must be specified. "
-            "Use `version=<major>` for a stable kernel API version or `revision=<branch/tag/commit>` "
-            "for an explicit Hub revision. See: https://huggingface.co/docs/kernels/migration"
-        )'''
-_KERNELS_RESOLVER_NEW = '''    else:
-        # ACFT-RFT-COMPAT: the flash-attention hub fallback calls the resolver with neither
-        # version nor revision; restore the historical kernels<0.13 default of "main".
-        return "main"'''
+def _validate_kernels_default_revision():
+    path = _module_path("kernels._versions")
+    spec = importlib.util.spec_from_file_location("_acft_kernels_versions", path)
+    if spec is None or spec.loader is None:
+        sys.exit(f"ERROR: could not load kernels version resolver from {path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", FutureWarning)
+        revision = module.select_revision_or_version(
+            "acft/compat-validation",
+            revision=None,
+            version=None,
+        )
+    if revision != "main":
+        sys.exit(
+            f"ERROR: kernels default revision is {revision!r}, expected 'main'; "
+            "the bundled package version requires an updated compatibility patch."
+        )
+    print("[ok]   validated kernels default revision: main")
 
 
 # --------------------------------------------------------------------------------------
@@ -417,9 +420,7 @@ def _enable_bundled_driver_dashboard():
 
 
 def main():
-    _replace("kernels.layer.layer", _KERNELS_REPO_OLD, _KERNELS_REPO_NEW)
-    _replace("kernels.layer.func", _KERNELS_REPO_OLD, _KERNELS_REPO_NEW)
-    _replace("kernels._versions", _KERNELS_RESOLVER_OLD, _KERNELS_RESOLVER_NEW)
+    _validate_kernels_default_revision()
 
     # vLLM <-> flash-attn 4 / transformers FA integration
     _replace_if_present("vllm.model_executor.layers.rotary_embedding.common", _VLLM_ROTARY_OLD, _VLLM_ROTARY_NEW)
