@@ -13,11 +13,12 @@ Reference: https://github.com/google-deepmind/bbeh
 
 import json
 import logging
-from typing import Dict
+from typing import Dict, List
 from typing_extensions import overload, override
 
 from azure.ai.evaluation._evaluators._common import EvaluatorBase
 from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
+from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
 
 try:  # azure-ai-evaluation >= 1.18.1
     from azure.ai.evaluation._common.utils import _preprocess_messages
@@ -28,36 +29,46 @@ logger = logging.getLogger(__name__)
 
 
 def _extract_final_text_response(messages):
-    """Extract only the plain text of assistant messages, dropping tool calls/results.
+    """Extract only the latest assistant text message, dropping tool calls/results.
 
-    Iterates the preprocessed messages and collects the ``text`` content of every
-    ``assistant`` role message, ignoring any ``tool_call``/``tool_result`` content blocks
-    and any non-assistant messages (e.g. ``tool`` role messages). This ensures only the
-    final plain-text agent response is used for evaluation, never intermediate tool call
-    or tool result content.
+    Scans messages in reverse order for the latest assistant text, stopping as
+    soon as a user message is reached so text from earlier turns is never used.
 
     :param messages: The preprocessed list of chat-message dicts.
     :type messages: list
-    :return: The joined plain text of all assistant messages, or an empty string if none.
+    :return: The latest assistant text, or an empty string if none is found
+        before the latest user message.
     :rtype: str
     """
-    text_lines = []
-    for msg in messages:
-        if isinstance(msg, dict) and msg.get("role") == "assistant":
-            for content in msg.get("content", []) or []:
-                if isinstance(content, dict) and "text" in content:
-                    text_lines.append(content["text"])
-    return "\n".join(text_lines)
+    for msg in reversed(messages):
+        if not isinstance(msg, dict):
+            continue
+        role = msg.get("role")
+        if role == "user":
+            break
+        if role != "assistant":
+            continue
+        message_content = msg.get("content", []) or []
+        if isinstance(message_content, str):
+            return message_content
+        text_lines = [
+            content["text"]
+            for content in message_content
+            if isinstance(content, dict) and content.get("text")
+        ]
+        if text_lines:
+            return "\n".join(text_lines)
+    return ""
 
 
 def _parse_response_for_evaluation(response):
     """Flatten ``response`` into a plain string, parsing a JSON-encoded list of messages if needed.
 
     If ``response`` is a string, attempt to ``json.loads`` it. When it (or an already-parsed
-    ``response``) is a list of chat-message dicts, only the plain text of assistant messages
-    is extracted (tool calls, tool results, and other message types are dropped). Any other
-    input (a plain string that is not JSON, or a string/list that fails to parse or yields no
-    assistant text) is returned unchanged.
+    ``response``) is a list of chat-message dicts, only the plain text of the latest assistant
+    message is extracted (tool calls, tool results, and other message types are dropped); an
+    empty string is returned if no such text is found. Any other input (a plain string that is
+    not JSON, or a JSON value that isn't a list) is returned unchanged.
 
     :param response: The raw response value from the eval input.
     :type response: Any
@@ -73,12 +84,23 @@ def _parse_response_for_evaluation(response):
     if isinstance(parsed, list):
         try:
             messages = _preprocess_messages(parsed)
-            text = _extract_final_text_response(messages)
-            if text:
-                return text
+            return _extract_final_text_response(messages)
         except Exception:
-            logger.debug("Could not extract plain text from response messages; falling back to original response")
+            logger.debug("Could not extract plain text from response messages; treating as empty response")
+            return ""
     return response
+
+
+def _response_from_messages(messages):
+    """Extract the final agent text response from a list of chat messages."""
+    if not isinstance(messages, list) or not messages:
+        raise EvaluationException(
+            message="messages must be provided as a non-empty list of message dictionaries.",
+            blame=ErrorBlame.USER_ERROR,
+            category=ErrorCategory.INVALID_VALUE,
+            target=ErrorTarget.EVALUATE,
+        )
+    return _parse_response_for_evaluation(messages)
 
 
 def strip_latex(response: str) -> str:
@@ -334,6 +356,13 @@ class BBEHEvaluator(EvaluatorBase):
             "bbeh_result": EVALUATION_PASS_FAIL_MAPPING[is_correct],
         }
 
+    @override
+    async def _real_call(self, **kwargs):
+        messages = kwargs.pop("messages", None)
+        if messages is not None:
+            kwargs["response"] = _response_from_messages(messages)
+        return await super()._real_call(**kwargs)
+
     @overload  # type: ignore
     def __call__(self, *, response: str, ground_truth: str) -> Dict[str, any]:
         """
@@ -346,6 +375,10 @@ class BBEHEvaluator(EvaluatorBase):
         :return: The evaluation result containing score and pass/fail information.
         :rtype: Dict[str, any]
         """
+
+    @overload
+    def __call__(self, *, messages: List[dict], ground_truth: str) -> Dict[str, any]:
+        """Evaluate BBEH using the final agent response in messages."""
 
     @override
     def __call__(  # pylint: disable=docstring-missing-param

@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.bleu_score"
-version: 3
+version: 4
 displayName: "Bleu-Score-Evaluator"
 description: "Measures how similar the model’s output is to a reference text. Useful
   for assessing alignment between generated and expected responses. It’s best used
@@ -31,7 +31,13 @@ dataMappingSchema:
       - type: "array"
         items:
           type: "object"
-  required: ["ground_truth", "response"]
+    messages:
+      type: "array"
+      items:
+        type: "object"
+  anyOf:
+  - required: ["ground_truth", "response"]
+  - required: ["ground_truth", "messages"]
 outputSchema:
   bleu:
     type: "continuous"

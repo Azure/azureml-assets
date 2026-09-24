@@ -694,6 +694,7 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                     internal_message="Invalid score value.",
                     category=ErrorCategory.FAILED_EXECUTION,
                     blame=ErrorBlame.SYSTEM_ERROR,
+                    target=ErrorTarget.TOOL_SELECTION_EVALUATOR,
                 )
 
             # Format the output

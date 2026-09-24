@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.meteor_score"
-version: 3
+version: 4
 displayName: "Meteor-Score-Evaluator"
 description: "Evaluates similarity between generated and reference text using flexible
   matching. Higher scores indicate better linguistic overlap. It’s best used for natural
@@ -31,7 +31,13 @@ dataMappingSchema:
       - type: "array"
         items:
           type: "object"
-  required: ["ground_truth", "response"]
+    messages:
+      type: "array"
+      items:
+        type: "object"
+  anyOf:
+  - required: ["ground_truth", "response"]
+  - required: ["ground_truth", "messages"]
 outputSchema:
   meteor:
     type: "continuous"

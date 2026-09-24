@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.bbeh"
-version: 2
+version: 3
 displayName: "BBEH-Evaluator"
 description: "Evaluates model responses for the BIG-Bench Extra Hard (BBEH) benchmark
   using fuzzy matching logic. Extracts answers from model output (handling 'The answer
@@ -31,7 +31,13 @@ dataMappingSchema:
     ground_truth:
       type: "string"
       description: "The expected answer to match against."
-  required: ["response", "ground_truth"]
+    messages:
+      type: "array"
+      items:
+        type: "object"
+  anyOf:
+  - required: ["response", "ground_truth"]
+  - required: ["messages", "ground_truth"]
 outputSchema:
   bbeh:
     type: "boolean"

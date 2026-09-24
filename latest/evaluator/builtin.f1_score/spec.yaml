@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.f1_score"
-version: 3
+version: 4
 displayName: "F1Score-Evaluator"
 description: "Balances correctness and completeness when comparing predictions to
   true results. Higher scores indicate better overall accuracy. It’s best used for
@@ -32,7 +32,13 @@ dataMappingSchema:
       - type: "array"
         items:
           type: "object"
-  required: ["ground_truth", "response"]
+    messages:
+      type: "array"
+      items:
+        type: "object"
+  anyOf:
+  - required: ["ground_truth", "response"]
+  - required: ["ground_truth", "messages"]
 outputSchema:
   f1_score:
     type: "continuous"
