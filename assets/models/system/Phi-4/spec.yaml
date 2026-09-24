@@ -182,4 +182,8 @@ system_metadata:
   platformCapabilities:
     enableBatch: false
     maasInference: true
+  deprecation:
+    inferenceLegacyDate: '2026-09-17T00:00:00.000000Z'
+    inferenceDeprecationDate: '2026-10-17T00:00:00.000000Z'
+    inferenceRetirementDate: '2027-01-17T00:00:00.000000Z'
 version: 8
