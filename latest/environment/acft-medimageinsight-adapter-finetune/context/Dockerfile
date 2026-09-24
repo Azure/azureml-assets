@@ -4,10 +4,18 @@ USER root
 
 RUN apt-get -y update && apt-get -y upgrade \
  && apt-get -y install --only-upgrade \
+        coreutils \
         curl \
+        diffutils \
         dotnet-hostfxr-8.0 \
         dotnet-host-8.0 \
         dotnet-runtime-8.0 \
+        libattr1 \
+        libc6 \
+        libc6-dev \
+        libc-bin \
+        libc-dev-bin \
+        libevent-core-2.1-7 \
         libgssapi-krb5-2 \
         libgcrypt20 \
         libk5crypto3 \
@@ -16,15 +24,23 @@ RUN apt-get -y update && apt-get -y upgrade \
         libcurl3-gnutls \
         libcurl4 \
         liblzma5 \
+        libp11-kit0 \
         libperl5.34 \
         libpng16-16 \
+        libpython3.10-minimal \
+        libpython3.10-stdlib \
         libsqlite3-0 \
+        libssh-4 \
         libssl-dev \
         libssl3 \
+        locales \
+        openssh-client \
         openssl \
         perl \
         perl-base \
         perl-modules-5.34 \
+        python3.10 \
+        python3.10-minimal \
         tar \
         wget \
         xz-utils \
@@ -102,5 +118,14 @@ RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.1
            /opt/conda/lib/python3.14/site-packages/pydantic__settings-2.12*.dist-info \
            /opt/conda/lib/python3.14/site-packages/msgpack-1.1*.dist-info \
            /opt/conda/lib/python3.14/site-packages/setuptools-70.3.0.dist-info
+
+# pip: direct package manager upgraded in both envs; fixes GHSA-qwm4-qh6w-59xr.
+# anyio: pinned transitive dep of anaconda-cli-base/httpx tooling in base env; brought in by base image, fixes GHSA-5p39-cfhj-2xmp and GHSA-82r6-8w77-94w6.
+RUN conda install -y -n base -c conda-forge 'pip=26.2.0' 'anyio=4.14.2' && \
+    conda run -n ptca python -m pip install --no-cache-dir --upgrade 'pip==26.2.0' && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/pip-26.1*.dist-info \
+           /opt/conda/lib/python3.14/site-packages/anyio-4.12*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.10/site-packages/pip-26.1*.dist-info && \
+    conda clean -ay
 
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/

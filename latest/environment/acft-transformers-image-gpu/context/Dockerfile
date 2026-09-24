@@ -4,12 +4,20 @@ USER root
 # Pull latest Ubuntu 22.04 security patches for packages present in the base image.
 RUN apt-get -y update && apt-get -y upgrade \
  && apt-get -y install --only-upgrade \
+        coreutils \
         curl \
-        dotnet-hostfxr-8.0 \
+        diffutils \
         dotnet-host-8.0 \
+        dotnet-hostfxr-8.0 \
         dotnet-runtime-8.0 \
+        libattr1 \
+        libc-bin \
+        libc-dev-bin \
+        libc6 \
+        libc6-dev \
         libcurl3-gnutls \
         libcurl4 \
+        libevent-core-2.1-7 \
         libgcrypt20 \
         libgssapi-krb5-2 \
         libk5crypto3 \
@@ -17,11 +25,23 @@ RUN apt-get -y update && apt-get -y upgrade \
         libkrb5support0 \
         liblzma5 \
         libnghttp2-14 \
+        libp11-kit0 \
         libpam-modules \
         libpam-modules-bin \
         libpam-runtime \
         libpam0g \
+        libperl5.34 \
+        libpython3.10-minimal \
+        libpython3.10-stdlib \
         libsqlite3-0 \
+        libssh-4 \
+        locales \
+        openssh-client \
+        perl \
+        perl-base \
+        perl-modules-5.34 \
+        python3.10 \
+        python3.10-minimal \
         tar \
         wget \
         xz-utils \
@@ -62,12 +82,13 @@ RUN pip install --progress-bar off -r requirements.txt --no-cache-dir
 RUN pip install --progress-bar off --no-cache-dir --upgrade 'onnx>=1.21.0' 'pyasn1>=0.6.4' 'fastmcp>=3.2.0' 'Mako>=1.3.12' 'GitPython>=3.1.55' 'python-dotenv>=1.2.2' 'pillow>=12.2.0' 'pytest>=9.0.3' 'urllib3>=2.7.0'
 # pip: package installer itself - there is no parent package that brings it in.
 #   Both conda envs (ptca python3.10, base python3.14) ship pip from the base
-#   image, vulnerable to GHSA-wf93-45jw-7689. Use conda-forge to upgrade pip in both
-#   envs without allowing the solver to roll back other packages (--freeze-installed).
+#   image, vulnerable to GHSA-wf93-45jw-7689 and GHSA-qwm4-qh6w-59xr. Use conda-forge
+#   to upgrade pip in both envs without allowing the solver to roll back other
+#   packages (--freeze-installed).
 RUN rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/pip* \
            /opt/conda/lib/python3.14/site-packages/pip* \
- && conda install -n ptca -y -c conda-forge --freeze-installed --force-reinstall 'pip=26.1.2' \
- && conda install -n base -y -c conda-forge --freeze-installed --force-reinstall 'pip=26.1.2'
+ && conda install -n ptca -y -c conda-forge --freeze-installed --force-reinstall 'pip=26.2.0' \
+ && conda install -n base -y -c conda-forge --freeze-installed --force-reinstall 'pip=26.2.0'
 # python-dotenv in base conda env: transitive dep of uvicorn[standard] (>=0.13); loose floor,
 #   base image has 1.2.1 which has GHSA-mf9w-mj56-hr94; override to >=1.2.2
 # urllib3 in base conda env: same root cause as above — base ships 2.6.3 via

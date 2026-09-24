@@ -21,7 +21,17 @@ RUN apt-get -y update && apt-get -y upgrade && \
         openssl \
         libudev1 \
         udev \
-        libsystemd0 && \
+        libsystemd0 \
+        libc-bin \
+        libc6 \
+        locales \
+        python3.10 \
+        python3.10-minimal \
+        libpython3.10-minimal \
+        libpython3.10-stdlib \
+        openssh-client \
+        libgcrypt20 \
+        libevent-core-2.1-7 && \
     apt-get -y purge 'linux-headers-*' 'linux-libc-dev' && \
     apt-get -y autoremove && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
