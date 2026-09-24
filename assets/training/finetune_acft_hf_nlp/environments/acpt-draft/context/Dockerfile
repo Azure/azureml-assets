@@ -12,10 +12,10 @@ ENV PIP_PROGRESS_BAR=off
 # USN-8699-1, USN-8692-1, USN-8697-1, USN-8711-1, USN-8710-1, USN-8721-1, USN-8737-1,
 # USN-8740-1, USN-8744-1, and USN-8775-1.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        libpam-runtime=1.4.0-11ubuntu2.7 \
-        libpam0g=1.4.0-11ubuntu2.7 \
-        libpam-modules=1.4.0-11ubuntu2.7 \
-        libpam-modules-bin=1.4.0-11ubuntu2.7 \
+        libpam-runtime \
+        libpam0g \
+        libpam-modules \
+        libpam-modules-bin \
         libc-bin=2.35-0ubuntu3.15 \
         libc-dev-bin=2.35-0ubuntu3.15 \
         libc6=2.35-0ubuntu3.15 \
