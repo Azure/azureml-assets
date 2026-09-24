@@ -6,28 +6,45 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 # when apt-get upgrade would otherwise hold them back.
 RUN apt-get -y update && apt-get -y upgrade && \
     apt-get -y install --only-upgrade \
+        attr \
+        coreutils \
         curl \
+        diffutils \
         dotnet-hostfxr-8.0 \
         dotnet-host-8.0 \
         dotnet-runtime-8.0 \
+        libattr1 \
+        libc-bin \
+        libc-dev-bin \
+        libc6 \
+        libc6-dev \
         libcurl3-gnutls \
         libcurl4 \
+        libevent-core-2.1-7 \
         libgcrypt20 \
         libgssapi-krb5-2 \
         libk5crypto3 \
         libkrb5-3 \
         libkrb5support0 \
+        libp11-kit0 \
         libperl5.34 \
         libpng16-16 \
+        libpython3.10-minimal \
+        libpython3.10-stdlib \
+        libssh-4 \
         libssl-dev \
         libssl3 \
         liblzma5 \
         libnghttp2-14 \
         libsqlite3-0 \
+        locales \
+        openssh-client \
         openssl \
         perl \
         perl-base \
         perl-modules-5.34 \
+        python3.10 \
+        python3.10-minimal \
         tar \
         wget \
         xz-utils && \
@@ -104,11 +121,13 @@ RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade \
         'torch==2.13.0' 'torchvision==0.28.0'
 
 # Update duplicate base-image Python env metadata that VCM scans.
+# pip>=26.2.0 fixes GHSA-qwm4-qh6w-59xr (base image ships 26.1.2).
 RUN for py in /opt/conda/bin/python /opt/conda/envs/*/bin/python; do \
         if [ -x "$py" ]; then \
             "$py" -m pip install --no-cache-dir --upgrade \
                 'setuptools>=83.0.0' \
-                'msgpack>=1.2.1'; \
+                'msgpack>=1.2.1' \
+                'pip>=26.2.0'; \
         fi; \
     done && \
     find /opt -type d \( \
@@ -116,6 +135,7 @@ RUN for py in /opt/conda/bin/python /opt/conda/envs/*/bin/python; do \
         -name 'setuptools-70.3.0.egg-info' -o \
         -name 'msgpack-1.1.2.dist-info' -o \
         -name 'msgpack-1.1.2.egg-info' \
-    \) -prune -exec rm -rf {} +
+    \) -prune -exec rm -rf {} + && \
+    find /opt -type f -path '*/conda-meta/pip-26.1.2-*.json' -delete
 
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
