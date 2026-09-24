@@ -6,6 +6,7 @@
 import json
 
 import pytest
+from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
 
 from ...builtin.bbeh.evaluator import _bbeh
 from ...builtin.bbeh.evaluator._bbeh import BBEHEvaluator
@@ -109,8 +110,12 @@ def test_messages_with_no_final_text_returns_empty_string(module, messages):
 @pytest.mark.parametrize("messages", ["not a list", []])
 def test_messages_reject_invalid_input(module, messages):
     """Only a structurally invalid (non-list or empty) messages value raises."""
-    with pytest.raises(ValueError):
+    with pytest.raises(EvaluationException) as exc_info:
         module._response_from_messages(messages)
+
+    assert exc_info.value.blame == ErrorBlame.USER_ERROR
+    assert exc_info.value.category == ErrorCategory.INVALID_VALUE
+    assert exc_info.value.target == ErrorTarget.EVALUATE
 
 
 @pytest.mark.unittest

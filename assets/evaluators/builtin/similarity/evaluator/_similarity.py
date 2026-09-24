@@ -44,7 +44,12 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
             default=-1,
         )
         if latest_user_index == -1:
-            raise ValueError("messages must contain at least one message with role 'user'.")
+            raise EvaluationException(
+                message="messages must contain at least one message with role 'user'.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=ErrorTarget.SIMILARITY_EVALUATOR,
+            )
         return messages[: latest_user_index + 1], messages[latest_user_index + 1:]
 
 # Re-exported so the module keeps exposing the message-preprocessing helpers used
@@ -418,7 +423,15 @@ class SimilarityEvaluator(PromptyEvaluatorBase):
         """
         messages = kwargs.pop("messages", None)
         if messages is not None:
-            query_messages, response_messages = _split_messages_at_latest_user(messages)
+            try:
+                query_messages, response_messages = _split_messages_at_latest_user(messages)
+            except ValueError as exc:
+                raise EvaluationException(
+                    message=str(exc),
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=ErrorTarget.SIMILARITY_EVALUATOR,
+                ) from exc
             kwargs["query"] = query_messages
             kwargs["response"] = response_messages
 

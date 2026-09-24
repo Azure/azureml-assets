@@ -88,7 +88,12 @@ def _parse_response_for_evaluation(response):
 def _response_from_messages(messages):
     """Extract the final agent text response from a list of chat messages."""
     if not isinstance(messages, list) or not messages:
-        raise ValueError("messages must be provided as a non-empty list of message dictionaries.")
+        raise EvaluationException(
+            message="messages must be provided as a non-empty list of message dictionaries.",
+            blame=ErrorBlame.USER_ERROR,
+            category=ErrorCategory.INVALID_VALUE,
+            target=ErrorTarget.EVALUATE,
+        )
     return _parse_response_for_evaluation(messages)
 
 
