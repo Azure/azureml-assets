@@ -8,7 +8,12 @@ Supports deterministic evaluators that don't require LLM calls (e.g., BLEU, F1, 
 """
 
 import asyncio
+import importlib
+import json
 from typing import Any, Dict
+
+import pytest
+from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
 
 from .base_evaluator_runner import BaseEvaluatorRunner
 
@@ -46,6 +51,70 @@ class BaseCodeEvaluatorRunner(BaseEvaluatorRunner):
         """
         assert result_data["threshold"] == expected_threshold, \
             f"Expected threshold {expected_threshold} but got {result_data['threshold']}"
+
+    @property
+    def _evaluator_module(self):
+        """Return the module that owns the evaluator implementation."""
+        module = importlib.import_module(self.evaluator_type.__module__)
+        if not hasattr(module, "_parse_response_for_evaluation"):
+            pytest.skip("Evaluator does not support message response parsing")
+        return module
+
+    def test_message_parser_representations(self):
+        """Cover string, JSON, direct-list, and structured-content parsing."""
+        module = self._evaluator_module
+        assert module._parse_response_for_evaluation("plain response") == "plain response"
+        assert module._parse_response_for_evaluation("[{bad json") == "[{bad json"
+        assert module._parse_response_for_evaluation('{"answer": "text"}') == '{"answer": "text"}'
+        assert module._parse_response_for_evaluation(
+            json.dumps([{"role": "assistant", "content": "final answer"}])
+        ) == "final answer"
+        assert module._parse_response_for_evaluation(
+            [{"role": "assistant", "content": [{"type": "text", "text": "final answer"}]}]
+        ) == "final answer"
+
+    def test_message_extractor_skips_non_text_and_stops_at_user(self):
+        """Cover ignored message types and the latest-user boundary."""
+        module = self._evaluator_module
+        assert module._extract_final_text_response([123, {"role": "narrator", "content": "ignored"}]) == ""
+        assert module._extract_final_text_response(
+            [
+                {"role": "assistant", "content": "old answer"},
+                {"role": "user", "content": "new question"},
+            ]
+        ) == ""
+        assert module._extract_final_text_response(
+            [
+                {
+                    "role": "assistant",
+                    "content": [
+                        {"type": "text", "text": "line one"},
+                        {"type": "tool_call", "name": "lookup"},
+                        {"type": "text", "text": "line two"},
+                    ],
+                }
+            ]
+        ) == "line one\nline two"
+
+    def test_message_parser_preprocessing_failure_returns_empty(self, monkeypatch):
+        """A malformed message list degrades to an empty response."""
+        module = self._evaluator_module
+
+        def raise_preprocessing_error(messages):
+            raise ValueError("invalid messages")
+
+        monkeypatch.setattr(module, "_preprocess_messages", raise_preprocessing_error)
+        assert module._parse_response_for_evaluation([{"role": "assistant", "content": "answer"}]) == ""
+
+    @pytest.mark.parametrize("messages", ["not a list", []])
+    def test_invalid_messages_raise_user_error(self, messages):
+        """Invalid top-level messages use the SDK user-error convention."""
+        with pytest.raises(EvaluationException) as exc_info:
+            self._evaluator_module._response_from_messages(messages)
+
+        assert exc_info.value.blame == ErrorBlame.USER_ERROR
+        assert exc_info.value.category == ErrorCategory.INVALID_VALUE
+        assert exc_info.value.target == ErrorTarget.EVALUATE
 
 
 class SingleScoreCodeEvalCoverageMixin:
