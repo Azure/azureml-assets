@@ -90,6 +90,7 @@ def test_response_parser_representations(module, response, expected):
     [
         [123],
         [{"role": "narrator", "content": "hello"}],
+        [{"role": "assistant", "content": ""}],
         [{"role": "user", "content": "hello"}],
         [
             {"role": "user", "content": "Give the final answer."},
@@ -121,6 +122,18 @@ def test_messages_without_user_turn_still_extracts_assistant_text(module):
 
 @pytest.mark.unittest
 @pytest.mark.parametrize("module", PARSER_MODULES)
+def test_response_extractor_skips_empty_assistant_text(module):
+    """An empty assistant message does not hide earlier assistant text in the same turn."""
+    messages = [
+        {"role": "assistant", "content": "final answer"},
+        {"role": "assistant", "content": ""},
+    ]
+
+    assert module._extract_final_text_response(messages) == "final answer"
+
+
+@pytest.mark.unittest
+@pytest.mark.parametrize("module", PARSER_MODULES)
 def test_messages_search_stops_at_latest_user_boundary(module):
     """Text from an earlier turn is never used when the latest turn has no text."""
     messages = [
@@ -130,6 +143,18 @@ def test_messages_search_stops_at_latest_user_boundary(module):
         {"role": "assistant", "content": [{"type": "tool_call", "name": "lookup", "arguments": {}}]},
     ]
     assert module._response_from_messages(messages) == ""
+
+
+@pytest.mark.unittest
+@pytest.mark.parametrize("module", PARSER_MODULES)
+def test_response_parser_treats_preprocessing_failure_as_empty(module, monkeypatch):
+    """An invalid message array degrades to an empty response."""
+    def raise_preprocessing_error(messages):
+        raise ValueError("invalid messages")
+
+    monkeypatch.setattr(module, "_preprocess_messages", raise_preprocessing_error)
+
+    assert module._parse_response_for_evaluation([{"role": "assistant", "content": "answer"}]) == ""
 
 
 @pytest.mark.unittest

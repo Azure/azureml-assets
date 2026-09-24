@@ -44,9 +44,7 @@ def _extract_final_text_response(messages):
             continue
         message_content = msg.get("content", []) or []
         if isinstance(message_content, str):
-            if message_content:
-                return message_content
-            continue
+            return message_content
         text_lines = [
             content["text"]
             for content in message_content
