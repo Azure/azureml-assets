@@ -134,9 +134,10 @@ _KERNELS_RESOLVER_NEW = '''    else:
 
 
 # --------------------------------------------------------------------------------------
-# transformers 5.6.0 flash-attention integration dereferences the optional attention-sink
-# tensor s_aux without a None guard; models without sinks (e.g. Qwen3) pass None. Guard it
-# (matches the upstream transformers 5.12.1 fix).
+# transformers <5.10 flash-attention integration dereferences the optional attention-sink
+# tensor s_aux without a None guard; models without sinks (e.g. Qwen3) pass None. This
+# guard is upstream as of transformers 5.10 (bundled here at 5.12.1), so the patch below
+# is applied only if the older unguarded code is still present (_replace_if_present).
 # --------------------------------------------------------------------------------------
 _TF_SAUX_OLD = "        s_aux=s_aux.to(query.dtype),  # FA only accepts half precision"
 _TF_SAUX_NEW = (
@@ -423,7 +424,7 @@ def main():
     # vLLM <-> flash-attn 4 / transformers FA integration
     _replace_if_present("vllm.model_executor.layers.rotary_embedding.common", _VLLM_ROTARY_OLD, _VLLM_ROTARY_NEW)
     _replace("vllm.vllm_flash_attn", _VLLM_FLASH_ATTN_OLD, _VLLM_FLASH_ATTN_NEW)
-    _replace("transformers.integrations.flash_attention", _TF_SAUX_OLD, _TF_SAUX_NEW)
+    _replace_if_present("transformers.integrations.flash_attention", _TF_SAUX_OLD, _TF_SAUX_NEW)
 
     # verl 0.7.1 worker layer <-> vendored post-0.8.0 vLLM rollout
     _append("verl.workers.rollout.utils", _VERL_UTILS_APPEND, require=_VERL_UTILS_REQUIRE)
