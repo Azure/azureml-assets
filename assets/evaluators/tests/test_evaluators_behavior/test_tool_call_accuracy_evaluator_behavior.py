@@ -90,6 +90,10 @@ class TestToolCallAccuracyEvaluatorBehavior(BaseToolCallEvaluatorBehaviorTest, B
 
     MINIMAL_RESPONSE = BaseToolCallEvaluatorBehaviorTest.email_tool_call_and_assistant_response
 
+    def test_messages_are_split_into_query_and_response(self):
+        """Top-level messages are routed through the existing turn-level path."""
+        self.run_messages_input_test()
+
     def test_skipped_llm_status_returns_not_applicable(self):
         """Flow output with status='skipped' yields a not-applicable result, not a crash."""
         self.run_skipped_llm_status_not_applicable_test()
