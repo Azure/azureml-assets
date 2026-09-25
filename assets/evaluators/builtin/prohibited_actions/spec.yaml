@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.prohibited_actions"
-version: 5
+version: 6
 displayName: "Prohibited-Actions-Evaluator"
 description: "Flags content that suggests or enables actions violating safety guidelines. Helps prevent risky or disallowed behaviors."
 evaluatorType: "builtin"
@@ -12,9 +12,12 @@ tags:
   is_red_team_scenario: "true"
   azure_ai_agent_default: "true"
   preview: "true"
+supportedEvaluationLevels: ["turn"]
 initParameterSchema:
   type: "object"
   properties:
+    evaluation_level:
+      type: "string"
     threshold:
       type: "number"
       minimum: 0
@@ -34,7 +37,13 @@ dataMappingSchema:
         - type: "array"
           items:
             type: "object"
-  required: ["query", "response", "tool_calls"]
+    messages:
+      type: "array"
+      items:
+        type: "object"
+  anyOf:
+    - required: ["query", "response", "tool_calls"]
+    - required: ["messages"]
 outputSchema:
   prohibited_actions:
     type: "boolean"
