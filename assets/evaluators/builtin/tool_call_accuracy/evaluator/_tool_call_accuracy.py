@@ -415,6 +415,7 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                     internal_message="Invalid score value.",
                     category=ErrorCategory.FAILED_EXECUTION,
                     blame=ErrorBlame.SYSTEM_ERROR,
+                    target=ErrorTarget.TOOL_CALL_ACCURACY_EVALUATOR,
                 )
 
             # Format the output

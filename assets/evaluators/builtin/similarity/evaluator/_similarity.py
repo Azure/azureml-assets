@@ -44,7 +44,12 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
             default=-1,
         )
         if latest_user_index == -1:
-            raise ValueError("messages must contain at least one message with role 'user'.")
+            raise EvaluationException(
+                message="messages must contain at least one message with role 'user'.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=ErrorTarget.SIMILARITY_EVALUATOR,
+            )
         return messages[: latest_user_index + 1], messages[latest_user_index + 1:]
 
 # Re-exported so the module keeps exposing the message-preprocessing helpers used
@@ -61,6 +66,30 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
     )
 
 logger = logging.getLogger(__name__)
+
+
+def _parse_json_response_if_applicable(response):
+    """Parse ``response``/``query`` as JSON when it is a JSON-encoded string of chat messages.
+
+    If ``response`` is a string that successfully parses as JSON into a list, the parsed
+    list is returned so it can be handled by the existing message-list preprocessing path.
+    Any other input (a plain string, an already-parsed list, or a string that fails to
+    parse as JSON) is returned unchanged.
+
+    :param response: The raw response value from the eval input.
+    :type response: Any
+    :return: The parsed list of messages, or the original response if it is not a
+        JSON-encoded list.
+    :rtype: Any
+    """
+    if isinstance(response, str):
+        try:
+            parsed = json.loads(response)
+        except (ValueError, TypeError):
+            return response
+        if isinstance(parsed, list):
+            return parsed
+    return response
 
 
 class SimilarityEvaluator(PromptyEvaluatorBase):
@@ -284,6 +313,7 @@ class SimilarityEvaluator(PromptyEvaluatorBase):
                 target=ErrorTarget.CONVERSATION,
             )
         # Check for intermediate response
+        eval_input["response"] = _parse_json_response_if_applicable(eval_input.get("response"))
         if _is_intermediate_response(eval_input.get("response")):
             return self._return_not_applicable_result(
                 "Intermediate response. Please provide the agent's final response for evaluation.",
@@ -393,7 +423,15 @@ class SimilarityEvaluator(PromptyEvaluatorBase):
         """
         messages = kwargs.pop("messages", None)
         if messages is not None:
-            query_messages, response_messages = _split_messages_at_latest_user(messages)
+            try:
+                query_messages, response_messages = _split_messages_at_latest_user(messages)
+            except ValueError as exc:
+                raise EvaluationException(
+                    message=str(exc),
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=ErrorTarget.SIMILARITY_EVALUATOR,
+                ) from exc
             kwargs["query"] = query_messages
             kwargs["response"] = response_messages
 

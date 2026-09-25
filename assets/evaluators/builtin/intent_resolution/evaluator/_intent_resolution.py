@@ -424,6 +424,7 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                     internal_message="Invalid score value.",
                     category=ErrorCategory.FAILED_EXECUTION,
                     blame=ErrorBlame.SYSTEM_ERROR,
+                    target=ErrorTarget.INTENT_RESOLUTION_EVALUATOR,
                 )
             reason = llm_output.get("reason", "")
             score = float(score)

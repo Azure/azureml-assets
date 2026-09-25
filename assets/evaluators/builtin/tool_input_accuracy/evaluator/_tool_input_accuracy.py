@@ -657,6 +657,7 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                     internal_message="Invalid score value.",
                     category=ErrorCategory.FAILED_EXECUTION,
                     blame=ErrorBlame.SYSTEM_ERROR,
+                    target=ErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR,
                 )
 
             # Add parameter extraction accuracy post-processing

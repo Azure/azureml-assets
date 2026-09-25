@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.rouge_score"
-version: 3
+version: 5
 displayName: "Rouge-Score-Evaluator"
 description: "Compares the overlap of words or phrases between model output and reference text. Higher scores indicate closer alignment. Reccomended use cases include text summarization and document comparison, especially when focusing on recall and the ability to capture relevant information from the reference text."
 evaluatorType: "builtin"
@@ -36,8 +36,18 @@ dataMappingSchema:
     ground_truth:
       type: "string"
     response:
-      type: "string"
-  required: ["ground_truth", "response"]
+      anyOf:
+        - type: "string"
+        - type: "array"
+          items:
+            type: "object"
+    messages:
+      type: "array"
+      items:
+        type: "object"
+  anyOf:
+    - required: ["ground_truth", "response"]
+    - required: ["ground_truth", "messages"]
 outputSchema:
   rouge:
     type: "continuous"

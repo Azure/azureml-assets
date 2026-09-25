@@ -165,7 +165,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
             )
         return [
             message
-            for message in messages[latest_user_index + 1 :]
+            for message in messages[latest_user_index + 1:]
             if message.get("role") == "assistant"
         ]
 
