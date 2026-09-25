@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.tool_call_success"
-version: 13
+version: 14
 displayName: "Tool-Call-Success-Evaluator"
 description: "Evaluates whether all tool calls were successful or not. It checks all
   tool calls to determine if any of these resulted in technical failure like exception,
@@ -12,10 +12,13 @@ categories: ["agents"]
 tags:
   provider: "Microsoft"
   is_continuous_scenario: "true"
+supportedEvaluationLevels: ["turn"]
 initParameterSchema:
   type: "object"
   properties:
     deployment_name:
+      type: "string"
+    evaluation_level:
       type: "string"
   required: ["deployment_name"]
 dataMappingSchema:
@@ -33,7 +36,13 @@ dataMappingSchema:
       - type: "array"
         items:
           type: "object"
-  required: ["response"]
+    messages:
+      type: "array"
+      items:
+        type: "object"
+  anyOf:
+  - required: ["response"]
+  - required: ["messages"]
 outputSchema:
   tool_call_success:
     type: "boolean"

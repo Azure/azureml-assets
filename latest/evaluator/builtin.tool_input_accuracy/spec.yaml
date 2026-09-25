@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.tool_input_accuracy"
-version: 15
+version: 16
 displayName: "Tool-Input-Accuracy-Evaluator"
 description: "A binary evaluator (0 or 1) that checks whether all parameters in an
   agent’s tool call are correct, validating grounding, type, format, completeness,
@@ -13,10 +13,13 @@ categories: ["agents"]
 tags:
   provider: "Microsoft"
   is_continuous_scenario: "true"
+supportedEvaluationLevels: ["turn"]
 initParameterSchema:
   type: "object"
   properties:
     deployment_name:
+      type: "string"
+    evaluation_level:
       type: "string"
   required: ["deployment_name"]
 dataMappingSchema:
@@ -40,7 +43,13 @@ dataMappingSchema:
       - type: "array"
         items:
           type: "object"
-  required: ["query", "response", "tool_definitions"]
+    messages:
+      type: "array"
+      items:
+        type: "object"
+  anyOf:
+  - required: ["query", "response", "tool_definitions"]
+  - required: ["messages", "tool_definitions"]
 outputSchema:
   tool_input_accuracy:
     type: "boolean"
