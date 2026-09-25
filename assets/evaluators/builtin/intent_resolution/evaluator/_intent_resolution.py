@@ -4,7 +4,7 @@
 import os
 import math
 import logging
-from typing import Dict, Union, List, Optional
+from typing import Dict, Union, List, Optional, Tuple
 
 from typing_extensions import overload, override
 
@@ -35,12 +35,30 @@ from azure.ai.evaluation._evaluators._common._validators import (  # noqa: F401
 )
 
 try:  # azure-ai-evaluation >= 1.18.1
-    from azure.ai.evaluation._common.utils import _is_intermediate_response, _preprocess_messages
+    from azure.ai.evaluation._common.utils import (
+        _is_intermediate_response,
+        _preprocess_messages,
+        _split_messages_at_latest_user,
+    )
 except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 1.17.x is dropped)  # pragma: no cover
     from azure.ai.evaluation._evaluators._common._base_prompty_eval import (
         _is_intermediate_response,
         _preprocess_messages,
     )
+
+    def _split_messages_at_latest_user(messages: List[dict]) -> Tuple[List[dict], List[dict]]:
+        latest_user_index = max(
+            (index for index, message in enumerate(messages) if message.get("role") == "user"),
+            default=-1,
+        )
+        if latest_user_index == -1:
+            raise EvaluationException(
+                message="messages must contain at least one message with role 'user'.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=ErrorTarget.INTENT_RESOLUTION_EVALUATOR,
+            )
+        return messages[: latest_user_index + 1], messages[latest_user_index + 1:]
 
 # Re-exported so the module keeps exposing the message-preprocessing helpers used
 # by the test suite; they are invoked indirectly through _preprocess_messages.
@@ -293,6 +311,18 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: The evaluation result.
         :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
         """
+        messages = kwargs.pop("messages", None)
+        if messages is not None:
+            try:
+                kwargs["query"], kwargs["response"] = _split_messages_at_latest_user(messages)
+            except ValueError as exc:
+                raise EvaluationException(
+                    message=str(exc),
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=ErrorTarget.INTENT_RESOLUTION_EVALUATOR,
+                ) from exc
+
         # Validate input before processing
         self._validator.validate_eval_input(kwargs)
 

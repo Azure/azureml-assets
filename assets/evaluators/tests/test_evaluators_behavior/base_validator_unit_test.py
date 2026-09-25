@@ -204,7 +204,8 @@ class _ValidatorUnitTestSupport:
         "intent_resolution": (
             "ConversationValidator _convert_kwargs_to_eval_input _do_eval _drop_mcp_approval_messages"
             " _get_token_metadata _is_intermediate_response _normalize_function_call_types"
-            " _preprocess_messages _real_call _return_not_applicable_result _the_super_real_call"
+            " _preprocess_messages _real_call _return_not_applicable_result _split_messages_at_latest_user"
+            " _the_super_real_call"
         ),
         "customer_satisfaction": (
             "ConversationValidator EvaluationLevel MessagesOrQueryResponseInputValidator _build_result"
@@ -246,27 +247,29 @@ class _ValidatorUnitTestSupport:
         "tool_call_accuracy": (
             "ConversationValidator _convert_kwargs_to_eval_input _do_eval _drop_mcp_approval_messages"
             " _get_token_metadata _is_intermediate_response _normalize_function_call_types"
-            " _preprocess_messages _real_call _return_not_applicable_result"
+            " _preprocess_messages _real_call _return_not_applicable_result _split_messages_at_latest_user"
         ),
         "tool_call_success": (
             "ConversationValidator _convert_kwargs_to_eval_input _do_eval _drop_mcp_approval_messages"
             " _get_token_metadata _is_intermediate_response _normalize_function_call_types"
-            " _preprocess_messages _real_call _return_not_applicable_result _the_super_real_call"
+            " _preprocess_messages _real_call _return_not_applicable_result _split_messages_at_latest_user"
+            " _the_super_real_call"
         ),
         "tool_input_accuracy": (
             "ConversationValidator _convert_kwargs_to_eval_input _do_eval _drop_mcp_approval_messages"
             " _get_token_metadata _is_intermediate_response _normalize_function_call_types"
-            " _preprocess_messages _real_call _return_not_applicable_result"
+            " _preprocess_messages _real_call _return_not_applicable_result _split_messages_at_latest_user"
         ),
         "tool_output_utilization": (
             "ConversationValidator _convert_kwargs_to_eval_input _do_eval _drop_mcp_approval_messages"
             " _get_token_metadata _is_intermediate_response _normalize_function_call_types"
-            " _preprocess_messages _real_call _return_not_applicable_result _the_super_real_call"
+            " _preprocess_messages _real_call _return_not_applicable_result _split_messages_at_latest_user"
+            " _the_super_real_call"
         ),
         "tool_selection": (
             "ConversationValidator _convert_kwargs_to_eval_input _do_eval _drop_mcp_approval_messages"
             " _get_token_metadata _is_intermediate_response _normalize_function_call_types"
-            " _preprocess_messages _real_call _return_not_applicable_result"
+            " _preprocess_messages _real_call _return_not_applicable_result _split_messages_at_latest_user"
         ),
     }
 

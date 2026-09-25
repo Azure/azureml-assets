@@ -44,6 +44,10 @@ class TestToolOutputUtilizationEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest,
     Tests different input formats and scenarios.
     """
 
+    def test_messages_are_split_into_query_and_response(self):
+        """Top-level messages are routed through the existing turn-level path."""
+        self.run_messages_input_test()
+
     # region Expected flow inputs for each test
     # TOU defines its own _get_agent_response that JSON-encodes dict/list tool_result
     # payloads via _stringify_tool_result (vs the SDK helper used by TA/TC which uses

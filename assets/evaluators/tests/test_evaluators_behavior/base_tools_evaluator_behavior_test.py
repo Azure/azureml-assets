@@ -7,9 +7,14 @@ Base class for behavioral tests of for tools evaluators.
 Tests various input scenarios: query, response, and tool_definitions.
 """
 
+import asyncio
 import json
+import pytest
+from azure.ai.evaluation._exceptions import EvaluationException
+
 from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
 from ..common.evaluator_mock_config import (
+    create_mocked_evaluator,
     create_none_score_flow_side_effect,
     assert_none_score_result,
 )
@@ -85,6 +90,50 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
 
     INVALID_TOOL_DEFINITIONS_AS_STRING: str = json.dumps(INVALID_TOOL_DEFINITIONS)
     # endregion
+
+    def run_messages_input_test(self):
+        """Assert top-level messages reach the existing query/response path."""
+        evaluator = create_mocked_evaluator(self.evaluator_type, self.result_key)
+        captured_kwargs = {}
+        evaluator._validator.validate_eval_input = lambda kwargs: None
+
+        if hasattr(evaluator, "_the_super_real_call"):
+            async def capture_real_call(**kwargs):
+                captured_kwargs.update(kwargs)
+                return {}
+
+            evaluator._the_super_real_call = capture_real_call
+        else:
+            evaluator._return_not_applicable_result = lambda *args: {}
+
+            def capture_conversion(**kwargs):
+                captured_kwargs.update(kwargs)
+                return {"error_message": "captured"}
+
+            evaluator._convert_kwargs_to_eval_input = capture_conversion
+
+        messages = [
+            {"role": "system", "content": "system"},
+            {"role": "user", "content": "question"},
+            {"role": "assistant", "content": "answer"},
+        ]
+        asyncio.run(
+            evaluator._real_call(
+                messages=messages,
+                tool_definitions=self.VALID_TOOL_DEFINITIONS,
+            )
+        )
+
+        assert captured_kwargs["query"] == messages[:2]
+        assert captured_kwargs["response"] == messages[2:]
+
+        with pytest.raises(EvaluationException):
+            asyncio.run(
+                evaluator._real_call(
+                    messages=[{"role": "assistant", "content": "answer"}],
+                    tool_definitions=self.VALID_TOOL_DEFINITIONS,
+                )
+            )
 
     def run_skipped_llm_status_not_applicable_test(self):
         """Run a skipped-status flow output and assert a not-applicable result.
