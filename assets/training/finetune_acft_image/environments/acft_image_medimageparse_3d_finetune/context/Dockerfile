@@ -33,12 +33,15 @@ RUN apt-get update && \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+# Upgrade the vulnerable anyio package in the base Python prefix.
+RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade "anyio>=4.14.2"
+
 # Step 1: minimal conda env with python 3.10 (matches azureml-acft-image-components compat).
 # Keep this step pure conda-channel — the SAT solver OOMs on ACR Standard build
 # agents when conda + pip resolution run together. Sibling envs split for the
 # same reason.
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH -q -y \
-        python=3.10 pip=26.1 \
+        python=3.10 pip=26.2.0 \
         -c conda-forge && \
     conda clean -a -y
 
@@ -56,3 +59,39 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir -r r
 # azureml-mlflow metadata caps it below the patched release, fixes GHSA-g6cj-pr64-35w5.
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --no-deps --upgrade \
         "cryptography==50.0.0"
+
+# Remove stale scanner metadata while retaining the upgraded installations.
+RUN set -eu; \
+    roots="/opt /root"; \
+    [ ! -d /azureml-envs ] || roots="$roots /azureml-envs"; \
+    find $roots -type f \( \
+        -path '*/site-packages/pip/_vendor/bom.cdx.json' -o \
+        -path '*/site-packages/pip/_vendor/vendor.txt' \
+    \) -delete; \
+    find $roots -type d \( \
+        -name 'setuptools-70.3.0.dist-info' -o \
+        -name 'setuptools-70.3.0.egg-info' -o \
+        -name 'setuptools-70.3.0-py*.egg-info' -o \
+        -name 'msgpack-1.1.2.dist-info' -o \
+        -name 'msgpack-1.1.2.egg-info' -o \
+        -name 'msgpack-1.1.2-py*.egg-info' \
+    \) -prune -exec rm -rf {} +; \
+    find $roots -type f \( \
+        -path '*/conda-meta/setuptools-70.3.0-*.json' -o \
+        -path '*/conda-meta/msgpack-python-1.1.2-*.json' -o \
+        -path '*/conda-meta/msgpack-1.1.2-*.json' \
+    \) -delete; \
+    stale="$(find $roots \( \
+        -path '*/site-packages/pip/_vendor/bom.cdx.json' -o \
+        -path '*/site-packages/pip/_vendor/vendor.txt' -o \
+        -name 'setuptools-70.3.0.dist-info' -o \
+        -name 'setuptools-70.3.0.egg-info' -o \
+        -name 'setuptools-70.3.0-py*.egg-info' -o \
+        -name 'msgpack-1.1.2.dist-info' -o \
+        -name 'msgpack-1.1.2.egg-info' -o \
+        -name 'msgpack-1.1.2-py*.egg-info' -o \
+        -path '*/conda-meta/setuptools-70.3.0-*.json' -o \
+        -path '*/conda-meta/msgpack-python-1.1.2-*.json' -o \
+        -path '*/conda-meta/msgpack-1.1.2-*.json' \
+    \) -print -quit)"; \
+    [ -z "$stale" ] || { echo "stale setuptools/msgpack scanner metadata remains: $stale" >&2; exit 1; }

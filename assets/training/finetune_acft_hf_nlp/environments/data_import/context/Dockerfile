@@ -38,6 +38,35 @@ apt-get install -y --only-upgrade \
     && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Fail closed if the package repositories did not supply the scanner-required fixes.
+RUN set -eu; \
+    check_version() { \
+        installed="$(dpkg-query -W -f='${Version}' "$1")"; \
+        dpkg --compare-versions "$installed" ge "$2" || { echo "$1 $installed is below required version $2" >&2; exit 1; }; \
+    }; \
+    check_version libgcrypt20 1.10.3-2ubuntu0.2; \
+    check_version openssh-sftp-server 1:9.6p1-3ubuntu13.19; \
+    check_version openssh-server 1:9.6p1-3ubuntu13.19; \
+    check_version openssh-client 1:9.6p1-3ubuntu13.19; \
+    check_version libpython3.12-minimal 3.12.3-1ubuntu0.17; \
+    check_version python3.12 3.12.3-1ubuntu0.17; \
+    check_version libpython3.12-stdlib 3.12.3-1ubuntu0.17; \
+    check_version python3.12-minimal 3.12.3-1ubuntu0.17; \
+    check_version locales 2.39-0ubuntu8.9; \
+    check_version libc-bin 2.39-0ubuntu8.9; \
+    check_version libc6 2.39-0ubuntu8.9; \
+    check_version libc6-dev 2.39-0ubuntu8.9; \
+    check_version libc-dev-bin 2.39-0ubuntu8.9; \
+    check_version nginx 1.24.0-2ubuntu7.18; \
+    check_version nginx-light 1.24.0-2ubuntu7.18; \
+    check_version nginx-common 1.24.0-2ubuntu7.18; \
+    check_version perl-modules-5.38 5.38.2-3.2ubuntu0.6; \
+    check_version perl-base 5.38.2-3.2ubuntu0.6; \
+    check_version perl 5.38.2-3.2ubuntu0.6; \
+    check_version libperl5.38t64 5.38.2-3.2ubuntu0.6; \
+    check_version libsqlite3-0 3.45.1-1ubuntu2.8; \
+    check_version sqlite3 3.45.1-1ubuntu2.8
+
 # Remove pip's informational vendored-version manifests because VCM can report
 # stale vendored package entries even when the installed packages are patched.
 RUN find /opt/miniconda \( -path '*/pip/_vendor/vendor.txt' -o -path '*/pip/_vendor/bom.cdx.json' \) -delete && \

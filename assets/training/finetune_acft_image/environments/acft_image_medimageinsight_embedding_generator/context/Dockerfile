@@ -43,12 +43,12 @@ RUN apt-get -y update && \
     apt-get install -y --no-install-recommends unzip && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip to the patched 26.1 line in both envs to fix GHSA-jp4c-xjxw-mgf9 (bootstrap
+# Upgrade pip to the patched 26.2 line in both envs to fix GHSA-jp4c-xjxw-mgf9 (bootstrap
 # installer, no parent to bump). Installed from PyPI; stale conda-meta JSON removed so the
 # SBOM scanner doesn't re-flag it. Done before requirements so later installs use patched pip.
-RUN pip install --no-cache-dir --upgrade 'pip>=26.1.2,<27' && \
+RUN pip install --no-cache-dir --upgrade 'pip>=26.2.0,<27' && \
     rm -f /opt/conda/envs/ptca/conda-meta/pip-*.json && \
-    /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'pip>=26.1.2,<27' && \
+    /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'pip>=26.2.0,<27' && \
     rm -f /opt/conda/conda-meta/pip-*.json
 
 COPY requirements.txt .
@@ -103,7 +103,8 @@ RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.58' 'pyt
 # setuptools: bootstrapped by the ACPT base conda image; fixes GHSA-h35f-9h28-mq5c.
 # msgpack: the base conda prefix carries its own copy that the ptca pin above never reaches;
 #   fixes GHSA-6v7p-g79w-8964.
-RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.3' 'PyJWT>=2.13.0' 'py-rattler>=0.24.0' 'cryptography>=50.0.0' 'pydantic-settings>=2.14.2' 'pyasn1>=0.6.4' 'setuptools>=83.0.0' 'msgpack>=1.2.1'
+# anyio: base-prefix dependency; fixes GHSA-5p39-cfhj-2xmp and GHSA-82r6-8w77-94w6.
+RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.3' 'PyJWT>=2.13.0' 'py-rattler>=0.24.0' 'cryptography>=50.0.0' 'pydantic-settings>=2.14.2' 'pyasn1>=0.6.4' 'setuptools>=83.0.0' 'msgpack>=1.2.1' 'anyio>=4.14.2'
 
 # pip vendors its own copies of setuptools and msgpack and declares them in
 # pip/_vendor/bom.cdx.json, which the scanner reports as setuptools 70.3.0

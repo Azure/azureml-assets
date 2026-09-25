@@ -84,11 +84,12 @@ ENV AZURE_ML_CLI_PRIVATE_FEATURES_ENABLED=True
 #   GHSA-4xgf-cpjx-pc3j.
 # - msgpack: pinned transitive dep of azureml-mlflow -> mlflow-skinny; brought
 #   in by requirements.txt, fixes GHSA-6v7p-g79w-8964.
+# - anyio: inherited base version is below the scanner-required safe floor.
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
         'setuptools>=83.0.0' 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' \
         'aiohttp>=3.14.3' 'click>=8.3.3' 'idna>=3.15' 'PyJWT>=2.13.0' \
         'py-rattler>=0.24.0' 'cryptography>=50.0.0' 'pydantic-settings>=2.14.2' \
-        'msgpack>=1.2.1'
+        'msgpack>=1.2.1' 'anyio>=4.14.2'
 
 # Vulnerability overrides in ptca conda env (python3.10):
 # - urllib3: requirements can re-resolve loose dependencies back to vulnerable
@@ -122,7 +123,8 @@ RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade \
 
 # Update duplicate base-image Python env metadata that VCM scans.
 # pip>=26.2.0 fixes GHSA-qwm4-qh6w-59xr (base image ships 26.1.2).
-RUN for py in /opt/conda/bin/python /opt/conda/envs/*/bin/python; do \
+RUN set -eu; \
+    for py in /opt/conda/bin/python /opt/conda/envs/*/bin/python; do \
         if [ -x "$py" ]; then \
             "$py" -m pip install --no-cache-dir --upgrade \
                 'setuptools>=83.0.0' \
@@ -130,12 +132,38 @@ RUN for py in /opt/conda/bin/python /opt/conda/envs/*/bin/python; do \
                 'pip>=26.2.0'; \
         fi; \
     done && \
-    find /opt -type d \( \
+    roots="/opt /root"; \
+    [ ! -d /azureml-envs ] || roots="$roots /azureml-envs"; \
+    find $roots -type f \( \
+        -path '*/site-packages/pip/_vendor/bom.cdx.json' -o \
+        -path '*/site-packages/pip/_vendor/vendor.txt' \
+    \) -delete && \
+    find $roots -type d \( \
         -name 'setuptools-70.3.0.dist-info' -o \
         -name 'setuptools-70.3.0.egg-info' -o \
+        -name 'setuptools-70.3.0-py*.egg-info' -o \
         -name 'msgpack-1.1.2.dist-info' -o \
-        -name 'msgpack-1.1.2.egg-info' \
+        -name 'msgpack-1.1.2.egg-info' -o \
+        -name 'msgpack-1.1.2-py*.egg-info' \
     \) -prune -exec rm -rf {} + && \
-    find /opt -type f -path '*/conda-meta/pip-26.1.2-*.json' -delete
+    find $roots -type f \( \
+        -path '*/conda-meta/setuptools-70.3.0-*.json' -o \
+        -path '*/conda-meta/msgpack-python-1.1.2-*.json' -o \
+        -path '*/conda-meta/msgpack-1.1.2-*.json' \
+    \) -delete && \
+    stale="$(find $roots \( \
+        -path '*/site-packages/pip/_vendor/bom.cdx.json' -o \
+        -path '*/site-packages/pip/_vendor/vendor.txt' -o \
+        -name 'setuptools-70.3.0.dist-info' -o \
+        -name 'setuptools-70.3.0.egg-info' -o \
+        -name 'setuptools-70.3.0-py*.egg-info' -o \
+        -name 'msgpack-1.1.2.dist-info' -o \
+        -name 'msgpack-1.1.2.egg-info' -o \
+        -name 'msgpack-1.1.2-py*.egg-info' -o \
+        -path '*/conda-meta/setuptools-70.3.0-*.json' -o \
+        -path '*/conda-meta/msgpack-python-1.1.2-*.json' -o \
+        -path '*/conda-meta/msgpack-1.1.2-*.json' \
+    \) -print -quit)" && \
+    [ -z "$stale" ] || { echo "stale setuptools/msgpack scanner metadata remains: $stale" >&2; exit 1; }
 
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/

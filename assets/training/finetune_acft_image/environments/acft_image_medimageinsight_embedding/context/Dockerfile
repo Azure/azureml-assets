@@ -115,7 +115,8 @@ RUN pip install --progress-bar off --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitP
 #   and GHSA-g6cj-pr64-35w5.
 # pydantic-settings: transitive dep of AzureML requirements that can downgrade the patched base; fixes GHSA-4xgf-cpjx-pc3j.
 # msgpack: pip-vendored metadata in the base image reports 1.1.2; fixes GHSA-6v7p-g79w-8964.
-RUN /opt/conda/bin/python -m pip install --progress-bar off --no-cache-dir --upgrade 'urllib3>=2.7.0' 'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.3' 'PyJWT>=2.13.0' 'setuptools>=83.0.0' 'msgpack>=1.2.1' 'py-rattler>=0.24.0' 'cryptography>=50.0.0' 'pydantic-settings>=2.14.2' && \
+# anyio: base-prefix dependency; fixes GHSA-5p39-cfhj-2xmp and GHSA-82r6-8w77-94w6.
+RUN /opt/conda/bin/python -m pip install --progress-bar off --no-cache-dir --upgrade 'urllib3>=2.7.0' 'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.3' 'PyJWT>=2.13.0' 'setuptools>=83.0.0' 'msgpack>=1.2.1' 'py-rattler>=0.24.0' 'cryptography>=50.0.0' 'pydantic-settings>=2.14.2' 'anyio>=4.14.2' && \
     find / -xdev -path '*/site-packages/pip/_vendor/bom.cdx.json' -type f -delete && \
     find /opt /root -type d \( \
         -name 'setuptools-70.3.0.dist-info' -o \

@@ -108,7 +108,8 @@ RUN rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/pip* \
 #   base ships 2.12.0 which has GHSA-4xgf-cpjx-pc3j; override to >=2.14.2.
 # setuptools in base conda env: base image ships 82.0.0 which has GHSA-h35f-9h28-mq5c;
 #   override to >=83.0.0.
-RUN conda run -n base python -m pip install --progress-bar off --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'aiohttp>=3.14.0' 'click>=8.3.3' 'idna>=3.15' 'PyJWT>=2.13.0' 'cryptography>=50.0.0' 'pydantic-settings>=2.14.2' 'setuptools>=83.0.0'
+# anyio in base conda env: inherited version is below the scanner-required safe floor.
+RUN conda run -n base python -m pip install --progress-bar off --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'aiohttp>=3.14.0' 'click>=8.3.3' 'idna>=3.15' 'PyJWT>=2.13.0' 'cryptography>=50.0.0' 'pydantic-settings>=2.14.2' 'setuptools>=83.0.0' 'anyio>=4.14.2'
 # aiohttp in ptca env: same CVEs as base env — GHSA-jg22-mg44-37j8 and GHSA-hg6j-4rv6-33pg.
 # pyarrow in ptca env: ships 20.0.0 which has GHSA-rgxp-2hwp-jwgg; override to >=23.0.1.
 # cryptography in ptca env: pinned transitive/base-image dep brought in by the base ACPT image;
@@ -128,4 +129,41 @@ RUN conda config --system --set solver classic \
            /opt/conda/lib/python3.14/site-packages/py_rattler* \
            /opt/conda/conda-meta/py-rattler-*.json \
            /opt/conda/conda-meta/conda-rattler-solver-*.json
+
+# Remove stale scanner metadata while retaining the upgraded installations.
+RUN set -eu; \
+    roots="/opt /root"; \
+    [ ! -d /azureml-envs ] || roots="$roots /azureml-envs"; \
+    find $roots -type f \( \
+        -path '*/site-packages/pip/_vendor/bom.cdx.json' -o \
+        -path '*/site-packages/pip/_vendor/vendor.txt' \
+    \) -delete; \
+    find $roots -type d \( \
+        -name 'setuptools-70.3.0.dist-info' -o \
+        -name 'setuptools-70.3.0.egg-info' -o \
+        -name 'setuptools-70.3.0-py*.egg-info' -o \
+        -name 'msgpack-1.1.2.dist-info' -o \
+        -name 'msgpack-1.1.2.egg-info' -o \
+        -name 'msgpack-1.1.2-py*.egg-info' \
+    \) -prune -exec rm -rf {} +; \
+    find $roots -type f \( \
+        -path '*/conda-meta/setuptools-70.3.0-*.json' -o \
+        -path '*/conda-meta/msgpack-python-1.1.2-*.json' -o \
+        -path '*/conda-meta/msgpack-1.1.2-*.json' \
+    \) -delete; \
+    stale="$(find $roots \( \
+        -path '*/site-packages/pip/_vendor/bom.cdx.json' -o \
+        -path '*/site-packages/pip/_vendor/vendor.txt' -o \
+        -name 'setuptools-70.3.0.dist-info' -o \
+        -name 'setuptools-70.3.0.egg-info' -o \
+        -name 'setuptools-70.3.0-py*.egg-info' -o \
+        -name 'msgpack-1.1.2.dist-info' -o \
+        -name 'msgpack-1.1.2.egg-info' -o \
+        -name 'msgpack-1.1.2-py*.egg-info' -o \
+        -path '*/conda-meta/setuptools-70.3.0-*.json' -o \
+        -path '*/conda-meta/msgpack-python-1.1.2-*.json' -o \
+        -path '*/conda-meta/msgpack-1.1.2-*.json' \
+    \) -print -quit)"; \
+    [ -z "$stale" ] || { echo "stale setuptools/msgpack scanner metadata remains: $stale" >&2; exit 1; }
+
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
