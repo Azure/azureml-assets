@@ -36,8 +36,8 @@ RUN apt-get update && \
 # Remove the pip package directory first so conda lays down a coherent installation.
 RUN rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/pip \
            /opt/conda/envs/ptca/lib/python3.10/site-packages/pip-*.dist-info && \
-    conda install -y -n ptca -c conda-forge pip==26.1.2 && \
-    rm -f /opt/conda/envs/ptca/conda-meta/pip-26.1.1*.json && \
+    conda install -y -n ptca -c conda-forge pip==26.2.0 && \
+    rm -f /opt/conda/envs/ptca/conda-meta/pip-26.1*.json && \
     conda clean -ay
 
 # ptca env (python 3.10) pip-managed overrides. Parent packages in this env
@@ -83,11 +83,12 @@ RUN conda run -n base python -m pip install --no-cache-dir --upgrade --progress-
     rm -rf /opt/conda/lib/python*/site-packages/cryptography-4[68]*.dist-info
 
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade --progress-bar off \
-        'pip==26.1.2' \
+        'pip==26.2.0' \
         'setuptools>=83.0.0' \
         'py-rattler>=0.24.0' \
         'python-dotenv>=1.2.2' \
         'urllib3>=2.7.0' \
+        'anyio>=4.14.2' \
         'idna>=3.15' \
         'click>=8.3.3' \
         'aiohttp>=3.14.0' \
@@ -95,7 +96,7 @@ RUN conda run -n base python -m pip install --no-cache-dir --upgrade --progress-
         'pydantic-settings>=2.14.2' \
         'msgpack>=1.2.1' && \
     rm -rf /opt/conda/lib/python*/site-packages/pip-26.0*.dist-info \
-           /opt/conda/lib/python*/site-packages/pip-26.1.1.dist-info \
+           /opt/conda/lib/python*/site-packages/pip-26.1*.dist-info \
            /opt/conda/lib/python*/site-packages/setuptools-8[12]*.dist-info \
            /opt/conda/lib/python*/site-packages/py__rattler-0.23*.dist-info \
            /opt/conda/lib/python*/site-packages/python__dotenv-1.2.1.dist-info \
@@ -105,7 +106,8 @@ RUN conda run -n base python -m pip install --no-cache-dir --upgrade --progress-
            /opt/conda/lib/python*/site-packages/aiohttp-3.13*.dist-info \
            /opt/conda/lib/python*/site-packages/PyJWT-2.12*.dist-info \
            /opt/conda/lib/python*/site-packages/pydantic_settings-2.12*.dist-info \
-           /opt/conda/lib/python*/site-packages/msgpack-1.1*.dist-info
+           /opt/conda/lib/python*/site-packages/msgpack-1.1*.dist-info && \
+    rm -f /opt/conda/conda-meta/pip-26.1*.json
 
 RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade --progress-bar off \
         'setuptools>=83.0.0' && \
@@ -114,3 +116,39 @@ RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade --pr
 COPY requirements.txt .
 RUN pip install --progress-bar off -r requirements.txt
 RUN pip install --progress-bar off --no-build-isolation git+https://github.com/facebookresearch/detectron2.git@a1ce2f9
+
+# Remove stale scanner metadata while retaining the upgraded installations.
+RUN set -eu; \
+    roots="/opt /root"; \
+    [ ! -d /azureml-envs ] || roots="$roots /azureml-envs"; \
+    find $roots -type f \( \
+        -path '*/site-packages/pip/_vendor/bom.cdx.json' -o \
+        -path '*/site-packages/pip/_vendor/vendor.txt' \
+    \) -delete; \
+    find $roots -type d \( \
+        -name 'setuptools-70.3.0.dist-info' -o \
+        -name 'setuptools-70.3.0.egg-info' -o \
+        -name 'setuptools-70.3.0-py*.egg-info' -o \
+        -name 'msgpack-1.1.2.dist-info' -o \
+        -name 'msgpack-1.1.2.egg-info' -o \
+        -name 'msgpack-1.1.2-py*.egg-info' \
+    \) -prune -exec rm -rf {} +; \
+    find $roots -type f \( \
+        -path '*/conda-meta/setuptools-70.3.0-*.json' -o \
+        -path '*/conda-meta/msgpack-python-1.1.2-*.json' -o \
+        -path '*/conda-meta/msgpack-1.1.2-*.json' \
+    \) -delete; \
+    stale="$(find $roots \( \
+        -path '*/site-packages/pip/_vendor/bom.cdx.json' -o \
+        -path '*/site-packages/pip/_vendor/vendor.txt' -o \
+        -name 'setuptools-70.3.0.dist-info' -o \
+        -name 'setuptools-70.3.0.egg-info' -o \
+        -name 'setuptools-70.3.0-py*.egg-info' -o \
+        -name 'msgpack-1.1.2.dist-info' -o \
+        -name 'msgpack-1.1.2.egg-info' -o \
+        -name 'msgpack-1.1.2-py*.egg-info' -o \
+        -path '*/conda-meta/setuptools-70.3.0-*.json' -o \
+        -path '*/conda-meta/msgpack-python-1.1.2-*.json' -o \
+        -path '*/conda-meta/msgpack-1.1.2-*.json' \
+    \) -print -quit)"; \
+    [ -z "$stale" ] || { echo "stale setuptools/msgpack scanner metadata remains: $stale" >&2; exit 1; }
