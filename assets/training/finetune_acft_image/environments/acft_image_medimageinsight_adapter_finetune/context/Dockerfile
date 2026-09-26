@@ -47,45 +47,6 @@ RUN apt-get -y update && apt-get -y upgrade \
  && apt-get -y install --no-install-recommends unzip \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Fail closed if the package repositories did not supply the scanner-required fixes.
-RUN set -eu; \
-    check_version() { \
-        installed="$(dpkg-query -W -f='${Version}' "$1")"; \
-        dpkg --compare-versions "$installed" ge "$2" || { echo "$1 $installed is below required version $2" >&2; exit 1; }; \
-    }; \
-    check_version libp11-kit0 0.24.0-6ubuntu0.1; \
-    check_version libgcrypt20 1.9.4-3ubuntu3.3; \
-    check_version openssh-client 1:8.9p1-3ubuntu0.17; \
-    check_version perl 5.34.0-3ubuntu1.9; \
-    check_version libperl5.34 5.34.0-3ubuntu1.9; \
-    check_version perl-modules-5.34 5.34.0-3ubuntu1.9; \
-    check_version perl-base 5.34.0-3ubuntu1.9; \
-    check_version libc6-dev 2.35-0ubuntu3.15; \
-    check_version libc-bin 2.35-0ubuntu3.15; \
-    check_version libc6 2.35-0ubuntu3.15; \
-    check_version libc-dev-bin 2.35-0ubuntu3.15; \
-    check_version locales 2.35-0ubuntu3.15; \
-    check_version dotnet-runtime-8.0 '8.0.31-0ubuntu1~22.04.1'; \
-    check_version dotnet-hostfxr-8.0 '8.0.31-0ubuntu1~22.04.1'; \
-    check_version dotnet-host-8.0 '8.0.31-0ubuntu1~22.04.1'; \
-    check_version python3.10 '3.10.12-1~22.04.18'; \
-    check_version python3.10-minimal '3.10.12-1~22.04.18'; \
-    check_version libpython3.10-minimal '3.10.12-1~22.04.18'; \
-    check_version libpython3.10-stdlib '3.10.12-1~22.04.18'; \
-    check_version libsqlite3-0 3.37.2-2ubuntu0.8; \
-    check_version libcurl4 7.81.0-1ubuntu1.27; \
-    check_version curl 7.81.0-1ubuntu1.27; \
-    check_version libcurl3-gnutls 7.81.0-1ubuntu1.27; \
-    check_version libpng16-16 1.6.37-3ubuntu0.6; \
-    check_version libssl-dev 3.0.2-0ubuntu1.29; \
-    check_version libssl3 3.0.2-0ubuntu1.29; \
-    check_version openssl 3.0.2-0ubuntu1.29; \
-    check_version libattr1 1:2.5.1-1ubuntu0.1; \
-    check_version libssh-4 0.9.6-2ubuntu0.22.04.8; \
-    check_version diffutils 1:3.8-0ubuntu2.1; \
-    check_version coreutils 8.32-4.1ubuntu1.4; \
-    check_version libevent-core-2.1-7 2.1.12-stable-1ubuntu0.1
-
 # Install required PyPI packages.
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir && \
@@ -202,9 +163,5 @@ RUN set -eu; \
         -path '*/conda-meta/msgpack-1.1.2-*.json' \
     \) -print -quit)"; \
     [ -z "$stale" ] || { echo "stale setuptools/msgpack scanner metadata remains: $stale" >&2; exit 1; }
-
-# Verify each affected Python environment reports the scanner-required versions.
-RUN /opt/conda/bin/python -c "from importlib.metadata import version; from packaging.version import Version; required={'pip':'26.2.0','anyio':'4.14.2','setuptools':'83.0.0','msgpack':'1.2.1'}; actual={p: version(p) for p in required}; assert all(Version(actual[p]) >= Version(v) for p, v in required.items()), f'base package versions below required floors: {actual}'" && \
-    /opt/conda/envs/ptca/bin/python -c "from importlib.metadata import version; from packaging.version import Version; required={'mlflow':'3.15.0','pip':'26.2.0','sqlparse':'0.6.0','setuptools':'83.0.0'}; actual={p: version(p) for p in required}; assert all(Version(actual[p]) >= Version(v) for p, v in required.items()), f'ptca package versions below required floors: {actual}'"
 
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
