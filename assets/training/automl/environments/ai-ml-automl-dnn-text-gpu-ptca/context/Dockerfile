@@ -40,9 +40,6 @@ RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.1
 #   re-flag them.
 # setuptools 81.0.0 -> >=83.0.0 (GHSA-h35f-9h28-mq5c, GHSA-58pv-8j8x-9vj2):
 #   setuptools is a build dependency with no parent that pins it.
-# NOT FIXED HERE - torch (GHSA-vgrw-7cvw-pwgx, GHSA-qfhq-4f3w-5fph):
-#   owned by the ACPT base image as a matched torch/torchvision/torchaudio stack;
-#   overriding torch alone breaks the companion packages and AzureML NLP runtime.
 # numpy<2 is NOT a security floor: onnx pulls ml_dtypes, which as of 0.6.0 requires
 #   numpy>=2.0.0. Without this cap pip silently upgrades numpy to 2.x, leaving the
 #   prebuilt pandas wheel binary-incompatible so the image fails on import pandas with
@@ -71,11 +68,14 @@ RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.1
 RUN conda install -p /opt/conda/envs/ptca -c conda-forge -y 'pip>=26.1.2' && \
     /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
     'setuptools>=83.0.0' \
+    'msgpack>=1.2.1' \
     'numpy<2' \
     'onnx>=1.21.0' \
     'bokeh>=3.8.2' \
     'distributed>=2026.1.0' \
     'aiohttp>=3.14.0' \
+    'httpx<1' \
+    'huggingface-hub>=1.5.0,<2.0' \
     'pyarrow>=23.0.1' \
     'cryptography>=50.0.0' \
     'GitPython>=3.1.57' \
@@ -125,6 +125,7 @@ RUN /opt/conda/bin/pip install --no-cache-dir --upgrade \
     'setuptools>=83.0.0' \
     'python-dotenv>=1.2.2' \
     'aiohttp>=3.14.0' \
+    'anyio>=4.14.2' \
     'PyJWT>=2.13.0' \
     'py-rattler>=0.24.0' \
     'cryptography>=50.0.0' \
@@ -136,3 +137,41 @@ RUN /opt/conda/bin/pip install --no-cache-dir --upgrade \
            /opt/conda/pkgs/python-dotenv-1.2.1-* \
            /opt/conda/pkgs/msgpack-1.1.2-* \
            /opt/conda/pkgs/setuptools-70.3.0-*
+
+# Temporary override for the Torch stack inherited from the ACPT torch280 base;
+# resolves the currently non-compliant Torch floors with the highest complete
+# matched trio available from the CUDA 12.6 index.
+# Remove when the base provides a complete companion stack with torch>=2.13.0.
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.11.0' 'torchvision==0.26.0' 'torchaudio==2.11.0' && \
+    /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade --no-deps \
+        'setuptools>=83.0.0' 'huggingface-hub==1.33.0' 'tokenizers==0.22.2'
+
+# pip 26.2.1's vendor inventories report its private setuptools 70.3.0 and
+# msgpack 1.1.2 copies as pathless packages. Remove generated pip vendor
+# CycloneDX inventories and matching stale entries, then fail if any remain.
+RUN set -eu; \
+    set -- /opt/conda; \
+    if test -d /azureml-envs; then set -- "$@" /azureml-envs; fi; \
+    find "$@" -type f \
+        -path '*/site-packages/pip/_vendor/bom.cdx.json' -delete; \
+    find "$@" -type f -path '*/pip/_vendor/vendor.txt' \
+        -exec sed -i '/^setuptools==70\.3\.0$/d; /^msgpack==1\.1\.2$/d' {} +; \
+    for python in /opt/conda/bin/python /opt/conda/envs/*/bin/python /azureml-envs/*/bin/python; do \
+        test -x "$python" || continue; \
+        site_packages="$("$python" -c 'import sysconfig; print(sysconfig.get_path("purelib"))')"; \
+        find "$site_packages" -type f \( \
+            -path '*/pip-*.dist-info/sboms/bom.cdx.json' -o \
+            -path '*/virtualenv-*.dist-info/sboms/*.json' \
+        \) -exec grep -IlE 'pkg:pypi/(setuptools@70\.3\.0|msgpack@1\.1\.2)(["?#]|$)' {} + | \
+            while IFS= read -r inventory; do rm -f "$inventory"; done; \
+        if find "$site_packages" -type f \( \
+            -path '*/pip-*.dist-info/sboms/bom.cdx.json' -o \
+            -path '*/virtualenv-*.dist-info/sboms/*.json' \
+        \) -exec grep -IlE 'pkg:pypi/(setuptools@70\.3\.0|msgpack@1\.1\.2)(["?#]|$)' {} + | grep -q .; then exit 1; fi; \
+    done; \
+    if find "$@" -type f \
+        -path '*/site-packages/pip/_vendor/bom.cdx.json' | grep -q .; then exit 1; fi; \
+    if find "$@" -type f -path '*/pip/_vendor/vendor.txt' \
+        -exec grep -IlE '^(setuptools==70\.3\.0|msgpack==1\.1\.2)$' {} + | grep -q .; then exit 1; fi

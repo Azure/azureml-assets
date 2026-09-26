@@ -63,11 +63,6 @@ RUN pip install --upgrade lightgbm==4.6.0
 
 RUN pip install --upgrade --force-reinstall xgboost==1.5.2 pandas==1.5.3
 
-# Install ncurses via conda (C library, not available on pip; single-package solve is trivial)
-RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    ncurses=6.5 \
-    -c conda-forge -y
-
 # Install packages via pip (avoids conda solver OOM)
 RUN pip install --no-cache-dir \
     'numpy>=1.23.5,<1.24' \

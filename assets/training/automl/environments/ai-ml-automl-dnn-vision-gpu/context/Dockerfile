@@ -227,6 +227,7 @@ RUN conda run -n base pip install --no-cache-dir --upgrade \
                 'idna>=3.15' \
                 'click>=8.3.3' \
                 'aiohttp>=3.14.0' \
+                'anyio>=4.14.2' \
                 'PyJWT>=2.13.0' \
                 'py-rattler>=0.24.0' \
                 'cryptography>=48.0.1' \

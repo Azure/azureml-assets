@@ -1,7 +1,7 @@
 transformers
-datasets
+datasets>=4.8.4
 accelerate
 scikit-learn
-apache_beam~=2.69.0
+apache_beam~=2.72.0
 evaluate
 cryptography>=46.0.7,<47.0.0
