@@ -149,9 +149,9 @@ COPY patch_ray_jackson.py /tmp/patch_ray_jackson.py
 RUN JACKSON_CORE_VERSION=2.21.5 \
     JACKSON_CORE_JAR_SHA1=7ec0c8bf8402fa998f64b2009632d6566a42ceb7 \
     JACKSON_CORE_POM_SHA1=32a98918e6a365962063ac88abe54b1251f1c2d0 \
-    JACKSON_DATABIND_VERSION=2.21.5 \
-    JACKSON_DATABIND_JAR_SHA1=84924990b468233a28214ae2c505a9ec24cd6ea6 \
-    JACKSON_DATABIND_POM_SHA1=f85e75bea42ea3f61307a3dd9ba27ca33962be68 \
+    JACKSON_DATABIND_VERSION=2.21.6 \
+    JACKSON_DATABIND_JAR_SHA1=90fc0c39cc03058141d4312ccadb431a583d6574 \
+    JACKSON_DATABIND_POM_SHA1=9bb89f1e2ab3f37e1b2f8fd148ed7a8b8d79b575 \
     python /tmp/patch_ray_jackson.py && \
     rm /tmp/patch_ray_jackson.py
 
@@ -181,6 +181,15 @@ RUN cd /opt/slime/slime/backends/megatron_utils/kernels/int4_qat && \
 RUN apt-get update && \
     apt-get install -y --no-install-recommends --only-upgrade \
         curl \
+        gir1.2-glib-2.0 \
+        libc-bin \
+        libc-dev-bin \
+        libc6 \
+        libc6-dev \
+        libgcrypt20 \
+        libexpat1 \
+        libglib2.0-0t64 \
+        libglib2.0-data \
         libgssapi-krb5-2 \
         libk5crypto3 \
         libkrb5-3 \
@@ -192,12 +201,24 @@ RUN apt-get update && \
         libpam-modules-bin \
         libpam-runtime \
         libpam0g \
+        libperl5.38t64 \
+        libpython3.12-minimal \
+        libpython3.12-stdlib \
         libssl3t64 \
         libsqlite3-0 \
+        libxml2 \
         nginx \
         nginx-common \
         nginx-light \
+        openssh-client \
+        openssh-server \
+        openssh-sftp-server \
         openssl \
+        perl \
+        perl-base \
+        perl-modules-5.38 \
+        python3.12 \
+        python3.12-minimal \
         rsyslog \
         tar \
         wget && \
@@ -220,12 +241,67 @@ RUN python -m pip install --no-cache-dir \
         "pyarrow>=23.0.1" \
         "pyasn1>=0.6.4" \
         "pillow>=12.3.0" \
-        "transformers>=5.5.0,<=5.6.0" \
+        "transformers>=5.10.0" \
         "mcp[cli]>=1.28.1" \
         "wandb>=0.28.1" \
         "GitPython>=3.1.57" \
         "cryptography>=50.0.0" \
+        "pip>=26.2.0" \
         "setuptools>=83.0.0"
+
+# pip and virtualenv publish PEP 770 inventories for bootstrap/vendored
+# components. Remove only inventories and package-manager records that still
+# describe the superseded pip 26.0.1 or setuptools 82.0.1, then fail closed if
+# either stale version remains in those metadata locations.
+RUN set -eux; \
+    python -c 'from importlib.metadata import version; from packaging.version import Version; assert Version(version("pip")) >= Version("26.2.0"); assert Version(version("setuptools")) >= Version("83.0.0")'; \
+    find /opt/miniconda -type f -path '*/pip/_vendor/vendor.txt' -exec \
+        sed -i '/^pip==26\.0\.1$/d; /^setuptools==82\.0\.1$/d' {} +; \
+    find /opt/miniconda -type f \( \
+            -path '*/pip/_vendor/bom.cdx.json' -o \
+            -path '*/virtualenv-*.dist-info/sboms/*' -o \
+            -path '*/pip-*.dist-info/sboms/*' -o \
+            -path '*/setuptools-*.dist-info/sboms/*' \
+        \) -exec sh -c 'for metadata do if grep -Eq "26\.0\.1|82\.0\.1" "$metadata"; then rm -f "$metadata"; fi; done' sh {} +; \
+    find /opt/miniconda -type d \( \
+            -name 'pip-26.0.1.dist-info' -o \
+            -name 'setuptools-82.0.1.dist-info' \
+        \) -prune -exec rm -rf {} +; \
+    find /opt/miniconda -type f \( \
+            -path '*/conda-meta/pip-26.0.1-*.json' -o \
+            -path '*/conda-meta/setuptools-82.0.1-*.json' \
+        \) -delete; \
+    if [ -d /opt/miniconda/pkgs ]; then \
+        find /opt/miniconda/pkgs -mindepth 1 -maxdepth 1 -type d \( \
+                -name 'pip-26.0.1-*' -o \
+                -name 'setuptools-82.0.1-*' \
+            \) -prune -exec rm -rf {} +; \
+    fi; \
+    stale_paths="$(find /opt/miniconda \( \
+            -type d \( -name 'pip-26.0.1.dist-info' -o -name 'setuptools-82.0.1.dist-info' \) -o \
+            -type d \( -path '/opt/miniconda/pkgs/pip-26.0.1-*' -o -path '/opt/miniconda/pkgs/setuptools-82.0.1-*' \) -o \
+            -type f \( -path '*/conda-meta/pip-26.0.1-*.json' -o -path '*/conda-meta/setuptools-82.0.1-*.json' \) \
+        \) -print -quit)"; \
+    test -z "$stale_paths"; \
+    stale_inventories="$(find /opt/miniconda -type f \( \
+            -path '*/pip/_vendor/vendor.txt' -o \
+            -path '*/pip/_vendor/bom.cdx.json' -o \
+            -path '*/virtualenv-*.dist-info/sboms/*' -o \
+            -path '*/pip-*.dist-info/sboms/*' -o \
+            -path '*/setuptools-*.dist-info/sboms/*' \
+        \) -exec grep -IlE '26\.0\.1|82\.0\.1' {} + || true)"; \
+    test -z "$stale_inventories"
+
+# Reassert the curated runtime after all dependency-resolving installs. SGLang's
+# bootstrap metadata pins an older Torch/Transformers stack; --no-deps prevents
+# that resolver from undoing the versions intentionally selected by this image.
+RUN python -m pip install --no-cache-dir --no-deps --upgrade \
+        "sglang==${SGLANG_VERSION}" \
+        torch==2.13.0 \
+        torchvision==0.28.0 \
+        torchaudio==2.11.0 \
+        "transformers>=5.10.0" && \
+    python -c 'from importlib.metadata import version; from packaging.version import Version; expected = {"sglang": "0.5.11", "torch": "2.13.0", "torchvision": "0.28.0", "torchaudio": "2.11.0"}; actual = {name: version(name).split("+", 1)[0] for name in expected}; transformers_version = version("transformers"); assert actual == expected, f"unexpected curated stack: {actual}"; assert Version(transformers_version) >= Version("5.10.0"), f"transformers {transformers_version} is below 5.10.0"'
 
 # The optional wandb service binary embeds vulnerable Go modules; remove it so
 # runtime uses the Python client path instead.

@@ -199,11 +199,15 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Upgrade current Ubuntu USN fixes for packages installed by the CUDA and inferencing layers,
-# including curl (USN-8651-1/USN-8670-2) and rsyslog (USN-8598-1).
+# including curl (USN-8651-1/USN-8670-2), glibc (USN-8737-1), and rsyslog (USN-8598-1).
 RUN apt-get update && \
     apt-get install --only-upgrade -y --no-install-recommends \
         curl \
         gzip \
+        libc-bin \
+        libc-dev-bin \
+        libc6 \
+        libc6-dev \
         libcurl3-gnutls \
         libcurl4 \
         libnghttp2-14 \
@@ -211,6 +215,7 @@ RUN apt-get update && \
         libpython3.10-stdlib \
         libsqlite3-0 \
         libxml2 \
+        locales \
         python3.10 \
         python3.10-minimal \
         rsyslog \
