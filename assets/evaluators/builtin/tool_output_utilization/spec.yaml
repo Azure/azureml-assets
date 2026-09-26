@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.tool_output_utilization"
-version: 11
+version: 12
 displayName: "Tool-Output-Utilization-Evaluator"
 description: "Checks if an agent correctly interprets and contextually uses the outputs returned by invoked tools (e.g., APIs, DB queries, search results) without fabrication or omission. Use it to validate that agents accurately reuse and represent tool outputs in their responses across tool-dependent systems."
 evaluatorType: "builtin"
@@ -9,10 +9,13 @@ categories: ["agents"]
 tags:
   provider: "Microsoft"
   is_continuous_scenario: "true"
+supportedEvaluationLevels: ["turn"]
 initParameterSchema:
   type: "object"
   properties:
     deployment_name:
+      type: "string"
+    evaluation_level:
       type: "string"
   required: ["deployment_name"]
 dataMappingSchema:
@@ -36,7 +39,13 @@ dataMappingSchema:
         - type: "array"
           items:
             type: "object"
-  required: ["query", "response", "tool_definitions"]
+    messages:
+      type: "array"
+      items:
+        type: "object"
+  anyOf:
+    - required: ["query", "response", "tool_definitions"]
+    - required: ["messages", "tool_definitions"]
 outputSchema:
   tool_output_utilization:
     type: "ordinal"
