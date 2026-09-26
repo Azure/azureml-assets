@@ -16,16 +16,16 @@ import sys
 
 
 EXPECTED_VERSIONS = {
-    "torch": "2.11.0",
-    "torchvision": "0.26.0",
-    "vllm": "0.26.0",
+    "torch": "2.13.0",
+    "torchvision": "0.28.0",
+    "vllm": "0.28.0",
     "openai": "2.25.0",
     "nvidia-nccl-cu12": "2.29.7",
     "flashinfer-python": "0.6.13",
     "flashinfer-cubin": "0.6.13",
 }
 EXPECTED_CUDA = "12.9"
-EXPECTED_TORCH_NCCL = (2, 28, 9)
+EXPECTED_TORCH_NCCL = (2, 29, 7)
 EXPECTED_RUNTIME_NCCL = (2, 29, 7)
 
 
