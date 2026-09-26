@@ -36,6 +36,7 @@ RUN printf 'Acquire::Retries "5";\n' > /etc/apt/apt.conf.d/80-retries && \
         libasound2-data \
         libcurl3-gnutls \
         libcurl4 \
+        libexpat1 \
         libgssapi-krb5-2 \
         libk5crypto3 \
         libkrb5-3 \
@@ -56,6 +57,7 @@ RUN printf 'Acquire::Retries "5";\n' > /etc/apt/apt.conf.d/80-retries && \
         libsqlite3-0 \
         libsystemd0 \
         libudev1 \
+        libxml2 \
         locales \
         nginx-common \
         nginx-light \
@@ -93,16 +95,6 @@ RUN apt-get update && \
 # sqlparse>=0.6.0: transitive dep of azureml-mlflow -> mlflow-skinny; fixes
 # GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr, GHSA-3496-9g83-7v6x, and
 # GHSA-pwgv-4x5q-6m9f.
-# NOT FIXED HERE - torch (GHSA-vgrw-7cvw-pwgx, GHSA-qfhq-4f3w-5fph,
-#   GHSA-rrmf-rvhw-rf47): torch is owned by the ACPT base image
-#   (aifx/acpt/stable-ubuntu2204-cu126-py310-torch280), which ships a matched
-#   torch/torchvision/torchaudio set plus a transformers build compiled against
-#   it. Overriding torch alone leaves torchvision/torchaudio pinned to
-#   torch==2.8.0 and breaks `transformers` at import time; upgrading the whole
-#   stack is not possible either, because torch 2.13.0 has no matching
-#   torchaudio release and torchvision 0.28.0 removes torchvision.io.VideoReader
-#   which the base-image transformers still imports. These CVEs must therefore
-#   be remediated in the ACPT base image, not in this curated layer.
 # urllib3>=2.7.0: GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j.
 # idna>=3.15: GHSA-65pc-fj4g-8rjx.
 # aiohttp>=3.14.3: GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8,
@@ -143,21 +135,70 @@ RUN conda run -n ptca python -m pip install --upgrade --no-cache-dir \
 #   GHSA-6v7p-g79w-8964.
 # PyJWT>=2.13.0: transitive dep from the base image; fixes GHSA-jq35-7prp-9v3f
 #   and GHSA-993g-76c3-p5m4.
+# anyio>=4.14.2: transitive dep in the base prefix; fixes
+#   GHSA-5p39-cfhj-2xmp and GHSA-82r6-8w77-94w6.
 RUN conda run -n base python -m pip install --upgrade \
-    'setuptools>=83.0.0' 'msgpack>=1.2.1' 'python-dotenv>=1.2.2' \
+    'pip>=26.2.0' 'setuptools>=83.0.0' 'msgpack>=1.2.1' 'python-dotenv>=1.2.2' \
     'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.3' \
-    'cryptography>=50.0.0' 'PyJWT>=2.13.0' && \
+    'anyio>=4.14.2' 'cryptography>=50.0.0' 'PyJWT>=2.13.0' && \
     conda clean -a -y && rm -rf /opt/conda/pkgs/
 
-RUN find /opt/conda -type d \( \
-        -name 'setuptools-70.3.0.dist-info' -o \
-        -name 'setuptools-70.3.0-py*.egg-info' -o \
-        -name 'msgpack-1.1.2.dist-info' \
-    \) -prune -exec rm -rf {} + && \
-    conda run -n base python -m pip install --upgrade --no-cache-dir \
+# Temporary override for torch inherited from the ACPT torch280 base; fixes
+# GHSA-rrmf-rvhw-rf47, GHSA-qfhq-4f3w-5fph, and GHSA-vgrw-7cvw-pwgx.
+# Remove when the base supplies torch>=2.13.0 with a compatible companion stack.
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
+        'torch==2.13.0' 'torchvision==0.28.0' && \
+    /opt/conda/envs/ptca/bin/python -c 'from importlib.metadata import version; actual = {name: version(name).split("+", 1)[0] for name in ("torch", "torchvision")}; expected = {"torch": "2.13.0", "torchvision": "0.28.0"}; assert actual == expected, f"unexpected Torch stack: {actual}"'
+
+RUN conda run -n base python -m pip install --upgrade --no-cache-dir \
         'setuptools>=83.0.0' 'msgpack>=1.2.1' && \
     conda run -n ptca python -m pip install --upgrade --no-cache-dir \
-        'setuptools>=83.0.0' 'msgpack>=1.2.1' && \
+        'pip>=26.2.0' 'setuptools>=83.0.0' 'msgpack>=1.2.1' && \
+    site_packages="$(find /opt/conda/lib -mindepth 2 -maxdepth 2 -type d \
+        -path '/opt/conda/lib/python*/site-packages' -print; \
+        if [ -d /opt/conda/envs/ptca/lib/python3.10/site-packages ]; then \
+            printf '%s\n' /opt/conda/envs/ptca/lib/python3.10/site-packages; \
+        fi)" && \
+    for site_packages_dir in $site_packages; do \
+        rm -f \
+            "$site_packages_dir/pip/_vendor/bom.cdx.json" \
+            "$site_packages_dir/pip/_vendor/vendor.txt"; \
+        find "$site_packages_dir" -maxdepth 1 -type d \( \
+                -name 'setuptools-70.3.0.dist-info' -o \
+                -name 'setuptools-70.3.0.egg-info' -o \
+                -name 'setuptools-70.3.0-py*.egg-info' -o \
+                -name 'msgpack-1.1.2.dist-info' -o \
+                -name 'msgpack-1.1.2.egg-info' -o \
+                -name 'msgpack-1.1.2-py*.egg-info' -o \
+                -name 'pip-26.1.2.dist-info' \
+            \) -prune -exec rm -rf {} +; \
+    done && \
+    rm -f \
+        /opt/conda/conda-meta/setuptools-70.3.0-*.json \
+        /opt/conda/conda-meta/msgpack-1.1.2-*.json \
+        /opt/conda/conda-meta/msgpack-python-1.1.2-*.json \
+        /opt/conda/conda-meta/pip-26.1.2-*.json \
+        /opt/conda/envs/ptca/conda-meta/setuptools-70.3.0-*.json \
+        /opt/conda/envs/ptca/conda-meta/msgpack-1.1.2-*.json \
+        /opt/conda/envs/ptca/conda-meta/msgpack-python-1.1.2-*.json \
+        /opt/conda/envs/ptca/conda-meta/pip-26.1.2-*.json && \
+    stale_metadata="$(find $site_packages \
+        /opt/conda/conda-meta \
+        /opt/conda/envs/ptca/conda-meta \( \
+            -path '*/pip/_vendor/bom.cdx.json' -o \
+            -path '*/pip/_vendor/vendor.txt' -o \
+            -name 'setuptools-70.3.0.dist-info' -o \
+            -name 'setuptools-70.3.0.egg-info' -o \
+            -name 'setuptools-70.3.0-py*.egg-info' -o \
+            -name 'setuptools-70.3.0-*.json' -o \
+            -name 'msgpack-1.1.2.dist-info' -o \
+            -name 'msgpack-1.1.2.egg-info' -o \
+            -name 'msgpack-1.1.2-py*.egg-info' -o \
+            -name 'msgpack-1.1.2-*.json' -o \
+            -name 'msgpack-python-1.1.2-*.json' -o \
+            -name 'pip-26.1.2.dist-info' -o \
+            -name 'pip-26.1.2-*.json' \
+    \) -print -quit)" && test -z "$stale_metadata" && \
     conda clean -a -y && rm -rf /opt/conda/pkgs/
 
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/

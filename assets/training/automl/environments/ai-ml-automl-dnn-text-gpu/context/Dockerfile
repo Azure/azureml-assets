@@ -133,17 +133,21 @@ RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3'
 # The ACPT ptca env and the base conda prefix carry their own copies of these
 # packages, which the AzureML conda env above never touches; patch them explicitly.
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3'
-RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3' 'cryptography>=50.0.0'
+RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3' 'anyio>=4.14.2' 'cryptography>=50.0.0'
 
-# NOT FIXED HERE - torch (GHSA-rrmf-rvhw-rf47, GHSA-vgrw-7cvw-pwgx,
-# GHSA-qfhq-4f3w-5fph) is owned by the ACPT base image and AzureML NLP runtime
-# as matched torch/torchvision/torchaudio stacks. Overriding torch alone breaks
-# those companion packages; these findings require patched parent releases.
-RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'setuptools>=83.0.0'
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'setuptools>=83.0.0' 'msgpack>=1.2.1'
 
-# Apply the same setuptools security fix in the AzureML and base conda envs.
-RUN pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==83.0.0'
-RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'setuptools>=83.0.0'
+# Apply the same setuptools and msgpack security fixes in the AzureML and base conda envs.
+RUN pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==83.0.0' 'msgpack>=1.2.1'
+RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'setuptools>=83.0.0' 'msgpack>=1.2.1'
+
+# Temporary override for torch inherited from the ACPT torch280 base; fixes
+# GHSA-rrmf-rvhw-rf47, GHSA-qfhq-4f3w-5fph, and GHSA-vgrw-7cvw-pwgx.
+# Remove when the base supplies torch>=2.13.0 with a compatible companion stack.
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
+        'torch==2.13.0' 'torchvision==0.28.0' && \
+    "$AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip" install --no-cache-dir --upgrade \
+        'torch==2.13.0' 'torchvision==0.28.0'
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  export CUDACXX=/usr/local/cuda/bin/nvcc && \
@@ -154,5 +158,36 @@ RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  pip install --no-cache-dir --no-build-isolation \
  git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d"
 
+RUN /opt/conda/envs/ptca/bin/python -c 'from importlib.metadata import version; actual = {name: version(name).split("+", 1)[0] for name in ("torch", "torchvision")}; expected = {"torch": "2.13.0", "torchvision": "0.28.0"}; assert actual == expected, f"unexpected Torch stack: {actual}"' && \
+    "$AZUREML_CONDA_ENVIRONMENT_PATH/bin/python" -c 'from importlib.metadata import version; actual = {name: version(name).split("+", 1)[0] for name in ("torch", "torchvision")}; expected = {"torch": "2.13.0", "torchvision": "0.28.0"}; assert actual == expected, f"unexpected Torch stack: {actual}"'
+
 RUN rm -rf /opt/conda/pkgs/
+
+# pip 26.2.1's vendor inventories report its private setuptools 70.3.0 and
+# msgpack 1.1.2 copies as pathless packages. Remove generated pip vendor
+# CycloneDX inventories and matching stale entries, then fail if any remain.
+RUN set -eu; \
+    set -- /opt/conda; \
+    if test -d /azureml-envs; then set -- "$@" /azureml-envs; fi; \
+    find "$@" -type f \
+        -path '*/site-packages/pip/_vendor/bom.cdx.json' -delete; \
+    find "$@" -type f -path '*/pip/_vendor/vendor.txt' \
+        -exec sed -i '/^setuptools==70\.3\.0$/d; /^msgpack==1\.1\.2$/d' {} +; \
+    for python in /opt/conda/bin/python /opt/conda/envs/*/bin/python /azureml-envs/*/bin/python; do \
+        test -x "$python" || continue; \
+        site_packages="$("$python" -c 'import sysconfig; print(sysconfig.get_path("purelib"))')"; \
+        find "$site_packages" -type f \( \
+            -path '*/pip-*.dist-info/sboms/bom.cdx.json' -o \
+            -path '*/virtualenv-*.dist-info/sboms/*.json' \
+        \) -exec grep -IlE 'pkg:pypi/(setuptools@70\.3\.0|msgpack@1\.1\.2)(["?#]|$)' {} + | \
+            while IFS= read -r inventory; do rm -f "$inventory"; done; \
+        if find "$site_packages" -type f \( \
+            -path '*/pip-*.dist-info/sboms/bom.cdx.json' -o \
+            -path '*/virtualenv-*.dist-info/sboms/*.json' \
+        \) -exec grep -IlE 'pkg:pypi/(setuptools@70\.3\.0|msgpack@1\.1\.2)(["?#]|$)' {} + | grep -q .; then exit 1; fi; \
+    done; \
+    if find "$@" -type f \
+        -path '*/site-packages/pip/_vendor/bom.cdx.json' | grep -q .; then exit 1; fi; \
+    if find "$@" -type f -path '*/pip/_vendor/vendor.txt' \
+        -exec grep -IlE '^(setuptools==70\.3\.0|msgpack==1\.1\.2)$' {} + | grep -q .; then exit 1; fi
 # end pip install
