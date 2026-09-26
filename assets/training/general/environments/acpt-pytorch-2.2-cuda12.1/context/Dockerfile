@@ -95,11 +95,12 @@ RUN pip install -r requirements.txt --no-cache-dir && \
 # resolves the currently non-compliant Torch floors with the highest complete
 # matched trio available from the CUDA 12.6 index.
 # Remove when the base provides a complete companion stack with torch>=2.13.0.
+# datasets>=4.8.4 handles torchvision releases that no longer expose VideoReader.
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
         --index-url https://download.pytorch.org/whl/cu126 \
         'torch==2.11.0' 'torchvision==0.26.0' 'torchaudio==2.11.0' && \
     /opt/conda/envs/ptca/bin/python -m pip install --upgrade --no-cache-dir \
-        'setuptools>=83.0.0'
+        'datasets>=4.8.4' 'setuptools>=83.0.0'
 
 # Inference requirements.
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/

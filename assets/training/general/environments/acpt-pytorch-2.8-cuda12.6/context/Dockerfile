@@ -147,6 +147,7 @@ RUN conda run -n base python -m pip install --upgrade \
 # resolves the currently non-compliant Torch floors with the highest complete
 # matched trio available from the CUDA 12.6 index.
 # Remove when the base provides a complete companion stack with torch>=2.13.0.
+# datasets>=4.8.4 handles torchvision releases that no longer expose VideoReader.
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
         --index-url https://download.pytorch.org/whl/cu126 \
         'torch==2.11.0' 'torchvision==0.26.0' 'torchaudio==2.11.0' && \
@@ -155,7 +156,7 @@ RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
 RUN conda run -n base python -m pip install --upgrade --no-cache-dir \
         'setuptools>=83.0.0' 'msgpack>=1.2.1' && \
     conda run -n ptca python -m pip install --upgrade --no-cache-dir \
-        'pip>=26.2.0' 'setuptools>=83.0.0' 'msgpack>=1.2.1' && \
+        'pip>=26.2.0' 'datasets>=4.8.4' 'setuptools>=83.0.0' 'msgpack>=1.2.1' && \
     site_packages="$(find /opt/conda/lib -mindepth 2 -maxdepth 2 -type d \
         -path '/opt/conda/lib/python*/site-packages' -print; \
         if [ -d /opt/conda/envs/ptca/lib/python3.10/site-packages ]; then \
