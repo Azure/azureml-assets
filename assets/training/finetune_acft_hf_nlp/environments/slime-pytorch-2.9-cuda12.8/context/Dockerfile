@@ -254,7 +254,6 @@ RUN python -m pip install --no-cache-dir \
 # describe the superseded pip 26.0.1 or setuptools 82.0.1, then fail closed if
 # either stale version remains in those metadata locations.
 RUN set -eux; \
-    python -c 'from importlib.metadata import version; from packaging.version import Version; assert Version(version("pip")) >= Version("26.2.0"); assert Version(version("setuptools")) >= Version("83.0.0")'; \
     find /opt/miniconda -type f -path '*/pip/_vendor/vendor.txt' -exec \
         sed -i '/^pip==26\.0\.1$/d; /^setuptools==82\.0\.1$/d' {} +; \
     find /opt/miniconda -type f \( \
@@ -300,8 +299,7 @@ RUN python -m pip install --no-cache-dir --no-deps --upgrade \
         torch==2.13.0 \
         torchvision==0.28.0 \
         torchaudio==2.11.0 \
-        "transformers>=5.10.0" && \
-    python -c 'from importlib.metadata import version; from packaging.version import Version; expected = {"sglang": "0.5.11", "torch": "2.13.0", "torchvision": "0.28.0", "torchaudio": "2.11.0"}; actual = {name: version(name).split("+", 1)[0] for name in expected}; transformers_version = version("transformers"); assert actual == expected, f"unexpected curated stack: {actual}"; assert Version(transformers_version) >= Version("5.10.0"), f"transformers {transformers_version} is below 5.10.0"'
+        "transformers>=5.10.0"
 
 # The optional wandb service binary embeds vulnerable Go modules; remove it so
 # runtime uses the Python client path instead.

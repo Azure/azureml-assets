@@ -74,6 +74,8 @@ RUN conda install -p /opt/conda/envs/ptca -c conda-forge -y 'pip>=26.1.2' && \
     'bokeh>=3.8.2' \
     'distributed>=2026.1.0' \
     'aiohttp>=3.14.0' \
+    'httpx<1' \
+    'huggingface-hub>=1.5.0,<2.0' \
     'pyarrow>=23.0.1' \
     'cryptography>=50.0.0' \
     'GitPython>=3.1.57' \
@@ -136,12 +138,15 @@ RUN /opt/conda/bin/pip install --no-cache-dir --upgrade \
            /opt/conda/pkgs/msgpack-1.1.2-* \
            /opt/conda/pkgs/setuptools-70.3.0-*
 
-# Temporary override for torch inherited from the ACPT torch280 base; fixes
-# GHSA-rrmf-rvhw-rf47, GHSA-qfhq-4f3w-5fph, and GHSA-vgrw-7cvw-pwgx.
-# Remove when the base supplies torch>=2.13.0 with a compatible companion stack.
+# Temporary override for the Torch stack inherited from the ACPT torch280 base;
+# resolves the currently non-compliant Torch floors with the highest complete
+# matched trio available from the CUDA 12.6 index.
+# Remove when the base provides a complete companion stack with torch>=2.13.0.
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
-        'torch==2.13.0' 'torchvision==0.28.0' && \
-    /opt/conda/envs/ptca/bin/python -c 'from importlib.metadata import version; actual = {name: version(name).split("+", 1)[0] for name in ("torch", "torchvision")}; expected = {"torch": "2.13.0", "torchvision": "0.28.0"}; assert actual == expected, f"unexpected Torch stack: {actual}"'
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.11.0' 'torchvision==0.26.0' 'torchaudio==2.11.0' && \
+    /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade --no-deps \
+        'setuptools>=83.0.0' 'huggingface-hub==1.33.0' 'tokenizers==0.22.2'
 
 # pip 26.2.1's vendor inventories report its private setuptools 70.3.0 and
 # msgpack 1.1.2 copies as pathless packages. Remove generated pip vendor

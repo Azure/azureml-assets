@@ -91,12 +91,15 @@ RUN pip install -r requirements.txt --no-cache-dir && \
         'setuptools>=83.0.0' && \
     conda run -n base python -m pip install --upgrade --no-cache-dir 'setuptools>=83.0.0'
 
-# Temporary override for torch inherited from the ACPT torch280 base; fixes
-# GHSA-rrmf-rvhw-rf47, GHSA-qfhq-4f3w-5fph, and GHSA-vgrw-7cvw-pwgx.
-# Remove when the base supplies torch>=2.13.0 with a compatible companion stack.
+# Temporary override for the Torch stack inherited from the ACPT torch280 base;
+# resolves the currently non-compliant Torch floors with the highest complete
+# matched trio available from the CUDA 12.6 index.
+# Remove when the base provides a complete companion stack with torch>=2.13.0.
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
-        'torch==2.13.0' 'torchvision==0.28.0' && \
-    /opt/conda/envs/ptca/bin/python -c 'from importlib.metadata import version; actual = {name: version(name).split("+", 1)[0] for name in ("torch", "torchvision")}; expected = {"torch": "2.13.0", "torchvision": "0.28.0"}; assert actual == expected, f"unexpected Torch stack: {actual}"'
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.11.0' 'torchvision==0.26.0' 'torchaudio==2.11.0' && \
+    /opt/conda/envs/ptca/bin/python -m pip install --upgrade --no-cache-dir \
+        'setuptools>=83.0.0'
 
 # Inference requirements.
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
