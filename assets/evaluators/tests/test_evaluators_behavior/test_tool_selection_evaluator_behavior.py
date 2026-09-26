@@ -44,6 +44,10 @@ class TestToolSelectionEvaluatorBehavior(BaseToolCallEvaluatorBehaviorTest, Base
     Tests different input formats and scenarios.
     """
 
+    def test_messages_are_split_into_query_and_response(self):
+        """Top-level messages are routed through the existing turn-level path."""
+        self.run_messages_input_test()
+
     # region Expected flow inputs for each test
     test_function_tool_local_calls_expected_flow_inputs = {
         "query": data.LOCAL_CALLS_EXPECTED_FLOW_QUERY,
