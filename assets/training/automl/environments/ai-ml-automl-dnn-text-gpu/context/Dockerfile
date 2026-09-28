@@ -106,6 +106,7 @@ RUN pip install pyarrow==14.0.2 \
 
 # transformers is a pinned transitive dep of azureml-automl-dnn-nlp; fixes GHSA-69w3-r845-3855 and GHSA-xrqw-3rrv-vx5w.
 RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.10.0'
+RUN pip install --no-cache-dir 'httpx<1' 'huggingface-hub>=1.5.0,<2.0'
 
 # Security: upgrade pip to fix self-update vulnerabilities in the AzureML conda env.
 # pip is its own parent, so explicit upgrade is the only remediation.
@@ -132,18 +133,27 @@ RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3'
 
 # The ACPT ptca env and the base conda prefix carry their own copies of these
 # packages, which the AzureML conda env above never touches; patch them explicitly.
-RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3'
-RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3' 'cryptography>=50.0.0'
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3' 'httpx<1' 'huggingface-hub>=1.5.0,<2.0'
+RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3' 'anyio>=4.14.2' 'cryptography>=50.0.0'
 
-# NOT FIXED HERE - torch (GHSA-rrmf-rvhw-rf47, GHSA-vgrw-7cvw-pwgx,
-# GHSA-qfhq-4f3w-5fph) is owned by the ACPT base image and AzureML NLP runtime
-# as matched torch/torchvision/torchaudio stacks. Overriding torch alone breaks
-# those companion packages; these findings require patched parent releases.
-RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'setuptools>=83.0.0'
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'setuptools>=83.0.0' 'msgpack>=1.2.1'
 
-# Apply the same setuptools security fix in the AzureML and base conda envs.
-RUN pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==83.0.0'
-RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'setuptools>=83.0.0'
+# Apply the same setuptools and msgpack security fixes in the AzureML and base conda envs.
+RUN pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==83.0.0' 'msgpack>=1.2.1'
+RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'setuptools>=83.0.0' 'msgpack>=1.2.1'
+
+# Temporary override for the Torch stack inherited from the ACPT torch280 base;
+# resolves the currently non-compliant Torch floors with the highest complete
+# matched trio available from the CUDA 12.6 index.
+# Remove when the base provides a complete companion stack with torch>=2.13.0.
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.11.0' 'torchvision==0.26.0' 'torchaudio==2.11.0' && \
+    /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade --no-deps \
+        'setuptools>=83.0.0' 'huggingface-hub==1.33.0' 'tokenizers==0.22.2' && \
+    "$AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip" install --no-cache-dir --upgrade \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.11.0' 'torchvision==0.26.0' 'torchaudio==2.11.0'
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  export CUDACXX=/usr/local/cuda/bin/nvcc && \
@@ -152,7 +162,36 @@ RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  HOROVOD_CUDA_HOME=/usr/local/cuda \
  CMAKE_LIBRARY_PATH=/usr/local/cuda/targets/x86_64-linux/lib:/usr/local/cuda-12.6/targets/x86_64-linux/lib \
  pip install --no-cache-dir --no-build-isolation \
- git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d"
+ git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d && \
+ pip install --no-cache-dir --upgrade --no-deps 'setuptools>=83.0.0' 'huggingface-hub==1.33.0' 'tokenizers==0.22.2'"
 
 RUN rm -rf /opt/conda/pkgs/
+
+# pip 26.2.1's vendor inventories report its private setuptools 70.3.0 and
+# msgpack 1.1.2 copies as pathless packages. Remove generated pip vendor
+# CycloneDX inventories and matching stale entries, then fail if any remain.
+RUN set -eu; \
+    set -- /opt/conda; \
+    if test -d /azureml-envs; then set -- "$@" /azureml-envs; fi; \
+    find "$@" -type f \
+        -path '*/site-packages/pip/_vendor/bom.cdx.json' -delete; \
+    find "$@" -type f -path '*/pip/_vendor/vendor.txt' \
+        -exec sed -i '/^setuptools==70\.3\.0$/d; /^msgpack==1\.1\.2$/d' {} +; \
+    for python in /opt/conda/bin/python /opt/conda/envs/*/bin/python /azureml-envs/*/bin/python; do \
+        test -x "$python" || continue; \
+        site_packages="$("$python" -c 'import sysconfig; print(sysconfig.get_path("purelib"))')"; \
+        find "$site_packages" -type f \( \
+            -path '*/pip-*.dist-info/sboms/bom.cdx.json' -o \
+            -path '*/virtualenv-*.dist-info/sboms/*.json' \
+        \) -exec grep -IlE 'pkg:pypi/(setuptools@70\.3\.0|msgpack@1\.1\.2)(["?#]|$)' {} + | \
+            while IFS= read -r inventory; do rm -f "$inventory"; done; \
+        if find "$site_packages" -type f \( \
+            -path '*/pip-*.dist-info/sboms/bom.cdx.json' -o \
+            -path '*/virtualenv-*.dist-info/sboms/*.json' \
+        \) -exec grep -IlE 'pkg:pypi/(setuptools@70\.3\.0|msgpack@1\.1\.2)(["?#]|$)' {} + | grep -q .; then exit 1; fi; \
+    done; \
+    if find "$@" -type f \
+        -path '*/site-packages/pip/_vendor/bom.cdx.json' | grep -q .; then exit 1; fi; \
+    if find "$@" -type f -path '*/pip/_vendor/vendor.txt' \
+        -exec grep -IlE '^(setuptools==70\.3\.0|msgpack==1\.1\.2)$' {} + | grep -q .; then exit 1; fi
 # end pip install
