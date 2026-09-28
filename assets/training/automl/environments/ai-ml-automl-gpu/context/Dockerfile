@@ -16,7 +16,12 @@ RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/v
 # Patch Ubuntu packages still vulnerable in the base image; install build deps for LightGBM/XGBoost.
 RUN apt-get update && \
     apt-get install -y --only-upgrade \
-        libgcrypt20 && \
+        libexpat1 \
+        libgcrypt20 \
+        libglib2.0-0 \
+        libglib2.0-data \
+        libxml2 \
+        rsyslog && \
     apt-get install -y --no-install-recommends \
         cmake \
         libboost-dev \
