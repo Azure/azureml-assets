@@ -11,39 +11,39 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 /artifacts /var/
-# Install runtime OS packages and pin vulnerable base packages to patched Ubuntu USN versions.
+# Install runtime OS packages and use current patched Ubuntu repository versions.
 # libsystemd0/libudev1/udev fix USN-8626-1 inherited from the base image.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get install -y --no-install-recommends \
-        curl=7.81.0-1ubuntu1.27 \
-        libsystemd0=249.11-0ubuntu3.22 \
-        libudev1=249.11-0ubuntu3.22 \
-        libcurl3-gnutls=7.81.0-1ubuntu1.27 \
-        libcurl4=7.81.0-1ubuntu1.27 \
-        libnghttp2-14=1.43.0-1ubuntu0.4 \
-        libnginx-mod-http-echo=1.18.0-6ubuntu14.20 \
-        libnginx-mod-http-geoip2=1.18.0-6ubuntu14.20 \
+        curl \
+        libsystemd0 \
+        libudev1 \
+        libcurl3-gnutls \
+        libcurl4 \
+        libnghttp2-14 \
+        libnginx-mod-http-echo \
+        libnginx-mod-http-geoip2 \
         libunwind8 \
-        libsqlite3-0=3.37.2-2ubuntu0.7 \
-        libxml2=2.9.13+dfsg-1ubuntu0.12 \
-        nginx-common=1.18.0-6ubuntu14.20 \
+        libsqlite3-0 \
+        libxml2 \
+        nginx-common \
         libxml++2.6-2v5 \
-        nginx-light=1.18.0-6ubuntu14.20 \
-        wget=1.21.2-2ubuntu1.5 \
-        tar=1.34+dfsg-1ubuntu0.1.22.04.6 \
-        libkrb5support0=1.19.2-2ubuntu0.8 \
-        libgssapi-krb5-2=1.19.2-2ubuntu0.8 \
-        libk5crypto3=1.19.2-2ubuntu0.8 \
-        libkrb5-3=1.19.2-2ubuntu0.8 \
-        libpam-runtime=1.4.0-11ubuntu2.7 \
-        libpam0g=1.4.0-11ubuntu2.7 \
-        libpam-modules=1.4.0-11ubuntu2.7 \
-        libpam-modules-bin=1.4.0-11ubuntu2.7 \
+        nginx-light \
+        wget \
+        tar \
+        libkrb5support0 \
+        libgssapi-krb5-2 \
+        libk5crypto3 \
+        libkrb5-3 \
+        libpam-runtime \
+        libpam0g \
+        libpam-modules \
+        libpam-modules-bin \
         psmisc \
-        rsyslog=8.2112.0-2ubuntu2.4 \
+        rsyslog \
         runit \
-        udev=249.11-0ubuntu3.22 \
+        udev \
         unzip && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \

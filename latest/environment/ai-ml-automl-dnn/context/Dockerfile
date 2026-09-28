@@ -12,7 +12,7 @@ ENV ENABLE_METADATA=true
 # Upgrade vulnerable Ubuntu packages inherited from the base image when installed.
 RUN set -eux; \
     apt-get update; \
-    os_security_packages="libgssapi-krb5-2 libk5crypto3 libkrb5-3 libkrb5support0 libsqlite3-0 nginx nginx-common nginx-light tar wget"; \
+    os_security_packages="coreutils curl diffutils libattr1 libc-bin libc-dev-bin libc6 libc6-dev libcurl3t64-gnutls libcurl4t64 libgcrypt20 libgssapi-krb5-2 libk5crypto3 libkrb5-3 libkrb5support0 libp11-kit0 libperl5.38t64 libpython3.12-minimal libpython3.12-stdlib libsqlite3-0 libssh-4 libssl3t64 nginx nginx-common nginx-light openssh-client openssh-server openssh-sftp-server openssl perl perl-base perl-modules-5.38 python3.12 python3.12-minimal tar wget zlib1g"; \
     installed_os_packages=""; \
     for package in $os_security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
