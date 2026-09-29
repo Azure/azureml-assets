@@ -90,7 +90,7 @@ RUN pip install --no-cache-dir --upgrade 'setuptools>=84.0.0' 'nltk>=3.10.0' 'tr
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
     'setuptools>=84.0.0' 'pyOpenSSL>=26.0.0' 'urllib3>=2.7.0' \
     'python-dotenv>=1.2.2' 'pip>=26.1.1' 'idna>=3.15' 'click>=8.3.3' \
-    'aiohttp>=3.14.3' 'PyJWT>=2.13.0' 'pydantic-settings>=2.14.2' \
+    'aiohttp>=3.14.3' 'anyio>=4.14.2' 'PyJWT>=2.13.0' 'pydantic-settings>=2.14.2' \
     'msgpack>=1.2.1' 'pillow>=12.3.0' 'py-rattler>=0.24.0' \
     'cryptography>=50.0.0' && \
     rm -f /opt/conda/conda-meta/setuptools-70*.json \
