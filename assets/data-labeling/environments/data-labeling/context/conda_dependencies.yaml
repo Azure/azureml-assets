@@ -17,3 +17,4 @@ dependencies:
   - python-rle==0.0.3
   # Pinning setuptools to avoid import issue with azureml-core as temp workaround. This can be removed once azureml-core is updated to remove the dependency on pkg_resources.
   - setuptools==81.0.0
+  - cryptography>=50.0.0
