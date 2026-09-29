@@ -138,13 +138,14 @@ RUN /opt/conda/bin/pip install --no-cache-dir --upgrade \
            /opt/conda/pkgs/msgpack-1.1.2-* \
            /opt/conda/pkgs/setuptools-70.3.0-*
 
-# Temporary override for the Torch stack inherited from the ACPT torch280 base;
-# resolves the currently non-compliant Torch floors with the highest complete
-# matched trio available from the CUDA 12.6 index.
-# Remove when the base provides a complete companion stack with torch>=2.13.0.
-RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
+# Temporary override for the Torch stack inherited from the ACPT torch280 base.
+# The CUDA 12.6 index has no torchaudio build compatible with torch>=2.12, so
+# remove inherited torchaudio rather than retaining a binary-incompatible build.
+# Remove when the base provides torch>=2.13.0 and compatible companion packages.
+RUN /opt/conda/envs/ptca/bin/pip uninstall -y torchaudio && \
+    /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
         --index-url https://download.pytorch.org/whl/cu126 \
-        'torch==2.11.0' 'torchvision==0.26.0' 'torchaudio==2.11.0' && \
+        'torch==2.13.0' 'torchvision==0.28.0' && \
     /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade --no-deps \
         'setuptools>=83.0.0' 'huggingface-hub==1.33.0' 'tokenizers==0.22.2'
 
