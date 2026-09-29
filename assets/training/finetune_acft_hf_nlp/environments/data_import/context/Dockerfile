@@ -14,23 +14,46 @@ RUN apt-get update && ACCEPT_EULA=Y apt-get -y upgrade && \
 apt-get install -y sudo locales libssl-dev sqlite3 && \
 apt-get install -y --only-upgrade \
     curl \
+    gir1.2-glib-2.0 \
     gzip \
+    libc-bin \
+    libc-dev-bin \
+    libc6 \
+    libc6-dev \
     libcurl3t64-gnutls \
     libcurl4t64 \
+    libexpat1 \
     libgcrypt20 \
+    libglib2.0-0t64 \
+    libglib2.0-data \
     libgnutls30t64 \
     libgssapi-krb5-2 \
     libk5crypto3 \
     libkrb5-3 \
     libkrb5support0 \
+    libperl5.38t64 \
+    libpython3.12-minimal \
+    libpython3.12-stdlib \
     libssl-dev \
     libssl3t64 \
     libsqlite3-0 \
+    libxml2 \
+    locales \
     nginx \
     nginx-common \
     nginx-light \
+    openssh-client \
+    openssh-server \
+    openssh-sftp-server \
     openssl \
+    perl \
+    perl-base \
+    perl-modules-5.38 \
+    python3.12 \
+    python3.12-minimal \
+    rsyslog \
     sqlite3 \
+    sudo \
     tar \
     wget \
     liblzma5 \

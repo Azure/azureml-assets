@@ -24,6 +24,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends --only-upgrade 
     coreutils=8.32-4.1ubuntu1.4 \
     libgcrypt20=1.9.4-3ubuntu3.3 \
     libevent-core-2.1-7=2.1.12-stable-1ubuntu0.1 \
+    libexpat1 \
+    libxml2 \
     openssh-client=1:8.9p1-3ubuntu0.17 \
     libc6-dev=2.35-0ubuntu3.15 \
     libc-bin=2.35-0ubuntu3.15 \
@@ -59,10 +61,11 @@ RUN pip install -r requirements.txt --no-cache-dir \
 RUN pip uninstall -y onnx && pip install --no-cache-dir 'onnx-weekly>=1.22.0.dev20260504'
 
 # pyarrow: pinned transitive dep of datasets; image install downgrades the base, fixes CVE-2026-25087.
-# aiohttp: pinned inherited dep from the ACPT base image; fixes GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, and GHSA-mfx4-hv73-q22v.
+# aiohttp and anyio: pinned inherited deps from the ACPT base image; fix current GHSA findings.
 # cryptography: pinned inherited base dep and transitive dep of azureml-core in ptca; fixes GHSA-g6cj-pr64-35w5.
 RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade \
     'aiohttp>=3.14.3' \
+    'anyio>=4.14.2' \
     'cryptography>=50.0.0' \
  && conda run -n ptca python -m pip install --no-cache-dir --upgrade \
     'aiohttp>=3.14.3' \
