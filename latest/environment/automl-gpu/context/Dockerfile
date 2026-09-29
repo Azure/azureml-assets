@@ -39,6 +39,9 @@ ENV ENABLE_METADATA=true
 RUN apt-get update && \
     apt-get install --only-upgrade -y --no-install-recommends \
         tar \
+        libexpat1 \
+        libglib2.0-0 \
+        libglib2.0-data \
         libxml2 \
         curl \
         libcurl3-gnutls \
