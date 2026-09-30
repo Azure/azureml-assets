@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260920.v1
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260929.v1
 
 # Upgrade OS packages to pull current Ubuntu security patches.
 # libgcrypt20 is inherited from the openmpi base image; pin to the

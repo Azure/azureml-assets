@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:20260920.v1
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:20260929.v1
 
 RUN mkdir -p /opt/miniconda/
 RUN mkdir -p etc/nginx/sites-available
