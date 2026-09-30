@@ -78,13 +78,14 @@ ENV PATH=/usr/local/go/bin:$PATH
 # Trivy v0.74.0 still needs these module fixes:
 # grpc 1.83.2: CVE-2026-84304, CVE-2026-84303, CVE-2026-84445.
 # x/crypto 0.56.0: CVE-2026-78662, CVE-2026-56855.
-# containerd/v2 2.3.5: CVE-2026-53495; swag/jsonutils 0.27.1: GHSA-xh24-9qpg-8w28.
+# containerd/v2 2.3.6: CVE-2026-53495, CVE-2026-53493.
+# swag/jsonutils 0.27.1: GHSA-xh24-9qpg-8w28.
 # Drop each override once the Trivy release includes that fixed version or newer.
 RUN git clone --depth 1 --branch v${TRIVY_VERSION} https://github.com/aquasecurity/trivy.git /tmp/trivy \
  && cd /tmp/trivy \
  && go get google.golang.org/grpc@v1.83.2 \
       golang.org/x/crypto@v0.56.0 \
-      github.com/containerd/containerd/v2@v2.3.5 \
+      github.com/containerd/containerd/v2@v2.3.6 \
       github.com/go-openapi/swag/jsonutils@v0.27.1 \
  && go mod tidy \
  && CGO_ENABLED=0 GOEXPERIMENT=jsonv2 go build \
