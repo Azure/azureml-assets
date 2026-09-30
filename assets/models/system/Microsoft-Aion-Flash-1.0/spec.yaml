@@ -1,0 +1,12 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: Microsoft-Aion-Flash-1.0
+version: 1
+path: ./
+tags:
+  Copilot-Local: 'true'
+system_metadata:
+  publisher: Microsoft
+  displayName: Microsoft Aion Flash 1.0
+  tasks:
+    inferenceTasks:
+    - chat-completion
