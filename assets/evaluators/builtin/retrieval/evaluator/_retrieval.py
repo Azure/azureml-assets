@@ -387,58 +387,130 @@ class RetrievalEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             eval_input["response"] = _preprocess_messages(eval_input["response"])
         if isinstance(eval_input.get("query"), list):
             eval_input["query"] = _preprocess_messages(eval_input["query"])
-        # Call the prompty flow to get the evaluation result.
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
+
+        # Validate the outer flow response before reading token metadata or the
+        # nested LLM output so malformed service responses remain typed evaluator errors.
+        if not isinstance(prompty_output_dict, dict) or not prompty_output_dict:
+            raise self._invalid_output("EmptyResponse", prompty_output_dict)
+
+        llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
+        parsed_output = None
+        if isinstance(llm_output, dict):
+            parsed_output = llm_output
+        elif isinstance(llm_output, str) and llm_output.strip():
+            try:
+                parsed_output = json.loads(llm_output)
+            except (json.JSONDecodeError, TypeError):
+                parsed_output = None
+        elif isinstance(llm_output, str):
+            raise self._invalid_output("EmptyResponse", prompty_output_dict)
+        else:
+            raise self._invalid_output("UnexpectedResponseShape", prompty_output_dict)
+
         score = math.nan
         reason = ""
         llm_properties = {}
-        if prompty_output_dict:
-            llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
-            parsed_output = None
-            if isinstance(llm_output, dict):
-                parsed_output = llm_output
-            elif isinstance(llm_output, str):
-                try:
-                    parsed_output = json.loads(llm_output)
-                except (json.JSONDecodeError, TypeError):
-                    parsed_output = None
-            if parsed_output and isinstance(parsed_output, dict):
-                llm_status = parsed_output.get("status", "completed")
-                if llm_status == "skipped":
-                    skip_reason = parsed_output.get("reason", "")
-                    return self._return_not_applicable_result(skip_reason, self._threshold)
-                score = parsed_output.get("score", math.nan)
-                reason = parsed_output.get("reason", "")
-                llm_properties = parsed_output.get("properties", {}) or {}
-            else:
-                if isinstance(llm_output, str) and self._result_key in PROMPT_BASED_REASON_EVALUATORS:
-                    score, reason = parse_quality_evaluator_reason_score(llm_output)
-                elif isinstance(llm_output, str):
-                    match = re.search(r"\d", llm_output)
-                    if match:
-                        score = float(match.group())
-            score = float(score) if score is not None else math.nan
-            score_result = self._get_binary_result(score)
-            token_metadata = self._get_token_metadata(prompty_output_dict)
-            llm_properties.update(token_metadata)
-            result = {
-                self._result_key: score,
-                f"{self._result_key}_score": score,
-                f"{self._result_key}_passed": score_result == "pass",
-                f"{self._result_key}_result": score_result,
-                f"{self._result_key}_reason": reason,
-                f"{self._result_key}_status": "completed",
-                f"{self._result_key}_threshold": self._threshold,
-                f"{self._result_key}_properties": llm_properties,
+        if isinstance(parsed_output, dict):
+            # Skipped responses intentionally omit the score, while completed
+            # responses must include one to avoid silently producing a NaN result.
+            llm_status = parsed_output.get("status", "completed")
+            if llm_status == "skipped":
+                skip_reason = parsed_output.get("reason", "")
+                return self._return_not_applicable_result(
+                    skip_reason if isinstance(skip_reason, str) else "",
+                    self._threshold,
+                )
+            if llm_status != "completed":
+                raise self._invalid_output("UnexpectedStatus", prompty_output_dict)
+            if "score" not in parsed_output or parsed_output["score"] is None:
+                raise self._invalid_output("MissingScore", prompty_output_dict)
+            score = parsed_output["score"]
+            reason = parsed_output.get("reason", "")
+            llm_properties = parsed_output.get("properties", {}) or {}
+        elif isinstance(llm_output, str):
+            # Preserve legacy text responses, but only accept an explicitly labeled
+            # score so unrelated digits such as dates cannot become evaluator scores.
+            if self._result_key in PROMPT_BASED_REASON_EVALUATORS:
+                score, reason = parse_quality_evaluator_reason_score(llm_output)
+            try:
+                legacy_score_is_valid = score is not None and math.isfinite(float(score))
+            except (TypeError, ValueError):
+                legacy_score_is_valid = False
+            if not legacy_score_is_valid:
+                match = re.search(r"\bscore\s*(?:is|[:=])?\s*([1-5])\b", llm_output, re.IGNORECASE)
+                if not match:
+                    raise self._invalid_output("MalformedJson", prompty_output_dict)
+                score = match.group(1)
+
+        if isinstance(score, bool):
+            raise self._invalid_output("InvalidScoreType", prompty_output_dict)
+        try:
+            # Preserve backward compatibility with integral numeric strings and
+            # floats while enforcing the same semantic integer score contract.
+            score = float(score)
+        except (TypeError, ValueError):
+            raise self._invalid_output("InvalidScoreType", prompty_output_dict)
+
+        # Enforce the published Retrieval contract before calculating pass/fail:
+        # the score must be finite, integral, and within the inclusive 1-5 range.
+        if not math.isfinite(score):
+            raise self._invalid_output("NonFiniteScore", prompty_output_dict)
+        if not score.is_integer():
+            raise self._invalid_output("InvalidScoreType", prompty_output_dict)
+        if not 1 <= score <= 5:
+            raise self._invalid_output("ScoreOutOfRange", prompty_output_dict)
+        if not isinstance(reason, str):
+            reason = ""
+        if not isinstance(llm_properties, dict):
+            llm_properties = {}
+
+        score_result = self._get_binary_result(score)
+        token_metadata = self._get_token_metadata(prompty_output_dict)
+        llm_properties.update(token_metadata)
+        result = {
+            self._result_key: score,
+            f"{self._result_key}_score": score,
+            f"{self._result_key}_passed": score_result == "pass",
+            f"{self._result_key}_result": score_result,
+            f"{self._result_key}_reason": reason,
+            f"{self._result_key}_status": "completed",
+            f"{self._result_key}_threshold": self._threshold,
+            f"{self._result_key}_properties": llm_properties,
+        }
+        result.update(
+            {
+                f"{self._result_key}_{key}": value
+                for key, value in token_metadata.items()
             }
-            # Add top-level token metadata fields for backward compatibility.
-            result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
-            return result
-        raise EvaluationException(
-            message="Evaluator returned invalid output.",
+        )
+        return result
+
+    @staticmethod
+    def _invalid_output(code: str, prompty_output: Any) -> EvaluationException:
+        """Create a safe output-validation exception containing metadata only."""
+        # Include only bounded structural metadata in diagnostics. Never log the
+        # customer query/context or the raw judge-model response.
+        output_type = type(prompty_output).__name__
+        finish_reason = ""
+        if isinstance(prompty_output, dict):
+            llm_output = prompty_output.get("llm_output", prompty_output)
+            output_type = type(llm_output).__name__
+            raw_finish_reason = prompty_output.get("finish_reason", "")
+            if isinstance(raw_finish_reason, str):
+                finish_reason = raw_finish_reason
+        logger.warning(
+            "Retrieval judge output validation failed. category=%s output_type=%s finish_reason=%s",
+            code,
+            output_type,
+            finish_reason,
+        )
+        return EvaluationException(
+            message=f"Evaluator returned invalid output ({code}).",
+            internal_message=f"category={code}; output_type={output_type}; finish_reason={finish_reason}",
             blame=ErrorBlame.SYSTEM_ERROR,
             category=ErrorCategory.FAILED_EXECUTION,
-            target=ErrorTarget.EVALUATE,
+            target=ErrorTarget.RETRIEVAL_EVALUATOR,
         )
 
     @staticmethod
@@ -473,17 +545,7 @@ class RetrievalEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         if isinstance(eval_input.get("query"), list):
             eval_input["query"] = _preprocess_messages(eval_input["query"])
 
-        result = await self._the_super_do_eval(eval_input)
-        # Check if base returned nan (invalid output case); None means not-applicable/skipped
-        _score = result.get(self._result_key, 0)
-        if _score is not None and math.isnan(_score):
-            raise EvaluationException(
-                message="Evaluator returned invalid output.",
-                blame=ErrorBlame.SYSTEM_ERROR,
-                category=ErrorCategory.FAILED_EXECUTION,
-                target=ErrorTarget.RETRIEVAL_EVALUATOR,
-            )
-        return result
+        return await self._the_super_do_eval(eval_input)
 
     @override
     async def _real_call(self, **kwargs):
@@ -497,9 +559,10 @@ class RetrievalEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         # Convert inputs into list of evaluable inputs.
         try:
             eval_input_list = self._convert_kwargs_to_eval_input(**kwargs)
-        except Exception as e:
-            logger.error(f"Error converting kwargs to eval_input_list: {e}")
-            raise e
+        except Exception:
+            logger.exception("Error converting kwargs to eval_input_list.")
+            # Preserve the original traceback rather than replacing it with this frame.
+            raise
         per_turn_results = []
         # Evaluate all inputs.
         for eval_input in eval_input_list:
