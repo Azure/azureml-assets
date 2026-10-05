@@ -24,15 +24,24 @@ dataMappingSchema:
   type: "object"
   properties:
     query:
-      type: "string"
+      anyOf:
+        - type: "string"
+        - type: "array"
+          items:
+            type: "object"
     context:
       type: "string"
+    response:
+      type: "array"
+      items:
+        type: "object"
     messages:
       type: "array"
       items:
         type: "object"
   anyOf:
     - required: ["query", "context"]
+    - required: ["query", "response"]
     - required: ["messages"]
 outputSchema:
   retrieval:
