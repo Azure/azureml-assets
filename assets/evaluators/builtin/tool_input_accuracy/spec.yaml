@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.tool_input_accuracy"
-version: 16
+version: 17
 displayName: "Tool-Input-Accuracy-Evaluator"
 description: "A binary evaluator (0 or 1) that checks whether all parameters in an agent’s tool call are correct, validating grounding, type, format, completeness, and contextual appropriateness using LLM-based analysis. Use it to verify agent tool usage, API integration tests, or to ensure tool call parameters are fully correct in AI workflows."
 evaluatorType: "builtin"
@@ -44,8 +44,8 @@ dataMappingSchema:
       items:
         type: "object"
   anyOf:
-    - required: ["query", "response", "tool_definitions"]
-    - required: ["messages", "tool_definitions"]
+    - required: ["query", "response"]
+    - required: ["messages"]
 outputSchema:
   tool_input_accuracy:
     type: "boolean"

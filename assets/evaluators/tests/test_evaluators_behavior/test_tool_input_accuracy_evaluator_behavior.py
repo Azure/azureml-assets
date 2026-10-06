@@ -86,7 +86,7 @@ class TestToolInputAccuracyEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, Bas
     check_for_unsupported_tools = False
 
     # Test Configs
-    requires_tool_definitions = True
+    absent_tool_definitions_assert_type = BaseToolsEvaluatorBehaviorTest.AssertType.SKIPPED
 
     MINIMAL_RESPONSE = BaseToolsEvaluatorBehaviorTest.tool_calls_with_arguments
 

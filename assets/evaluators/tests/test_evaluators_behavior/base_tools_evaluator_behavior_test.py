@@ -28,7 +28,8 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
     Subclasses should implement:
     - evaluator_type: type[PromptyEvaluatorBase] - type of the evaluator (e.g., "ToolOutputUtilization")
     Subclasses may override:
-    - requires_tool_definitions: bool - whether tool definitions are required or optional
+    - absent_tool_definitions_assert_type: AssertType - expected outcome when tool definitions are absent, None
+      or empty (PASS when the evaluator scores without them, SKIPPED when it skips the row as not applicable)
     - requires_query: bool - whether query is required
     - MINIMAL_RESPONSE: list - minimal valid response format for the evaluator
     - expected_result_fields: list - expected fields in the evaluation result
@@ -36,7 +37,7 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
     """
 
     # Test Configs
-    requires_tool_definitions: bool = False
+    absent_tool_definitions_assert_type = BaseEvaluatorBehaviorTest.AssertType.PASS
 
     # region Test Data
     # Tool definition test data
@@ -194,13 +195,13 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
         result_data = self._extract_and_print_result(results, description)
 
         expected_behavior = assert_type
-        if not self.requires_tool_definitions and assert_type != self.AssertType.INVALID_VALUE:
-            expected_behavior = self.AssertType.PASS
+        if assert_type == self.AssertType.MISSING_FIELD:
+            expected_behavior = self.absent_tool_definitions_assert_type
 
         self.assert_expected_behavior(expected_behavior, result_data)
 
     def test_tool_definitions_not_present(self):
-        """Tool definitions not present - should raise missing field error."""
+        """Tool definitions not present - scored or skipped as not applicable, never a missing field error."""
         self.run_tool_definitions_test(
             input_tool_definitions=None,
             description="Tool Definitions Not Present",
@@ -240,7 +241,7 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
         )
 
     def test_tool_definitions_empty_list(self):
-        """Tool definitions as empty list - should raise missing field error."""
+        """Tool definitions as empty list - scored or skipped as not applicable, never a missing field error."""
         self.run_tool_definitions_test(
             input_tool_definitions=self.EMPTY_LIST,
             description="Tool Definitions Empty List",

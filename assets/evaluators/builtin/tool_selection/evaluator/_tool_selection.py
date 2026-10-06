@@ -569,7 +569,10 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         self.threshold = threshold
 
         # Initialize input validator
-        self._validator = ToolCallsValidator(error_target=ExtendedErrorTarget.TOOL_SELECTION_EVALUATOR)
+        self._validator = ToolCallsValidator(
+            error_target=ExtendedErrorTarget.TOOL_SELECTION_EVALUATOR,
+            optional_tool_definitions=True,
+        )
 
         super().__init__(
             model_config=model_config,

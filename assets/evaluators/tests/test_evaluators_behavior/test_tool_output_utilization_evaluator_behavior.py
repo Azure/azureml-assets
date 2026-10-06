@@ -137,7 +137,7 @@ class TestToolOutputUtilizationEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest,
     check_for_unsupported_tools = True
 
     MINIMAL_RESPONSE = BaseEvaluatorBehaviorTest.VALID_RESPONSE
-    requires_tool_definitions = True
+    absent_tool_definitions_assert_type = BaseToolsEvaluatorBehaviorTest.AssertType.SKIPPED
 
     def test_skipped_llm_status_returns_not_applicable(self):
         """Flow output with status='skipped' yields a not-applicable result, not a crash."""
@@ -715,4 +715,43 @@ class TestToolOutputUtilizationInternalBranches:
 
         evaluator._flow = _bad_flow
         with pytest.raises(EvaluationException):
-            asyncio.run(evaluator._do_eval({"query": "q", "response": "r", "tool_definitions": []}))
+            asyncio.run(
+                evaluator._do_eval(
+                    {
+                        "query": "q",
+                        "response": "r",
+                        "tool_definitions": [{"name": "search", "description": "Search.", "parameters": {}}],
+                    }
+                )
+            )
+
+    @pytest.mark.parametrize("eval_input_extras", [{}, {"tool_definitions": None}, {"tool_definitions": []}])
+    def test_do_eval_without_tool_definitions_returns_not_applicable(self, eval_input_extras):
+        """Skip the row as not applicable, without calling the judge, when tool definitions are absent."""
+        evaluator = create_mocked_evaluator(ToolOutputUtilizationEvaluator, "tool_output_utilization")
+        evaluator._flow = MagicMock(side_effect=AssertionError("the judge must not be called"))
+
+        result = asyncio.run(evaluator._do_eval({"query": "q", "response": "r", **eval_input_extras}))
+
+        assert result["tool_output_utilization"] is None
+        assert result["tool_output_utilization_result"] == "not_applicable"
+        assert result["tool_output_utilization_status"] == "skipped"
+        assert evaluator._NO_TOOL_DEFINITIONS_MESSAGE in result["tool_output_utilization_reason"]
+        evaluator._flow.assert_not_called()
+
+    def test_do_eval_with_string_tool_definitions_is_scored(self):
+        """String tool definitions are passed through to the judge, not skipped."""
+        evaluator = create_mocked_evaluator(ToolOutputUtilizationEvaluator, "tool_output_utilization")
+        captured = {}
+
+        async def _flow(**kwargs):
+            captured.update(kwargs)
+            return {"llm_output": {"score": 1, "reason": "ok"}}
+
+        evaluator._flow = _flow
+        result = asyncio.run(
+            evaluator._do_eval({"query": "q", "response": "r", "tool_definitions": "search: looks things up"})
+        )
+
+        assert result["tool_output_utilization_status"] == "completed"
+        assert captured["tool_definitions"] == "search: looks things up"

@@ -550,7 +550,7 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         # Initialize input validator
         self._validator = ToolDefinitionsValidator(
-            error_target=ExtendedErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR, optional_tool_definitions=False,
+            error_target=ExtendedErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR, optional_tool_definitions=True,
             check_for_unsupported_tools=False,
         )
 
@@ -823,8 +823,9 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         :keyword query: Query or Chat history up to the message that has the tool call being evaluated.
         :paramtype query: Union[str, List[dict]]
-        :keyword tool_definitions: List of tool definitions whose calls are being evaluated.
-        :paramtype tool_definitions: Union[dict, List[dict]]
+        :keyword tool_definitions: Optional list of tool definitions whose calls are being evaluated.
+            When not provided, the evaluation is skipped and reported as not applicable.
+        :paramtype tool_definitions: Optional[Union[dict, List[dict]]]
         :keyword response: Response containing tool calls to be evaluated.
         :paramtype response: Union[str, List[dict]]
         :return: The tool input accuracy evaluation results.

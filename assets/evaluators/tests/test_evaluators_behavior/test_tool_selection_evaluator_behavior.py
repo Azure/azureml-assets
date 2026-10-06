@@ -140,8 +140,6 @@ class TestToolSelectionEvaluatorBehavior(BaseToolCallEvaluatorBehaviorTest, Base
     }
     # endregion
 
-    is_tool_definition_required = True
-
     evaluator_type = ToolSelectionEvaluator
 
     def test_skipped_llm_status_returns_not_applicable(self):

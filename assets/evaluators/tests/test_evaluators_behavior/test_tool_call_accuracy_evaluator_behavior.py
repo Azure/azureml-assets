@@ -86,8 +86,6 @@ class TestToolCallAccuracyEvaluatorBehavior(BaseToolCallEvaluatorBehaviorTest, B
     # for tools with an empty expected_flow_inputs dict.
     check_for_unsupported_tools = False
 
-    is_tool_definition_required = True
-
     MINIMAL_RESPONSE = BaseToolCallEvaluatorBehaviorTest.email_tool_call_and_assistant_response
 
     def test_messages_are_split_into_query_and_response(self):
