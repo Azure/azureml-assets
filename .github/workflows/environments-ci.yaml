@@ -17,12 +17,12 @@ defaults:
 
 jobs:
   check-execution-context:
-    uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
+    uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@4ed8b0cd1a4c0620233865c72e08e83c953a7cdf # pre-benchmark-removal
 
   check-directory-file-changes:
     needs: check-execution-context
     if: fromJSON(needs.check-execution-context.outputs.continue)
-    uses: Azure/azureml-assets/.github/workflows/check-changed-files.yaml@main
+    uses: Azure/azureml-assets/.github/workflows/check-changed-files.yaml@4ed8b0cd1a4c0620233865c72e08e83c953a7cdf # pre-benchmark-removal
     with:
       folder_path: "assets/**"
       forked_pr_input: ${{ needs.check-execution-context.outputs.forked_pr }}
@@ -51,7 +51,7 @@ jobs:
 
     steps:
       - name: Clone branch
-        uses: Azure/azureml-assets/.github/actions/clone-repo@main
+        uses: Azure/azureml-assets/.github/actions/clone-repo@4ed8b0cd1a4c0620233865c72e08e83c953a7cdf # pre-benchmark-removal
         with:
           forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
           fetch-depth: 2
