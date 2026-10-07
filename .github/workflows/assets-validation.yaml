@@ -39,7 +39,7 @@ permissions:
 
 jobs:
   check-directory-file-changes:
-    uses: Azure/azureml-assets/.github/workflows/check-changed-files.yaml@main
+    uses: Azure/azureml-assets/.github/workflows/check-changed-files.yaml@4ed8b0cd1a4c0620233865c72e08e83c953a7cdf # pre-benchmark-removal
     with:
       folder_path: "assets/**"
       forked_pr_input: false

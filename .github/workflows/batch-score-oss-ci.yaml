@@ -30,7 +30,7 @@ defaults:
 
 jobs:
   check-execution-context:
-    uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
+    uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@4ed8b0cd1a4c0620233865c72e08e83c953a7cdf # pre-benchmark-removal
   run-batch-score-oss-tests:
     name: Run Batch Score Component Tests
     runs-on: ubuntu-latest
@@ -38,7 +38,7 @@ jobs:
     environment: Testing
     steps:
       - name: Clone branch
-        uses: Azure/azureml-assets/.github/actions/clone-repo@main
+        uses: Azure/azureml-assets/.github/actions/clone-repo@4ed8b0cd1a4c0620233865c72e08e83c953a7cdf # pre-benchmark-removal
         with:
           forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
       - name: Use Python 3.12 or below
