@@ -2,15 +2,19 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: MAI-Code-1.1-Flash
 version: 5
 path: ./
-system_metadata:
-  publisher: Microsoft
+tags:
+  localCoding: "true"
+  modelFormat: gguf
   displayName: MAI Code 1.1 Flash
-  license: MIT
-  licenseDescription: This model is provided under the MIT License at <https://opensource.org/license/mit>.
-  maxOutputTokens: 128000
-  modelFlavor: GGUF
-  supportsToolCalling: true
-  textContextWindow: 256000
-  tasks:
-    inferenceTasks:
-    - chat-completion
+  downloadBytes: "56688835352"
+  peakDiskBytes: "56688835352"
+  recommendedVramBytes: "103079215104"
+  maxPromptTokens: "128000"
+  maxContextWindowTokens: "256000"
+  maxOutputTokens: "128000"
+  supportsToolCalls: "true"
+  licenseName: MIT
+  licenseUrl: https://opensource.org/license/mit
+  author: Microsoft
+  task: chat-completion
+  license: mit
