@@ -8,9 +8,13 @@ Tests various input scenarios: query, response, and tool_definitions.
 """
 
 import asyncio
+import inspect
 import json
+from pathlib import Path
+
 import pytest
 from azure.ai.evaluation._exceptions import EvaluationException
+from azure.ai.evaluation._legacy.prompty._prompty import AsyncPrompty
 
 from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
 from ..common.evaluator_mock_config import (
@@ -247,6 +251,41 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
             description="Tool Definitions Empty List",
             assert_type=self.AssertType.MISSING_FIELD,
         )
+
+    # ==================== PROMPTY RENDERING TESTS ====================
+    # The tests above mock the judge flow, so they never load the Prompty. A legacy Prompty input without a
+    # ``default`` raises ``MissingRequiredInputError`` when it is absent, so these render the real Prompty to
+    # guarantee that omitted tool definitions reach the judge instead of failing before the model call.
+    _PROMPTY_MODEL = {
+        "configuration": {
+            "azure_endpoint": "https://example.openai.azure.com",
+            "azure_deployment": "d",
+            "api_key": "k",
+        }
+    }
+    _PROMPTY_SENTINEL = "SENTINEL_TOOL_DEFINITION_PAYLOAD"
+
+    def _render_prompty(self, **inputs) -> str:
+        prompty_path = Path(inspect.getfile(self.evaluator_type)).parent / self.evaluator_type._PROMPTY_FILE
+        prompty = AsyncPrompty.load(source=prompty_path, model=self._PROMPTY_MODEL)
+        messages = prompty.render(query="q", response="r", tool_calls=[{"name": "f"}], **inputs)
+        return "\n".join(str(message.get("content")) for message in messages).replace("\r\n", "\n")
+
+    def test_prompty_renders_provided_tool_definitions(self):
+        assert self._PROMPTY_SENTINEL in self._render_prompty(tool_definitions=self._PROMPTY_SENTINEL)
+
+    @pytest.mark.parametrize(
+        "absent", [{}, {"tool_definitions": None}, {"tool_definitions": ""}, {"tool_definitions": []}]
+    )
+    def test_prompty_renders_without_tool_definitions(self, absent):
+        rendered = self._render_prompty(**absent)
+        assert self._PROMPTY_SENTINEL not in rendered
+        assert rendered.strip()
+
+    def test_prompty_drops_tool_definitions_block_when_absent(self):
+        with_definitions = self._render_prompty(tool_definitions=self._PROMPTY_SENTINEL)
+        without_definitions = self._render_prompty()
+        assert len(without_definitions) < len(with_definitions.replace(self._PROMPTY_SENTINEL, ""))
 
     # ==================== TOOL DEFINITIONS PARAMETER TESTS ====================
     def test_tool_definitions_missing_name_parameter(self):
