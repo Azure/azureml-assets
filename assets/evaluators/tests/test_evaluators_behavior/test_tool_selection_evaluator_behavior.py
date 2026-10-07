@@ -141,6 +141,7 @@ class TestToolSelectionEvaluatorBehavior(BaseToolCallEvaluatorBehaviorTest, Base
     # endregion
 
     evaluator_type = ToolSelectionEvaluator
+    prompty_tool_definitions_optional = True
 
     def test_skipped_llm_status_returns_not_applicable(self):
         """Flow output with status='skipped' yields a not-applicable result, not a crash."""

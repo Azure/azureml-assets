@@ -34,6 +34,8 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
     Subclasses may override:
     - absent_tool_definitions_assert_type: AssertType - expected outcome when tool definitions are absent, None
       or empty (PASS when the evaluator scores without them, SKIPPED when it skips the row as not applicable)
+    - prompty_tool_definitions_optional: bool - True when the evaluator's Prompty renders without tool definitions,
+      which enables the Prompty rendering tests
     - requires_query: bool - whether query is required
     - MINIMAL_RESPONSE: list - minimal valid response format for the evaluator
     - expected_result_fields: list - expected fields in the evaluation result
@@ -42,6 +44,7 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
 
     # Test Configs
     absent_tool_definitions_assert_type = BaseEvaluatorBehaviorTest.AssertType.PASS
+    prompty_tool_definitions_optional = False
 
     # region Test Data
     # Tool definition test data
@@ -266,23 +269,28 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
     _PROMPTY_SENTINEL = "SENTINEL_TOOL_DEFINITION_PAYLOAD"
 
     def _render_prompty(self, **inputs) -> str:
+        if not self.prompty_tool_definitions_optional:
+            pytest.skip("Prompty tool definitions are not optional for this evaluator")
         prompty_path = Path(inspect.getfile(self.evaluator_type)).parent / self.evaluator_type._PROMPTY_FILE
         prompty = AsyncPrompty.load(source=prompty_path, model=self._PROMPTY_MODEL)
         messages = prompty.render(query="q", response="r", tool_calls=[{"name": "f"}], **inputs)
         return "\n".join(str(message.get("content")) for message in messages).replace("\r\n", "\n")
 
     def test_prompty_renders_provided_tool_definitions(self):
+        """Provided tool definitions reach the rendered prompt."""
         assert self._PROMPTY_SENTINEL in self._render_prompty(tool_definitions=self._PROMPTY_SENTINEL)
 
     @pytest.mark.parametrize(
         "absent", [{}, {"tool_definitions": None}, {"tool_definitions": ""}, {"tool_definitions": []}]
     )
     def test_prompty_renders_without_tool_definitions(self, absent):
+        """Absent, None, empty string and empty list definitions render a prompt instead of raising."""
         rendered = self._render_prompty(**absent)
         assert self._PROMPTY_SENTINEL not in rendered
         assert rendered.strip()
 
     def test_prompty_drops_tool_definitions_block_when_absent(self):
+        """The tool definitions section is omitted from the prompt, not rendered empty."""
         with_definitions = self._render_prompty(tool_definitions=self._PROMPTY_SENTINEL)
         without_definitions = self._render_prompty()
         assert len(without_definitions) < len(with_definitions.replace(self._PROMPTY_SENTINEL, ""))

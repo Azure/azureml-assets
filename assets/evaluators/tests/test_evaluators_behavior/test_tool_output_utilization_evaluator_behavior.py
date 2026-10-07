@@ -133,6 +133,7 @@ class TestToolOutputUtilizationEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest,
     # endregion
 
     evaluator_type = ToolOutputUtilizationEvaluator
+    prompty_tool_definitions_optional = True
 
     check_for_unsupported_tools = True
 
