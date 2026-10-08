@@ -88,6 +88,113 @@ class TestRetrievalDoEvalBranches:
 class TestRetrievalConversationContextExtraction:
     """Covers retrieval context extraction from conversation tool outputs."""
 
+    def test_query_response_extracts_tool_context(self):
+        """Response-side tool outputs become context for an explicit query."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        response = [
+            {
+                "role": "tool",
+                "content": [
+                    {
+                        "type": "tool_result",
+                        "tool_result": {"sourceData": {"snippet": "The warranty is 24 months."}},
+                    }
+                ],
+            },
+            {"role": "assistant", "content": "The warranty is 24 months."},
+        ]
+
+        inputs = evaluator._convert_kwargs_to_eval_input(
+            query="What is the warranty?",
+            response=response,
+        )
+
+        assert inputs == [
+            {
+                "query": "What is the warranty?",
+                "context": '{"sourceData": {"snippet": "The warranty is 24 months."}}',
+            }
+        ]
+
+    def test_string_response_is_rejected(self):
+        """Plain response text cannot be treated as retrieved context."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        query = [
+            {"role": "user", "content": "Earlier question"},
+            {"role": "assistant", "content": "Earlier answer"},
+            {"role": "user", "content": "Latest question"},
+        ]
+
+        with pytest.raises(EvaluationException, match="'response' must be a list of messages"):
+            evaluator._convert_kwargs_to_eval_input(
+                query=query,
+                response="Retrieved context",
+            )
+
+    def test_message_query_uses_latest_user_with_response_tool_context(self):
+        """A message-list query contributes only its latest user text."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        query = [
+            {"role": "user", "content": "Earlier question"},
+            {"role": "assistant", "content": "Earlier answer"},
+            {"role": "user", "content": "Latest question"},
+        ]
+        response = [{"role": "tool", "content": "Retrieved context"}]
+
+        inputs = evaluator._convert_kwargs_to_eval_input(query=query, response=response)
+
+        assert inputs == [{"query": "Latest question", "context": "Retrieved context"}]
+
+    def test_response_without_tool_output_is_not_applicable(self):
+        """A response with no tool messages cannot provide retrieval context."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+
+        with pytest.raises(EvaluationException, match="No valid query or tool output"):
+            evaluator._convert_kwargs_to_eval_input(
+                query="Question",
+                response=[{"role": "assistant", "content": "Answer"}],
+            )
+
+    def test_response_without_query_is_rejected(self):
+        """A response without a query must not evaluate with an empty query."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+
+        with pytest.raises(EvaluationException, match="'query' must be a string or a list of messages"):
+            evaluator._convert_kwargs_to_eval_input(response=[{"role": "tool", "content": "Ctx"}])
+
+    def test_query_without_user_text_is_not_applicable(self):
+        """A message-list query without user text cannot produce a retrieval query."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+
+        with pytest.raises(EvaluationException, match="No valid query or tool output"):
+            evaluator._convert_kwargs_to_eval_input(
+                query=[{"role": "assistant", "content": "Answer"}],
+                response=[{"role": "tool", "content": "Ctx"}],
+            )
+
+    def test_non_string_non_list_query_is_rejected(self):
+        """An unsupported query type raises a classified user error instead of a TypeError."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+
+        with pytest.raises(EvaluationException, match="'query' must be a string or a list of messages"):
+            evaluator._convert_kwargs_to_eval_input(
+                query=5,
+                response=[{"role": "tool", "content": "Ctx"}],
+            )
+
+    def test_query_context_is_preferred_over_response(self):
+        """Explicit context keeps the legacy query/context behavior and ignores response."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+
+        inputs = evaluator._convert_kwargs_to_eval_input(
+            query="Question",
+            context="Explicit context",
+            response=[{"role": "tool", "content": "Response context"}],
+        )
+
+        assert inputs[0]["query"] == "Question"
+        assert inputs[0]["context"] == "Explicit context"
+
     def test_custom_knowledge_base_result_is_extracted_without_tool_filtering(self):
         """Nested Azure AI Search references from a custom tool remain intact."""
         evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
