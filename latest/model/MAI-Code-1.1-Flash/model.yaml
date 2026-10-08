@@ -1,0 +1,8 @@
+path:
+  type: azureblob
+  storage_name: stamlmodeldata
+  container_name: models
+  container_path: custom/MAI-Code-1.1-Flash/5
+publish:
+  description: description.md
+  type: custom_model
