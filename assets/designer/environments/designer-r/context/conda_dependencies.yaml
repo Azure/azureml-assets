@@ -5,6 +5,8 @@ dependencies:
   - python=3.12.8
   - pip:
       - pip>=25.3
-      - urllib3>=2.6.0
+      - urllib3>=2.8.0
+      - setuptools>=83.0.0
+      - msgpack>=1.2.1
       - cryptography>=46.0.7
       - azureml-designer-classic-modules==0.0.196
