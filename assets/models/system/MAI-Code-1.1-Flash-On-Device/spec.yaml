@@ -4,7 +4,7 @@ version: 1
 path: ./
 system_metadata:
   publisher: Microsoft
-  displayName: MAI Code 1.1 Flash On-Device
+  displayName: MAI Code 1.1 Flash
   license: MIT
   licenseDescription: MIT License at https://opensource.org/license/mit
   maxInputTokens: 128000
