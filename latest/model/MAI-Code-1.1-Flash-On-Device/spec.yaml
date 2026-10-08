@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: MAI-Code-1.1-Flash
+name: MAI-Code-1.1-Flash-On-Device
 version: 1
 path: ./
 system_metadata:
