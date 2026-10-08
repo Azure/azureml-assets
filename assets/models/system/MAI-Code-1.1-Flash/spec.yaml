@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: MAI-Code-1.1-Flash
-version: 5
+version: 1
 path: ./
 system_metadata:
   publisher: Microsoft
