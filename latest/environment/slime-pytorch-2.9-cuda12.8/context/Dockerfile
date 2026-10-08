@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.8-ubuntu24.04:20260929.v1
+FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.8-ubuntu24.04:20261007.v1
 
 USER root
 # Editable sources live under /opt so AML/Singularity jobs (uid 9000) can
@@ -149,9 +149,9 @@ COPY patch_ray_jackson.py /tmp/patch_ray_jackson.py
 RUN JACKSON_CORE_VERSION=2.21.5 \
     JACKSON_CORE_JAR_SHA1=7ec0c8bf8402fa998f64b2009632d6566a42ceb7 \
     JACKSON_CORE_POM_SHA1=32a98918e6a365962063ac88abe54b1251f1c2d0 \
-    JACKSON_DATABIND_VERSION=2.21.6 \
-    JACKSON_DATABIND_JAR_SHA1=90fc0c39cc03058141d4312ccadb431a583d6574 \
-    JACKSON_DATABIND_POM_SHA1=9bb89f1e2ab3f37e1b2f8fd148ed7a8b8d79b575 \
+    JACKSON_DATABIND_VERSION=2.21.7 \
+    JACKSON_DATABIND_JAR_SHA1=a2ebbc72e3092323f0f3defa786ff3bb0c47218c \
+    JACKSON_DATABIND_POM_SHA1=2042d73ac64ef7586d763c44aff5398753941fde \
     python /tmp/patch_ray_jackson.py && \
     rm /tmp/patch_ray_jackson.py
 
@@ -323,3 +323,20 @@ RUN python -m pip install --no-cache-dir --upgrade \
 # `import slime`, `python /opt/slime/train.py`, and the PYTHONPATH-based
 # Megatron-LM import all succeed without requiring `--user root`.
 RUN chmod -R a+rX /opt/slime /opt/Megatron-LM
+
+# Refresh packages for the latest Ubuntu security advisories.
+RUN set -eux; \
+    apt-get update; \
+    security_packages="libssl3t64 openssl"; \
+    installed_packages=""; \
+    for package in $security_packages; do \
+        if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
+            installed_packages="$installed_packages $package"; \
+        fi; \
+    done; \
+    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*
+
+# Reassert newly patched transitive dependencies after all package installs.
+RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0'
