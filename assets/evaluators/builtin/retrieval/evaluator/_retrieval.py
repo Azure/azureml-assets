@@ -166,6 +166,23 @@ class RetrievalEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     def __call__(
         self,
         *,
+        query: Union[str, List[dict]],
+        response: List[dict],
+    ) -> Dict[str, Union[str, float]]:
+        """Evaluate retrieval using context extracted from the response.
+
+        :keyword query: The query text or query-side messages.
+        :paramtype query: Union[str, List[dict]]
+        :keyword response: Response-side messages containing tool outputs.
+        :paramtype response: List[dict]
+        :return: The retrieval evaluation result.
+        :rtype: Dict[str, Union[str, float]]
+        """
+
+    @overload
+    def __call__(
+        self,
+        *,
         conversation: Conversation,
     ) -> Dict[str, Union[float, Dict[str, List[Union[str, float]]]]]:
         """Evaluate retrieval for a multi-turn evaluation.
@@ -183,7 +200,7 @@ class RetrievalEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     def __call__(self, *args, **kwargs):  # pylint: disable=docstring-missing-param
         """Evaluate retrieval score chat scenario.
 
-        Accepts either a query and context for a single evaluation,
+        Accepts query and context, query and response, or messages for a single evaluation,
         or a conversation for a multi-turn evaluation. If the conversation has more than one turn,
         the evaluator will aggregate the results of each turn.
 
@@ -191,6 +208,8 @@ class RetrievalEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :paramtype query: Optional[str]
         :keyword context: The context to be evaluated. Mutually exclusive with `conversation` parameter.
         :paramtype context: Optional[str]
+        :keyword response: Response-side messages containing tool outputs.
+        :paramtype response: Optional[List[dict]]
         :keyword conversation: The conversation to be evaluated.
         :paramtype conversation: Optional[~azure.ai.evaluation.Conversation]
         :return: The scores for Chat scenario.
@@ -211,6 +230,9 @@ class RetrievalEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             if messages is not None:
                 kwargs.pop("conversation")
         if messages is None:
+            response = kwargs.pop("response", None)
+            if response is not None and not kwargs.get("context"):
+                return self._convert_query_response(kwargs.get("query"), response)
             return super()._convert_kwargs_to_eval_input(**kwargs)
         if not isinstance(messages, list) or not messages:
             raise EvaluationException(
@@ -224,7 +246,7 @@ class RetrievalEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         explicit_query = kwargs.pop("query", None)
         if explicit_context:
             query = explicit_query or self._get_latest_user_query(messages)
-            return super()._convert_kwargs_to_eval_input(query=query, context=explicit_context, **kwargs)
+            return [{"query": query, "context": explicit_context}]
 
         eval_inputs = self._extract_retrieval_turns(messages)
         if not eval_inputs:
@@ -240,6 +262,33 @@ class RetrievalEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         if explicit_query and len(eval_inputs) == 1:
             eval_inputs[0]["query"] = explicit_query
         return eval_inputs
+
+    @classmethod
+    def _convert_query_response(cls, query: Any, response: Any) -> List[Dict]:
+        """Build one retrieval input from a query and the tool outputs in its response messages."""
+        if not isinstance(response, list) or not isinstance(query, (str, list)):
+            raise EvaluationException(
+                message=(
+                    "RetrievalEvaluator: 'query' must be a string or a list of messages and "
+                    "'response' must be a list of messages."
+                ),
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=ErrorTarget.RETRIEVAL_EVALUATOR,
+            )
+        query_text = query if isinstance(query, str) else cls._get_latest_user_query(query)
+        context = cls._extract_response_context(response)
+        if not query_text or not context:
+            raise EvaluationException(
+                message=(
+                    "RetrievalEvaluator: No valid query or tool output could be "
+                    "extracted from 'query' and 'response'."
+                ),
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.NOT_APPLICABLE,
+                target=ErrorTarget.RETRIEVAL_EVALUATOR,
+            )
+        return [{"query": query_text, "context": context}]
 
     @classmethod
     def _extract_retrieval_turns(cls, messages: List[Dict[str, Any]]) -> List[Dict]:
@@ -321,6 +370,15 @@ class RetrievalEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             if serialized:
                 context_parts.append(serialized)
         return context_parts
+
+    @classmethod
+    def _extract_response_context(cls, response: List[dict]) -> str:
+        """Extract retrieval context from response tool messages."""
+        context_parts = []
+        for message in response:
+            if isinstance(message, dict) and message.get("role") == "tool":
+                context_parts.extend(cls._extract_tool_message_context(message.get("content")))
+        return "\n\n".join(part for part in context_parts if part)
 
     @staticmethod
     def _stringify_tool_output(value: Any) -> str:

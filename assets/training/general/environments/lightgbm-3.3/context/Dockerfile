@@ -82,3 +82,21 @@ RUN PIP_CONSTRAINT=/tmp/pip-security-constraints.txt conda run -p $CONDA_PREFIX 
 RUN find /opt /azureml-envs /root -path '*/pip/_vendor/vendor.txt' -type f -exec \
         sed -i -E 's/setuptools==70\.3\.0/setuptools==84.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.2/g' {} + && \
     find /opt /azureml-envs /root -path '*/pip/_vendor/bom.cdx.json' -type f -delete
+
+# Refresh packages for the latest Ubuntu security advisories.
+RUN set -eux; \
+    apt-get update; \
+    security_packages="curl libcurl3t64-gnutls libcurl4t64 libexpat1 libssl3t64 openssl"; \
+    installed_packages=""; \
+    for package in $security_packages; do \
+        if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
+            installed_packages="$installed_packages $package"; \
+        fi; \
+    done; \
+    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*
+
+# Reassert newly patched transitive dependencies after all package installs.
+RUN /azureml-envs/lightgbm-3.3/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0' 'oauthlib>=4.0.0' 'urllib3>=2.8.0' && \
+    /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0' 'urllib3>=2.8.0' && rm -rf /opt/miniconda/pkgs/urllib3-2.7.0-*
