@@ -1,0 +1,23 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: MAI-Code-1.1-Flash-On-Device
+version: 1
+path: ./
+system_metadata:
+  publisher: Microsoft
+  displayName: MAI Code 1.1 Flash
+  license: MIT
+  licenseDescription: MIT License at https://opensource.org/license/mit
+  maxInputTokens: 128000
+  textContextWindow: 256000
+  maxOutputTokens: 128000
+  modelFlavor: GGUF
+  supportsToolCalling: true
+  keywords:
+  - Coding
+  domain:
+  - Code & Software Engineering
+  modelCapabilities:
+  - tool-calling
+  tasks:
+    inferenceTasks:
+    - chat-completion
