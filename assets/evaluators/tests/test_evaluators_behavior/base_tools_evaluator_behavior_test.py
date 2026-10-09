@@ -8,9 +8,13 @@ Tests various input scenarios: query, response, and tool_definitions.
 """
 
 import asyncio
+import inspect
 import json
+from pathlib import Path
+
 import pytest
 from azure.ai.evaluation._exceptions import EvaluationException
+from azure.ai.evaluation._legacy.prompty._prompty import AsyncPrompty
 
 from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
 from ..common.evaluator_mock_config import (
@@ -28,7 +32,10 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
     Subclasses should implement:
     - evaluator_type: type[PromptyEvaluatorBase] - type of the evaluator (e.g., "ToolOutputUtilization")
     Subclasses may override:
-    - requires_tool_definitions: bool - whether tool definitions are required or optional
+    - absent_tool_definitions_assert_type: AssertType - expected outcome when tool definitions are absent, None
+      or empty (PASS when the evaluator scores without them, SKIPPED when it skips the row as not applicable)
+    - prompty_tool_definitions_optional: bool - True when the evaluator's Prompty renders without tool definitions,
+      which enables the Prompty rendering tests
     - requires_query: bool - whether query is required
     - MINIMAL_RESPONSE: list - minimal valid response format for the evaluator
     - expected_result_fields: list - expected fields in the evaluation result
@@ -36,7 +43,8 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
     """
 
     # Test Configs
-    requires_tool_definitions: bool = False
+    absent_tool_definitions_assert_type = BaseEvaluatorBehaviorTest.AssertType.PASS
+    prompty_tool_definitions_optional = False
 
     # region Test Data
     # Tool definition test data
@@ -194,13 +202,13 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
         result_data = self._extract_and_print_result(results, description)
 
         expected_behavior = assert_type
-        if not self.requires_tool_definitions and assert_type != self.AssertType.INVALID_VALUE:
-            expected_behavior = self.AssertType.PASS
+        if assert_type == self.AssertType.MISSING_FIELD:
+            expected_behavior = self.absent_tool_definitions_assert_type
 
         self.assert_expected_behavior(expected_behavior, result_data)
 
     def test_tool_definitions_not_present(self):
-        """Tool definitions not present - should raise missing field error."""
+        """Tool definitions not present - scored or skipped as not applicable, never a missing field error."""
         self.run_tool_definitions_test(
             input_tool_definitions=None,
             description="Tool Definitions Not Present",
@@ -240,12 +248,52 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
         )
 
     def test_tool_definitions_empty_list(self):
-        """Tool definitions as empty list - should raise missing field error."""
+        """Tool definitions as empty list - scored or skipped as not applicable, never a missing field error."""
         self.run_tool_definitions_test(
             input_tool_definitions=self.EMPTY_LIST,
             description="Tool Definitions Empty List",
             assert_type=self.AssertType.MISSING_FIELD,
         )
+
+    # ==================== PROMPTY RENDERING TESTS ====================
+    # The tests above mock the judge flow, so they never load the Prompty. A legacy Prompty input without a
+    # ``default`` raises ``MissingRequiredInputError`` when it is absent, so these render the real Prompty to
+    # guarantee that omitted tool definitions reach the judge instead of failing before the model call.
+    _PROMPTY_MODEL = {
+        "configuration": {
+            "azure_endpoint": "https://example.openai.azure.com",
+            "azure_deployment": "d",
+            "api_key": "k",
+        }
+    }
+    _PROMPTY_SENTINEL = "SENTINEL_TOOL_DEFINITION_PAYLOAD"
+
+    def _render_prompty(self, **inputs) -> str:
+        if not self.prompty_tool_definitions_optional:
+            pytest.skip("Prompty tool definitions are not optional for this evaluator")
+        prompty_path = Path(inspect.getfile(self.evaluator_type)).parent / self.evaluator_type._PROMPTY_FILE
+        prompty = AsyncPrompty.load(source=prompty_path, model=self._PROMPTY_MODEL)
+        messages = prompty.render(query="q", response="r", tool_calls=[{"name": "f"}], **inputs)
+        return "\n".join(str(message.get("content")) for message in messages).replace("\r\n", "\n")
+
+    def test_prompty_renders_provided_tool_definitions(self):
+        """Provided tool definitions reach the rendered prompt."""
+        assert self._PROMPTY_SENTINEL in self._render_prompty(tool_definitions=self._PROMPTY_SENTINEL)
+
+    @pytest.mark.parametrize(
+        "absent", [{}, {"tool_definitions": None}, {"tool_definitions": ""}, {"tool_definitions": []}]
+    )
+    def test_prompty_renders_without_tool_definitions(self, absent):
+        """Absent, None, empty string and empty list definitions render a prompt instead of raising."""
+        rendered = self._render_prompty(**absent)
+        assert self._PROMPTY_SENTINEL not in rendered
+        assert rendered.strip()
+
+    def test_prompty_drops_tool_definitions_block_when_absent(self):
+        """The tool definitions section is omitted from the prompt, not rendered empty."""
+        with_definitions = self._render_prompty(tool_definitions=self._PROMPTY_SENTINEL)
+        without_definitions = self._render_prompty()
+        assert len(without_definitions) < len(with_definitions.replace(self._PROMPTY_SENTINEL, ""))
 
     # ==================== TOOL DEFINITIONS PARAMETER TESTS ====================
     def test_tool_definitions_missing_name_parameter(self):

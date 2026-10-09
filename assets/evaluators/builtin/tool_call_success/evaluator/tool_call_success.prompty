@@ -16,6 +16,8 @@ inputs:
     type: List
   tool_definitions:
     type: Dict
+    optional: true
+    default: {}
 ---
 system:
 
@@ -333,7 +335,9 @@ EXPECTED OUTPUT
 
 
 # Data
+{% if tool_definitions %}
 TOOL_DEFINITIONS: {{tool_definitions}}
+{% endif %}
 TOOL_CALLS: {{tool_calls}}
 
 
