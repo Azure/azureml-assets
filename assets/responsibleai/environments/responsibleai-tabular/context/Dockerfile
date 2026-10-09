@@ -62,6 +62,12 @@ RUN pip install 'mcp>=1.23.0'
 # --no-deps to prevent skops from upgrading numpy (skops>=0.13.0 requires numpy>=1.25 but we pin numpy<1.24)
 RUN pip install --no-deps 'skops>=0.13.0'
 
+# TODO: remove after responsibleai-tabular-automl includes the scalar
+# prediction fix.
+COPY patch_responsibleai_tabular_automl.py .
+RUN python patch_responsibleai_tabular_automl.py && \
+    rm patch_responsibleai_tabular_automl.py
+
 # Drop pip's vendored-dependency SBOM. Modern pip ships pip/_vendor/bom.cdx.json (a CycloneDX
 # file) that scanners ingest, surfacing pip's internal vendored setuptools (70.3.0,
 # CVE-2025-47273) as an image finding even though it's a pip internal, not an installed
@@ -79,3 +85,7 @@ RUN pip freeze
 
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH $CONDA_PREFIX/lib:$LD_LIBRARY_PATH
+
+# AutoML images use pip's legacy resolver before applying security overrides.
+# Use the same resolver when recreating their frozen MLflow environments.
+ENV PIP_USE_DEPRECATED=legacy-resolver

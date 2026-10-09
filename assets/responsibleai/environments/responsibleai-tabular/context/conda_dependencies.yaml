@@ -8,7 +8,6 @@ dependencies:
   - pip:
     - responsibleai~=0.36.0
     - raiwidgets~=0.36.0
-    - bokeh<3
     - markupsafe<=2.1.2
     - itsdangerous<=2.1.2
     - mlflow
