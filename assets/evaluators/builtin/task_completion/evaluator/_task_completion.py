@@ -2,13 +2,14 @@
 # Licensed under the MIT License.
 import os
 import logging
+import json
 from enum import Enum
 from typing import Dict, Union, List, Optional, Any, Tuple
 
 from typing_extensions import overload, override
 
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
-from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
+from azure.ai.evaluation._evaluators import _common as _sdk_common
 from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
 from azure.ai.evaluation._common._experimental import experimental
 from azure.ai.evaluation._common.utils import (
@@ -22,6 +23,25 @@ from azure.ai.evaluation._evaluators._common._validators import (
     ValidatorInterface,
     ConversationValidator,
     ToolDefinitionsValidator,
+)
+
+
+try:
+    from azure.ai.evaluation._evaluators._common._prompty_strategy import PromptyEvaluationStrategy
+except ImportError as exc:
+    if exc.name != "azure.ai.evaluation._evaluators._common._prompty_strategy":
+        raise
+    PromptyEvaluationStrategy = None
+
+ModelEvaluatorBase = getattr(_sdk_common, "ModelEvaluatorBase", _sdk_common.PromptyEvaluatorBase)
+try:
+    from azure.ai.evaluation._evaluators._common._decision_strategy import BinaryScoring, DecisionEvaluationStrategy
+except ImportError as exc:
+    if exc.name != "azure.ai.evaluation._evaluators._common._decision_strategy":
+        raise
+    BinaryScoring = DecisionEvaluationStrategy = None
+_SDK_SUPPORTS_DECISION = (
+    hasattr(_sdk_common, "ModelEvaluatorBase") and BinaryScoring is not None and DecisionEvaluationStrategy is not None
 )
 
 # ---------------------------------------------------------------------------
@@ -422,8 +442,20 @@ def _create_extended_error_target():
 ExtendedErrorTarget = _create_extended_error_target()
 
 
+def _is_decision_config(model_config) -> bool:
+    return isinstance(model_config, dict) and model_config.get("type") == "decision"
+
+
+def _load_decision_questions(path: str, question_id: str) -> Dict:
+    """Load the status and result questions from one of this evaluator's combined decision rubrics."""
+    from azure.ai.evaluation._legacy.prompty._yaml_utils import load_yaml
+
+    rubric = json.loads(json.dumps(load_yaml(path)))
+    return {"status": rubric["status"], question_id: rubric["result"]}
+
+
 @experimental
-class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
+class TaskCompletionEvaluator(ModelEvaluatorBase[Union[str, int]]):
     """The Task Completion evaluator determines whether an AI agent successfully completed the requested task.
 
     This evaluator assesses task completion based on:
@@ -439,7 +471,12 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
     The evaluation includes task requirement analysis, outcome assessment, and completion gap identification.
 
 
-    :param model_config: Configuration for the Azure OpenAI model.
+    :param model_config: Configuration for the Azure OpenAI model. A configuration with
+        ``type="decision"``, an ``azure_endpoint`` (the Foundry resource endpoint) and an ``azure_deployment``
+        (the Microsoft-Decision-1 deployment name) selects a decision model instead; authenticate with
+        ``api_key`` or ``credential``. The
+        optional ``probability_threshold`` (default 0.75) is the completion probability at or above which the
+        score is 1.
     :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
         ~azure.ai.evaluation.OpenAIModelConfiguration]
 
@@ -465,8 +502,13 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
 
     _PROMPTY_FILE = "task_completion.prompty"
     _MULTI_TURN_PROMPTY_FILE = "task_completion_multi_turn.prompty"
+    _DECISION_FILE = "task_completion.decision.yaml"
+    _MULTI_TURN_DECISION_FILE = "task_completion_multi_turn.decision.yaml"
     _RESULT_KEY = "task_completion"
     _OPTIONAL_PARAMS = ["messages", "tool_definitions"]
+
+    _supports_decision_models = True
+    _binary_decision = True
 
     _validator: ValidatorInterface
 
@@ -490,7 +532,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         """
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
-        threshold_value = kwargs.pop("threshold", 1)
+        threshold = kwargs.pop("threshold", 1)
 
         # Validate and store evaluation level
         self._evaluation_level = _resolve_evaluation_level(
@@ -503,15 +545,46 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             enforce_tool_definitions=True,
         )
 
+        decision_selected = _is_decision_config(model_config)
+        if decision_selected and not _SDK_SUPPORTS_DECISION:
+            raise EvaluationException(
+                message="Decision models require an azure-ai-evaluation version with decision model support.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
+            )
+
         super().__init__(
             model_config=model_config,
             prompty_file=prompty_path,
             result_key=self._RESULT_KEY,
             credential=credential,
-            threshold=threshold_value,
+            threshold=threshold,
             **kwargs,
         )
 
+        if decision_selected:
+            self._strategy = self._decision_strategy(os.path.join(current_dir, self._DECISION_FILE))
+            self._multi_turn_strategy = self._decision_strategy(
+                os.path.join(current_dir, self._MULTI_TURN_DECISION_FILE)
+            )
+            return
+
+        strategy_options = {
+            "result_key": self._result_key,
+            "threshold": self._threshold,
+            "timeout": self._LLM_CALL_TIMEOUT,
+            "error_target": ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
+            "binary_cutoff": 1.0,
+            "top_level_usage": True,
+        }
+        self._strategy = self._multi_turn_strategy = None
+        if PromptyEvaluationStrategy is not None:
+            runner = getattr(self, "_prompty_model_runner", None) or (lambda **inputs: self._flow(**inputs))
+            self._strategy = PromptyEvaluationStrategy(runner, **strategy_options)
+            self._multi_turn_strategy = PromptyEvaluationStrategy(
+                runner, flow_resolver=lambda: self._multi_turn_flow, **strategy_options
+            )
         # Load the multi-turn prompty flow for multi-turn evaluation
         multi_turn_prompty_path = os.path.join(current_dir, self._MULTI_TURN_PROMPTY_FILE)
         prompty_model_config = construct_prompty_model_config(
@@ -524,6 +597,18 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             model=prompty_model_config,
             token_credential=credential,
             is_reasoning_model=self._is_reasoning_model,
+        )
+
+    def _decision_strategy(self, rubric_path: str):
+        runner = self._decision_model_runner
+        return DecisionEvaluationStrategy(
+            runner,
+            result_key=self._result_key,
+            error_target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
+            questions=_load_decision_questions(rubric_path, self._result_key),
+            scoring=BinaryScoring(runner.probability_threshold),
+            threshold=self._threshold,
+            timeout=self._LLM_CALL_TIMEOUT,
         )
 
     @overload
@@ -696,29 +781,22 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         :param prompty_output_dict: Optional raw prompty output for extracting token metadata.
         :return: The standardized result dictionary.
         """
-        p = prompty_output_dict if isinstance(prompty_output_dict, dict) else {}
-        metadata = {
-            "prompt_tokens": p.get("input_token_count", 0),
-            "completion_tokens": p.get("output_token_count", 0),
-            "total_tokens": p.get("total_token_count", 0),
-            "finish_reason": p.get("finish_reason", ""),
-            "model": p.get("model_id", ""),
-            "sample_input": p.get("sample_input", ""),
-            "sample_output": p.get("sample_output", ""),
-        }
-        result_payload = {
+        if self._strategy is not None:
+            return self._strategy.format_result(
+                score, result, reason, status, dict(properties), prompty_output_dict
+            )
+        metadata = self._get_token_metadata(prompty_output_dict or {})
+        return {
             self._result_key: score,
             f"{self._result_key}_score": score,
+            f"{self._result_key}_passed": result == "pass" if result in ("pass", "fail", "unknown") else None,
             f"{self._result_key}_result": result,
-            f"{self._result_key}_passed": result == "pass" if result in ["pass", "fail"] else None,
-            f"{self._result_key}_threshold": self._threshold,
             f"{self._result_key}_reason": reason,
             f"{self._result_key}_status": status,
-            f"{self._result_key}_properties": {**properties, **metadata}
+            f"{self._result_key}_threshold": self._threshold,
+            f"{self._result_key}_properties": {**properties, **metadata},
+            **{f"{self._result_key}_{key}": value for key, value in metadata.items()},
         }
-        # Add top-level token metadata fields for backward compatibility.
-        result_payload.update({f"{self._result_key}_{key}": value for key, value in metadata.items()})
-        return result_payload
 
     def _return_not_applicable_result(
         self, error_message: str, threshold: Union[int, float]
@@ -734,7 +812,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         """
         token_metadata = self._get_token_metadata({})
         result = {
-            f"{self._result_key}": None,
+            self._result_key: None,
             f"{self._result_key}_score": None,
             f"{self._result_key}_passed": None,
             f"{self._result_key}_result": "not_applicable",
@@ -746,19 +824,6 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         # Add top-level token metadata fields for backward compatibility.
         result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
         return result
-
-    @staticmethod
-    def _get_token_metadata(prompty_output: Dict) -> Dict:
-        """Extract token usage and model metadata from the prompty output dict."""
-        return {
-            "prompt_tokens": prompty_output.get("input_token_count", 0),
-            "completion_tokens": prompty_output.get("output_token_count", 0),
-            "total_tokens": prompty_output.get("total_token_count", 0),
-            "finish_reason": prompty_output.get("finish_reason", ""),
-            "model": prompty_output.get("model_id", ""),
-            "sample_input": prompty_output.get("sample_input", ""),
-            "sample_output": prompty_output.get("sample_output", ""),
-        }
 
     @override
     async def _real_call(self, **kwargs):
@@ -899,8 +964,9 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         # Remove keys not consumed by the single-turn prompty to avoid leaking extra kwargs
         eval_input.pop("messages", None)
 
-        prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
-        return self._parse_prompty_output(prompty_output_dict)
+        if self._strategy is not None:
+            return await self._strategy.evaluate(eval_input)
+        return self._parse_prompty_output(await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input))
 
     async def _do_eval_conversation_level(self, eval_input: Dict) -> Dict[str, Union[int, str]]:
         """Evaluate task completion for a full conversation-level evaluation.
@@ -920,52 +986,25 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         if tool_definitions:
             prompty_kwargs["tool_definitions"] = reformat_tool_definitions(tool_definitions, logger)
 
-        prompty_output_dict = await self._multi_turn_flow(timeout=self._LLM_CALL_TIMEOUT, **prompty_kwargs)
-        return self._parse_prompty_output(prompty_output_dict)
+        if self._multi_turn_strategy is not None:
+            return await self._multi_turn_strategy.evaluate(prompty_kwargs)
+        return self._parse_prompty_output(await self._multi_turn_flow(timeout=self._LLM_CALL_TIMEOUT, **prompty_kwargs))
 
-    def _parse_prompty_output(self, prompty_output_dict: Dict) -> Dict[str, Union[int, str]]:
-        """Parse the prompty output into a standardized result dictionary.
-
-        Shared between single-turn and multi-turn evaluation paths.
-        Expects the canonical schema: score (int), reason (str), status (str), properties (dict|null).
-
-        :param prompty_output_dict: Raw output from the prompty flow.
-        :type prompty_output_dict: Dict
-        :return: The parsed evaluation result.
-        :rtype: Dict
-        """
-        llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
-
-        if not isinstance(llm_output, dict):
+    def _parse_prompty_output(self, model_output_dict: Dict) -> Dict[str, Union[int, str]]:
+        if self._strategy is not None:
+            return self._strategy.parse(model_output_dict)
+        answer = model_output_dict.get("llm_output", model_output_dict) if isinstance(model_output_dict, dict) else None
+        if not isinstance(answer, dict):
             raise EvaluationException(
                 message="Evaluator returned invalid output.",
                 blame=ErrorBlame.SYSTEM_ERROR,
                 category=ErrorCategory.FAILED_EXECUTION,
                 target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
             )
-
-        # Handle skipped status from LLM
-        llm_status = llm_output.get("status", "completed")
-        if llm_status == "skipped":
-            reason = llm_output.get("reason", "")
-            return self._return_not_applicable_result(reason, self._threshold)
-
-        score = float(llm_output.get("score", 0))
-        success_result = "pass" if score >= 1.0 else "fail"
-        reason = llm_output.get("reason", "")
-        llm_properties = llm_output.get("properties", {}) or {}
-        token_metadata = self._get_token_metadata(prompty_output_dict)
-        llm_properties.update(token_metadata)
-        result = {
-            self._result_key: score,
-            f"{self._result_key}_score": score,
-            f"{self._result_key}_passed": success_result == "pass",
-            f"{self._result_key}_result": success_result,
-            f"{self._result_key}_reason": reason,
-            f"{self._result_key}_status": "completed",
-            f"{self._result_key}_threshold": self._threshold,
-            f"{self._result_key}_properties": llm_properties,
-        }
-        # Add top-level token metadata fields for backward compatibility.
-        result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
-        return result
+        if answer.get("status", "completed") == "skipped":
+            return self._return_not_applicable_result(answer.get("reason", ""), self._threshold)
+        score = float(answer.get("score", 0))
+        return self._build_result(
+            score, "pass" if score >= 1.0 else "fail", answer.get("reason", ""), "completed",
+            answer.get("properties", {}) or {}, model_output_dict,
+        )

@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.tool_call_accuracy"
-version: 16
+version: 17
 displayName: "Tool-Call-Accuracy-Evaluator"
 description: "Measures whether the agent selects the correct tool calls, applies the correct parameters, and tracks inefficient or missing too calls, in order to resolve a user's request. This is an umbrella evaluators that assessing overall tool call quality. Use this metric in agent-based systems, and AI assistants that rely on tool integration."
 evaluatorType: "builtin"
@@ -22,7 +22,26 @@ initParameterSchema:
       multipleOf: 1
     evaluation_level:
       type: "string"
-  required: ["deployment_name"]
+    model_config:
+      type: "object"
+      additionalProperties: false
+      properties:
+        type:
+          const: decision
+        azure_endpoint:
+          type: "string"
+          minLength: 1
+        azure_deployment:
+          type: "string"
+          minLength: 1
+      required: ["type", "azure_endpoint", "azure_deployment"]
+  oneOf:
+    - required: ["deployment_name"]
+      not:
+        required: ["model_config"]
+    - required: ["model_config"]
+      not:
+        required: ["deployment_name"]
 dataMappingSchema:
   type: "object"
   properties:
