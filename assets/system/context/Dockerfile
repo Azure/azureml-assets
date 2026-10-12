@@ -1,6 +1,9 @@
 # Shared Go toolchain version used across builder stages; compiled from source so the
-# trivy and oras binaries link a patched Go stdlib. Bump to the latest patched Go.
-ARG GO_VERSION=1.26.8
+# trivy and oras binaries link a patched Go stdlib. Go 1.26.9 is the 2026-10-08
+# security release for this line (crypto/tls, html/template, net/http, net/textproto,
+# os, including CVE-2026-97032, CVE-2026-78659, and CVE-2026-97031). Stay on 1.26;
+# move this pin when a newer patched 1.26 release ships.
+ARG GO_VERSION=1.26.9
 ARG TRIVY_VERSION=0.74.0
 ARG ORAS_VERSION=1.3.4
 
