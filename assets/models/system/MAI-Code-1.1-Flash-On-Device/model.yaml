@@ -6,3 +6,4 @@ path:
 publish:
   description: description.md
   type: custom_model
+copy_source_contents_only: true
