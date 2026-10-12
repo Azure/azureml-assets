@@ -139,6 +139,7 @@ def _exercise_chat(module, name, class_name):
 @pytest.mark.parametrize("capabilities", ["shared", "old_base", "old_sdk", "no_strategy", "no_decision",
                                           "no_strategy_symbol", "no_decision_symbol"])
 def test_released_sdk_prompt_strategy_and_decision_rejection(monkeypatch, name, class_name, capabilities):
+    """Preserve chat evaluation and reject unsupported Decision configurations across SDK capabilities."""
     if capabilities in ("old_base", "old_sdk"):
         monkeypatch.delattr(_common, "ModelEvaluatorBase", raising=False)
     if capabilities in ("old_sdk", "no_strategy"):
@@ -160,6 +161,7 @@ def test_released_sdk_prompt_strategy_and_decision_rejection(monkeypatch, name, 
 @pytest.mark.parametrize("name,class_name", EVALUATORS)
 @pytest.mark.parametrize("error", [ImportError("Broken SDK module"), ModuleNotFoundError(name="broken_dependency")])
 def test_broken_strategy_import_is_not_hidden(monkeypatch, name, class_name, error):
+    """Propagate broken strategy imports rather than treating them as unavailable SDK features."""
     import builtins
 
     original_import = builtins.__import__
@@ -178,6 +180,7 @@ def test_broken_strategy_import_is_not_hidden(monkeypatch, name, class_name, err
 @pytest.mark.parametrize("version", ["1.17.0", "1.18.2"])
 @pytest.mark.parametrize("name,class_name", EVALUATORS)
 def test_actual_released_wheel_standalone_asset(tmp_path, version, name, class_name):
+    """Verify standalone asset chat evaluation with an isolated released SDK installation."""
     target = Path(tempfile.gettempdir()) / f"azureml-compat-sdk-{version}"
     if not (target / "azure" / "ai" / "evaluation" / "__init__.py").is_file():
         pytest.skip(f"SDK {version} temporary target not installed: {target}")

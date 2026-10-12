@@ -43,6 +43,7 @@ def stub(evaluator, payload=None, **kwargs):
 
 
 def test_completion_sync_without_prompty():
+    """Evaluate task completion synchronously without loading a chat flow."""
     with patch(PROMPTY_LOAD, side_effect=AssertionError("Chat flow must not be initialized")):
         evaluator = TaskCompletionEvaluator(CONFIG)
     post = stub(evaluator, native("task_completion", {"type": "noul", "noul": 0.9}))
@@ -63,6 +64,7 @@ def test_completion_sync_without_prompty():
 
 @pytest.mark.parametrize("conversation", [False, True])
 def test_completion_model_status_skips_before_parsing_score(conversation):
+    """Skip inapplicable tasks before reading an unusable completion answer."""
     evaluator = TaskCompletionEvaluator(CONFIG)
     post = stub(evaluator, native("task_completion", None, 0.1))
     inputs = {"messages": [{"role": "user", "content": "Say hello"},
@@ -78,6 +80,7 @@ def test_completion_model_status_skips_before_parsing_score(conversation):
 
 
 def test_completion_conversation_and_cutoff():
+    """Apply the configured probability cutoff to asynchronous conversation evaluation."""
     evaluator = TaskCompletionEvaluator({**CONFIG, "probability_threshold": 0.8})
     post = stub(evaluator, native("task_completion", {"type": "noul", "noul": 0.7}, 0.5))
     messages = [{"role": "user", "content": "Say hello"}, {"role": "assistant", "content": "Hello"}]
@@ -90,6 +93,7 @@ def test_completion_conversation_and_cutoff():
 
 
 def test_completion_intermediate_skips_without_call():
+    """Skip intermediate tool responses without invoking the Decision model."""
     evaluator = TaskCompletionEvaluator(CONFIG)
     post = stub(evaluator, side_effect=AssertionError("Must not call"))
     result = evaluator(query="Hello", response=[{"role": "assistant", "content": [{"type": "function_call",
@@ -100,6 +104,7 @@ def test_completion_intermediate_skips_without_call():
 
 
 def test_accuracy_score_and_metadata():
+    """Map tied accuracy probabilities to the lower level and preserve model metadata."""
     evaluator = ToolCallAccuracyEvaluator(CONFIG, threshold=4)
     answer = {"type": "score", "score": 2.5, "confidence": 0.8,
               "probabilities": {"0": 0, "1": 0, "2": 0.5, "3": 0.5, "4": 0}}
@@ -124,6 +129,7 @@ def test_accuracy_score_and_metadata():
 
 
 def test_accuracy_model_status_skips_before_parsing_score():
+    """Skip inapplicable tool calls before reading an unusable accuracy answer."""
     evaluator = ToolCallAccuracyEvaluator(CONFIG)
     post = stub(evaluator, native("tool_call_accuracy", None, 0.1))
     result = evaluator(
@@ -140,6 +146,7 @@ def test_accuracy_model_status_skips_before_parsing_score():
 
 
 def test_accuracy_without_calls_skips():
+    """Skip responses without tool calls without invoking the Decision model."""
     evaluator = ToolCallAccuracyEvaluator(CONFIG)
     post = stub(evaluator, side_effect=AssertionError("Must not call"))
     result = evaluator(query="Hello", tool_definitions=[{"name": "weather", "parameters": {}}],
@@ -150,6 +157,7 @@ def test_accuracy_without_calls_skips():
 
 @pytest.mark.parametrize("evaluator_class", [TaskCompletionEvaluator, ToolCallAccuracyEvaluator])
 def test_bad_answer_raises_not_scored_fail(evaluator_class):
+    """Raise an evaluation error for malformed answers instead of returning a failing score."""
     evaluator = evaluator_class(CONFIG)
     stub(evaluator, {})
     inputs = {"query": "Hello", "response": "Hello"} if evaluator_class is TaskCompletionEvaluator else {
@@ -162,6 +170,7 @@ def test_bad_answer_raises_not_scored_fail(evaluator_class):
 
 @pytest.mark.parametrize("evaluator_class", [TaskCompletionEvaluator, ToolCallAccuracyEvaluator])
 def test_legacy_backend_configuration_is_rejected(evaluator_class):
+    """Reject legacy backend configuration fields for both evaluators."""
     legacy = {"backend": "decision", "provider": "jev", "model": "m", "endpoint": "https://x.example", "api_key": "k"}
     with pytest.raises(EvaluationException):
         evaluator_class(legacy)
