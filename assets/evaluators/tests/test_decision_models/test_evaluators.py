@@ -8,8 +8,13 @@ from azure.ai.evaluation._exceptions import EvaluationException
 
 from ...builtin.task_completion.evaluator._task_completion import TaskCompletionEvaluator
 from ...builtin.tool_call_accuracy.evaluator._tool_call_accuracy import ToolCallAccuracyEvaluator
-from .test_backend import CONFIG
 
+CONFIG = {
+    "type": "decision",
+    "azure_endpoint": "https://example.services.ai.azure.com",
+    "azure_deployment": "Decision-1",
+    "api_key": "test-only",
+}
 UNUSABLE = {
     "task_completion": {"type": "noul", "noul": "unusable"},
     "tool_call_accuracy": {"type": "score", "probabilities": "unusable"},

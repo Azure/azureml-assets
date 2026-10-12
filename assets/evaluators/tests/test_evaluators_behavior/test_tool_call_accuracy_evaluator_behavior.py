@@ -15,6 +15,7 @@ from azure.ai.evaluation._exceptions import EvaluationException
 
 from .base_tool_calls_evaluator_behavior_test import BaseToolCallEvaluatorBehaviorTest
 from .base_tool_evaluation_test import BaseToolEvaluationTest
+from .base_model_types_test import ModelTypesTests
 from . import common_tool_test_data as data
 from .base_validator_unit_test import (
     ConversationValidatorToolCheckUnitTests,
@@ -101,6 +102,13 @@ class TestToolCallAccuracyEvaluatorBehavior(BaseToolCallEvaluatorBehaviorTest, B
     def test_intermediate_response_returns_not_applicable(self):
         """A response ending in an unresolved function_call is treated as not-applicable."""
         self.run_intermediate_response_not_applicable_test()
+
+
+class TestToolCallAccuracyModelTypes(ModelTypesTests):
+    """Cover Decision routing and released-SDK chat fallback paths."""
+
+    result_key = "tool_call_accuracy"
+    class_name = "ToolCallAccuracyEvaluator"
 
 
 @pytest.mark.unittest

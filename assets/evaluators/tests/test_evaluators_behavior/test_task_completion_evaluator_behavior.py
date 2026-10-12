@@ -12,6 +12,7 @@ from azure.ai.evaluation._exceptions import EvaluationException
 from .base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
 from .base_evaluator_behavior_test import _TurnLevelUtilE2ETests, _MessagesUtilE2ETests
 from .base_tool_evaluation_test import BaseToolEvaluationTest
+from .base_model_types_test import ModelTypesTests
 from . import common_tool_test_data as data
 from .base_validator_unit_test import (
     AgentResponseReformatUnitTests,
@@ -140,6 +141,25 @@ class TestTaskCompletionEvaluatorBehavior(
     evaluator_type = TaskCompletionEvaluator
 
     MINIMAL_RESPONSE = BaseToolsEvaluatorBehaviorTest.email_tool_call_and_assistant_response
+
+
+class TestTaskCompletionModelTypes(ModelTypesTests):
+    """Cover Decision routing and released-SDK chat fallback paths."""
+
+    result_key = "task_completion"
+    class_name = "TaskCompletionEvaluator"
+
+    def test_build_result_delegates_to_chat_strategy(self):
+        """Preserve result formatting when the shared chat strategy is available."""
+        from unittest.mock import Mock
+
+        evaluator = _create_mocked_evaluator()
+        evaluator._strategy = Mock()
+        result = evaluator._build_result(1, "pass", "reason", "completed", {"custom": True}, {})
+        assert result is evaluator._strategy.format_result.return_value
+        evaluator._strategy.format_result.assert_called_once_with(
+            1, "pass", "reason", "completed", {"custom": True}, {}
+        )
 
 
 def _create_mocked_evaluator():

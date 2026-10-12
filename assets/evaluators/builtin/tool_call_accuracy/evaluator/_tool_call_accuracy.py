@@ -484,7 +484,9 @@ class ToolCallAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
     def _parse_chat_output(self, model_output_dict: Dict) -> Dict:
         if self._strategy is not None:
             return self._strategy.parse(model_output_dict)
-        answer = model_output_dict.get("llm_output", model_output_dict) if isinstance(model_output_dict, dict) else None
+        answer = (
+            model_output_dict.get("llm_output", model_output_dict) if isinstance(model_output_dict, dict) else None
+        )
         if not isinstance(answer, dict):
             raise EvaluationException(
                 message="Evaluator returned invalid output.",

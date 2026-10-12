@@ -988,12 +988,16 @@ class TaskCompletionEvaluator(ModelEvaluatorBase[Union[str, int]]):
 
         if self._multi_turn_strategy is not None:
             return await self._multi_turn_strategy.evaluate(prompty_kwargs)
-        return self._parse_prompty_output(await self._multi_turn_flow(timeout=self._LLM_CALL_TIMEOUT, **prompty_kwargs))
+        return self._parse_prompty_output(
+            await self._multi_turn_flow(timeout=self._LLM_CALL_TIMEOUT, **prompty_kwargs)
+        )
 
     def _parse_prompty_output(self, model_output_dict: Dict) -> Dict[str, Union[int, str]]:
         if self._strategy is not None:
             return self._strategy.parse(model_output_dict)
-        answer = model_output_dict.get("llm_output", model_output_dict) if isinstance(model_output_dict, dict) else None
+        answer = (
+            model_output_dict.get("llm_output", model_output_dict) if isinstance(model_output_dict, dict) else None
+        )
         if not isinstance(answer, dict):
             raise EvaluationException(
                 message="Evaluator returned invalid output.",
