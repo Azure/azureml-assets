@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """Verify opt-in evaluator calls and unchanged validation without live models."""
 
 import asyncio

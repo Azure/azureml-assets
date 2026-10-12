@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """Exercise released SDK chat compatibility without live model calls."""
 
 import asyncio
