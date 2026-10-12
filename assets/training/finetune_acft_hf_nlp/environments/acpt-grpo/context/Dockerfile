@@ -114,9 +114,9 @@ RUN JACKSON_ARTIFACT=jackson-core \
     JACKSON_POM_SHA1=326ab798972022e9f3d16dc0e98fc104b9435ff3 \
     python3 /tmp/patch_ray_jackson_databind.py && \
     JACKSON_ARTIFACT=jackson-databind \
-    JACKSON_VERSION=2.18.10 \
-    JACKSON_JAR_SHA1=53801af72780b10fd552ee6cd8f8f7572a78d88e \
-    JACKSON_POM_SHA1=7ecd839b59f40e63079acd2b66ccf4e09a056f67 \
+    JACKSON_VERSION=2.18.11 \
+    JACKSON_JAR_SHA1=625e36b952b4d7766e6df729c458f1e5223468a4 \
+    JACKSON_POM_SHA1=7f4fe42fa60d598a3d5d2f4375ae350ce4050294 \
     python3 /tmp/patch_ray_jackson_databind.py && \
     rm -f /tmp/patch_ray_jackson_databind.py
 # httpcore5: pinned transitive dep of ray; bundled in Ray's fat JAR,
@@ -131,3 +131,20 @@ RUN find /opt/conda -type d \( -name 'setuptools-70.3.0.dist-info' -o -name 'msg
     find /opt/conda -path '*/site-packages/pip/_vendor/bom.cdx.json' -delete && \
     find /opt/conda -path '*/site-packages/pip/_vendor/vendor.txt' -exec sed -i -e '/^setuptools==70\.3\.0$/d' -e '/^msgpack==1\.1\.2$/d' {} + && \
     conda clean -a -y && rm -rf /opt/conda/pkgs/ /opt/miniconda/pkgs/ /root/.cache/pip
+
+# Refresh packages for the latest Ubuntu security advisories.
+RUN set -eux; \
+    apt-get update; \
+    security_packages="curl libcurl3-gnutls libcurl4 libevent-core-2.1-7 libexpat1 libssl-dev libssl3 openssl"; \
+    installed_packages=""; \
+    for package in $security_packages; do \
+        if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
+            installed_packages="$installed_packages $package"; \
+        fi; \
+    done; \
+    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*
+
+# Reassert newly patched transitive dependencies after all package installs.
+RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'oauthlib>=4.0.0'

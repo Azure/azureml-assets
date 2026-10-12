@@ -176,9 +176,9 @@ RUN find /opt/conda/envs/ptca/lib/python3.10/site-packages/ray -type d -name 'th
 # GHSA-6hg6-v5c8-fphq, and GHSA-3pxv-7cmr-fjr4; patch httpcore5 for
 # GHSA-hf6x-8p5f-cgmf.
 COPY patch_ray_jackson_databind.py /tmp/patch_ray_jackson_databind.py
-RUN JACKSON_DATABIND_VERSION=2.21.6 \
-    JACKSON_DATABIND_JAR_SHA1=90fc0c39cc03058141d4312ccadb431a583d6574 \
-    JACKSON_DATABIND_POM_SHA1=9bb89f1e2ab3f37e1b2f8fd148ed7a8b8d79b575 \
+RUN JACKSON_DATABIND_VERSION=2.21.7 \
+JACKSON_DATABIND_JAR_SHA1=a2ebbc72e3092323f0f3defa786ff3bb0c47218c \
+JACKSON_DATABIND_POM_SHA1=2042d73ac64ef7586d763c44aff5398753941fde \
     JACKSON_CORE_VERSION=2.18.8 \
     JACKSON_CORE_JAR_SHA1=459eb2c4bb30bd6898eb9bbe9d7a4c4140529b8b \
     JACKSON_CORE_POM_SHA1=90813471a8fd344b176d7459ab2ee310dacb607f \
@@ -220,3 +220,20 @@ ENV LD_LIBRARY_PATH=/opt/conda/envs/ptca/lib/python3.10/site-packages/nvidia/ncc
     PYTHONHASHSEED=random \
     PYTHONDONTWRITEBYTECODE=1
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/ /opt/conda/pkgs/
+
+# Refresh packages for the latest Ubuntu security advisories.
+RUN set -eux; \
+    apt-get update; \
+    security_packages="libevent-core-2.1-7 libssl-dev libssl3 openssl"; \
+    installed_packages=""; \
+    for package in $security_packages; do \
+        if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
+            installed_packages="$installed_packages $package"; \
+        fi; \
+    done; \
+    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*
+
+# Reassert newly patched transitive dependencies after all package installs.
+RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'oauthlib>=4.0.0'
