@@ -4,6 +4,7 @@
 """Verify opt-in evaluator calls and unchanged validation without live models."""
 
 import asyncio
+import json
 from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
@@ -44,6 +45,16 @@ def stub(evaluator, payload=None, **kwargs):
     return evaluator._model_runner._post
 
 
+def request_evidence(post):
+    """Inspect the actual serialized native request without bypassing SDK preparation."""
+    content, _ = post.call_args.args
+    assert isinstance(content, bytes)
+    body = json.loads(content)
+    assert set(body) == {"model", "state", "questions"}
+    assert body["model"] == CONFIG["azure_deployment"]
+    return body["state"], body["questions"]
+
+
 def test_completion_sync_without_prompty():
     """Evaluate task completion synchronously without loading a chat flow."""
     with patch(PROMPTY_LOAD, side_effect=AssertionError("Chat flow must not be initialized")):
@@ -58,7 +69,7 @@ def test_completion_sync_without_prompty():
     assert "task_requirements" not in result["task_completion_properties"]
     assert result["task_completion_properties"]["decision_model"]["deployment"] == "Decision-1"
     assert "No model rationale" in result["task_completion_reason"]
-    state, questions = post.call_args.args
+    state, questions = request_evidence(post)
     assert set(state) == {"query", "response", "tool_definitions"}
     assert questions["task_completion"]["type"] == "noul"
     assert questions["status"]["type"] == "noul"
@@ -89,7 +100,7 @@ def test_completion_conversation_and_cutoff():
     result = asyncio.run(evaluator._to_async()(messages=messages))
     assert result["task_completion"] == 0
     assert result["task_completion_result"] == "fail"
-    state, questions = post.call_args.args
+    state, questions = request_evidence(post)
     assert "messages" in state
     assert "end to end" in questions["task_completion"]["instructions"]
 
@@ -123,7 +134,7 @@ def test_accuracy_score_and_metadata():
     assert "correct_tool_calls_made_by_agent" not in properties
     assert properties["decision_model"]["deployment"] == "Decision-1"
     assert "tool_call_accuracy_total_tokens" not in result
-    state, questions = post.call_args.args
+    state, questions = request_evidence(post)
     assert set(questions) == {"tool_call_accuracy", "status"}
     assert questions["tool_call_accuracy"]["type"] == "score"
     assert questions["status"]["type"] == "noul"
@@ -145,7 +156,11 @@ def test_accuracy_model_status_skips_before_parsing_score():
     assert result["tool_call_accuracy_result"] == "not_applicable"
     assert result["tool_call_accuracy"] is None
     assert result["tool_call_accuracy_passed"] is None
-    assert result["tool_call_accuracy_properties"] is None
+    properties = result["tool_call_accuracy_properties"]
+    assert properties["model"] == "actual-model"
+    assert properties["total_tokens"] == 34
+    assert properties["decision_model"]["deployment"] == CONFIG["azure_deployment"]
+    assert not {"finish_reason", "sample_input", "sample_output"} & properties.keys()
 
 
 def test_accuracy_without_calls_skips():
@@ -190,7 +205,7 @@ def test_accuracy_response_evidence_preserves_selection_and_retry(selected):
     result = evaluator(query="Weather in Paris?", response=deepcopy(response),
                        tool_definitions=definitions, **inputs)
     assert result["tool_call_accuracy"] == 4
-    state, questions = post.call_args.args
+    state, questions = request_evidence(post)
     assert set(state) == {"query", "tool_calls", "tool_definitions", "response"}
     assert state["query"] == "Weather in Paris?"
     assert state["tool_definitions"] == definitions
@@ -224,7 +239,7 @@ def test_accuracy_response_only_definitions_and_normalized_state(tool):
     response = deepcopy(getattr(data, f"{tool}_RESPONSE"))
     definitions = deepcopy(getattr(data, f"{tool}_TOOL_DEFINITIONS"))
     evaluator(query=query, response=response, tool_definitions=definitions)
-    state, _ = post.call_args.args
+    state, _ = request_evidence(post)
     expected_calls = data.FILE_SEARCH_EXPECTED_FLOW_TOOL_CALLS if tool == "FILE_SEARCH" else [{
         "type": "tool_call",
         "tool_call_id": "call_cfb55a91a58c44ea9217b34174aad2ab",
@@ -277,7 +292,7 @@ def test_completion_scope_and_default_cutoff_boundaries(
     assert result["task_completion"] == score
     assert result["task_completion_threshold"] == 1
     assert result["task_completion_status"] == ("skipped" if score is None else "completed")
-    state, questions = post.call_args.args
+    state, questions = request_evidence(post)
     if evaluation_level == "turn":
         assert set(state) == {"query", "response", "tool_definitions"}
         assert "Latest task" in state["query"]
@@ -332,7 +347,7 @@ def test_completion_forced_conversation_uses_full_query_response_transcript():
                {"role": "user", "content": "Latest task"}],
         response=[{"role": "assistant", "content": "Latest answer"}],
     )
-    state, questions = post.call_args.args
+    state, questions = request_evidence(post)
     assert set(state) == {"messages"}
     assert all(text in state["messages"] for text in ("First task", "First answer", "Latest task", "Latest answer"))
     assert "end to end" in questions["task_completion"]["instructions"]
