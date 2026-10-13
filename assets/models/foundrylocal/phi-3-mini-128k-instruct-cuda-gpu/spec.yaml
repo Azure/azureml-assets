@@ -6,7 +6,7 @@ tags:
   capabilities: ''
   supportsReasoning: ''
 system_metadata:
-  invisibleUntil: "2027-10-01T00:00:00Z"
+  invisibleUntil: "2027-10-01T00:00:00.000Z"
   alias: phi-3-mini-128k
   publisher: Microsoft
   author: Microsoft
