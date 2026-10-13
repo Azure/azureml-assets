@@ -63,4 +63,4 @@ MAI Code 1.1 Flash maintains comparable coding quality following optimization fo
 
 Benchmark results may vary based on inference configuration and evaluation methodology.
 
-For additional performance measurements, including throughput across different context lengths and details on speculative decoding, see Bringing local models and sandboxed tools to Windows and GitHub Copilot.
+For additional performance measurements, including throughput across different context lengths and details on speculative decoding, see [Bringing local models and sandboxed tools to Windows and GitHub Copilot](https://commandline.microsoft.com/local-models-sandboxed-tools-github-windows/).
