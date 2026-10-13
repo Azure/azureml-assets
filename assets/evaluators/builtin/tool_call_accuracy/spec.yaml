@@ -12,6 +12,7 @@ tags:
 supportedEvaluationLevels: ["turn"]
 initParameterSchema:
   type: "object"
+  description: "Hosted initialization uses a named deployment resolved by the service. Python model_config and credentials remain internal constructor inputs, not public initialization parameters."
   properties:
     deployment_name:
       type: "string"
@@ -22,26 +23,9 @@ initParameterSchema:
       multipleOf: 1
     evaluation_level:
       type: "string"
-    model_config:
-      type: "object"
-      additionalProperties: false
-      properties:
-        type:
-          const: decision
-        azure_endpoint:
-          type: "string"
-          minLength: 1
-        azure_deployment:
-          type: "string"
-          minLength: 1
-      required: ["type", "azure_endpoint", "azure_deployment"]
-  oneOf:
-    - required: ["deployment_name"]
-      not:
-        required: ["model_config"]
-    - required: ["model_config"]
-      not:
-        required: ["deployment_name"]
+  required: ["deployment_name"]
+  not:
+    required: ["model_config"]
 dataMappingSchema:
   type: "object"
   properties:

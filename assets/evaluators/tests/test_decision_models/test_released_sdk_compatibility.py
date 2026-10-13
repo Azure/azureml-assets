@@ -9,7 +9,6 @@ import runpy
 import shutil
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
@@ -57,17 +56,20 @@ def test_standalone_asset_packages_native_rubrics_without_public_auth(tmp_path, 
         assert questions[name]["type"] == ("noul" if name == "task_completion" else "score")
     schema = spec["initParameterSchema"]
     public_config = {key: value for key, value in DECISION_CONFIG.items() if key != "api_key"}
-    validate({"model_config": public_config}, schema)
     validate({"deployment_name": "chat-model"}, schema)
+    assert "model_config" not in schema["properties"]
+    for selection in ({}, {"model_config": public_config},
+                      {"deployment_name": "Decision-1", "model_config": public_config}):
+        with pytest.raises(ValidationError):
+            validate(selection, schema)
     for auth_field in ("api_key", "credential", "authorization", "headers"):
         with pytest.raises(ValidationError):
             validate({"model_config": {**public_config, auth_field: "not-public"}}, schema)
     with pytest.raises(ValidationError):
         validate({"deployment_name": "chat-model", "model_config": public_config}, schema)
     if name == "task_completion":
-        validate({"model_config": public_config, "probability_threshold": 0.8}, schema)
         validate({"deployment_name": "Decision-1", "probability_threshold": 0.8}, schema)
-        for selection in ({"model_config": public_config}, {"deployment_name": "Decision-1"}):
+        for selection in ({"deployment_name": "Decision-1"},):
             for cutoff in (-0.1, 1.1, "0.8", True):
                 with pytest.raises(ValidationError):
                     validate({**selection, "probability_threshold": cutoff}, schema)
@@ -232,11 +234,9 @@ def test_broken_strategy_import_is_not_hidden(monkeypatch, name, class_name, err
 
 @pytest.mark.parametrize("version", ["1.17.0", "1.18.2"])
 @pytest.mark.parametrize("name,class_name", EVALUATORS)
-def test_actual_released_wheel_standalone_asset(tmp_path, version, name, class_name):
+def test_actual_released_wheel_standalone_asset(tmp_path, version, name, class_name, released_sdk_target):
     """Verify standalone asset chat evaluation with an isolated released SDK installation."""
-    target = Path(tempfile.gettempdir()) / f"azureml-compat-sdk-{version}"
-    if not (target / "azure" / "ai" / "evaluation" / "__init__.py").is_file():
-        pytest.skip(f"SDK {version} temporary target not installed: {target}")
+    target = released_sdk_target(version)
     package = tmp_path / "evaluator"
     shutil.copytree(BUILTIN / name / "evaluator", package, ignore=shutil.ignore_patterns("__pycache__"))
     script = """
@@ -245,7 +245,9 @@ import sys
 from pathlib import Path
 sys.path.insert(0, sys.argv[1])
 import azure.ai.evaluation as sdk
+from azure.ai.evaluation._version import VERSION
 assert Path(sdk.__file__).is_relative_to(Path(sys.argv[1])), sdk.__file__
+assert VERSION == sys.argv[6], VERSION
 tests = runpy.run_path(sys.argv[2])
 module = runpy.run_path(sys.argv[3])
 assert module['PromptyEvaluationStrategy'] is None
@@ -257,7 +259,18 @@ print('Released SDK standalone sync/async chat checks passed')
     environment.pop("PYTHONPATH", None)
     result = subprocess.run(
         [sys.executable, "-c", script, str(target), str(Path(__file__).resolve()),
-         str(package / f"_{name}.py"), name, class_name],
+         str(package / f"_{name}.py"), name, class_name, version],
         cwd=tmp_path, env=environment, capture_output=True, text=True, timeout=120,
     )
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+@pytest.mark.parametrize("version", ["1.17.0", "1.18.2"])
+@pytest.mark.parametrize("configured", [False, True])
+def test_released_sdk_absence_is_an_actionable_skip(tmp_path, monkeypatch, released_sdk_target, version, configured):
+    if configured:
+        monkeypatch.setenv("AZUREML_COMPAT_SDK_ROOT", str(tmp_path))
+    else:
+        monkeypatch.delenv("AZUREML_COMPAT_SDK_ROOT", raising=False)
+    with pytest.raises(pytest.skip.Exception, match="AZUREML_COMPAT_SDK_ROOT"):
+        released_sdk_target(version)

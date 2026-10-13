@@ -4,6 +4,7 @@
 """Composite contracts exercised against the actual shared Decision SDK."""
 
 from copy import deepcopy
+import hashlib
 import json
 import logging
 import os
@@ -11,7 +12,6 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
-import tempfile
 from unittest.mock import AsyncMock
 
 import jsonschema
@@ -19,6 +19,7 @@ import pandas as pd
 import pytest
 import yaml
 
+from azure.ai.evaluation import evaluate
 from azure.ai.evaluation._evaluate._evaluate import (
     _calculate_aoai_evaluation_summary,
     _convert_single_row_to_aoai_format,
@@ -29,6 +30,7 @@ from azure.ai.evaluation._exceptions import EvaluationException
 from azure.ai.evaluation._evaluate._batch_run._run_submitter_client import RunSubmitterClient
 from ...builtin.output_quality.evaluator._output_quality import OutputQualityEvaluator
 from ...builtin.tool_use_quality.evaluator._tool_use_quality import ToolUseQualityEvaluator
+from ...builtin.f1_score.evaluator._f1_score import F1ScoreEvaluator
 
 
 CONFIG = {
@@ -124,19 +126,40 @@ def test_member_threshold_schema_matches_constructor(evaluator_class):
     module = __import__(evaluator_class.__module__, fromlist=["__file__"])
     spec = yaml.safe_load((Path(module.__file__).parent.parent / "spec.yaml").read_text(encoding="utf-8"))
     schema = spec["initParameterSchema"]
-    for binding in ({"deployment_name": "resolved-deployment"}, {"model_config": {
-        key: value for key, value in CONFIG.items() if key != "api_key"
-    }}):
-        jsonschema.validate({**binding, "threshold": {}, "probability_threshold": 0.8}, schema)
-        for member in evaluator_class._EVALUATORS:
-            for value in (member["min"], member["min"] + (member["max"] - member["min"]) * 0.625, member["max"]):
-                jsonschema.validate({**binding, "threshold": {member["name"]: value}}, schema)
-            for value in (True, "3", None, member["min"] - 0.1, member["max"] + 0.1):
-                with pytest.raises(jsonschema.ValidationError):
-                    jsonschema.validate({**binding, "threshold": {member["name"]: value}}, schema)
-        for invalid in (3, [], {"unknown": 1}):
+    binding = {"deployment_name": "resolved-deployment"}
+    jsonschema.validate({**binding, "threshold": {}, "probability_threshold": 0.8}, schema)
+    for member in evaluator_class._EVALUATORS:
+        for value in (member["min"], member["min"] + (member["max"] - member["min"]) * 0.625, member["max"]):
+            jsonschema.validate({**binding, "threshold": {member["name"]: value}}, schema)
+        for value in (True, "3", None, member["min"] - 0.1, member["max"] + 0.1):
             with pytest.raises(jsonschema.ValidationError):
-                jsonschema.validate({**binding, "threshold": invalid}, schema)
+                jsonschema.validate({**binding, "threshold": {member["name"]: value}}, schema)
+    for invalid in (3, [], {"unknown": 1}):
+        with pytest.raises(jsonschema.ValidationError):
+            jsonschema.validate({**binding, "threshold": invalid}, schema)
+
+
+@pytest.mark.parametrize("name", ["task_completion", "tool_call_accuracy", "output_quality", "tool_use_quality"])
+def test_public_initialization_requires_trusted_named_deployment(name):
+    schema = yaml.safe_load(
+        (Path(__file__).parents[2] / "builtin" / name / "spec.yaml").read_text(encoding="utf-8")
+    )["initParameterSchema"]
+    assert "model_config" not in schema["properties"]
+    binding = {"deployment_name": "Decision-1", "evaluation_level": "turn"}
+    jsonschema.validate(binding, schema)
+    for invalid in ({}, {"model_config": CONFIG}, {"deployment_name": None},
+                    {"deployment_name": 1}):
+        with pytest.raises(jsonschema.ValidationError):
+            jsonschema.validate(invalid, schema)
+    for config in (CONFIG, CHAT_CONFIG, {}, None, "untrusted"):
+        with pytest.raises(jsonschema.ValidationError):
+            jsonschema.validate({**binding, "model_config": config}, schema)
+    if "probability_threshold" in schema["properties"]:
+        for value in (0, 0.75, 1):
+            jsonschema.validate({**binding, "probability_threshold": value}, schema)
+        for value in (-0.1, 1.1, True, None, "0.75"):
+            with pytest.raises(jsonschema.ValidationError):
+                jsonschema.validate({**binding, "probability_threshold": value}, schema)
 
 
 @pytest.mark.parametrize("evaluator_class", COMPOSITES)
@@ -170,6 +193,85 @@ def test_public_converter_and_rollup_count_shared_request_once(evaluator_class, 
         "model_name": "actual-model", "invocation_count": 1,
         "prompt_tokens": 30, "completion_tokens": 4, "total_tokens": 34, "cached_tokens": 0,
     }]
+
+
+@pytest.mark.parametrize("evaluator_class", COMPOSITES)
+@pytest.mark.parametrize("outcome", ["passed", "all_skipped", "mixed", "failed", "error"])
+def test_public_evaluate_preserves_member_provenance_and_root_usage(tmp_path, evaluator_class, outcome):
+    evaluator = evaluator_class(CONFIG, probability_threshold=0.8)
+    payload = _native(evaluator_class, skipped=outcome == "all_skipped")
+    first = evaluator._EVALUATORS[0]["name"]
+    if outcome == "mixed":
+        payload["answers"][f"{first}_status"]["noul"] = 0
+    elif outcome == "failed":
+        payload["answers"][first] = (
+            {"type": "noul", "noul": 0.1} if evaluator._EVALUATORS[0]["max"] == 1 else
+            {"type": "score", "score": 1, "confidence": 1,
+             "probabilities": {str(index): float(index == 0) for index in range(5)}}
+        )
+    elif outcome == "error":
+        payload["answers"][f"{first}_status"]["noul"] = 2
+    post = AsyncMock(return_value=payload)
+    evaluator._decision_model_runner._post = post
+    data = tmp_path / "input.jsonl"
+    data.write_text(json.dumps({**INPUT, "ground_truth": "Hello"}) + "\n", encoding="utf-8")
+    result = evaluate(
+        data=str(data), evaluators={"composite": evaluator, "f1": F1ScoreEvaluator()},
+        _convert_to_aoai_evaluation_result=True,
+    )
+    post.assert_awaited_once()
+    row, = result["_evaluation_results_list"]
+    converted = {item["metric"]: item for item in row["results"]}
+    assert converted["f1_score"]["score"] == 1 and converted["f1_score"]["passed"] is True
+    metric = evaluator._RESULT_KEY
+    assert converted[metric]["score"] == {
+        "passed": 1, "all_skipped": None, "mixed": 1, "failed": 0, "error": None,
+    }[outcome]
+    with_usage = [item for item in row["results"] if item.get("sample", {}).get("usage")]
+    assert len(with_usage) == 1 and with_usage[0]["metric"] == metric
+    assert with_usage[0]["sample"]["usage"] == {
+        "prompt_tokens": 30, "completion_tokens": 4, "total_tokens": 34,
+    }
+    assert result["_evaluation_summary"]["per_model_usage"] == [{
+        "model_name": "actual-model", "invocation_count": 1,
+        "prompt_tokens": 30, "completion_tokens": 4, "total_tokens": 34, "cached_tokens": 0,
+    }]
+    if outcome == "error":
+        assert all(converted[member["name"]]["status"] == "error" for member in evaluator._EVALUATORS)
+        assert all(converted[member["name"]]["properties"]["decision_model"]
+                   for member in evaluator._EVALUATORS)
+        return
+    flat, = result["rows"]
+    raw = flat[f"outputs.composite.{metric}_evaluators"]
+    for member in evaluator._EVALUATORS:
+        name = member["name"]
+        properties = raw[name]["properties"]
+        assert converted[name]["properties"] == properties
+        assert flat[f"outputs.composite.{name}_properties"] == properties
+        assert converted[name]["score"] == raw[name]["score"]
+        assert converted[name]["passed"] == raw[name]["passed"]
+        assert converted[name]["status"] == raw[name]["status"]
+        assert not converted[name].get("sample", {}).get("usage")
+        assert not converted[name].get("sample", {}).get("model")
+        for suffix in ("prompt_tokens", "completion_tokens", "total_tokens", "model"):
+            assert f"outputs.composite.{name}_{suffix}" not in flat
+        native = properties["decision_model"]
+        strategy = evaluator._decision_strategies[name]
+        assert native["rubric_hash"] == hashlib.sha256(
+            json.dumps(strategy.questions[name], sort_keys=True).encode()
+        ).hexdigest()
+        assert native["status_rubric_hash"] == hashlib.sha256(
+            json.dumps(strategy.questions["status"], sort_keys=True).encode()
+        ).hexdigest()
+        assert native["status_probability_threshold"] == 0.5
+        assert native["native_status_answer"] == payload["answers"][f"{name}_status"]
+        if raw[name]["status"] != "skipped":
+            assert native["native_answer"] == payload["answers"][name]
+            if member["max"] == 1:
+                assert native["probability_threshold"] == 0.8
+                assert native["probabilities"] == {"false": pytest.approx(0.1), "true": 0.9}
+            else:
+                assert native["probabilities"] == payload["answers"][name]["probabilities"]
 
 
 @pytest.mark.parametrize("evaluator_class", COMPOSITES)
@@ -408,9 +510,8 @@ def test_actual_batch_failure_preserves_known_usage_once(evaluator_class, root_l
 
 @pytest.mark.parametrize("evaluator_class", COMPOSITES)
 @pytest.mark.parametrize("version", ["1.17.0", "1.18.2"])
-def test_actual_released_wheel_composite_package(tmp_path, evaluator_class, version):
-    target = Path(tempfile.gettempdir()) / f"azureml-compat-sdk-{version}"
-    assert (target / "azure" / "ai" / "evaluation" / "__init__.py").is_file(), target
+def test_actual_released_wheel_composite_package(tmp_path, evaluator_class, version, released_sdk_target):
+    target = released_sdk_target(version)
     module = __import__(evaluator_class.__module__, fromlist=["__file__"])
     package = tmp_path / "evaluator"
     shutil.copytree(Path(module.__file__).parent, package, ignore=shutil.ignore_patterns("__pycache__"))
@@ -420,7 +521,9 @@ import sys
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 import azure.ai.evaluation as sdk
+from azure.ai.evaluation._version import VERSION
 assert Path(sdk.__file__).is_relative_to(Path(sys.argv[1])), sdk.__file__
+assert VERSION == sys.argv[4], VERSION
 module = runpy.run_path(sys.argv[2])
 cls = module[sys.argv[3]]
 assert not module['_SDK_SUPPORTS_DECISION']
@@ -468,7 +571,7 @@ print('Released composite package chat/threshold/capability checks passed')
     environment["PYTHONPATH"] = str(target)
     result = subprocess.run(
         [sys.executable, "-c", script, str(target), str(package / Path(module.__file__).name),
-         evaluator_class.__name__],
+         evaluator_class.__name__, version],
         cwd=tmp_path, env=environment, capture_output=True, text=True, timeout=120,
     )
     assert result.returncode == 0, result.stdout + result.stderr

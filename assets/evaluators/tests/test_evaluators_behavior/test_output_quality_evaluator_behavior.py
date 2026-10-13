@@ -1101,18 +1101,20 @@ def test_native_decision_decision_usage_cannot_capture_stale_chat_cache():
     not output_quality_module._SDK_SUPPORTS_DECISION, reason="Shared Decision SDK support is unavailable."
 )
 def test_native_decision_spec_initializer_is_exclusive_and_validates_cutoffs():
-    """Require exactly one initializer and validate Decision deployment and probability fields."""
+    """Require a public named deployment while keeping probability cutoffs numeric."""
     path = Path(output_quality_module.__file__).parents[1] / "spec.yaml"
     spec = yaml.safe_load(path.read_text(encoding="utf-8"))
     schema = spec["initParameterSchema"]
     jsonschema.validate({"deployment_name": "chat"}, schema)
     config = {key: value for key, value in _native_decision_CONFIG.items() if key != "api_key"}
-    jsonschema.validate({"model_config": config, "probability_threshold": 0.75}, schema)
+    jsonschema.validate({"deployment_name": "Decision-1", "probability_threshold": 0.75}, schema)
+    assert "model_config" not in schema["properties"]
     for invalid in ({}, {"deployment_name": "chat", "model_config": config},
                     {"model_config": {"type": "decision"}},
                     {"model_config": {**config, "azure_endpoint": ""}},
                     {"model_config": {**config, "probability_threshold": 2}},
-                    {"model_config": config, "probability_threshold": -1}):
+                    {"model_config": config, "probability_threshold": -1},
+                    {"deployment_name": "Decision-1", "probability_threshold": -1}):
         with pytest.raises(jsonschema.ValidationError):
             jsonschema.validate(invalid, schema)
 

@@ -15,6 +15,7 @@ tags:
   composite_evaluator: "fluency, coherence, intent_resolution, task_adherence, groundedness, task_completion"
 initParameterSchema:
   type: "object"
+  description: "Hosted initialization uses a named deployment resolved by the service. Python model_config and credentials remain internal constructor inputs, not public initialization parameters."
   properties:
     deployment_name:
       type: "string"
@@ -53,31 +54,10 @@ initParameterSchema:
       type: "number"
       minimum: 0
       maximum: 1
-      description: "Decision-only probability cutoff for task_adherence and task_completion. Overrides model_config.probability_threshold; defaults to 0.75. Public score thresholds are unchanged."
-    model_config:
-      type: "object"
-      additionalProperties: false
-      properties:
-        type:
-          const: decision
-        azure_endpoint:
-          type: "string"
-          minLength: 1
-        azure_deployment:
-          type: "string"
-          minLength: 1
-        probability_threshold:
-          type: "number"
-          minimum: 0
-          maximum: 1
-      required: ["type", "azure_endpoint", "azure_deployment"]
-  oneOf:
-    - required: ["deployment_name"]
-      not:
-        required: ["model_config"]
-    - required: ["model_config"]
-      not:
-        required: ["deployment_name"]
+      description: "Decision-only probability cutoff for task_adherence and task_completion, checked after trusted named-deployment resolution. Overrides the resolved configuration cutoff; defaults to 0.75. Public score thresholds are unchanged."
+  required: ["deployment_name"]
+  not:
+    required: ["model_config"]
 dataMappingSchema:
   type: "object"
   properties:

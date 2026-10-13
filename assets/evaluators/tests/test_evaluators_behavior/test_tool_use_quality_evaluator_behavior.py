@@ -1045,7 +1045,7 @@ def test_native_decision_one_request_per_converted_input():
     not tool_use_quality_module._SDK_SUPPORTS_DECISION, reason="Shared Decision SDK support is unavailable."
 )
 def test_native_decision_rubrics_and_init_schema():
-    """Validate both local rubrics and mutually exclusive deployment configuration."""
+    """Validate both local rubrics and public named-deployment configuration."""
     root = Path(tool_use_quality_module.__file__).parent
     for filename in (ToolUseQualityEvaluator._DECISION_FILE, ToolUseQualityEvaluator._MULTI_TURN_DECISION_FILE):
         rubric = yaml.safe_load((root / filename).read_text(encoding="utf-8"))
@@ -1060,12 +1060,14 @@ def test_native_decision_rubrics_and_init_schema():
     assert spec["version"] == 7
     schema = spec["initParameterSchema"]
     config = {key: value for key, value in _native_decision_CONFIG.items() if key != "api_key"}
-    for valid in ({"deployment_name": "chat"}, {"model_config": config},
-                  {"model_config": config, "probability_threshold": 0.75}):
+    assert "model_config" not in schema["properties"]
+    for valid in ({"deployment_name": "chat"},
+                  {"deployment_name": "Decision-1", "probability_threshold": 0.75}):
         jsonschema.validate(valid, schema)
     for invalid in ({}, {"deployment_name": "chat", "model_config": config},
                     {"model_config": {"type": "decision"}},
                     {"model_config": {**config, "probability_threshold": 2}},
-                    {"model_config": config, "probability_threshold": -1}):
+                    {"model_config": config, "probability_threshold": -1},
+                    {"deployment_name": "Decision-1", "probability_threshold": -1}):
         with pytest.raises(jsonschema.ValidationError):
             jsonschema.validate(invalid, schema)

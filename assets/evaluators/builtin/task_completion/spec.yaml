@@ -12,6 +12,7 @@ tags:
 supportedEvaluationLevels: ["conversation", "turn"]
 initParameterSchema:
   type: "object"
+  description: "Hosted initialization uses a named deployment resolved by the service. Python model_config and credentials remain internal constructor inputs, not public initialization parameters."
   properties:
     deployment_name:
       type: "string"
@@ -21,31 +22,10 @@ initParameterSchema:
       type: "number"
       minimum: 0
       maximum: 1
-      description: "Decision-only completion probability cutoff, checked after the named deployment is resolved to its model configuration. Overrides model_config.probability_threshold; defaults to 0.75 when neither is supplied. The public binary score threshold remains 1."
-    model_config:
-      type: "object"
-      additionalProperties: false # undeclared fields are rejected
-      properties:
-        type:
-          const: decision
-        azure_endpoint:
-          type: "string"
-          minLength: 1
-        azure_deployment:
-          type: "string"
-          minLength: 1
-        probability_threshold:
-          type: "number"
-          minimum: 0
-          maximum: 1
-      required: ["type", "azure_endpoint", "azure_deployment"]
-  oneOf:
-    - required: ["deployment_name"]
-      not:
-        required: ["model_config"]
-    - required: ["model_config"]
-      not:
-        required: ["deployment_name"]
+      description: "Decision-only completion probability cutoff, checked after trusted named-deployment resolution. Overrides the resolved configuration cutoff; defaults to 0.75 when neither is supplied. The public binary score threshold remains 1."
+  required: ["deployment_name"]
+  not:
+    required: ["model_config"]
 dataMappingSchema:
   type: "object"
   properties:

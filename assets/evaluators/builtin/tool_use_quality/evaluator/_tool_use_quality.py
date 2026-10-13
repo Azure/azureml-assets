@@ -781,8 +781,7 @@ class ToolUseQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
                 "score": parsed[f"{name}_score"],
                 "status": parsed[f"{name}_status"],
                 "reason": parsed[f"{name}_reason"],
-                "properties": {"decision_model": properties["decision_model"]}
-                if "decision_model" in properties else {},
+                "properties": properties,
             }
         usage = response["usage"]
         token_metadata = {
@@ -975,6 +974,8 @@ class ToolUseQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
             result[f"{name}_reason"] = member_output.get("reason")
             result[f"{name}_threshold"] = member_output.get("threshold")
             result[f"{name}_status"] = member_output.get("status")
+            if "properties" in member_output:
+                result[f"{name}_properties"] = member_output["properties"]
             if member_passed is not None:
                 result[f"{name}_result"] = EVALUATION_PASS_FAIL_MAPPING[member_passed]
             else:
