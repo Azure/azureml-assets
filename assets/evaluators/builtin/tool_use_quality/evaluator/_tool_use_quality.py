@@ -781,7 +781,8 @@ class ToolUseQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
                 "score": parsed[f"{name}_score"],
                 "status": parsed[f"{name}_status"],
                 "reason": parsed[f"{name}_reason"],
-                "properties": properties,
+                "properties": {"decision_model": properties["decision_model"]}
+                if "decision_model" in properties else {},
             }
         usage = response["usage"]
         token_metadata = {
