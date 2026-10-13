@@ -9,7 +9,7 @@ ENV PYTHONUNBUFFERED=1 \
 # Remove vulnerable NVIDIA Nsight Compute components
 # nic_sampler (Go stdlib v1.23.4) contains 36 CVEs; this profiling plugin is not needed for inference
 RUN /opt/nvidia/nsight-compute/2025.4.1/host/target-linux-x64/python/bin/python \
-    -m pip install --upgrade pip==26.1.2 2>/dev/null || true && \
+    -m pip install --upgrade pip==26.2.0 2>/dev/null || true && \
     rm -rf /opt/nvidia/nsight-compute/2025.4.1/host/target-linux-x64/plugins/efa_metrics
 
 # CUDA forward-compat: lets CUDA 13.1 userspace run on hosts with older (e.g. 535-series) NVIDIA drivers.
@@ -46,7 +46,7 @@ ENV CONDA_PREFIX=${AZUREML_CONDA_ENVIRONMENT_PATH}
 WORKDIR /
 
 # When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference==0.2.60 --no-cache-dir
+RUN pip install llm-optimized-inference==0.2.61 --no-cache-dir
 
 RUN pip install --no-cache-dir --no-deps flashinfer-python==0.6.16.post4
 
