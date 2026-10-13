@@ -1,7 +1,7 @@
 type: "evaluator"
 id: "azureml://registries/azureml/evaluators/builtin.output_quality/versions/1"
 name: "builtin.output_quality"
-version: 5
+version: 6
 displayName: "Output Quality Evaluator"
 description: "A composite evaluator that batches fluency, coherence, intent_resolution, task_adherence, groundedness, and task_completion into a single LLM call."
 evaluatorType: "builtin"
@@ -25,7 +25,35 @@ initParameterSchema:
       multipleOf: 1
     evaluation_level:
       type: "string"
-  required: ["deployment_name"]
+    probability_threshold:
+      type: "number"
+      minimum: 0
+      maximum: 1
+      description: "Decision-only probability cutoff for task_adherence and task_completion. Overrides model_config.probability_threshold; defaults to 0.75. Public score thresholds are unchanged."
+    model_config:
+      type: "object"
+      additionalProperties: false
+      properties:
+        type:
+          const: decision
+        azure_endpoint:
+          type: "string"
+          minLength: 1
+        azure_deployment:
+          type: "string"
+          minLength: 1
+        probability_threshold:
+          type: "number"
+          minimum: 0
+          maximum: 1
+      required: ["type", "azure_endpoint", "azure_deployment"]
+  oneOf:
+    - required: ["deployment_name"]
+      not:
+        required: ["model_config"]
+    - required: ["model_config"]
+      not:
+        required: ["deployment_name"]
 dataMappingSchema:
   type: "object"
   properties:

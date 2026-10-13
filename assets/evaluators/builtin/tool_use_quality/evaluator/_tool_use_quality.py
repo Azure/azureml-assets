@@ -4,13 +4,14 @@ import contextvars
 import functools
 import os
 import logging
+import yaml
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from typing_extensions import overload, override
 
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
-from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
+from azure.ai.evaluation._evaluators import _common as _sdk_common
 from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
 from azure.ai.evaluation._common._experimental import experimental
 from azure.ai.evaluation._common.utils import (
@@ -22,6 +23,24 @@ from azure.ai.evaluation._evaluators._common._validators import (
     ValidatorInterface,
     ConversationValidator,
     ToolDefinitionsValidator,
+)
+
+ModelEvaluatorBase = getattr(_sdk_common, "ModelEvaluatorBase", _sdk_common.PromptyEvaluatorBase)
+try:
+    from azure.ai.evaluation._evaluators._common._decision_strategy import (
+        BinaryScoring,
+        DecisionEvaluationStrategy,
+        LikertScoring,
+    )
+except ImportError as exc:
+    if exc.name != "azure.ai.evaluation._evaluators._common._decision_strategy":
+        raise
+    BinaryScoring = DecisionEvaluationStrategy = LikertScoring = None
+_SDK_SUPPORTS_DECISION = (
+    hasattr(_sdk_common, "ModelEvaluatorBase")
+    and BinaryScoring is not None
+    and LikertScoring is not None
+    and callable(getattr(DecisionEvaluationStrategy, "parse", None))
 )
 
 # ---------------------------------------------------------------------------
@@ -548,7 +567,7 @@ _EVALUATORS: Tuple[Dict[str, Union[str, int]], ...] = (
 
 
 @experimental
-class ToolUseQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
+class ToolUseQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
     """The Tool Use Quality Evaluator batches five tool-usage evaluators into one LLM call.
 
     This is a composite evaluator: it scores the same five evaluators as the standalone
@@ -566,7 +585,10 @@ class ToolUseQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
     ``tool_use_quality_evaluators``. Converter-compatible member fields are also emitted
     as flat, member-prefixed keys.
 
-    :param model_config: Configuration for the Azure OpenAI model.
+    :param model_config: Configuration for a chat model, or a Decision model with
+        ``type="decision"``, a Foundry ``azure_endpoint`` and ``azure_deployment``.
+        Decision evaluates all five members in one request without model rationales
+        or failed-turn localization. Authenticate with ``api_key`` or ``credential``.
     :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
         ~azure.ai.evaluation.OpenAIModelConfiguration]
     :keyword evaluation_level: Force a specific evaluation level for this invocation. When ``None``
@@ -580,13 +602,20 @@ class ToolUseQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         their standalone-evaluator default threshold (3 for ``tool_call_accuracy``, 1 for the
         four binary evaluators).
     :type threshold: Optional[Dict[str, Union[int, float]]]
+    :keyword probability_threshold: Decision-only probability cutoff for binary members,
+        between 0 and 1; defaults to the model configuration cutoff or 0.75.
+    :type probability_threshold: Optional[float]
     """
 
     _PROMPTY_FILE = "tool_use_quality.prompty"
     _MULTI_TURN_PROMPTY_FILE = "tool_use_quality_multi_turn.prompty"
+    _DECISION_FILE = "tool_use_quality.decision.yaml"
+    _MULTI_TURN_DECISION_FILE = "tool_use_quality_multi_turn.decision.yaml"
     _RESULT_KEY = "tool_use_quality"
     _OPTIONAL_PARAMS = ["messages", "tool_definitions"]
     _EVALUATORS = _EVALUATORS
+    _supports_decision_models = True
+    _binary_decision = True
 
     _validator: ValidatorInterface
 
@@ -594,7 +623,10 @@ class ToolUseQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
     """Evaluator identifier, experimental and to be used only with evaluation in cloud."""
 
     @override
-    def __init__(self, model_config, *, credential=None, evaluation_level=None, threshold=None, **kwargs):
+    def __init__(
+        self, model_config, *, credential=None, evaluation_level=None, threshold=None,
+        probability_threshold=None, **kwargs
+    ):
         """Initialize the ToolUseQualityEvaluator.
 
         :param model_config: Configuration for the Azure OpenAI model.
@@ -605,6 +637,9 @@ class ToolUseQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         :type evaluation_level: Optional[Union[EvaluationLevel, str]]
         :keyword threshold: Optional per-evaluator threshold overrides.
         :type threshold: Optional[Dict[str, Union[int, float]]]
+        :keyword probability_threshold: Decision-only cutoff for the four binary members, between 0 and 1.
+            Overrides the model configuration cutoff, which defaults to 0.75.
+        :type probability_threshold: Optional[float]
         :keyword kwargs: Additional keyword arguments.
         """
         current_dir = os.path.dirname(__file__)
@@ -628,6 +663,24 @@ class ToolUseQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             enforce_tool_definitions=True,
         )
 
+        decision_selected = isinstance(model_config, dict) and model_config.get("type") == "decision"
+        if probability_threshold is not None:
+            if not decision_selected:
+                raise EvaluationException(
+                    message="probability_threshold is only supported for Decision models.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=ExtendedErrorTarget.TOOL_USE_QUALITY_EVALUATOR,
+                )
+            model_config = {**model_config, "probability_threshold": probability_threshold}
+        if decision_selected and not _SDK_SUPPORTS_DECISION:
+            raise EvaluationException(
+                message="Decision models require an azure-ai-evaluation version with Decision strategy parse support.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=ExtendedErrorTarget.TOOL_USE_QUALITY_EVALUATOR,
+            )
+
         super().__init__(
             model_config=model_config,
             prompty_file=prompty_path,
@@ -637,6 +690,16 @@ class ToolUseQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             _higher_is_better=True,
             **kwargs,
         )
+
+        self._decision_strategies = self._multi_turn_decision_strategies = None
+        if decision_selected:
+            self._decision_strategies = self._load_decision_strategies(
+                os.path.join(current_dir, self._DECISION_FILE)
+            )
+            self._multi_turn_decision_strategies = self._load_decision_strategies(
+                os.path.join(current_dir, self._MULTI_TURN_DECISION_FILE)
+            )
+            return
 
         # Load the multi-turn prompty flow for multi-turn evaluation
         multi_turn_prompty_path = os.path.join(current_dir, self._MULTI_TURN_PROMPTY_FILE)
@@ -651,6 +714,60 @@ class ToolUseQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             token_credential=credential,
             is_reasoning_model=self._is_reasoning_model,
         )
+
+    def _load_decision_strategies(self, rubric_path: str) -> Dict:
+        """Load independent status and scoring strategies for the five members."""
+        with open(rubric_path, encoding="utf-8") as rubric_file:
+            rubric = yaml.safe_load(rubric_file)
+        runner = self._decision_model_runner
+        return {
+            member["name"]: DecisionEvaluationStrategy(
+                runner,
+                result_key=member["name"],
+                error_target=ExtendedErrorTarget.TOOL_USE_QUALITY_EVALUATOR,
+                questions={"status": rubric[member["name"]]["status"],
+                           member["name"]: rubric[member["name"]]["result"]},
+                scoring=(LikertScoring(5, minimum=1) if member["name"] == "tool_call_accuracy"
+                         else BinaryScoring(runner.probability_threshold)),
+                threshold=self._threshold_for(member["name"]),
+                timeout=self._LLM_CALL_TIMEOUT,
+            )
+            for member in self._EVALUATORS
+        }
+
+    async def _evaluate_decision(self, eval_input: Dict, strategies: Dict) -> Dict:
+        """Execute all ten questions once, then parse each member without transport."""
+        questions = {}
+        for name, strategy in strategies.items():
+            questions[f"{name}_status"] = strategy.questions["status"]
+            questions[name] = strategy.questions[name]
+        response = await self._decision_model_runner(
+            state=dict(eval_input), questions=questions, timeout=self._LLM_CALL_TIMEOUT
+        )
+        evaluators = {}
+        for name, strategy in strategies.items():
+            member_response = {
+                **response,
+                "answers": {"status": response["answers"][f"{name}_status"],
+                            name: response["answers"][name]},
+            }
+            parsed = strategy.parse(member_response, eval_input)
+            properties = parsed.get(f"{name}_properties") or {}
+            evaluators[name] = {
+                "score": parsed[f"{name}_score"],
+                "status": parsed[f"{name}_status"],
+                "reason": parsed[f"{name}_reason"],
+                "properties": {"decision_model": properties["decision_model"]}
+                if "decision_model" in properties else {},
+            }
+        usage = response["usage"]
+        token_metadata = self._get_token_metadata({
+            "input_token_count": usage["input_tokens"],
+            "output_token_count": usage["output_tokens"],
+            "total_token_count": usage["input_tokens"] + usage["output_tokens"],
+            "model_id": response["model"],
+        })
+        return self._build_aggregate_result(evaluators, token_metadata)
 
     @overload
     def __call__(
@@ -951,10 +1068,6 @@ class ToolUseQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         # Clear any cached-token value carried over from a previous LLM call so a
         # stale count is never attributed to this evaluation.
         clear_cached_tokens()
-        if not eval_input.get("tool_definitions"):
-            return self._return_not_applicable_result(
-                "No tool definitions provided. Tool use quality evaluation requires tool_definitions."
-            )
 
         if self._should_use_conversation_level(eval_input):
             return await self._do_eval_conversation_level(eval_input)
@@ -982,7 +1095,10 @@ class ToolUseQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         # Remove keys not consumed by the single-turn prompty to avoid leaking extra kwargs.
         # Keep query, response, and tool_definitions in their source-prompty List shape.
         eval_input.pop("messages", None)
+        eval_input["tool_definitions"] = eval_input.get("tool_definitions") or []
 
+        if self._decision_strategies is not None:
+            return await self._evaluate_decision(eval_input, self._decision_strategies)
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         return self._parse_prompty_output(prompty_output_dict)
 
@@ -1000,10 +1116,11 @@ class ToolUseQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         conversation_text = serialize_messages(messages)
 
         prompty_kwargs: Dict[str, Any] = {"messages": conversation_text}
-        tool_definitions = eval_input.get("tool_definitions")
-        if tool_definitions:
-            prompty_kwargs["tool_definitions"] = reformat_tool_definitions(tool_definitions, logger)
+        tool_definitions = eval_input.get("tool_definitions") or []
+        prompty_kwargs["tool_definitions"] = reformat_tool_definitions(tool_definitions, logger)
 
+        if self._multi_turn_decision_strategies is not None:
+            return await self._evaluate_decision(prompty_kwargs, self._multi_turn_decision_strategies)
         prompty_output_dict = await self._multi_turn_flow(timeout=self._LLM_CALL_TIMEOUT, **prompty_kwargs)
         return self._parse_prompty_output(prompty_output_dict, is_multi_turn=True)
 
