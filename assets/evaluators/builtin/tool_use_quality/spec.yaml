@@ -19,10 +19,30 @@ initParameterSchema:
     deployment_name:
       type: "string"
     threshold:
-      type: "number"
-      minimum: 0
-      maximum: 1
-      multipleOf: 1
+      type: "object"
+      additionalProperties: false
+      description: "Optional per-member public score thresholds; omitted members retain their defaults. Independent of the Decision binary probability cutoff."
+      properties:
+        tool_call_accuracy:
+          type: "number"
+          minimum: 1
+          maximum: 5
+        tool_call_success:
+          type: "number"
+          minimum: 0
+          maximum: 1
+        tool_input_accuracy:
+          type: "number"
+          minimum: 0
+          maximum: 1
+        tool_output_utilization:
+          type: "number"
+          minimum: 0
+          maximum: 1
+        tool_selection:
+          type: "number"
+          minimum: 0
+          maximum: 1
     evaluation_level:
       type: "string"
     probability_threshold:
@@ -71,6 +91,7 @@ dataMappingSchema:
             type: "object"
     messages:
       type: "array"
+      minItems: 1
       items:
         type: "object"
     tool_definitions:
@@ -80,8 +101,8 @@ dataMappingSchema:
           items:
             type: "object"
   anyOf:
-    - required: ["query", "response", "tool_definitions"]
-    - required: ["messages", "tool_definitions"]
+    - required: ["query", "response"]
+    - required: ["messages"]
 outputSchema:
   tool_use_quality:
     type: "boolean"

@@ -14,6 +14,7 @@ the multi-evaluator output shape instead of reusing that shared infrastructure.
 """
 
 import asyncio
+import json
 from pathlib import Path
 import os
 from types import SimpleNamespace
@@ -781,6 +782,15 @@ def _native_decision_evaluate(payload, inputs=None, **options):
     return evaluator, result
 
 
+def _native_decision_request(post):
+    content, = post.call_args.args
+    assert isinstance(content, bytes)
+    body = json.loads(content)
+    assert set(body) == {"model", "state", "questions"}
+    assert body["model"] == _native_decision_CONFIG["azure_deployment"]
+    return body["state"], body["questions"]
+
+
 @pytest.mark.parametrize("level", [None, "turn", "conversation"])
 @pytest.mark.parametrize("input_kind", ["query", "messages"])
 @pytest.mark.skipif(
@@ -792,7 +802,7 @@ def test_native_decision_one_request_ten_questions_and_metadata(level, input_kin
         "messages": _native_decision_MESSAGES, "tool_definitions": _native_decision_INPUTS["tool_definitions"]
     }
     evaluator, result = _native_decision_evaluate(_native_decision_response(), inputs, evaluation_level=level)
-    state, questions = evaluator._decision_model_runner._post.call_args.args
+    state, questions = _native_decision_request(evaluator._decision_model_runner._post)
     assert set(questions) == set(_native_decision_NAMES) | {f"{name}_status" for name in _native_decision_NAMES}
     assert len(questions) == 10
     assert sum(question["type"] == "score" for question in questions.values()) == 1
@@ -1006,7 +1016,8 @@ def test_native_decision_async_and_missing_definitions():
     result = asyncio.run(evaluator._to_async()(
         query=_native_decision_INPUTS["query"], response=_native_decision_INPUTS["response"]))
     evaluator._decision_model_runner._post.assert_awaited_once()
-    assert evaluator._decision_model_runner._post.call_args.args[0]["tool_definitions"] == []
+    state, _ = _native_decision_request(evaluator._decision_model_runner._post)
+    assert state["tool_definitions"] == []
     assert result["tool_use_quality"] == 1
 
 
@@ -1026,7 +1037,7 @@ def test_native_decision_one_request_per_converted_input():
     assert evaluator._decision_model_runner._post.await_count == 2
     assert len(results) == 2
     for call in evaluator._decision_model_runner._post.await_args_list:
-        assert len(call.args[1]) == 10
+        assert len(json.loads(call.args[0])["questions"]) == 10
     assert [result["tool_use_quality_total_tokens"] for result in results] == [34, 34]
 
 

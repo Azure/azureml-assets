@@ -514,18 +514,42 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
             ``azure_endpoint`` and ``azure_deployment``. Authenticate with an API key or credential.
         :keyword credential: Optional token credential.
         :keyword evaluation_level: Optional ``turn`` or ``conversation`` routing override.
-        :keyword threshold: Optional mapping of member names to public score thresholds.
+        :keyword threshold: Optional mapping of member names to public score thresholds,
+            between 1 and 5 for Likert members or 0 and 1 for binary members on either backend.
+            Fractional values are supported; omitted members retain their defaults.
         :keyword probability_threshold: Decision-only probability cutoff for the two binary members,
             between 0 and 1. Overrides the nested configuration; defaults to 0.75.
         :keyword kwargs: Additional base evaluator options.
         """
+        if isinstance(model_config, dict):
+            model_config = dict(model_config)
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
         threshold_value = {
             evaluator["name"]: evaluator["default_threshold"] for evaluator in self._EVALUATORS
         }
-        if isinstance(threshold, dict):
-            threshold_value.update({name: value for name, value in threshold.items() if name in threshold_value})
+        if threshold is not None:
+            if not isinstance(threshold, dict) or set(threshold) - threshold_value.keys():
+                raise EvaluationException(
+                    message="threshold must be a mapping of output quality member names to score thresholds.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=ExtendedErrorTarget.OUTPUT_QUALITY_EVALUATOR,
+                )
+            for member in self._EVALUATORS:
+                value = threshold.get(member["name"], threshold_value[member["name"]])
+                if (
+                    isinstance(value, bool) or not isinstance(value, (int, float))
+                    or not member["min"] <= value <= member["max"]
+                ):
+                    raise EvaluationException(
+                        message=f"threshold for {member['name']} must be a number in "
+                                f"[{member['min']}, {member['max']}].",
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=ExtendedErrorTarget.OUTPUT_QUALITY_EVALUATOR,
+                    )
+            threshold_value.update(threshold)
 
         self._evaluation_level = _resolve_evaluation_level(
             evaluation_level, ExtendedErrorTarget.OUTPUT_QUALITY_EVALUATOR
@@ -630,12 +654,12 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
                 if f"{name}_{field}" in parsed
             }
         usage = response["usage"]
-        token_metadata = self._get_token_metadata({
-            "input_token_count": usage["input_tokens"],
-            "output_token_count": usage["output_tokens"],
-            "total_token_count": usage["input_tokens"] + usage["output_tokens"],
-            "model_id": response["model"],
-        })
+        token_metadata = {
+            "prompt_tokens": usage["input_tokens"],
+            "completion_tokens": usage["output_tokens"],
+            "total_tokens": usage["input_tokens"] + usage["output_tokens"],
+            "model": response["model"],
+        }
         return self._build_aggregate_result(evaluators, token_metadata)
 
     @overload
@@ -711,6 +735,8 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
                     target=ExtendedErrorTarget.OUTPUT_QUALITY_EVALUATOR,
                 )
             evaluator_output["passed"] = score >= threshold
+            if "result" in evaluator_output:
+                evaluator_output["result"] = EVALUATION_PASS_FAIL_MAPPING[evaluator_output["passed"]]
             normalized_evaluators[name] = evaluator_output
             evaluated_scores[name] = score
 
@@ -803,11 +829,15 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         if "response" in kwargs and "query" not in kwargs and "messages" not in kwargs:
             kwargs["query"] = []
 
+        validation_input = kwargs
         if self._evaluation_level == EvaluationLevel.CONVERSATION and not kwargs.get("messages"):
+            validation_input = dict(kwargs)
             query = kwargs.get("query")
             response = kwargs.get("response")
-            if isinstance(query, str) and isinstance(response, str) and query and response:
-                query, response = _wrap_string_messages(query, response)
+            if isinstance(query, str) and query:
+                query, _ = _wrap_string_messages(query, "")
+            if isinstance(response, str) and response:
+                _, response = _wrap_string_messages("", response)
             if isinstance(query, list) and isinstance(response, list):
                 kwargs["messages"] = _merge_query_response_messages(query, response)
         elif self._evaluation_level == EvaluationLevel.TURN and kwargs.get("messages"):
@@ -822,7 +852,7 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
                 kwargs["response"] = messages
                 kwargs.pop("messages", None)
 
-        self._validator.validate_eval_input(kwargs)
+        self._validator.validate_eval_input(validation_input)
         return await self._the_super_real_call(**kwargs)
 
     async def _the_super_real_call(self, **kwargs):
@@ -877,6 +907,8 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
 
         if self._decision_strategies is not None:
             return await self._evaluate_decision(eval_input, self._decision_strategies)
+        if eval_input.get("tool_definitions") is None:
+            eval_input["tool_definitions"] = []
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         return self._parse_prompty_output(prompty_output_dict)
 

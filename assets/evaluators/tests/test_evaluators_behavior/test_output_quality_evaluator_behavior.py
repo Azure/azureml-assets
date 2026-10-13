@@ -6,6 +6,7 @@
 import asyncio
 import builtins
 import importlib.util
+import json
 from pathlib import Path
 from copy import deepcopy
 import os
@@ -796,6 +797,15 @@ def _native_decision_stub(evaluator, payload=None, **kwargs):
     return evaluator._decision_model_runner._post
 
 
+def _native_decision_request(post):
+    content, = post.call_args.args
+    assert isinstance(content, bytes)
+    body = json.loads(content)
+    assert set(body) == {"model", "state", "questions"}
+    assert body["model"] == _native_decision_CONFIG["azure_deployment"]
+    return body["state"], body["questions"]
+
+
 @pytest.mark.parametrize("execution", ["sync", "async", "sync_in_loop"])
 @pytest.mark.skipif(
     not output_quality_module._SDK_SUPPORTS_DECISION, reason="Shared Decision SDK support is unavailable."
@@ -816,7 +826,7 @@ def test_native_decision_one_transport_twelve_questions_and_no_chat(execution):
             return evaluator(**_native_decision_INPUTS)
         result = asyncio.run(invoke())
     post.assert_awaited_once()
-    state, questions = post.call_args.args
+    state, questions = _native_decision_request(post)
     assert state["query"] == _native_decision_INPUTS["query"]
     assert state["response"] == _native_decision_INPUTS["response"]
     assert set(questions) == set(_native_decision_NAMES) | {f"{name}_status" for name in _native_decision_NAMES}
@@ -857,7 +867,7 @@ def test_native_decision_independent_skip_ignores_unusable_score(name, conversat
     assert member["score"] is None and member["passed"] is None and member["status"] == "skipped"
     assert f"{name}_result" not in result
     assert all(result[f"{other}_status"] == "completed" for other in _native_decision_NAMES if other != name)
-    state, questions = post.call_args.args
+    state, questions = _native_decision_request(post)
     strategies = evaluator._multi_turn_decision_strategies if conversation else evaluator._decision_strategies
     assert questions[f"{name}_status"] == strategies[name].questions["status"]
     assert ("messages" in state) is conversation
@@ -972,7 +982,7 @@ def test_native_decision_routing_selects_own_rubrics(inputs, level, conversation
     evaluator = OutputQualityEvaluator(_native_decision_CONFIG, evaluation_level=level)
     post = _native_decision_stub(evaluator, _native_decision_native())
     evaluator(**deepcopy(inputs))
-    state, questions = post.call_args.args
+    state, questions = _native_decision_request(post)
     assert ("messages" in state) is conversation
     strategies = evaluator._multi_turn_decision_strategies if conversation else evaluator._decision_strategies
     for name in _native_decision_NAMES:
@@ -991,7 +1001,7 @@ def test_native_decision_response_only_retains_all_applicability_questions(conve
     post = _native_decision_stub(evaluator, _native_decision_native(skipped=set(_native_decision_NAMES) - {"fluency"}))
     inputs = {"messages": [{"role": "assistant", "content": "Hello"}]} if conversation else {"response": "Hello"}
     result = asyncio.run(evaluator._do_eval(inputs)) if conversation else evaluator(**inputs)
-    state, questions = post.call_args.args
+    state, questions = _native_decision_request(post)
     assert len(questions) == 12
     applicability = questions["fluency_status"]["criteria"]["true"]
     assert ("No user turn is required" if conversation else "NOT required") in applicability
@@ -1204,6 +1214,6 @@ def test_native_decision_one_runner_request_per_converted_input():
         result = asyncio.run(evaluator._the_super_real_call())
     assert result == {"output_quality": 1}
     assert post.await_count == 2
-    assert all(len(call.args[1]) == 12 for call in post.await_args_list)
+    assert all(len(json.loads(call.args[0])["questions"]) == 12 for call in post.await_args_list)
     results = aggregate.call_args.kwargs["per_turn_results"]
     assert all(result["output_quality_total_tokens"] == 34 for result in results)

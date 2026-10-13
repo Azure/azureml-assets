@@ -635,21 +635,45 @@ class ToolUseQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         :type credential: Optional[TokenCredential]
         :keyword evaluation_level: Force a specific evaluation level for this invocation.
         :type evaluation_level: Optional[Union[EvaluationLevel, str]]
-        :keyword threshold: Optional per-evaluator threshold overrides.
+        :keyword threshold: Optional per-evaluator public score threshold overrides,
+            between 1 and 5 for tool_call_accuracy or 0 and 1 for the binary members on either backend.
+            Fractional values are supported; omitted members retain their defaults.
         :type threshold: Optional[Dict[str, Union[int, float]]]
         :keyword probability_threshold: Decision-only cutoff for the four binary members, between 0 and 1.
             Overrides the model configuration cutoff, which defaults to 0.75.
         :type probability_threshold: Optional[float]
         :keyword kwargs: Additional keyword arguments.
         """
+        if isinstance(model_config, dict):
+            model_config = dict(model_config)
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
 
         threshold_value = {
             evaluator["name"]: evaluator["default_threshold"] for evaluator in self._EVALUATORS
         }
-        if isinstance(threshold, dict):
-            threshold_value.update({name: value for name, value in threshold.items() if name in threshold_value})
+        if threshold is not None:
+            if not isinstance(threshold, dict) or set(threshold) - threshold_value.keys():
+                raise EvaluationException(
+                    message="threshold must be a mapping of tool use quality member names to score thresholds.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=ExtendedErrorTarget.TOOL_USE_QUALITY_EVALUATOR,
+                )
+            for member in self._EVALUATORS:
+                value = threshold.get(member["name"], threshold_value[member["name"]])
+                if (
+                    isinstance(value, bool) or not isinstance(value, (int, float))
+                    or not member["min"] <= value <= member["max"]
+                ):
+                    raise EvaluationException(
+                        message=f"threshold for {member['name']} must be a number in "
+                                f"[{member['min']}, {member['max']}].",
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=ExtendedErrorTarget.TOOL_USE_QUALITY_EVALUATOR,
+                    )
+            threshold_value.update(threshold)
 
         # Validate and store evaluation level
         self._evaluation_level = _resolve_evaluation_level(
@@ -761,12 +785,12 @@ class ToolUseQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
                 if "decision_model" in properties else {},
             }
         usage = response["usage"]
-        token_metadata = self._get_token_metadata({
-            "input_token_count": usage["input_tokens"],
-            "output_token_count": usage["output_tokens"],
-            "total_token_count": usage["input_tokens"] + usage["output_tokens"],
-            "model_id": response["model"],
-        })
+        token_metadata = {
+            "prompt_tokens": usage["input_tokens"],
+            "completion_tokens": usage["output_tokens"],
+            "total_tokens": usage["input_tokens"] + usage["output_tokens"],
+            "model": response["model"],
+        }
         return self._build_aggregate_result(evaluators, token_metadata)
 
     @overload
@@ -1011,8 +1035,10 @@ class ToolUseQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         if self._evaluation_level == EvaluationLevel.CONVERSATION and not kwargs.get("messages"):
             query = kwargs.get("query")
             response = kwargs.get("response")
-            if isinstance(query, str) and isinstance(response, str) and query and response:
-                query, response = _wrap_string_messages(query, response)
+            if isinstance(query, str) and query:
+                query, _ = _wrap_string_messages(query, "")
+            if isinstance(response, str) and response:
+                _, response = _wrap_string_messages("", response)
             if isinstance(query, list) and isinstance(response, list):
                 kwargs["messages"] = _merge_query_response_messages(query, response)
         elif self._evaluation_level == EvaluationLevel.TURN and kwargs.get("messages"):

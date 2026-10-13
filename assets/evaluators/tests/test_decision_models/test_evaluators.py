@@ -47,7 +47,7 @@ def stub(evaluator, payload=None, **kwargs):
 
 def request_evidence(post):
     """Inspect the actual serialized native request without bypassing SDK preparation."""
-    content, _ = post.call_args.args
+    content, = post.call_args.args
     assert isinstance(content, bytes)
     body = json.loads(content)
     assert set(body) == {"model", "state", "questions"}
@@ -133,7 +133,10 @@ def test_accuracy_score_and_metadata():
     assert "tool_calls_made_by_agent" not in properties
     assert "correct_tool_calls_made_by_agent" not in properties
     assert properties["decision_model"]["deployment"] == "Decision-1"
-    assert "tool_call_accuracy_total_tokens" not in result
+    assert result["tool_call_accuracy_total_tokens"] == 34
+    assert result["tool_call_accuracy_prompt_tokens"] == 30
+    assert result["tool_call_accuracy_completion_tokens"] == 4
+    assert result["tool_call_accuracy_model"] == "actual-model"
     state, questions = request_evidence(post)
     assert set(questions) == {"tool_call_accuracy", "status"}
     assert questions["tool_call_accuracy"]["type"] == "score"
@@ -169,6 +172,23 @@ def test_accuracy_without_calls_skips():
     post = stub(evaluator, side_effect=AssertionError("Must not call"))
     result = evaluator(query="Hello", tool_definitions=[{"name": "weather", "parameters": {}}],
                        response=[{"role": "assistant", "content": [{"type": "text", "text": "Hello"}]}])
+    assert result["tool_call_accuracy_status"] == "skipped"
+    post.assert_not_called()
+
+
+def test_accuracy_explicit_empty_selection_does_not_fall_back_to_response_calls():
+    evaluator = ToolCallAccuracyEvaluator(CONFIG)
+    post = stub(evaluator, side_effect=AssertionError("Must not score unselected calls"))
+    response = [
+        {"role": "assistant", "content": [
+            {"type": "tool_call", "name": "weather", "tool_call_id": "context", "arguments": {}},
+        ]},
+        {"role": "assistant", "content": [{"type": "text", "text": "Sunny"}]},
+    ]
+    result = evaluator(
+        query="Weather?", response=response, tool_calls=[],
+        tool_definitions=[{"name": "weather", "parameters": {}}],
+    )
     assert result["tool_call_accuracy_status"] == "skipped"
     post.assert_not_called()
 
