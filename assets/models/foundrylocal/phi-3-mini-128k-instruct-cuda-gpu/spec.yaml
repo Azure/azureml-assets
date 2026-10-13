@@ -5,8 +5,8 @@ tags:
   contextLength: 131072
   capabilities: ''
   supportsReasoning: ''
-  invisibleUntil: "2027-10-01T00:00:00Z"
 system_metadata:
+  invisibleUntil: "2027-10-01T00:00:00Z"
   alias: phi-3-mini-128k
   publisher: Microsoft
   author: Microsoft
