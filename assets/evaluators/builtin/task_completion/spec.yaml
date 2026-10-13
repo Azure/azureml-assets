@@ -21,7 +21,7 @@ initParameterSchema:
       type: "number"
       minimum: 0
       maximum: 1
-      description: "Decision-only completion probability cutoff. Overrides model_config.probability_threshold; defaults to 0.75 when neither is supplied. The public binary score threshold remains 1."
+      description: "Decision-only completion probability cutoff, checked after the named deployment is resolved to its model configuration. Overrides model_config.probability_threshold; defaults to 0.75 when neither is supplied. The public binary score threshold remains 1."
     model_config:
       type: "object"
       additionalProperties: false # undeclared fields are rejected
@@ -42,9 +42,7 @@ initParameterSchema:
   oneOf:
     - required: ["deployment_name"]
       not:
-        anyOf:
-          - required: ["model_config"]
-          - required: ["probability_threshold"]
+        required: ["model_config"]
     - required: ["model_config"]
       not:
         required: ["deployment_name"]
