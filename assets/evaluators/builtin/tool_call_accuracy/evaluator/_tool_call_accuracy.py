@@ -316,7 +316,7 @@ class ToolCallAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
         )
 
         decision_selected = _is_decision_config(model_config)
-        self._uses_decision_model = decision_selected
+        self._decision_selected = decision_selected
         if decision_selected and not _SDK_SUPPORTS_DECISION:
             raise EvaluationException(
                 message="Decision models require an azure-ai-evaluation version with decision model support.",
@@ -456,7 +456,7 @@ class ToolCallAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
             "tool_calls": tool_calls,
             "tool_definitions": needed_tool_definitions,
         }
-        if self._uses_decision_model and response is not None:
+        if self._decision_selected and response is not None:
             eval_input["response"] = response
         return eval_input
 
