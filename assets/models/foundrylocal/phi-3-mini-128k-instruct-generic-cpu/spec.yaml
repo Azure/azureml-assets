@@ -5,13 +5,17 @@ tags:
   contextLength: 131072
   capabilities: ''
   supportsReasoning: ''
+  invisibleUntil: "2027-10-01T00:00:00Z"
 system_metadata:
-  previewType: hideUI
   alias: phi-3-mini-128k
   publisher: Microsoft
+  author: Microsoft
+  lifecycle: Generally available
   directoryPath: v3
   foundryLocal: ''
-  deploymentOptions: ['Foundry Local on Devices']
+  deploymentOptions:
+  - Foundry Local on Devices
+  - Foundry Local on Azure Local
   inputModalities:
   - text
   license: MIT
