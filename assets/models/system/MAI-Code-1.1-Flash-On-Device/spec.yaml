@@ -4,6 +4,11 @@ version: 2
 path: ./
 system_metadata:
   publisher: Microsoft
+  githubCopilotLocal: true
+  githubCopilotLocalRequirements:
+    downloadBytes: 56688835352
+    peakDiskBytes: 56688835352
+    recommendedVramBytes: 103079215104
   displayName: MAI Code 1.1 Flash
   license: MIT
   licenseDescription: >-
