@@ -36,6 +36,36 @@ OUTPUT_METADATA = {
 MESSAGES = [{"role": "user", "content": "Say hello"}, {"role": "assistant", "content": "Hello"}]
 
 
+@pytest.mark.parametrize("name,class_name", EVALUATORS)
+def test_standalone_asset_packages_native_rubrics_without_public_auth(tmp_path, name, class_name):
+    """The published evaluator path includes native rubrics and excludes authentication from its public schema."""
+    from azure.ai.evaluation._legacy.prompty._yaml_utils import load_yaml
+    from jsonschema import ValidationError, validate
+
+    spec = load_yaml(str(BUILTIN / name / "spec.yaml"))
+    package = tmp_path / "evaluator"
+    shutil.copytree(BUILTIN / name / spec["path"], package, ignore=shutil.ignore_patterns("__pycache__"))
+    module = runpy.run_path(str(package / f"_{name}.py"))
+    evaluator_class = module[class_name]
+    files = [evaluator_class._DECISION_FILE]
+    if name == "task_completion":
+        files.append(evaluator_class._MULTI_TURN_DECISION_FILE)
+    for filename in files:
+        questions = module["_load_decision_questions"](str(package / filename), name)
+        assert set(questions) == {"status", name}
+        assert questions["status"]["type"] == "noul"
+        assert questions[name]["type"] == ("noul" if name == "task_completion" else "score")
+    schema = spec["initParameterSchema"]
+    public_config = {key: value for key, value in DECISION_CONFIG.items() if key != "api_key"}
+    validate({"model_config": public_config}, schema)
+    validate({"deployment_name": "chat-model"}, schema)
+    for auth_field in ("api_key", "credential", "authorization", "headers"):
+        with pytest.raises(ValidationError):
+            validate({"model_config": {**public_config, auth_field: "not-public"}}, schema)
+    with pytest.raises(ValidationError):
+        validate({"deployment_name": "chat-model", "model_config": public_config}, schema)
+
+
 def _inputs(name):
     return {"query": "Say hello", "response": "Hello"} if name == "task_completion" else {
         "query": "Weather in Paris?",
@@ -147,13 +177,17 @@ def test_released_sdk_prompt_strategy_and_decision_rejection(monkeypatch, name, 
     if capabilities == "no_decision":
         monkeypatch.setitem(sys.modules, DECISION_MODULE, None)
     if capabilities == "no_strategy_symbol":
+        if sys.modules.get(STRATEGY_MODULE) is None:
+            pytest.skip("Installed SDK has no shared Prompty strategy to remove")
         monkeypatch.delattr(sys.modules[STRATEGY_MODULE], "PromptyEvaluationStrategy")
     if capabilities == "no_decision_symbol":
+        if sys.modules.get(DECISION_MODULE) is None:
+            pytest.skip("Installed SDK has no Decision strategy to remove")
         monkeypatch.delattr(sys.modules[DECISION_MODULE], "DecisionEvaluationStrategy")
     module = runpy.run_path(str(BUILTIN / name / "evaluator" / f"_{name}.py"))
     if capabilities in ("old_base", "old_sdk", "no_decision", "no_decision_symbol"):
         assert module["_SDK_SUPPORTS_DECISION"] is False
-    base = _common.PromptyEvaluatorBase if capabilities in ("old_base", "old_sdk") else _common.ModelEvaluatorBase
+    base = getattr(_common, "ModelEvaluatorBase", _common.PromptyEvaluatorBase)
     assert issubclass(module[class_name], base)
     _exercise_chat(module, name, class_name)
 

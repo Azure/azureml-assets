@@ -236,6 +236,9 @@ class ToolCallAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
         ``type="decision"``, an ``azure_endpoint`` (the Foundry resource endpoint) and an ``azure_deployment``
         (the Microsoft-Decision-1 deployment name) selects a decision model instead; authenticate with
         ``api_key`` or ``credential``.
+        For Decision models, ``response`` supplies execution results and retry evidence;
+        only the explicitly selected ``tool_calls`` are scored. Without ``tool_calls``,
+        calls are extracted from ``response``.
     :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
         ~azure.ai.evaluation.OpenAIModelConfiguration]
 
@@ -313,6 +316,7 @@ class ToolCallAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
         )
 
         decision_selected = _is_decision_config(model_config)
+        self._uses_decision_model = decision_selected
         if decision_selected and not _SDK_SUPPORTS_DECISION:
             raise EvaluationException(
                 message="Decision models require an azure-ai-evaluation version with decision model support.",
@@ -415,14 +419,14 @@ class ToolCallAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
         query = kwargs.get("query")
         response = kwargs.get("response")
         # TODO : Support classes that represents tool calls, messages etc once client side definitions are available
-        if response:
+        if tool_calls is None and response:
             parsed_tool_calls = self._parse_tools_from_response(response)
             if parsed_tool_calls:
                 tool_calls = parsed_tool_calls
 
         if not tool_calls:
             # If no tool calls provided and response is string, use response string as tool calls as is
-            if response and isinstance(response, str):
+            if tool_calls is None and response and isinstance(response, str):
                 tool_calls = response
             else:
                 return {"error_message": self._NO_TOOL_CALLS_MESSAGE}
@@ -447,11 +451,14 @@ class ToolCallAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
         if not needed_tool_definitions:
             return {"error_message": self._NO_TOOL_DEFINITIONS_MESSAGE}
 
-        return {
+        eval_input = {
             "query": query,
             "tool_calls": tool_calls,
             "tool_definitions": needed_tool_definitions,
         }
+        if self._uses_decision_model and response is not None:
+            eval_input["response"] = response
+        return eval_input
 
     @override
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:  # type: ignore[override]
