@@ -268,6 +268,7 @@ print('Released SDK standalone sync/async chat checks passed')
 @pytest.mark.parametrize("version", ["1.17.0", "1.18.2"])
 @pytest.mark.parametrize("configured", [False, True])
 def test_released_sdk_absence_is_an_actionable_skip(tmp_path, monkeypatch, released_sdk_target, version, configured):
+    """Explain missing opt-in or isolated SDK installations without failing clean machines."""
     if configured:
         monkeypatch.setenv("AZUREML_COMPAT_SDK_ROOT", str(tmp_path))
     else:

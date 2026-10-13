@@ -177,6 +177,7 @@ def test_accuracy_without_calls_skips():
 
 
 def test_accuracy_explicit_empty_selection_does_not_fall_back_to_response_calls():
+    """Skip explicit empty selections without scoring unrelated response calls."""
     evaluator = ToolCallAccuracyEvaluator(CONFIG)
     post = stub(evaluator, side_effect=AssertionError("Must not score unselected calls"))
     response = [
@@ -321,7 +322,9 @@ def test_completion_scope_and_default_cutoff_boundaries(
         assert "end to end" not in questions["task_completion"]["instructions"]
     else:
         assert set(state) == {"messages"}
-        assert all(text in state["messages"] for text in ("First task", "First answer", "Latest task", "Latest answer"))
+        assert all(
+            text in state["messages"] for text in ("First task", "First answer", "Latest task", "Latest answer")
+        )
         assert "end to end" in questions["task_completion"]["instructions"]
 
 

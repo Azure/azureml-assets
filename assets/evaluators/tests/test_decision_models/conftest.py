@@ -15,6 +15,7 @@ import pytest
 
 @pytest.fixture
 def released_sdk_target():
+    """Resolve an explicitly selected offline SDK target or explain why it is skipped."""
     def resolve(version):
         root = os.environ.get("AZUREML_COMPAT_SDK_ROOT")
         if not root:

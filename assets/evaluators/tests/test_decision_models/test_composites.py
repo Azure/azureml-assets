@@ -82,6 +82,7 @@ def _metadata(evaluator, source):
     3, [], {"unknown": 1}, {"tool_definitions": 1}, {"model_config": 1},
 ])
 def test_threshold_mapping_rejects_invalid_shape(evaluator_class, decision, threshold):
+    """Reject scalar thresholds and unknown member names on both backends."""
     with pytest.raises(EvaluationException, match="threshold must be a mapping"):
         evaluator_class(CONFIG if decision else CHAT_CONFIG, threshold=threshold)
 
@@ -90,6 +91,7 @@ def test_threshold_mapping_rejects_invalid_shape(evaluator_class, decision, thre
 @pytest.mark.parametrize("decision", [False, True])
 @pytest.mark.parametrize("value", [True, False, "3", None, float("nan"), float("inf"), -float("inf"), 10**400])
 def test_threshold_mapping_rejects_invalid_values(evaluator_class, decision, value):
+    """Reject booleans, nonnumeric values, and nonfinite member thresholds."""
     for member in evaluator_class._EVALUATORS:
         with pytest.raises(EvaluationException, match=f"threshold for {member['name']} must be a number"):
             evaluator_class(CONFIG if decision else CHAT_CONFIG, threshold={member["name"]: value})
@@ -99,6 +101,7 @@ def test_threshold_mapping_rejects_invalid_values(evaluator_class, decision, val
 @pytest.mark.parametrize("decision", [False, True])
 @pytest.mark.parametrize("position", ["below", "minimum", "fractional", "maximum", "above"])
 def test_threshold_member_bounds_and_copy(evaluator_class, decision, position):
+    """Preserve fractional thresholds and caller inputs while enforcing each member's range."""
     config = deepcopy(CONFIG if decision else CHAT_CONFIG)
     original = deepcopy(config)
     for member in evaluator_class._EVALUATORS:
@@ -123,6 +126,7 @@ def test_threshold_member_bounds_and_copy(evaluator_class, decision, position):
 
 @pytest.mark.parametrize("evaluator_class", COMPOSITES)
 def test_member_threshold_schema_matches_constructor(evaluator_class):
+    """Validate that public member threshold ranges match the actual constructor contract."""
     module = __import__(evaluator_class.__module__, fromlist=["__file__"])
     spec = yaml.safe_load((Path(module.__file__).parent.parent / "spec.yaml").read_text(encoding="utf-8"))
     schema = spec["initParameterSchema"]
@@ -141,6 +145,7 @@ def test_member_threshold_schema_matches_constructor(evaluator_class):
 
 @pytest.mark.parametrize("name", ["task_completion", "tool_call_accuracy", "output_quality", "tool_use_quality"])
 def test_public_initialization_requires_trusted_named_deployment(name):
+    """Require public named deployment binding and reject caller-supplied model configuration."""
     schema = yaml.safe_load(
         (Path(__file__).parents[2] / "builtin" / name / "spec.yaml").read_text(encoding="utf-8")
     )["initParameterSchema"]
@@ -166,6 +171,7 @@ def test_public_initialization_requires_trusted_named_deployment(name):
 @pytest.mark.parametrize("skipped", [False, True])
 @pytest.mark.parametrize("metadata_source", ["catalog", "sdk_instance", "sdk_builtin"])
 def test_public_converter_and_rollup_count_shared_request_once(evaluator_class, skipped, metadata_source):
+    """Attribute shared request usage only to the root during public conversion and rollup."""
     evaluator = evaluator_class(CONFIG)
     post = AsyncMock(return_value=_native(evaluator_class, skipped))
     evaluator._decision_model_runner._post = post
@@ -198,6 +204,7 @@ def test_public_converter_and_rollup_count_shared_request_once(evaluator_class, 
 @pytest.mark.parametrize("evaluator_class", COMPOSITES)
 @pytest.mark.parametrize("outcome", ["passed", "all_skipped", "mixed", "failed", "error"])
 def test_public_evaluate_preserves_member_provenance_and_root_usage(tmp_path, evaluator_class, outcome):
+    """Retain native member provenance and once-only usage through actual public batch evaluation."""
     evaluator = evaluator_class(CONFIG, probability_threshold=0.8)
     payload = _native(evaluator_class, skipped=outcome == "all_skipped")
     first = evaluator._EVALUATORS[0]["name"]
@@ -279,6 +286,7 @@ def test_public_evaluate_preserves_member_provenance_and_root_usage(tmp_path, ev
 @pytest.mark.parametrize("level", [None, "turn", "conversation"])
 @pytest.mark.parametrize("definitions", [None, [], INPUT["tool_definitions"]])
 def test_public_data_schema_matches_native_input_routes(evaluator_class, conversation, level, definitions):
+    """Keep public data requirements aligned with valid native turn and conversation routes."""
     module = __import__(evaluator_class.__module__, fromlist=["__file__"])
     schema = yaml.safe_load((Path(module.__file__).parent.parent / "spec.yaml").read_text(
         encoding="utf-8"))["dataMappingSchema"]
@@ -306,6 +314,7 @@ def test_public_data_schema_matches_native_input_routes(evaluator_class, convers
 @pytest.mark.parametrize("query_list", [False, True])
 @pytest.mark.parametrize("response_list", [False, True])
 def test_mixed_input_shapes_preserve_conversation_evidence(evaluator_class, query_list, response_list):
+    """Preserve both query and response evidence when string and message-list shapes are mixed."""
     query = [{"role": "user", "content": "Say hello"}] if query_list else "Say hello"
     response = [{"role": "assistant", "content": "Hello"}] if response_list else "Hello"
     evaluator = evaluator_class(CONFIG, evaluation_level="conversation")
@@ -321,6 +330,7 @@ def test_mixed_input_shapes_preserve_conversation_evidence(evaluator_class, quer
 
 
 def test_binary_public_member_threshold_is_independent_of_probability_cutoff():
+    """Apply the public score threshold separately from the native binary probability cutoff."""
     evaluator = OutputQualityEvaluator(CONFIG, threshold={"task_completion": 0})
     payload = _native(OutputQualityEvaluator)
     payload["answers"]["task_completion"]["noul"] = 0.1
@@ -337,6 +347,7 @@ def test_binary_public_member_threshold_is_independent_of_probability_cutoff():
 @pytest.mark.parametrize("decision", [False, True])
 @pytest.mark.parametrize("conversation", [False, True])
 def test_supplied_invalid_tool_definitions_are_not_ignored(decision, conversation):
+    """Reject malformed supplied tool definitions on both backends and input routes."""
     evaluator = ToolUseQualityEvaluator(CONFIG if decision else CHAT_CONFIG)
     inputs = {"messages": [
         {"role": "user", "content": "Say hello"}, {"role": "assistant", "content": "Hello"},
@@ -347,6 +358,7 @@ def test_supplied_invalid_tool_definitions_are_not_ignored(decision, conversatio
 
 @pytest.mark.parametrize("evaluator_class", COMPOSITES)
 def test_plain_execution_controls_and_credential_reach_shared_runner(evaluator_class):
+    """Forward internal credentials and plain execution controls without mutating configuration."""
     credential = object()
 
     def cancelled():
@@ -377,6 +389,7 @@ def test_plain_execution_controls_and_credential_reach_shared_runner(evaluator_c
 @pytest.mark.parametrize("evaluator_class", COMPOSITES)
 @pytest.mark.parametrize("field", ["temperature", "top_p"])
 def test_decision_configuration_rejects_chat_model_parameters(evaluator_class, field):
+    """Reject chat generation parameters in the strict internal Decision configuration."""
     with pytest.raises(EvaluationException, match="Unsupported decision model configuration"):
         evaluator_class({**CONFIG, field: 0.5})
 
@@ -388,6 +401,7 @@ def test_decision_configuration_rejects_chat_model_parameters(evaluator_class, f
     {"query": "Say hello", "response": False},
 ])
 def test_invalid_public_input_is_rejected_before_model_execution(evaluator_class, decision, inputs):
+    """Reject invalid input before either backend can dispatch a model request."""
     evaluator = evaluator_class(CONFIG if decision else CHAT_CONFIG)
     if decision:
         evaluator._decision_model_runner._post = AsyncMock(side_effect=AssertionError("Unexpected model request"))
@@ -405,6 +419,7 @@ def test_invalid_public_input_is_rejected_before_model_execution(evaluator_class
 def test_actual_prompty_render_receives_optional_definitions(
     evaluator_class, level, include_query, include_definitions,
 ):
+    """Render real turn and conversation prompts with omitted or explicitly supplied definitions."""
     evaluator = evaluator_class(CHAT_CONFIG, evaluation_level=level)
     actual_turn = evaluator._flow
     actual_conversation = evaluator._multi_turn_flow
@@ -449,6 +464,7 @@ def test_actual_prompty_render_receives_optional_definitions(
 @pytest.mark.parametrize("evaluator_class", COMPOSITES)
 @pytest.mark.parametrize("level", ["turn", "conversation"])
 def test_python_optional_definition_none_follows_shared_sdk_omission(evaluator_class, level):
+    """Keep optional Python None definitions equivalent to omission in native requests."""
     evaluator = evaluator_class(CONFIG, evaluation_level=level)
     post = AsyncMock(return_value=_native(evaluator_class))
     evaluator._decision_model_runner._post = post
@@ -464,6 +480,7 @@ def test_python_optional_definition_none_follows_shared_sdk_omission(evaluator_c
 @pytest.mark.parametrize("root_last", [False, True])
 @pytest.mark.parametrize("metadata_source", ["catalog", "sdk_instance", "sdk_builtin"])
 def test_actual_batch_failure_preserves_known_usage_once(evaluator_class, root_last, metadata_source):
+    """Preserve error provenance while attributing known shared usage once regardless of metric order."""
     evaluator = evaluator_class(CONFIG)
     payload = _native(evaluator_class)
     payload["answers"][f"{evaluator._EVALUATORS[0]['name']}_status"]["noul"] = 2
@@ -511,6 +528,7 @@ def test_actual_batch_failure_preserves_known_usage_once(evaluator_class, root_l
 @pytest.mark.parametrize("evaluator_class", COMPOSITES)
 @pytest.mark.parametrize("version", ["1.17.0", "1.18.2"])
 def test_actual_released_wheel_composite_package(tmp_path, evaluator_class, version, released_sdk_target):
+    """Exercise copied composite packages against explicitly provisioned released SDKs without providers."""
     target = released_sdk_target(version)
     module = __import__(evaluator_class.__module__, fromlist=["__file__"])
     package = tmp_path / "evaluator"

@@ -149,6 +149,62 @@ class TestTaskCompletionModelTypes(ModelTypesTests):
     result_key = "task_completion"
     class_name = "TaskCompletionEvaluator"
 
+    def test_chat_rejects_decision_cutoff_before_loading_prompts(self):
+        """Do not silently ignore a Decision-only cutoff on a chat configuration."""
+        from unittest.mock import patch
+
+        module = self._load_module()
+        with patch.object(module["AsyncPrompty"], "load") as load:
+            with pytest.raises(EvaluationException, match="only supported for Decision models"):
+                module[self.class_name](
+                    {"azure_endpoint": "https://example.openai.azure.com", "azure_deployment": "chat"},
+                    probability_threshold=0.8,
+                )
+        load.assert_not_called()
+
+    def test_decision_cutoff_override_preserves_config_when_sdk_is_unavailable(self, monkeypatch):
+        """Reject an unavailable Decision backend without mutating the caller's nested cutoff."""
+        module = self._load_module()
+        namespace = module["_is_decision_config"].__globals__
+        monkeypatch.setitem(namespace, "_SDK_SUPPORTS_DECISION", False)
+        config = {
+            "type": "decision", "azure_endpoint": "https://example.services.ai.azure.com",
+            "azure_deployment": "Decision-1", "probability_threshold": 0.9,
+        }
+        original = dict(config)
+        with pytest.raises(EvaluationException, match="version with decision model support"):
+            module[self.class_name](config, probability_threshold=0.8)
+        assert config == original
+
+    def test_available_chat_strategy_initialization_and_parse(self, monkeypatch):
+        """Initialize both shared chat strategies and delegate parsing without changing output."""
+        from unittest.mock import AsyncMock, Mock, patch
+
+        module = self._load_module()
+        namespace = module["_is_decision_config"].__globals__
+        turn_strategy = Mock()
+        conversation_strategy = Mock()
+        factory = Mock(side_effect=[turn_strategy, conversation_strategy])
+        monkeypatch.setitem(namespace, "PromptyEvaluationStrategy", factory)
+        with patch.object(module["AsyncPrompty"], "load", return_value=AsyncMock()):
+            evaluator = module[self.class_name](
+                {"azure_endpoint": "https://example.openai.azure.com", "azure_deployment": "chat"}
+            )
+        assert evaluator._strategy is turn_strategy
+        assert evaluator._multi_turn_strategy is conversation_strategy
+        assert factory.call_count == 2
+        for call in factory.call_args_list:
+            assert call.kwargs["result_key"] == "task_completion"
+            assert call.kwargs["threshold"] == 1
+            assert call.kwargs["binary_cutoff"] == 1.0
+            assert call.kwargs["top_level_usage"] is True
+            assert call.kwargs["timeout"] == evaluator._LLM_CALL_TIMEOUT
+        assert factory.call_args_list[1].kwargs["flow_resolver"]() is evaluator._multi_turn_flow
+        output = {"llm_output": {"score": 1, "reason": "Complete", "status": "completed"}}
+        assert evaluator._parse_prompty_output(output) is turn_strategy.parse.return_value
+        turn_strategy.parse.assert_called_once_with(output)
+        conversation_strategy.parse.assert_not_called()
+
     def test_build_result_delegates_to_chat_strategy(self):
         """Preserve result formatting when the shared chat strategy is available."""
         from unittest.mock import Mock
