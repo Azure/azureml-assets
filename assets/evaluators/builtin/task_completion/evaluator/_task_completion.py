@@ -516,7 +516,7 @@ class TaskCompletionEvaluator(ModelEvaluatorBase[Union[str, int]]):
     """Evaluator identifier, experimental and to be used only with evaluation in cloud."""
 
     @override
-    def __init__(self, model_config, *, credential=None, evaluation_level=None, **kwargs):
+    def __init__(self, model_config, *, credential=None, evaluation_level=None, probability_threshold=None, **kwargs):
         """Initialize the TaskCompletionEvaluator.
 
         :param model_config: Configuration for the Azure OpenAI model.
@@ -528,6 +528,11 @@ class TaskCompletionEvaluator(ModelEvaluatorBase[Union[str, int]]):
             ``query``/``response`` -> turn). Set to ``EvaluationLevel.CONVERSATION`` or
             ``EvaluationLevel.TURN`` to override auto-detection.
         :type evaluation_level: Optional[Union[EvaluationLevel, str]]
+        :keyword probability_threshold: Decision-only completion probability cutoff, between 0 and 1.
+            Overrides ``model_config["probability_threshold"]`` without modifying the supplied configuration.
+            When omitted, the nested cutoff is used, or 0.75 by default. This does not change the public
+            binary score threshold of 1.
+        :type probability_threshold: Optional[float]
         :keyword kwargs: Additional keyword arguments.
         """
         current_dir = os.path.dirname(__file__)
@@ -546,6 +551,15 @@ class TaskCompletionEvaluator(ModelEvaluatorBase[Union[str, int]]):
         )
 
         decision_selected = _is_decision_config(model_config)
+        if probability_threshold is not None:
+            if not decision_selected:
+                raise EvaluationException(
+                    message="probability_threshold is only supported for Decision models.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
+                )
+            model_config = {**model_config, "probability_threshold": probability_threshold}
         if decision_selected and not _SDK_SUPPORTS_DECISION:
             raise EvaluationException(
                 message="Decision models require an azure-ai-evaluation version with decision model support.",

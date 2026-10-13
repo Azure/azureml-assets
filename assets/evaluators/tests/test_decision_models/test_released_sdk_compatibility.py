@@ -64,6 +64,22 @@ def test_standalone_asset_packages_native_rubrics_without_public_auth(tmp_path, 
             validate({"model_config": {**public_config, auth_field: "not-public"}}, schema)
     with pytest.raises(ValidationError):
         validate({"deployment_name": "chat-model", "model_config": public_config}, schema)
+    if name == "task_completion":
+        validate({"model_config": public_config, "probability_threshold": 0.8}, schema)
+        for cutoff in (-0.1, 1.1, "0.8", True):
+            with pytest.raises(ValidationError):
+                validate({"model_config": public_config, "probability_threshold": cutoff}, schema)
+        with pytest.raises(ValidationError):
+            validate({"deployment_name": "chat-model", "probability_threshold": 0.8}, schema)
+
+
+def test_chat_completion_rejects_decision_probability_cutoff_before_loading_prompty():
+    """A caller's Decision-only cutoff cannot be ignored on the released chat backend."""
+    module = runpy.run_path(str(BUILTIN / "task_completion" / "evaluator" / "_task_completion.py"))
+    with patch("azure.ai.evaluation._legacy.prompty.AsyncPrompty.load") as load:
+        with pytest.raises(EvaluationException, match="only supported for Decision models"):
+            module["TaskCompletionEvaluator"](dict(CHAT_CONFIG), probability_threshold=0.8)
+    load.assert_not_called()
 
 
 def _inputs(name):

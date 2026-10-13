@@ -268,10 +268,10 @@ def test_completion_scope_and_default_cutoff_boundaries(
         "task_completion", {"type": "noul", "noul": score_probability}, status_probability,
     ))
     messages = [
-        {"role": "user", "content": "First task"},
-        {"role": "assistant", "content": "First answer"},
-        {"role": "user", "content": "Latest task"},
-        {"role": "assistant", "content": "Latest answer"},
+        {"role": "user", "content": [{"type": "text", "text": "First task"}]},
+        {"role": "assistant", "content": [{"type": "text", "text": "First answer"}]},
+        {"role": "user", "content": [{"type": "text", "text": "Latest task"}]},
+        {"role": "assistant", "content": [{"type": "text", "text": "Latest answer"}]},
     ]
     result = evaluator(messages=messages)
     assert result["task_completion"] == score
@@ -290,15 +290,37 @@ def test_completion_scope_and_default_cutoff_boundaries(
         assert "end to end" in questions["task_completion"]["instructions"]
 
 
+@pytest.mark.parametrize("top_level", [False, True])
 @pytest.mark.parametrize("probability,expected", [(0.7999, 0), (0.8, 1)])
-def test_completion_configured_cutoff_is_inclusive(probability, expected):
+def test_completion_configured_cutoff_is_inclusive(probability, expected, top_level):
     """The configured probability cutoff changes binary scoring, not the public threshold."""
-    evaluator = TaskCompletionEvaluator({**CONFIG, "probability_threshold": 0.8})
+    config = dict(CONFIG) if top_level else {**CONFIG, "probability_threshold": 0.8}
+    evaluator = TaskCompletionEvaluator(config, **({"probability_threshold": 0.8} if top_level else {}))
     stub(evaluator, native("task_completion", {"type": "noul", "noul": probability}, 0.5))
     result = evaluator(query="Say hello", response="Hello")
     assert result["task_completion"] == expected
     assert result["task_completion_threshold"] == 1
     assert result["task_completion_passed"] is bool(expected)
+
+
+def test_completion_top_level_cutoff_overrides_nested_without_mutating_config():
+    """The caller's explicit initialization cutoff wins over the trusted resolved config's cutoff."""
+    config = {**CONFIG, "probability_threshold": 0.75}
+    original = dict(config)
+    evaluator = TaskCompletionEvaluator(config, probability_threshold=0.8)
+    assert config == original
+    assert evaluator._decision_model_runner.probability_threshold == 0.8
+    stub(evaluator, native("task_completion", {"type": "noul", "noul": 0.79}, 0.5))
+    result = evaluator(query="Say hello", response="Hello")
+    assert result["task_completion"] == 0
+    assert result["task_completion_threshold"] == 1
+
+
+@pytest.mark.parametrize("cutoff", [-0.1, 1.1, float("nan"), float("inf"), "0.8", True])
+def test_completion_top_level_invalid_cutoff_rejected_by_sdk(cutoff):
+    """The top-level alias uses canonical SDK cutoff validation rather than silently defaulting."""
+    with pytest.raises(EvaluationException):
+        TaskCompletionEvaluator(CONFIG, probability_threshold=cutoff)
 
 
 def test_completion_forced_conversation_uses_full_query_response_transcript():
