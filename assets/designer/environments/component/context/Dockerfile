@@ -15,8 +15,4 @@ RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
     conda run -p $CONDA_PREFIX pip cache purge && \
     conda clean -a -y
 
-RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade \
-        'pip>=26.2.0' 'setuptools>=83.0.0' 'PyJWT>=2.15.0' 'urllib3>=2.8.0' && \
-    rm -rf /opt/miniconda/pkgs/ && \
-    find /opt/miniconda $CONDA_PREFIX \
-        \( -path '*/pip/_vendor/vendor.txt' -o -path '*/pip/_vendor/bom.cdx.json' \) -delete
+RUN find /opt/miniconda $CONDA_PREFIX -path '*/pip/_vendor/bom.cdx.json' -delete
