@@ -2,9 +2,9 @@
 # Licensed under the MIT License.
 import contextvars
 import functools
+import json
 import os
 import logging
-import yaml
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -741,8 +741,9 @@ class ToolUseQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
 
     def _load_decision_strategies(self, rubric_path: str) -> Dict:
         """Load independent status and scoring strategies for the five members."""
-        with open(rubric_path, encoding="utf-8") as rubric_file:
-            rubric = yaml.safe_load(rubric_file)
+        from azure.ai.evaluation._legacy.prompty._yaml_utils import load_yaml
+
+        rubric = json.loads(json.dumps(load_yaml(rubric_path)))
         runner = self._decision_model_runner
         return {
             member["name"]: DecisionEvaluationStrategy(

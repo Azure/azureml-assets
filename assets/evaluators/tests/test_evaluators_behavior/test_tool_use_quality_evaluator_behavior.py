@@ -160,8 +160,10 @@ def mocked_decision_evaluator(monkeypatch):
     monkeypatch.setitem(namespace, "BinaryScoring", binary_scoring)
     monkeypatch.setitem(namespace, "LikertScoring", likert_scoring)
     monkeypatch.setitem(namespace, "DecisionEvaluationStrategy", strategy_factory)
-    rubric_loader = Mock(wraps=tool_use_quality_module.yaml.safe_load)
-    monkeypatch.setattr(tool_use_quality_module.yaml, "safe_load", rubric_loader)
+    from azure.ai.evaluation._legacy.prompty import _yaml_utils
+
+    rubric_loader = Mock(wraps=_yaml_utils.load_yaml)
+    monkeypatch.setattr(_yaml_utils, "load_yaml", rubric_loader)
     config = {
         "type": "decision",
         "azure_endpoint": "https://example.services.ai.azure.com",
@@ -191,7 +193,7 @@ class TestToolUseQualityDecisionBehavior:
         mocks.load.assert_called_once()
         assert not hasattr(evaluator, "_multi_turn_flow")
         assert mocks.rubric_loader.call_count == 2
-        assert [os.path.basename(call.args[0].name) for call in mocks.rubric_loader.call_args_list] == [
+        assert [os.path.basename(call.args[0]) for call in mocks.rubric_loader.call_args_list] == [
             evaluator._DECISION_FILE, evaluator._MULTI_TURN_DECISION_FILE,
         ]
         assert mocks.strategy_factory.call_count == 10
