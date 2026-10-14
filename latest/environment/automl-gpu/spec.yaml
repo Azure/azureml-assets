@@ -4,7 +4,7 @@ description: >-
   An environment for automl inferencing (part of demand forecasting).
 
 name: "automl-gpu"
-version: "81"
+version: "82"
 
 build:
   path: "context"
