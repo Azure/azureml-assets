@@ -45,7 +45,7 @@ RUN pip install 'azureml-telemetry==1.60.0' --no-deps \
 RUN pip install 'pyarrow>=14.0.1'
 
 # To resolve vulnerability issue regarding cryptography
-RUN pip install 'cryptography>=46.0.5'
+RUN pip install 'cryptography>=50.0.0'
 
 # TODO: remove rai-core-flask pin with next raiwidgets release
 RUN pip install 'rai-core-flask==0.7.6'
