@@ -9,13 +9,75 @@ system_metadata:
   invisibleUntil: "2027-10-01T00:00:00.000Z"
   alias: phi-3-mini-128k
   publisher: Microsoft
-  author: Microsoft
   lifecycle: Generally available
   directoryPath: v2
   foundryLocal: ''
   deploymentOptions:
   - Foundry Local on Devices
   - Foundry Local on Azure Local
+  deploymentOptionDetails:
+    Foundry Local on Azure Local: |-
+      # Expected running times for phi-3-mini-128k-instruct
+
+      The results are for standard chat completion usages.
+
+      Mean metrics stand for the average performance, p99 metrics stand for the worst-performant percentile.
+
+      ## ONNX (cuda-gpu)
+
+      **Max model len**: 131072
+
+      ### Nvidia A10 GPU
+
+      | Maximal concurrency | Mean TTFT (ms) | P99 TTFT (ms) | Output throughput (tokens/s) |
+      |---|---|---|---|
+      | 1 request | 430.93 | 531.51 | 135.73 |
+      | 2 requests | 754.30 | 910.99 | 169.94 |
+      | 4 requests | 1360.31 | 1577.14 | 186.98 |
+      | 8 requests | 3168.56 | 9615.50 | 184.05 |
+
+      ### Nvidia RTX Pro 6000 vGPU
+
+      | Maximal concurrency | Mean TTFT (ms) | P99 TTFT (ms) | Output throughput (tokens/s) |
+      |---|---|---|---|
+      | 1 request | 284.30 | 913.08 | 249.13 |
+      | 2 requests | 443.35 | 641.61 | 319.56 |
+      | 4 requests | 839.51 | 1097.82 | 331.48 |
+      | 8 requests | 2152.09 | 3230.55 | 253.10 |
+
+      ---
+
+      Measured on Foundry on Arc build `0.260803.5`.
+
+      The results are for standard chat completion usages.
+
+      Mean metrics stand for the average performance, p99 metrics stand for the worst-performant percentile.
+
+      ## ONNX (cuda-gpu)
+
+      **Max model len**: 131072
+
+      ### Nvidia A10 GPU
+
+      | Maximal concurrency | Mean TTFT (ms) | P99 TTFT (ms) | Output throughput (tokens/s) |
+      |---|---|---|---|
+      | 1 request | 430.93 | 531.51 | 135.73 |
+      | 2 requests | 754.30 | 910.99 | 169.94 |
+      | 4 requests | 1360.31 | 1577.14 | 186.98 |
+      | 8 requests | 3168.56 | 9615.50 | 184.05 |
+
+      ### Nvidia RTX Pro 6000 vGPU
+
+      | Maximal concurrency | Mean TTFT (ms) | P99 TTFT (ms) | Output throughput (tokens/s) |
+      |---|---|---|---|
+      | 1 request | 284.30 | 913.08 | 249.13 |
+      | 2 requests | 443.35 | 641.61 | 319.56 |
+      | 4 requests | 839.51 | 1097.82 | 331.48 |
+      | 8 requests | 2152.09 | 3230.55 | 253.10 |
+
+      ---
+
+      Measured on Foundry on Arc build `0.260803.5`.
   inputModalities:
   - text
   license: MIT
