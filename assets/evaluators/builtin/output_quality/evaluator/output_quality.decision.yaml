@@ -75,7 +75,7 @@ groundedness:
     criteria:
       - Unrelated to query or sources, central claims phantom or contradictory, or multiple phantom claims.
       - Addresses query but has at least one wrong, contradicted, or unsupported factual detail, invented entity or value, or fabricated action, even if some content is correct.
-      - No verifiable factual claims: clarification, polite filler, follow-up or refusal without factual assertions. No phantom claim anywhere.
+      - "No verifiable factual claims: clarification, polite filler, follow-up or refusal without factual assertions. No phantom claim anywhere."
       - Every fact is supported with zero phantom claims, but important available source detail required by the query is omitted.
       - Every claim directly and precisely supported, zero phantom claims, complete query coverage without extraneous or unsupported information.
 task_completion:

@@ -27,6 +27,7 @@ from azure.ai.evaluation._evaluate._evaluate import (
     _extract_metrics_from_evaluator_name,
 )
 from azure.ai.evaluation._exceptions import EvaluationException
+from azure.ai.evaluation._legacy.prompty._yaml_utils import load_yaml
 from azure.ai.evaluation._evaluate._batch_run._run_submitter_client import RunSubmitterClient
 from ...builtin.output_quality.evaluator._output_quality import OutputQualityEvaluator
 from ...builtin.tool_use_quality.evaluator._tool_use_quality import ToolUseQualityEvaluator
@@ -42,6 +43,33 @@ CONFIG = {
 CHAT_CONFIG = {"azure_endpoint": CONFIG["azure_endpoint"], "azure_deployment": "chat", "api_key": "test-only"}
 COMPOSITES = [OutputQualityEvaluator, ToolUseQualityEvaluator]
 INPUT = {"query": "Say hello", "response": "Hello", "tool_definitions": [{"name": "greet", "parameters": {}}]}
+
+
+@pytest.mark.parametrize("rubric_path", [
+    path
+    for name in ("task_completion", "tool_call_accuracy", "output_quality", "tool_use_quality")
+    for path in sorted((Path(__file__).parents[2] / "builtin" / name / "evaluator").glob("*.decision.yaml"))
+], ids=lambda path: path.name)
+def test_decision_criteria_are_nonempty_strings(rubric_path):
+    """Keep every SDK-loaded criterion a nonempty string in all four assets' rubrics."""
+    rubric = json.loads(json.dumps(load_yaml(rubric_path)))
+
+    def check_questions(value, question_path):
+        if not isinstance(value, dict):
+            return
+        for key, child in value.items():
+            location = f"{question_path}.{key}"
+            if key == "criteria":
+                assert isinstance(child, (dict, list)), f"{location}: expected criterion mapping or list"
+                criteria = child.items() if isinstance(child, dict) else enumerate(child)
+                for index, criterion in criteria:
+                    assert isinstance(criterion, str) and criterion.strip(), (
+                        f"{location}[{index!r}]: expected nonempty string, got {criterion!r}"
+                    )
+            else:
+                check_questions(child, location)
+
+    check_questions(rubric, rubric_path.name)
 
 
 def _native(evaluator_class, skipped=False):
