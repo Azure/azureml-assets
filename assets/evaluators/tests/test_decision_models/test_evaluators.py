@@ -176,10 +176,13 @@ def test_accuracy_without_calls_skips():
     post.assert_not_called()
 
 
-def test_accuracy_explicit_empty_selection_does_not_fall_back_to_response_calls():
-    """Skip explicit empty selections without scoring unrelated response calls."""
+def test_accuracy_empty_selection_falls_back_to_response_calls():
+    """Parse calls from the response when tool_calls is empty."""
     evaluator = ToolCallAccuracyEvaluator(CONFIG)
-    post = stub(evaluator, side_effect=AssertionError("Must not score unselected calls"))
+    post = stub(evaluator, native("tool_call_accuracy", {
+        "type": "score", "score": 3, "confidence": 1,
+        "probabilities": {"0": 0, "1": 0, "2": 0, "3": 1, "4": 0},
+    }))
     response = [
         {"role": "assistant", "content": [
             {"type": "tool_call", "name": "weather", "tool_call_id": "context", "arguments": {}},
@@ -190,8 +193,8 @@ def test_accuracy_explicit_empty_selection_does_not_fall_back_to_response_calls(
         query="Weather?", response=response, tool_calls=[],
         tool_definitions=[{"name": "weather", "parameters": {}}],
     )
-    assert result["tool_call_accuracy_status"] == "skipped"
-    post.assert_not_called()
+    assert result["tool_call_accuracy_status"] == "completed"
+    post.assert_called_once()
 
 
 @pytest.mark.parametrize("selected", [False, True])

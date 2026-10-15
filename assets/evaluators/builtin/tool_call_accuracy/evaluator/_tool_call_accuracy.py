@@ -237,7 +237,7 @@ class ToolCallAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
         (the Microsoft-Decision-1 deployment name) selects a decision model instead; authenticate with
         ``api_key`` or ``credential``.
         For Decision models, ``response`` supplies execution results and retry evidence;
-        only the explicitly selected ``tool_calls`` are scored. Without ``tool_calls``,
+        only the explicitly selected ``tool_calls`` are scored. When ``tool_calls`` is ``None`` or empty,
         calls are extracted from ``response``.
     :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
         ~azure.ai.evaluation.OpenAIModelConfiguration]
@@ -419,14 +419,14 @@ class ToolCallAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
         query = kwargs.get("query")
         response = kwargs.get("response")
         # TODO : Support classes that represents tool calls, messages etc once client side definitions are available
-        if tool_calls is None and response:
+        if not tool_calls and response:
             parsed_tool_calls = self._parse_tools_from_response(response)
             if parsed_tool_calls:
                 tool_calls = parsed_tool_calls
 
         if not tool_calls:
             # If no tool calls provided and response is string, use response string as tool calls as is
-            if tool_calls is None and response and isinstance(response, str):
+            if response and isinstance(response, str):
                 tool_calls = response
             else:
                 return {"error_message": self._NO_TOOL_CALLS_MESSAGE}

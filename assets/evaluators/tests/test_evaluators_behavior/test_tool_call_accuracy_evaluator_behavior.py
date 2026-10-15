@@ -147,14 +147,14 @@ class TestToolCallAccuracyEvaluatorBehavior(BaseToolCallEvaluatorBehaviorTest, B
         evaluator._flow.assert_not_called()
 
     def test_tool_calls_empty_list_with_valid_response(self):
-        """Do not replace an explicit empty selection with valid response calls."""
+        """Parse calls from the response when tool_calls is an empty list."""
         evaluator = create_mocked_evaluator(ToolCallAccuracyEvaluator, "tool_call_accuracy")
         result = evaluator(
             query=self.VALID_QUERY, response=deepcopy(self.VALID_RESPONSE),
             tool_calls=[], tool_definitions=self.VALID_TOOL_DEFINITIONS,
         )
-        assert result["tool_call_accuracy_status"] == "skipped"
-        evaluator._flow.assert_not_called()
+        assert result["tool_call_accuracy_status"] == "completed"
+        evaluator._flow.assert_called_once()
 
     @pytest.mark.parametrize("as_dict", [False, True])
     def test_explicit_calls_are_not_replaced_by_response_context(self, as_dict):
@@ -180,16 +180,17 @@ class TestToolCallAccuracyEvaluatorBehavior(BaseToolCallEvaluatorBehaviorTest, B
             "tool_definitions": data.LOCAL_CALLS_TOOL_DEFINITIONS,
         }
 
+    @pytest.mark.parametrize("empty", [None, []])
     @pytest.mark.parametrize("response", [data.LOCAL_CALLS_RESPONSE, "context"])
-    def test_explicit_empty_selection_does_not_infer_response_calls(self, response):
-        """An empty explicit selection skips rather than evaluating response calls."""
+    def test_empty_selection_infers_response_calls(self, response, empty):
+        """None or an empty selection falls back to the calls in the response."""
         evaluator = create_mocked_evaluator(ToolCallAccuracyEvaluator, "tool_call_accuracy")
         result = evaluator(
-            query="q", tool_calls=[], response=deepcopy(response),
+            query="q", tool_calls=empty, response=deepcopy(response),
             tool_definitions=deepcopy(data.LOCAL_CALLS_TOOL_DEFINITIONS),
         )
-        assert result["tool_call_accuracy_status"] == "skipped"
-        evaluator._flow.assert_not_called()
+        assert result["tool_call_accuracy_status"] == "completed"
+        evaluator._flow.assert_called_once()
 
 
 class TestToolCallAccuracyModelTypes(ModelTypesTests):
