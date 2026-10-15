@@ -1,0 +1,7 @@
+extra_config: model.yaml
+spec: spec.yaml
+type: model
+categories: ["Foundation Models"]
+release_paths:
+  - artifact-manifest.json
+  - LICENSE
