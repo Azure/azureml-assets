@@ -3,7 +3,9 @@ channels:
 - conda-forge
 dependencies:
 - python=3.10
-- pip=26.1
-- setuptools<82
+- pip>=26.2
+- setuptools>=83
 - pip:
+  - PyJWT>=2.15.0
+  - urllib3>=2.8.0
   - mldesigner=={{latest-pypi-version:pre}}
