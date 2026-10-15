@@ -145,20 +145,19 @@ def test_member_threshold_schema_matches_constructor(evaluator_class):
 
 @pytest.mark.parametrize("name", ["task_completion", "tool_call_accuracy", "output_quality", "tool_use_quality"])
 def test_public_initialization_requires_trusted_named_deployment(name):
-    """Require public named deployment binding and reject caller-supplied model configuration."""
+    """Require named deployment binding without a separate model-configuration prohibition."""
     schema = yaml.safe_load(
         (Path(__file__).parents[2] / "builtin" / name / "spec.yaml").read_text(encoding="utf-8")
     )["initParameterSchema"]
     assert "model_config" not in schema["properties"]
+    assert "not" not in schema
+    assert schema["description"] == "Hosted initialization uses a named deployment resolved by the service."
     binding = {"deployment_name": "Decision-1", "evaluation_level": "turn"}
     jsonschema.validate(binding, schema)
     for invalid in ({}, {"model_config": CONFIG}, {"deployment_name": None},
                     {"deployment_name": 1}):
         with pytest.raises(jsonschema.ValidationError):
             jsonschema.validate(invalid, schema)
-    for config in (CONFIG, CHAT_CONFIG, {}, None, "untrusted"):
-        with pytest.raises(jsonschema.ValidationError):
-            jsonschema.validate({**binding, "model_config": config}, schema)
     if "probability_threshold" in schema["properties"]:
         for value in (0, 0.75, 1):
             jsonschema.validate({**binding, "probability_threshold": value}, schema)

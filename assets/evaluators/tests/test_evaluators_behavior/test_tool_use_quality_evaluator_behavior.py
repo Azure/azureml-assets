@@ -1066,7 +1066,8 @@ def test_native_decision_rubrics_and_init_schema():
     for valid in ({"deployment_name": "chat"},
                   {"deployment_name": "Decision-1", "probability_threshold": 0.75}):
         jsonschema.validate(valid, schema)
-    for invalid in ({}, {"deployment_name": "chat", "model_config": config},
+    assert "not" not in schema
+    for invalid in ({},
                     {"model_config": {"type": "decision"}},
                     {"model_config": {**config, "probability_threshold": 2}},
                     {"model_config": config, "probability_threshold": -1},

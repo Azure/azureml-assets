@@ -58,24 +58,19 @@ def test_standalone_asset_packages_native_rubrics_without_public_auth(tmp_path, 
     public_config = {key: value for key, value in DECISION_CONFIG.items() if key != "api_key"}
     validate({"deployment_name": "chat-model"}, schema)
     assert "model_config" not in schema["properties"]
-    for selection in ({}, {"model_config": public_config},
-                      {"deployment_name": "Decision-1", "model_config": public_config}):
+    assert "not" not in schema
+    for selection in ({}, {"model_config": public_config}):
         with pytest.raises(ValidationError):
             validate(selection, schema)
     for auth_field in ("api_key", "credential", "authorization", "headers"):
         with pytest.raises(ValidationError):
             validate({"model_config": {**public_config, auth_field: "not-public"}}, schema)
-    with pytest.raises(ValidationError):
-        validate({"deployment_name": "chat-model", "model_config": public_config}, schema)
     if name == "task_completion":
         validate({"deployment_name": "Decision-1", "probability_threshold": 0.8}, schema)
         for selection in ({"deployment_name": "Decision-1"},):
             for cutoff in (-0.1, 1.1, "0.8", True):
                 with pytest.raises(ValidationError):
                     validate({**selection, "probability_threshold": cutoff}, schema)
-        with pytest.raises(ValidationError):
-            validate({"deployment_name": "Decision-1", "model_config": public_config,
-                      "probability_threshold": 0.8}, schema)
 
 
 def test_chat_completion_rejects_decision_probability_cutoff_before_loading_prompty():

@@ -12,7 +12,7 @@ tags:
 supportedEvaluationLevels: ["conversation", "turn"]
 initParameterSchema:
   type: "object"
-  description: "Hosted initialization uses a named deployment resolved by the service. Python model_config and credentials remain internal constructor inputs, not public initialization parameters."
+  description: "Hosted initialization uses a named deployment resolved by the service."
   properties:
     deployment_name:
       type: "string"
@@ -24,8 +24,6 @@ initParameterSchema:
       maximum: 1
       description: "Decision-only completion probability cutoff, checked after trusted named-deployment resolution. Overrides the resolved configuration cutoff; defaults to 0.75 when neither is supplied. The public binary score threshold remains 1."
   required: ["deployment_name"]
-  not:
-    required: ["model_config"]
 dataMappingSchema:
   type: "object"
   properties:
