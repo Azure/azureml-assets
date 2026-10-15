@@ -1130,7 +1130,8 @@ def validate_assets(input_dirs: List[Path],
         input_dirs (List[Path]): Directories containing assets.
         asset_config_filename (str): Asset config filename to search for.
         model_validation_results_dir (str, optional): Dir containing model validation results
-        changed_files (List[Path], optional): List of changed files, used to filter assets. Defaults to None.
+        changed_files (List[Path], optional): List of changed files, used to filter asset-specific checks.
+            Repository-wide uniqueness checks still include all assets. Defaults to None.
         check_names (bool, optional): Whether to check asset names. Defaults to False.
         check_names_skip_pattern (re.Pattern, optional): Regex pattern to skip name validation. Defaults to None.
         check_images (bool, optional): Whether to check image names. Defaults to False.
@@ -1179,7 +1180,7 @@ def validate_assets(input_dirs: List[Path],
         unsupported_fields = ["variantInfo", "defaultDeploymentTemplate", "isArchived", "intellectualProperty"]
         unsupported_fields_mapping = {}
 
-        if asset_config.type == assets.AssetType.MODEL:
+        if asset_config.type == assets.AssetType.MODEL and validate_this:
             with open(asset_config.spec_with_path, "r", encoding='utf-8') as f:
                 spec_config = yaml.safe_load(f)
 
@@ -1199,7 +1200,7 @@ def validate_assets(input_dirs: List[Path],
         asset_dir_versions[f"{asset_config.type.value} {asset_config.name}"].append(str(asset_config.version))
 
         # validated_model_map would be empty for non-drop scenario
-        if asset_config.type == assets.AssetType.MODEL:
+        if asset_config.type == assets.AssetType.MODEL and validate_this:
             error_count += validate_model_spec(asset_config)
             # should run during drop creation only
             if validated_model_map:
