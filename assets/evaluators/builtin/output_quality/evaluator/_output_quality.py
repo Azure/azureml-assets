@@ -517,6 +517,7 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         :keyword threshold: Optional mapping of member names to public score thresholds,
             between 1 and 5 for Likert members or 0 and 1 for binary members on either backend.
             Fractional values are supported; omitted members retain their defaults.
+            A numeric threshold is accepted but ignored for backward compatibility on both backends.
         :keyword probability_threshold: Decision-only probability cutoff for the two binary members,
             between 0 and 1. Overrides the nested configuration; defaults to 0.75.
         :keyword kwargs: Additional base evaluator options.
@@ -528,6 +529,8 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         threshold_value = {
             evaluator["name"]: evaluator["default_threshold"] for evaluator in self._EVALUATORS
         }
+        if isinstance(threshold, (int, float)) and not isinstance(threshold, bool):
+            threshold = None
         if threshold is not None:
             if not isinstance(threshold, dict) or set(threshold) - threshold_value.keys():
                 raise EvaluationException(

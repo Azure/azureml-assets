@@ -20,9 +20,14 @@ initParameterSchema:
     deployment_name:
       type: "string"
     threshold:
-      type: "object"
+      anyOf:
+        - type: "number"
+          minimum: 0
+          maximum: 1
+          multipleOf: 1
+        - type: "object"
       additionalProperties: false
-      description: "Optional per-member public score thresholds; omitted members retain their defaults. Independent of the Decision binary probability cutoff."
+      description: "Per-evaluator pass thresholds, for example {tool_call_accuracy: 4}. Unspecified thresholds use defaults. Legacy numeric values are accepted but ignored."
       properties:
         tool_call_accuracy:
           type: "number"

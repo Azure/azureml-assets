@@ -600,8 +600,9 @@ class ToolUseQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         (any subset of ``tool_call_accuracy``, ``tool_call_success``, ``tool_input_accuracy``,
         ``tool_output_utilization``, ``tool_selection``). Evaluators not present in the dict keep
         their standalone-evaluator default threshold (3 for ``tool_call_accuracy``, 1 for the
-        four binary evaluators).
-    :type threshold: Optional[Dict[str, Union[int, float]]]
+        four binary evaluators). Numeric thresholds are accepted but ignored for backward
+        compatibility on both backends.
+    :type threshold: Optional[Union[int, float, Dict[str, Union[int, float]]]]
     :keyword probability_threshold: Decision-only probability cutoff for binary members,
         between 0 and 1; defaults to the model configuration cutoff or 0.75.
     :type probability_threshold: Optional[float]
@@ -638,7 +639,8 @@ class ToolUseQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         :keyword threshold: Optional per-evaluator public score threshold overrides,
             between 1 and 5 for tool_call_accuracy or 0 and 1 for the binary members on either backend.
             Fractional values are supported; omitted members retain their defaults.
-        :type threshold: Optional[Dict[str, Union[int, float]]]
+            A numeric threshold is accepted but ignored for backward compatibility on both backends.
+        :type threshold: Optional[Union[int, float, Dict[str, Union[int, float]]]]
         :keyword probability_threshold: Decision-only cutoff for the four binary members, between 0 and 1.
             Overrides the model configuration cutoff, which defaults to 0.75.
         :type probability_threshold: Optional[float]
@@ -652,6 +654,8 @@ class ToolUseQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         threshold_value = {
             evaluator["name"]: evaluator["default_threshold"] for evaluator in self._EVALUATORS
         }
+        if isinstance(threshold, (int, float)) and not isinstance(threshold, bool):
+            threshold = None
         if threshold is not None:
             if not isinstance(threshold, dict) or set(threshold) - threshold_value.keys():
                 raise EvaluationException(

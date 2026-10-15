@@ -107,12 +107,62 @@ def _metadata(evaluator, source):
 @pytest.mark.parametrize("evaluator_class", COMPOSITES)
 @pytest.mark.parametrize("decision", [False, True])
 @pytest.mark.parametrize("threshold", [
-    3, [], {"unknown": 1}, {"tool_definitions": 1}, {"model_config": 1},
+    True, False, "3", [], {"unknown": 1}, {"tool_definitions": 1}, {"model_config": 1},
 ])
 def test_threshold_mapping_rejects_invalid_shape(evaluator_class, decision, threshold):
-    """Reject scalar thresholds and unknown member names on both backends."""
+    """Reject unsupported threshold shapes and unknown member names on both backends."""
     with pytest.raises(EvaluationException, match="threshold must be a mapping"):
         evaluator_class(CONFIG if decision else CHAT_CONFIG, threshold=threshold)
+
+
+@pytest.mark.parametrize("evaluator_class,threshold", [
+    *((OutputQualityEvaluator, value) for value in (1, 2, 3, 4, 5)),
+    *((ToolUseQualityEvaluator, value) for value in (0, 1)),
+])
+@pytest.mark.parametrize("decision", [False, True])
+@pytest.mark.parametrize("outcome", ["pass", "likert_fail", "binary_fail"])
+def test_numeric_threshold_preserves_legacy_defaults(evaluator_class, decision, threshold, outcome):
+    """Match omission at pass/fail boundaries so a scalar can neither rescue nor sink results."""
+    members = evaluator_class._EVALUATORS
+    defaults = {member["name"]: member["default_threshold"] for member in members}
+    scores = dict(defaults)
+    if outcome != "pass":
+        failed_member = next(member["name"] for member in members
+                             if member["max"] == (5 if outcome == "likert_fail" else 1))
+        scores[failed_member] -= 1
+    results = []
+    for options in ({}, {"threshold": threshold}):
+        evaluator = evaluator_class(CONFIG if decision else CHAT_CONFIG, **options)
+        assert evaluator._threshold == defaults
+        if decision:
+            payload = _native(evaluator_class)
+            for member in members:
+                name = member["name"]
+                score = scores[name]
+                payload["answers"][name] = (
+                    {"type": "noul", "noul": 0.9 if score else 0.1} if member["max"] == 1 else
+                    {"type": "score", "score": score - 1, "confidence": 1,
+                     "probabilities": {str(index): float(index == score - 1) for index in range(5)}}
+                )
+            call = AsyncMock(return_value=payload)
+            evaluator._decision_model_runner._post = call
+        else:
+            call = AsyncMock(return_value={
+                "llm_output": {
+                    name: {"score": score, "status": "completed", "reason": "test"}
+                    for name, score in scores.items()
+                },
+            })
+            evaluator._flow = call
+        results.append(evaluator(**deepcopy(INPUT)))
+        call.assert_awaited_once()
+    expected, result = results
+    assert result == expected
+    assert result[evaluator._RESULT_KEY] == int(outcome == "pass")
+    for name, expected in defaults.items():
+        assert result[f"{name}_threshold"] == expected
+        assert result[f"{name}_score"] == scores[name]
+        assert result[f"{evaluator._RESULT_KEY}_evaluators"][name]["passed"] is (scores[name] >= expected)
 
 
 @pytest.mark.parametrize("evaluator_class", COMPOSITES)
@@ -160,13 +210,20 @@ def test_member_threshold_schema_matches_constructor(evaluator_class):
     schema = spec["initParameterSchema"]
     binding = {"deployment_name": "resolved-deployment"}
     jsonschema.validate({**binding, "threshold": {}, "probability_threshold": 0.8}, schema)
+    legacy_thresholds = (1, 2, 3, 4, 5) if evaluator_class is OutputQualityEvaluator else (0, 1)
+    for legacy_threshold in legacy_thresholds:
+        jsonschema.validate({**binding, "threshold": legacy_threshold}, schema)
+    invalid_scalars = (0, 6, 3.5) if evaluator_class is OutputQualityEvaluator else (-1, 2, 0.5)
+    for invalid in invalid_scalars:
+        with pytest.raises(jsonschema.ValidationError):
+            jsonschema.validate({**binding, "threshold": invalid}, schema)
     for member in evaluator_class._EVALUATORS:
         for value in (member["min"], member["min"] + (member["max"] - member["min"]) * 0.625, member["max"]):
             jsonschema.validate({**binding, "threshold": {member["name"]: value}}, schema)
         for value in (True, "3", None, member["min"] - 0.1, member["max"] + 0.1):
             with pytest.raises(jsonschema.ValidationError):
                 jsonschema.validate({**binding, "threshold": {member["name"]: value}}, schema)
-    for invalid in (3, [], {"unknown": 1}):
+    for invalid in (True, False, "3", [], {"unknown": 1}):
         with pytest.raises(jsonschema.ValidationError):
             jsonschema.validate({**binding, "threshold": invalid}, schema)
 
@@ -592,11 +649,30 @@ async def render_only(timeout, **inputs):
 evaluator._flow = AsyncMock(side_effect=render_only)
 evaluator._multi_turn_flow = AsyncMock(side_effect=render_only)
 inputs = {'query': 'Hello?', 'response': 'Hello'}
+legacy_thresholds = (1, 2, 3, 4, 5) if cls._RESULT_KEY == 'output_quality' else (0, 1)
+omitted = cls(config)
+omitted._flow = AsyncMock(side_effect=render_only)
+numeric_evaluators = [cls(config, threshold=value) for value in legacy_thresholds]
+for legacy_numeric in numeric_evaluators:
+    legacy_numeric._flow = AsyncMock(side_effect=render_only)
+maximum_output = output
+for likert_score, binary_score in ((3, 1), (2, 1), (3, 0)):
+    output = {**maximum_output, 'llm_output': {
+        member['name']: {'score': likert_score if member['max'] == 5 else binary_score,
+                         'status': 'completed', 'reason': 'test'} for member in cls._EVALUATORS}}
+    expected = omitted(**inputs)
+    assert expected[cls._RESULT_KEY] == int(likert_score == 3 and binary_score == 1)
+    for legacy_numeric in numeric_evaluators:
+        legacy_result = legacy_numeric(**inputs)
+        assert legacy_result == expected
+        for member in cls._EVALUATORS:
+            assert legacy_result[member['name'] + '_threshold'] == member['default_threshold']
+output = maximum_output
 assert evaluator(**inputs)[cls._RESULT_KEY] == 1
 assert evaluator(**inputs, tool_definitions=None)[cls._RESULT_KEY] == 1
 assert evaluator(messages=[{'role': 'user', 'content': 'Hello?'}, {'role': 'assistant', 'content': 'Hello'}])[
     cls._RESULT_KEY] == 1
-for invalid in (3, {'unknown': 1}, {cls._EVALUATORS[0]['name']: True}):
+for invalid in (True, '3', {'unknown': 1}, {cls._EVALUATORS[0]['name']: True}):
     try:
         cls(config, threshold=invalid)
     except module['EvaluationException']:
