@@ -120,8 +120,15 @@ def test_assets_test_has_fixed_summary_check():
     assert jobs["test-summary"]["name"] == "Test"
     assert jobs["test-summary"]["if"] == REPORT_GATE
     assert set(jobs["test-summary"]["needs"]) == {
-        GATE_JOB, "check-directory-file-changes", "setup", "test",
+        GATE_JOB, "check-directory-file-changes", "setup", "test", "released-sdk-compatibility",
     }
+    compatibility = jobs["released-sdk-compatibility"]
+    assert compatibility["permissions"] == {"contents": "read"}
+    assert compatibility["if"] == (
+        "contains(needs.check-directory-file-changes.outputs.files-changed, 'assets/evaluators/')"
+    )
+    assert set(compatibility["needs"]) == {GATE_JOB, "check-directory-file-changes"}
+    assert "released-sdk-compatibility" in jobs["report"]["needs"]
 
 
 @pytest.mark.parametrize(
@@ -157,13 +164,30 @@ def test_assets_test_has_fixed_summary_check():
           "TEST_COUNT": "", "TEST_RESULT": "skipped"}, 1),
         ({"CHANGES_RESULT": "cancelled", "CHANGED_FILES": "", "SETUP_RESULT": "skipped",
           "TEST_COUNT": "", "TEST_RESULT": "skipped"}, 1),
+        ({"CHANGES_RESULT": "success", "CHANGED_FILES": "assets/evaluators/builtin/output_quality/spec.yaml",
+          "SETUP_RESULT": "success", "TEST_COUNT": "1", "TEST_RESULT": "success",
+          "RELEASED_SDK_RESULT": "success"}, 0),
+        ({"CHANGES_RESULT": "success", "CHANGED_FILES": "assets/evaluators/tests/test_decision_models/conftest.py",
+          "SETUP_RESULT": "success", "TEST_COUNT": "0", "TEST_RESULT": "skipped",
+          "RELEASED_SDK_RESULT": "success"}, 0),
+        ({"CHANGES_RESULT": "success", "CHANGED_FILES": "assets/evaluators/builtin/output_quality/spec.yaml",
+          "SETUP_RESULT": "success", "TEST_COUNT": "1", "TEST_RESULT": "success",
+          "RELEASED_SDK_RESULT": "failure"}, 1),
+        ({"CHANGES_RESULT": "success", "CHANGED_FILES": "assets/evaluators/builtin/output_quality/spec.yaml",
+          "SETUP_RESULT": "success", "TEST_COUNT": "1", "TEST_RESULT": "success",
+          "RELEASED_SDK_RESULT": "cancelled"}, 1),
+        ({"CHANGES_RESULT": "success", "CHANGED_FILES": "assets/evaluators/builtin/output_quality/spec.yaml",
+          "SETUP_RESULT": "success", "TEST_COUNT": "1", "TEST_RESULT": "success",
+          "RELEASED_SDK_RESULT": "skipped"}, 1),
+        ({"CHANGES_RESULT": "success", "CHANGED_FILES": "assets/a", "SETUP_RESULT": "success",
+          "TEST_COUNT": "1", "TEST_RESULT": "success", "RELEASED_SDK_RESULT": "success"}, 1),
     ],
 )
 def test_assets_test_summary_result(state, expected, tmp_path):
     """Exercise successful, failed, cancelled and legitimate skip outcomes."""
     step = load_workflow("assets-test.yaml")["jobs"]["test-summary"]["steps"][0]
     environment = "\n".join(
-        f"export {name}={shlex.quote(value)}" for name, value in state.items()
+        f"export {name}={shlex.quote(value)}" for name, value in {"RELEASED_SDK_RESULT": "skipped", **state}.items()
     )
     script = tmp_path / "test-summary.sh"
     script.write_text(f"{environment}\n{step['run']}", encoding="utf-8", newline="\n")

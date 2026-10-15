@@ -581,7 +581,12 @@ class TestOutputQualityEvaluatorBehavior:
     def test_raw_member_properties_and_skipped_unusable_scores_are_preserved(self):
         """Preserve raw provenance while ignoring unusable scores on skipped members."""
         llm_output = _all_completed_llm_output()
-        provenance = {"decision_model": {"native_answer": {"type": "noul", "noul": 0.9}}}
+        provenance = {
+            "decision_model": {"native_answer": {"type": "noul", "noul": 0.9}},
+            "prompt_tokens": 7, "model": "chat-member", "finish_reason": "stop",
+            "sample_input": "member input", "sample_output": "member output",
+        }
+        llm_output.update(finish_reason="stop", sample_input="chat input", sample_output="chat output")
         llm_output["llm_output"]["task_completion"]["properties"] = provenance
         llm_output["llm_output"]["groundedness"] = {
             "score": "unusable", "status": "skipped", "reason": "Not applicable.",
@@ -590,6 +595,10 @@ class TestOutputQualityEvaluatorBehavior:
         result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE)
         assert result["output_quality"] == 1
         assert result["output_quality_evaluators"]["task_completion"]["properties"] == provenance
+        assert result["task_completion_properties"] == provenance
+        for field in ("finish_reason", "sample_input", "sample_output"):
+            assert result["output_quality_properties"][field] == llm_output[field]
+            assert result[f"output_quality_{field}"] == llm_output[field]
         assert result["output_quality_evaluators"]["groundedness"]["score"] == "unusable"
         assert result["output_quality_evaluators"]["groundedness"]["passed"] is None
 
@@ -837,6 +846,7 @@ def test_native_decision_one_transport_twelve_questions_and_no_chat(execution):
     assert result["output_quality_properties"]["total_tokens"] == 34
     for name in _native_decision_NAMES:
         member = result["output_quality_evaluators"][name]
+        assert set(member["properties"]) == {"decision_model"}
         provenance = member["properties"]["decision_model"]
         assert provenance["deployment"] == "Decision-1"
         assert provenance["model"] == "actual-model"
@@ -847,6 +857,57 @@ def test_native_decision_one_transport_twelve_questions_and_no_chat(execution):
         assert "failed_turn" not in member
         assert result[f"{name}_score"] == member["score"]
         assert f"{name}_total_tokens" not in result
+
+
+@pytest.mark.parametrize("decision", [False, True])
+@pytest.mark.parametrize("level", ["turn", "conversation"])
+@pytest.mark.skipif(
+    not output_quality_module._SDK_SUPPORTS_DECISION, reason="Shared Decision SDK support is unavailable."
+)
+def test_no_factual_claims_groundedness_interprets_level_specific_answers(decision, level):
+    """Interpret rubric-consistent mocked answers, not model judgments, for a user/agent greeting."""
+    evaluator = OutputQualityEvaluator(
+        _native_decision_CONFIG if decision else {
+            "azure_endpoint": "https://example.openai.azure.com", "azure_deployment": "chat",
+        }, evaluation_level=level,
+    )
+    conversation = level == "conversation"
+    if decision:
+        payload = _native_decision_native(
+            skipped=["groundedness"] if conversation else [],
+            overrides={} if conversation else {"groundedness": _native_decision_score(3)},
+        )
+        call = _native_decision_stub(evaluator, payload)
+    else:
+        payload = _all_completed_llm_output()
+        payload["llm_output"]["groundedness"] = {
+            "score": None if conversation else 3,
+            "status": "skipped" if conversation else "completed",
+            "reason": "No factual claims.",
+        }
+        call = AsyncMock(return_value=payload)
+        evaluator._flow = call
+        evaluator._multi_turn_flow = call
+    result = evaluator(messages=deepcopy(_native_decision_MESSAGES))
+    call.assert_awaited_once()
+    member = result["output_quality_evaluators"]["groundedness"]
+    assert member["status"] == ("skipped" if conversation else "completed")
+    assert member["score"] == (None if conversation else 3)
+    assert member["threshold"] == 3
+    assert member["passed"] is (None if conversation else True)
+    if conversation:
+        assert "groundedness_result" not in result
+    else:
+        assert result["groundedness_result"] == "pass"
+    assert result["output_quality"] == 1 and result["output_quality_passed"] is True
+    assert result["output_quality_properties"]["failed_evaluators"] == []
+    assert result["output_quality_properties"]["skipped_evaluators"] == (
+        ["groundedness"] if conversation else []
+    )
+    if decision:
+        _, questions = _native_decision_request(call)
+        criterion = questions["groundedness_status"]["criteria"]["false" if conversation else "true"]
+        assert ("no substantive factual claims" if conversation else "no verifiable factual claims") in criterion
 
 
 @pytest.mark.parametrize("name", _native_decision_NAMES)
@@ -1081,6 +1142,9 @@ def test_native_decision_intermediate_response_skips_without_transport():
         }],
     }])
     assert result["output_quality_status"] == "skipped"
+    for field in ("finish_reason", "sample_input", "sample_output"):
+        assert field not in result["output_quality_properties"]
+        assert f"output_quality_{field}" not in result
     post.assert_not_called()
 
 

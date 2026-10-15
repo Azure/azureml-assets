@@ -156,6 +156,56 @@ jobs:
           name: ${{ env.pytest_reports }}-${{ strategy.job-index }}
           path: ${{ env.pytest_reports }}-${{ strategy.job-index }}
 
+  released-sdk-compatibility:
+    name: Test released evaluator SDK compatibility
+    if: contains(needs.check-directory-file-changes.outputs.files-changed, 'assets/evaluators/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [check-execution-context, check-directory-file-changes]
+    permissions:
+      contents: read
+    env:
+      AZUREML_COMPAT_SDK_ROOT: ${{ runner.temp }}/released-sdk-compatibility
+
+    steps:
+      - name: Clone branch
+        uses: Azure/azureml-assets/.github/actions/clone-repo@main
+        with:
+          forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
+
+      - name: Use Python 3.12
+        uses: actions/setup-python@7f4fc3e22c37d6ff65e88745f38bd3157c663f7c # v4.9.1
+        with:
+          python-version: '3.12'
+
+      - name: Prepare isolated released SDK installations
+        run: |
+          python -m pip install pytest azure-ai-evaluation==1.18.8
+          for version in 1.17.0 1.18.2 1.18.8; do
+            python -m pip install --target "$AZUREML_COMPAT_SDK_ROOT/azureml-compat-sdk-$version" "azure-ai-evaluation==$version"
+          done
+
+      - name: Run offline released SDK compatibility checks
+        run: |
+          python -m pytest assets/evaluators/tests/test_decision_models/test_released_sdk_compatibility.py \
+            -k actual_released_wheel --junitxml="$pytest_reports/released-sdk-compatibility.xml"
+          python - <<'PY'
+          from pathlib import Path
+          import os
+          import xml.etree.ElementTree as ET
+          report = ET.parse(Path(os.environ["pytest_reports"]) / "released-sdk-compatibility.xml")
+          cases = report.findall(".//testcase")
+          assert len(cases) == 12, f"Expected all 12 released SDK cases, got {len(cases)}"
+          assert not report.findall(".//skipped"), "Released SDK compatibility cases must not skip in CI"
+          PY
+
+      - name: Upload test results
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: ${{ env.pytest_reports }}-released-sdk-compatibility
+          path: ${{ env.pytest_reports }}/released-sdk-compatibility.xml
+
   test-summary:
     name: Test
     if: always() && needs.check-execution-context.result == 'success' && needs.check-execution-context.outputs.continue == 'true'
@@ -165,6 +215,7 @@ jobs:
       - check-directory-file-changes
       - setup
       - test
+      - released-sdk-compatibility
 
     steps:
       - name: Verify test results
@@ -174,7 +225,18 @@ jobs:
           SETUP_RESULT: ${{ needs.setup.result }}
           TEST_COUNT: ${{ needs.setup.outputs.test_count }}
           TEST_RESULT: ${{ needs.test.result }}
+          RELEASED_SDK_RESULT: ${{ needs.released-sdk-compatibility.result }}
         run: |
+          if [[ "$CHANGED_FILES" == *"assets/evaluators/"* ]]; then
+            if [[ "$RELEASED_SDK_RESULT" != "success" ]]; then
+              echo "::error::Released SDK compatibility tests did not pass: $RELEASED_SDK_RESULT."
+              exit 1
+            fi
+          elif [[ "$RELEASED_SDK_RESULT" != "skipped" ]]; then
+            echo "::error::Unexpected released SDK compatibility state: $RELEASED_SDK_RESULT."
+            exit 1
+          fi
+
           if [[ "$CHANGES_RESULT" == "success" && -z "$CHANGED_FILES" &&
                 "$SETUP_RESULT" == "skipped" && "$TEST_RESULT" == "skipped" ]]; then
             echo "No changed assets require tests."
@@ -204,6 +266,7 @@ jobs:
       - check-execution-context
       - test
       - setup
+      - released-sdk-compatibility
 
     permissions:
       # Required for EnricoMi/publish-unit-test-result-action

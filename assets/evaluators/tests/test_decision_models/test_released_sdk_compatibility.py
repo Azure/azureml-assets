@@ -227,7 +227,7 @@ def test_broken_strategy_import_is_not_hidden(monkeypatch, name, class_name, err
     assert caught.value is error
 
 
-@pytest.mark.parametrize("version", ["1.17.0", "1.18.2"])
+@pytest.mark.parametrize("version", ["1.17.0", "1.18.2", "1.18.8"])
 @pytest.mark.parametrize("name,class_name", EVALUATORS)
 def test_actual_released_wheel_standalone_asset(tmp_path, version, name, class_name, released_sdk_target):
     """Verify standalone asset chat evaluation with an isolated released SDK installation."""
@@ -247,7 +247,11 @@ tests = runpy.run_path(sys.argv[2])
 module = runpy.run_path(sys.argv[3])
 assert module['PromptyEvaluationStrategy'] is None
 assert not module['_SDK_SUPPORTS_DECISION']
+assert module['ModelEvaluatorBase'] is sdk._evaluators._common.PromptyEvaluatorBase
 tests['_exercise_chat'](module, sys.argv[4], sys.argv[5])
+for name, loaded in tuple(sys.modules.items()):
+    if name.startswith('azure.ai.evaluation') and getattr(loaded, '__file__', None):
+        assert Path(loaded.__file__).is_relative_to(Path(sys.argv[1])), (name, loaded.__file__)
 print('Released SDK standalone sync/async chat checks passed')
 """
     environment = dict(os.environ)
@@ -260,7 +264,100 @@ print('Released SDK standalone sync/async chat checks passed')
     assert result.returncode == 0, result.stdout + result.stderr
 
 
-@pytest.mark.parametrize("version", ["1.17.0", "1.18.2"])
+@pytest.mark.parametrize("name,class_name", [
+    ("output_quality", "OutputQualityEvaluator"), ("tool_use_quality", "ToolUseQualityEvaluator"),
+])
+@pytest.mark.parametrize("version", ["1.17.0", "1.18.2", "1.18.8"])
+def test_actual_released_wheel_composite_package(tmp_path, name, class_name, version, released_sdk_target):
+    """Exercise copied composite packages against explicitly provisioned released SDKs without providers."""
+    target = released_sdk_target(version)
+    package = tmp_path / "evaluator"
+    shutil.copytree(BUILTIN / name / "evaluator", package, ignore=shutil.ignore_patterns("__pycache__"))
+    script = """
+import runpy
+import sys
+from pathlib import Path
+from unittest.mock import AsyncMock, patch
+import azure.ai.evaluation as sdk
+from azure.ai.evaluation._version import VERSION
+assert Path(sdk.__file__).is_relative_to(Path(sys.argv[1])), sdk.__file__
+assert VERSION == sys.argv[4], VERSION
+module = runpy.run_path(sys.argv[2])
+cls = module[sys.argv[3]]
+assert not module['_SDK_SUPPORTS_DECISION']
+assert module['ModelEvaluatorBase'] is sdk._evaluators._common.PromptyEvaluatorBase
+config = {'azure_endpoint': 'https://example.openai.azure.com', 'azure_deployment': 'chat'}
+original = dict(config)
+thresholds = {cls._EVALUATORS[0]['name']: 3.5}
+evaluator = cls(config, threshold=thresholds)
+assert config == original
+thresholds[cls._EVALUATORS[0]['name']] = -1
+assert evaluator._threshold_for(cls._EVALUATORS[0]['name']) == 3.5
+output = {'llm_output': {member['name']: {'score': member['max'], 'status': 'completed', 'reason': 'test'}
+                       for member in cls._EVALUATORS}, 'input_token_count': 30, 'output_token_count': 4,
+          'total_token_count': 34, 'model_id': 'actual-model'}
+actual_turn = evaluator._flow
+actual_conversation = evaluator._multi_turn_flow
+async def render_only(timeout, **inputs):
+    flow = actual_conversation if 'messages' in inputs else actual_turn
+    rendered = flow.render(**inputs)
+    assert 'Hello' in str(rendered)
+    return output
+evaluator._flow = AsyncMock(side_effect=render_only)
+evaluator._multi_turn_flow = AsyncMock(side_effect=render_only)
+inputs = {'query': 'Hello?', 'response': 'Hello'}
+legacy_thresholds = (1, 2, 3, 4, 5) if cls._RESULT_KEY == 'output_quality' else (0, 1)
+omitted = cls(config)
+omitted._flow = AsyncMock(side_effect=render_only)
+numeric_evaluators = [cls(config, threshold=value) for value in legacy_thresholds]
+for legacy_numeric in numeric_evaluators:
+    legacy_numeric._flow = AsyncMock(side_effect=render_only)
+maximum_output = output
+for likert_score, binary_score in ((3, 1), (2, 1), (3, 0)):
+    output = {**maximum_output, 'llm_output': {
+        member['name']: {'score': likert_score if member['max'] == 5 else binary_score,
+                         'status': 'completed', 'reason': 'test'} for member in cls._EVALUATORS}}
+    expected = omitted(**inputs)
+    assert expected[cls._RESULT_KEY] == int(likert_score == 3 and binary_score == 1)
+    for legacy_numeric in numeric_evaluators:
+        legacy_result = legacy_numeric(**inputs)
+        assert legacy_result == expected
+        for member in cls._EVALUATORS:
+            assert legacy_result[member['name'] + '_threshold'] == member['default_threshold']
+output = maximum_output
+assert evaluator(**inputs)[cls._RESULT_KEY] == 1
+assert evaluator(**inputs, tool_definitions=None)[cls._RESULT_KEY] == 1
+assert evaluator(messages=[{'role': 'user', 'content': 'Hello?'}, {'role': 'assistant', 'content': 'Hello'}])[
+    cls._RESULT_KEY] == 1
+for invalid in (True, '3', {'unknown': 1}, {cls._EVALUATORS[0]['name']: True}):
+    try:
+        cls(config, threshold=invalid)
+    except module['EvaluationException']:
+        pass
+    else:
+        raise AssertionError('Invalid threshold accepted')
+try:
+    cls({'type': 'decision', 'azure_endpoint': 'https://example.services.ai.azure.com',
+         'azure_deployment': 'Decision-1'})
+except module['EvaluationException'] as exc:
+    assert 'parse support' in str(exc)
+else:
+    raise AssertionError('Decision accepted by released SDK')
+for name, loaded in tuple(sys.modules.items()):
+    if name.startswith('azure.ai.evaluation') and getattr(loaded, '__file__', None):
+        assert Path(loaded.__file__).is_relative_to(Path(sys.argv[1])), (name, loaded.__file__)
+print('Released composite package chat/threshold/capability checks passed')
+"""
+    environment = dict(os.environ)
+    environment["PYTHONPATH"] = str(target)
+    result = subprocess.run(
+        [sys.executable, "-c", script, str(target), str(package / f"_{name}.py"), class_name, version],
+        cwd=tmp_path, env=environment, capture_output=True, text=True, timeout=120,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+@pytest.mark.parametrize("version", ["1.17.0", "1.18.2", "1.18.8"])
 @pytest.mark.parametrize("configured", [False, True])
 def test_released_sdk_absence_is_an_actionable_skip(tmp_path, monkeypatch, released_sdk_target, version, configured):
     """Explain missing opt-in or isolated SDK installations without failing clean machines."""

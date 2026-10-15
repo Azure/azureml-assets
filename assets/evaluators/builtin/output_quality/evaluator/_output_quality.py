@@ -488,6 +488,9 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
     Converter-compatible member fields are also emitted as flat, member-prefixed keys.
     The primary ``output_quality`` result is an any-fail aggregate: it passes only
     when every evaluated member meets its configured threshold.
+    With a user turn and a nonempty response containing no factual claims, turn-level
+    groundedness scores a neutral 3 (passing by default); conversation-level groundedness
+    is skipped and does not affect the aggregate.
     """
 
     _PROMPTY_FILE = "output_quality.prompty"
@@ -652,11 +655,15 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
                             name: response["answers"][name]},
             }
             parsed = strategy.parse(member_response, eval_input)
+            properties = parsed.get(f"{name}_properties") or {}
             evaluators[name] = {
                 field: parsed[f"{name}_{field}"]
-                for field in ("score", "status", "reason", "properties", "result", "passed", "threshold")
+                for field in ("score", "status", "reason", "result", "passed", "threshold")
                 if f"{name}_{field}" in parsed
             }
+            evaluators[name]["properties"] = (
+                {"decision_model": properties["decision_model"]} if "decision_model" in properties else {}
+            )
         usage = response["usage"]
         token_metadata = {
             "prompt_tokens": usage["input_tokens"],
@@ -807,7 +814,11 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
             }
             for evaluator in self._EVALUATORS
         }
-        return self._build_aggregate_result(evaluators, self._get_token_metadata({}))
+        token_metadata = self._get_token_metadata({})
+        if self._decision_strategies is not None:
+            for field in ("finish_reason", "sample_input", "sample_output"):
+                token_metadata.pop(field, None)
+        return self._build_aggregate_result(evaluators, token_metadata)
 
     @staticmethod
     def _get_token_metadata(prompty_output: Dict) -> Dict:
