@@ -1,0 +1,20 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: bge-small-en-v1.5-onnx-q
+version: 1
+path: ./
+system_metadata:
+  publisher: BAAI
+  displayName: BGE Small English v1.5 (quantized ONNX)
+  previewType: hideUI
+  license: MIT
+  licenseDescription: This model is provided under the MIT License available at https://github.com/FlagOpen/FlagEmbedding/blob/fd1a2bdf69488ffebe0327999d4400d8c8058a0b/LICENSE.
+  maxInputTokens: 512
+  languages:
+  - en
+  inputModalities:
+  - text
+  outputModalities:
+  - embeddings
+  tasks:
+    inferenceTasks:
+    - embeddings
