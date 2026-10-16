@@ -206,6 +206,47 @@ jobs:
           name: ${{ env.pytest_reports }}-released-sdk-compatibility
           path: ${{ env.pytest_reports }}/released-sdk-compatibility.xml
 
+  candidate-native-sdk:
+    name: Test candidate Decision SDK wheel
+    if: contains(needs.check-directory-file-changes.outputs.files-changed, 'assets/evaluators/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [check-execution-context, check-directory-file-changes]
+    permissions:
+      contents: read
+    env:
+      SDK_CANDIDATE_COMMIT: 0d1a2ee214ebe04549acae59e6e5b72ed2b7efe9
+      SDK_CANDIDATE_VERSION: 1.18.10
+    steps:
+      - name: Clone branch
+        uses: Azure/azureml-assets/.github/actions/clone-repo@main
+        with:
+          forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
+
+      - name: Use Python 3.12
+        uses: actions/setup-python@7f4fc3e22c37d6ff65e88745f38bd3157c663f7c # v4.9.1
+        with:
+          python-version: '3.12'
+
+      - name: Build candidate wheel and test native asset contracts
+        run: |
+          python -m pip wheel --no-deps --wheel-dir "$RUNNER_TEMP/candidate-wheels" \
+            "git+https://github.com/Azure/azure-sdk-for-python.git@$SDK_CANDIDATE_COMMIT#subdirectory=sdk/evaluation/azure-ai-evaluation"
+          wheel="$RUNNER_TEMP/candidate-wheels/azure_ai_evaluation-$SDK_CANDIDATE_VERSION-py3-none-any.whl"
+          python -m pip install "$wheel" pytest pytest-asyncio jsonschema PyYAML
+          python scripts/test/check_native_sdk.py "$wheel" "$pytest_reports" --provenance-only
+          python -m pytest assets/evaluators/tests/test_decision_models/test_evaluators.py \
+            assets/evaluators/tests/test_decision_models/test_composites.py -q \
+            --junitxml="$pytest_reports/candidate-native-sdk.xml"
+          python scripts/test/check_native_sdk.py "$wheel" "$pytest_reports"
+
+      - name: Upload test results and wheel provenance
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: ${{ env.pytest_reports }}-candidate-native-sdk
+          path: ${{ env.pytest_reports }}/candidate-native-sdk*
+
   test-summary:
     name: Test
     if: always() && needs.check-execution-context.result == 'success' && needs.check-execution-context.outputs.continue == 'true'
@@ -216,6 +257,7 @@ jobs:
       - setup
       - test
       - released-sdk-compatibility
+      - candidate-native-sdk
 
     steps:
       - name: Verify test results
@@ -226,14 +268,15 @@ jobs:
           TEST_COUNT: ${{ needs.setup.outputs.test_count }}
           TEST_RESULT: ${{ needs.test.result }}
           RELEASED_SDK_RESULT: ${{ needs.released-sdk-compatibility.result }}
+          NATIVE_SDK_RESULT: ${{ needs.candidate-native-sdk.result }}
         run: |
           if [[ "$CHANGED_FILES" == *"assets/evaluators/"* ]]; then
-            if [[ "$RELEASED_SDK_RESULT" != "success" ]]; then
-              echo "::error::Released SDK compatibility tests did not pass: $RELEASED_SDK_RESULT."
+            if [[ "$RELEASED_SDK_RESULT" != "success" || "$NATIVE_SDK_RESULT" != "success" ]]; then
+              echo "::error::SDK tests did not pass: released=$RELEASED_SDK_RESULT native=$NATIVE_SDK_RESULT."
               exit 1
             fi
-          elif [[ "$RELEASED_SDK_RESULT" != "skipped" ]]; then
-            echo "::error::Unexpected released SDK compatibility state: $RELEASED_SDK_RESULT."
+          elif [[ "$RELEASED_SDK_RESULT" != "skipped" || "$NATIVE_SDK_RESULT" != "skipped" ]]; then
+            echo "::error::Unexpected SDK test state: released=$RELEASED_SDK_RESULT native=$NATIVE_SDK_RESULT."
             exit 1
           fi
 
@@ -267,6 +310,7 @@ jobs:
       - test
       - setup
       - released-sdk-compatibility
+      - candidate-native-sdk
 
     permissions:
       # Required for EnricoMi/publish-unit-test-result-action
