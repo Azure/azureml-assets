@@ -5,7 +5,9 @@
 
 import asyncio
 import json
+import logging
 from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 import pytest
 from azure.ai.evaluation._exceptions import EvaluationException
@@ -82,6 +84,108 @@ class TestRetrievalDoEvalBranches:
             )
         )
         assert result["retrieval_score"] == 5
+
+
+@pytest.mark.unittest
+class TestRetrievalJudgeOutputValidation:
+    """Covers normalization and safe invalid-output diagnostics."""
+
+    @pytest.mark.parametrize("score", [1, 5, "4", 4.0])
+    def test_valid_scores_are_normalized(self, score):
+        """Integer-equivalent numeric values produce valid results."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        evaluator._flow = AsyncMock(
+            return_value={
+                "llm_output": {
+                    "properties": {"thought_chain": "brief reasoning"},
+                    "reason": "Relevant context.",
+                    "score": score,
+                    "status": "completed",
+                }
+            }
+        )
+
+        result = asyncio.run(evaluator._do_eval({"query": "question", "context": "context"}))
+
+        assert result["retrieval_score"] == float(score)
+
+    @pytest.mark.parametrize(
+        ("llm_output", "expected_error"),
+        [
+            ({"reason": "No score", "status": "completed"}, "MissingScore"),
+            ({"score": None, "status": "completed"}, "MissingScore"),
+            ({"score": True, "status": "completed"}, "InvalidScoreType"),
+            ({"score": "good", "status": "completed"}, "InvalidScoreType"),
+            ({"score": 3.5, "status": "completed"}, "InvalidScoreType"),
+            ({"score": float("nan"), "status": "completed"}, "NonFiniteScore"),
+            ({"score": 6, "status": "completed"}, "ScoreOutOfRange"),
+            ({"score": 4, "status": "unknown"}, "UnexpectedStatus"),
+        ],
+    )
+    def test_invalid_scores_return_safe_diagnostic(self, llm_output, expected_error):
+        """Invalid judge outputs identify the contract failure without exposing content."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        evaluator._flow = AsyncMock(return_value={"llm_output": llm_output})
+
+        with pytest.raises(EvaluationException, match=expected_error):
+            asyncio.run(evaluator._do_eval({"query": "question", "context": "context"}))
+
+        assert evaluator._flow.await_count == 1
+
+    @pytest.mark.parametrize(
+        ("prompty_output", "expected_error"),
+        [
+            ({}, "EmptyResponse"),
+            ({"llm_output": ""}, "EmptyResponse"),
+            ({"llm_output": "{}"}, "MissingScore"),
+            ({"llm_output": "not-json"}, "MalformedJson"),
+            ({"llm_output": []}, "UnexpectedResponseShape"),
+        ],
+    )
+    def test_invalid_response_shapes_return_safe_diagnostic(self, prompty_output, expected_error):
+        """Malformed response shapes produce a categorized system error."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        evaluator._flow = AsyncMock(return_value=prompty_output)
+
+        with pytest.raises(EvaluationException, match=expected_error):
+            asyncio.run(evaluator._do_eval({"query": "question", "context": "context"}))
+
+        assert evaluator._flow.await_count == 1
+
+    def test_explicit_legacy_text_score_is_supported(self):
+        """A clearly labeled legacy text score remains backward compatible."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        evaluator._flow = AsyncMock(return_value={"llm_output": "score: 4"})
+
+        result = asyncio.run(evaluator._do_eval({"query": "question", "context": "context"}))
+
+        assert result["retrieval_score"] == 4
+
+    def test_unrelated_digits_are_not_treated_as_legacy_score(self):
+        """Dates and other incidental digits must not become evaluator scores."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        evaluator._flow = AsyncMock(
+            return_value={"llm_output": "Rated on 2026-10-01; quality could not be determined."}
+        )
+
+        with pytest.raises(EvaluationException, match="MalformedJson"):
+            asyncio.run(evaluator._do_eval({"query": "question", "context": "context"}))
+
+    def test_invalid_output_diagnostics_do_not_expose_raw_content(self, caplog):
+        """Malformed-output diagnostics contain categories but not customer content."""
+        canary = "SENSITIVE_RETRIEVAL_CONTENT_7f3d"
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        evaluator._flow = AsyncMock(
+            return_value={"llm_output": canary, "finish_reason": "stop"}
+        )
+
+        with caplog.at_level(logging.WARNING):
+            with pytest.raises(EvaluationException, match="MalformedJson") as error:
+                asyncio.run(evaluator._do_eval({"query": canary, "context": canary}))
+
+        assert canary not in caplog.text
+        assert canary not in str(error.value)
+        assert canary not in error.value.internal_message
 
 
 @pytest.mark.unittest
