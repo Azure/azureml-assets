@@ -4,6 +4,7 @@
 """Output Quality Evaluator."""
 import contextvars
 import functools
+import json
 import logging
 import os
 from enum import Enum
@@ -14,7 +15,7 @@ from typing_extensions import overload, override
 from azure.ai.evaluation._common._experimental import experimental
 from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
-from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
+from azure.ai.evaluation._evaluators import _common as _sdk_common
 from azure.ai.evaluation._common.utils import (
     construct_prompty_model_config,
     reformat_tool_definitions,
@@ -24,6 +25,24 @@ from azure.ai.evaluation._evaluators._common._validators import (
     ValidatorInterface,
     ConversationValidator,
     ToolDefinitionsValidator,
+)
+
+ModelEvaluatorBase = getattr(_sdk_common, "ModelEvaluatorBase", _sdk_common.PromptyEvaluatorBase)
+try:
+    from azure.ai.evaluation._evaluators._common._decision_strategy import (
+        BinaryScoring,
+        DecisionEvaluationStrategy,
+        LikertScoring,
+    )
+except ImportError as exc:
+    if exc.name != "azure.ai.evaluation._evaluators._common._decision_strategy":
+        raise
+    BinaryScoring = DecisionEvaluationStrategy = LikertScoring = None
+_SDK_SUPPORTS_DECISION = (
+    hasattr(_sdk_common, "ModelEvaluatorBase")
+    and BinaryScoring is not None
+    and LikertScoring is not None
+    and callable(getattr(DecisionEvaluationStrategy, "parse", None))
 )
 
 # ---------------------------------------------------------------------------
@@ -462,34 +481,81 @@ _EVALUATORS: Tuple[Dict[str, Union[str, int]], ...] = (
 
 
 @experimental
-class OutputQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
+class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
     """Batch six quality evaluators into one LLM call.
 
     Raw member evaluator objects are preserved under ``output_quality_evaluators``.
     Converter-compatible member fields are also emitted as flat, member-prefixed keys.
     The primary ``output_quality`` result is an any-fail aggregate: it passes only
     when every evaluated member meets its configured threshold.
+    With a user turn and a nonempty response containing no factual claims, turn-level
+    groundedness scores a neutral 3 (passing by default); conversation-level groundedness
+    is skipped and does not affect the aggregate.
     """
 
     _PROMPTY_FILE = "output_quality.prompty"
     _MULTI_TURN_PROMPTY_FILE = "output_quality_multi_turn.prompty"
+    _DECISION_FILE = "output_quality.decision.yaml"
+    _MULTI_TURN_DECISION_FILE = "output_quality_multi_turn.decision.yaml"
     _RESULT_KEY = "output_quality"
     _OPTIONAL_PARAMS = ["messages", "tool_definitions"]
     _EVALUATORS = _EVALUATORS
+    _supports_decision_models = True
+    _binary_decision = True
 
     _validator: ValidatorInterface
     id = "azureai://built-in/evaluators/output_quality"
 
     @override
-    def __init__(self, model_config, *, credential=None, evaluation_level=None, threshold=None, **kwargs):
-        """Initialize the Output Quality Evaluator."""
+    def __init__(
+        self, model_config, *, credential=None, evaluation_level=None, threshold=None,
+        probability_threshold=None, **kwargs
+    ):
+        """Initialize the Output Quality Evaluator.
+
+        :param model_config: Chat configuration or Decision configuration with type ``decision``,
+            ``azure_endpoint`` and ``azure_deployment``. Authenticate with an API key or credential.
+        :keyword credential: Optional token credential.
+        :keyword evaluation_level: Optional ``turn`` or ``conversation`` routing override.
+        :keyword threshold: Optional mapping of member names to public score thresholds,
+            between 1 and 5 for Likert members or 0 and 1 for binary members on either backend.
+            Fractional values are supported; omitted members retain their defaults.
+            A numeric threshold is accepted but ignored for backward compatibility on both backends.
+        :keyword probability_threshold: Decision-only probability cutoff for the two binary members,
+            between 0 and 1. Overrides the nested configuration; defaults to 0.75.
+        :keyword kwargs: Additional base evaluator options.
+        """
+        if isinstance(model_config, dict):
+            model_config = dict(model_config)
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
         threshold_value = {
             evaluator["name"]: evaluator["default_threshold"] for evaluator in self._EVALUATORS
         }
-        if isinstance(threshold, dict):
-            threshold_value.update({name: value for name, value in threshold.items() if name in threshold_value})
+        if isinstance(threshold, (int, float)) and not isinstance(threshold, bool):
+            threshold = None
+        if threshold is not None:
+            if not isinstance(threshold, dict) or set(threshold) - threshold_value.keys():
+                raise EvaluationException(
+                    message="threshold must be a mapping of output quality member names to score thresholds.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=ExtendedErrorTarget.OUTPUT_QUALITY_EVALUATOR,
+                )
+            for member in self._EVALUATORS:
+                value = threshold.get(member["name"], threshold_value[member["name"]])
+                if (
+                    isinstance(value, bool) or not isinstance(value, (int, float))
+                    or not member["min"] <= value <= member["max"]
+                ):
+                    raise EvaluationException(
+                        message=f"threshold for {member['name']} must be a number in "
+                                f"[{member['min']}, {member['max']}].",
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=ExtendedErrorTarget.OUTPUT_QUALITY_EVALUATOR,
+                    )
+            threshold_value.update(threshold)
 
         self._evaluation_level = _resolve_evaluation_level(
             evaluation_level, ExtendedErrorTarget.OUTPUT_QUALITY_EVALUATOR
@@ -500,6 +566,24 @@ class OutputQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             enforce_tool_definitions=False,
         )
 
+        decision_selected = isinstance(model_config, dict) and model_config.get("type") == "decision"
+        if probability_threshold is not None:
+            if not decision_selected:
+                raise EvaluationException(
+                    message="probability_threshold is only supported for Decision models.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=ExtendedErrorTarget.OUTPUT_QUALITY_EVALUATOR,
+                )
+            model_config = {**model_config, "probability_threshold": probability_threshold}
+        if decision_selected and not _SDK_SUPPORTS_DECISION:
+            raise EvaluationException(
+                message="Decision models require an azure-ai-evaluation version with decision parse support.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=ExtendedErrorTarget.OUTPUT_QUALITY_EVALUATOR,
+            )
+
         super().__init__(
             model_config=model_config,
             prompty_file=prompty_path,
@@ -509,6 +593,16 @@ class OutputQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             _higher_is_better=True,
             **kwargs,
         )
+
+        self._decision_strategies = None
+        if decision_selected:
+            self._decision_strategies = self._load_decision_strategies(
+                os.path.join(current_dir, self._DECISION_FILE)
+            )
+            self._multi_turn_decision_strategies = self._load_decision_strategies(
+                os.path.join(current_dir, self._MULTI_TURN_DECISION_FILE)
+            )
+            return
 
         multi_turn_prompty_path = os.path.join(current_dir, self._MULTI_TURN_PROMPTY_FILE)
         prompty_model_config = construct_prompty_model_config(
@@ -522,6 +616,62 @@ class OutputQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             token_credential=credential,
             is_reasoning_model=self._is_reasoning_model,
         )
+
+    def _load_decision_strategies(self, rubric_path: str) -> Dict:
+        """Load independent member strategies from this evaluator's rubric file."""
+        from azure.ai.evaluation._legacy.prompty._yaml_utils import load_yaml
+
+        rubric = json.loads(json.dumps(load_yaml(rubric_path)))
+        runner = self._decision_model_runner
+        return {
+            member["name"]: DecisionEvaluationStrategy(
+                runner,
+                result_key=member["name"],
+                error_target=ExtendedErrorTarget.OUTPUT_QUALITY_EVALUATOR,
+                questions={"status": rubric[member["name"]]["status"],
+                           member["name"]: rubric[member["name"]]["result"]},
+                scoring=(BinaryScoring(runner.probability_threshold) if member["max"] == 1
+                         else LikertScoring(5, minimum=1)),
+                threshold=self._threshold_for(member["name"]),
+                timeout=self._LLM_CALL_TIMEOUT,
+            )
+            for member in self._EVALUATORS
+        }
+
+    async def _evaluate_decision(self, eval_input: Dict, strategies: Dict) -> Dict:
+        """Execute all twelve questions once and parse each member independently."""
+        questions = {}
+        for name, strategy in strategies.items():
+            questions[f"{name}_status"] = strategy.questions["status"]
+            questions[name] = strategy.questions[name]
+        response = await self._decision_model_runner(
+            state=dict(eval_input), questions=questions, timeout=self._LLM_CALL_TIMEOUT
+        )
+        evaluators = {}
+        for name, strategy in strategies.items():
+            member_response = {
+                **response,
+                "answers": {"status": response["answers"][f"{name}_status"],
+                            name: response["answers"][name]},
+            }
+            parsed = strategy.parse(member_response, eval_input)
+            properties = parsed.get(f"{name}_properties") or {}
+            evaluators[name] = {
+                field: parsed[f"{name}_{field}"]
+                for field in ("score", "status", "reason", "result", "passed", "threshold")
+                if f"{name}_{field}" in parsed
+            }
+            evaluators[name]["properties"] = (
+                {"decision_model": properties["decision_model"]} if "decision_model" in properties else {}
+            )
+        usage = response["usage"]
+        token_metadata = {
+            "prompt_tokens": usage["input_tokens"],
+            "completion_tokens": usage["output_tokens"],
+            "total_tokens": usage["input_tokens"] + usage["output_tokens"],
+            "model": response["model"],
+        }
+        return self._build_aggregate_result(evaluators, token_metadata)
 
     @overload
     def __call__(
@@ -596,6 +746,8 @@ class OutputQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
                     target=ExtendedErrorTarget.OUTPUT_QUALITY_EVALUATOR,
                 )
             evaluator_output["passed"] = score >= threshold
+            if "result" in evaluator_output:
+                evaluator_output["result"] = EVALUATION_PASS_FAIL_MAPPING[evaluator_output["passed"]]
             normalized_evaluators[name] = evaluator_output
             evaluated_scores[name] = score
 
@@ -644,6 +796,8 @@ class OutputQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             result[f"{name}_reason"] = member_output.get("reason")
             result[f"{name}_threshold"] = member_output.get("threshold")
             result[f"{name}_status"] = member_output.get("status")
+            if "properties" in member_output:
+                result[f"{name}_properties"] = member_output["properties"]
             if member_passed is not None:
                 result[f"{name}_result"] = EVALUATION_PASS_FAIL_MAPPING[member_passed]
 
@@ -660,7 +814,11 @@ class OutputQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             }
             for evaluator in self._EVALUATORS
         }
-        return self._build_aggregate_result(evaluators, self._get_token_metadata({}))
+        token_metadata = self._get_token_metadata({})
+        if self._decision_strategies is not None:
+            for field in ("finish_reason", "sample_input", "sample_output"):
+                token_metadata.pop(field, None)
+        return self._build_aggregate_result(evaluators, token_metadata)
 
     @staticmethod
     def _get_token_metadata(prompty_output: Dict) -> Dict:
@@ -688,11 +846,15 @@ class OutputQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         if "response" in kwargs and "query" not in kwargs and "messages" not in kwargs:
             kwargs["query"] = []
 
+        validation_input = kwargs
         if self._evaluation_level == EvaluationLevel.CONVERSATION and not kwargs.get("messages"):
+            validation_input = dict(kwargs)
             query = kwargs.get("query")
             response = kwargs.get("response")
-            if isinstance(query, str) and isinstance(response, str) and query and response:
-                query, response = _wrap_string_messages(query, response)
+            if isinstance(query, str) and query:
+                query, _ = _wrap_string_messages(query, "")
+            if isinstance(response, str) and response:
+                _, response = _wrap_string_messages("", response)
             if isinstance(query, list) and isinstance(response, list):
                 kwargs["messages"] = _merge_query_response_messages(query, response)
         elif self._evaluation_level == EvaluationLevel.TURN and kwargs.get("messages"):
@@ -707,7 +869,7 @@ class OutputQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
                 kwargs["response"] = messages
                 kwargs.pop("messages", None)
 
-        self._validator.validate_eval_input(kwargs)
+        self._validator.validate_eval_input(validation_input)
         return await self._the_super_real_call(**kwargs)
 
     async def _the_super_real_call(self, **kwargs):
@@ -760,6 +922,10 @@ class OutputQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             eval_input["query"] = _preprocess_messages(eval_input["query"])
         eval_input.pop("messages", None)
 
+        if self._decision_strategies is not None:
+            return await self._evaluate_decision(eval_input, self._decision_strategies)
+        if eval_input.get("tool_definitions") is None:
+            eval_input["tool_definitions"] = []
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         return self._parse_prompty_output(prompty_output_dict)
 
@@ -772,6 +938,8 @@ class OutputQualityEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         if tool_definitions:
             prompty_kwargs["tool_definitions"] = reformat_tool_definitions(tool_definitions, logger)
 
+        if self._decision_strategies is not None:
+            return await self._evaluate_decision(prompty_kwargs, self._multi_turn_decision_strategies)
         prompty_output_dict = await self._multi_turn_flow(timeout=self._LLM_CALL_TIMEOUT, **prompty_kwargs)
         return self._parse_prompty_output(prompty_output_dict, is_multi_turn=True)
 
