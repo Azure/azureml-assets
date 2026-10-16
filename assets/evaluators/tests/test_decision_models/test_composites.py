@@ -8,7 +8,7 @@ import hashlib
 import json
 import logging
 from pathlib import Path
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 import jsonschema
 import pandas as pd
@@ -462,7 +462,7 @@ def test_supplied_invalid_tool_definitions_are_not_ignored(decision, conversatio
 @pytest.mark.parametrize("evaluator_class", COMPOSITES)
 def test_plain_execution_controls_and_credential_reach_shared_runner(evaluator_class):
     """Forward internal credentials and plain execution controls without mutating configuration."""
-    credential = object()
+    credential = Mock(spec=["get_token"])
 
     def cancelled():
         return False
@@ -478,6 +478,7 @@ def test_plain_execution_controls_and_credential_reach_shared_runner(evaluator_c
     assert config == original
     runner = evaluator._decision_model_runner
     assert runner._credential is credential
+    credential.get_token.assert_not_called()
     assert evaluator._LLM_CALL_TIMEOUT == 17
     for name, value in controls.items():
         if name != "timeout":
