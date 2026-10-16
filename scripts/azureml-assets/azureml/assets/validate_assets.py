@@ -1200,8 +1200,7 @@ def validate_assets(input_dirs: List[Path],
 
         # validated_model_map would be empty for non-drop scenario
         if asset_config.type == assets.AssetType.MODEL:
-            if validate_this:
-                error_count += validate_model_spec(asset_config)
+            error_count += validate_model_spec(asset_config)
             # should run during drop creation only
             if validated_model_map:
                 error_count += confirm_model_validation_results(
