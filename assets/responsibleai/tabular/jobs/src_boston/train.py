@@ -4,20 +4,18 @@
 import argparse
 import json
 import os
-
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
-
+import tempfile
+import time
+from importlib.metadata import version as package_version
 
 import mlflow
+import mlflow.models
 import mlflow.sklearn
-
 import mltable
-
-import time
-import tempfile
+from sklearn.compose import ColumnTransformer
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 
 def parse_args():
@@ -91,7 +89,22 @@ def main(args):
 
     # Saving model with mlflow
     print("Saving model with MLFlow to temporary directory")
-    mlflow.sklearn.save_model(sk_model=model, path=args.model_output)
+    mlflow.sklearn.save_model(
+        sk_model=model,
+        path=args.model_output,
+        serialization_format=mlflow.sklearn.SERIALIZATION_FORMAT_CLOUDPICKLE,
+    )
+    mlflow.models.update_model_requirements(
+        args.model_output, "remove", ["mlflow"]
+    )
+    mlflow.models.update_model_requirements(
+        args.model_output,
+        "add",
+        [
+            f"mlflow-skinny=={mlflow.__version__}",
+            f"pandas=={package_version('pandas')}",
+        ],
+    )
 
     suffix = int(time.time())
     registered_name = "{0}_{1}".format(args.model_name, suffix)
@@ -101,7 +114,20 @@ def main(args):
     # Use save_model and create_model_version with file:// URI to let Azure ML handle the upload
     with tempfile.TemporaryDirectory() as temp_dir:
         model_dir = os.path.join(temp_dir, registered_name)
-        mlflow.sklearn.save_model(model, model_dir)
+        mlflow.sklearn.save_model(
+            model,
+            model_dir,
+            serialization_format=mlflow.sklearn.SERIALIZATION_FORMAT_CLOUDPICKLE,
+        )
+        mlflow.models.update_model_requirements(model_dir, "remove", ["mlflow"])
+        mlflow.models.update_model_requirements(
+            model_dir,
+            "add",
+            [
+                f"mlflow-skinny=={mlflow.__version__}",
+                f"pandas=={package_version('pandas')}",
+            ],
+        )
 
         # Use the older model registry API directly to avoid logged-models search
         from mlflow.tracking import MlflowClient
