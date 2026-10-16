@@ -4,6 +4,8 @@
 """Exercise released SDK chat compatibility without live model calls."""
 
 import asyncio
+from copy import deepcopy
+import json
 import os
 import runpy
 import shutil
@@ -139,6 +141,8 @@ def _exercise_chat(module, name, class_name):
         with pytest.raises(EvaluationException, match="invalid output"):
             evaluator(**_inputs(name))
     if name == "tool_call_accuracy":
+        for result_type in ("tool_result", "function_call_output", "openapi_call_output"):
+            _exercise_selected_chat_results(evaluator_class, result_type=result_type)
         for score in (None, 0, -1, 6, "invalid", float("nan")):
             replacement.return_value = {"llm_output": {"score": score}}
             with pytest.raises(EvaluationException, match="Invalid score"):
@@ -179,6 +183,87 @@ def _exercise_chat(module, name, class_name):
             with pytest.raises(EvaluationException, match="version with decision model support"):
                 evaluator_class(dict(DECISION_CONFIG))
             load.assert_not_called()
+
+
+def _exercise_selected_chat_results(
+    evaluator_class, *, as_dict=False, include_response_calls=False, result_type="tool_result",
+):
+    evaluator = evaluator_class(dict(CHAT_CONFIG))
+    flow = evaluator._flow
+    captured = []
+
+    async def render_only(timeout, **prepared):
+        captured.append((deepcopy(prepared), json.dumps(flow.render(**prepared))))
+        return {"llm_output": {"score": 5, "reason": "Mocked judgment."}}
+
+    evaluator._flow = AsyncMock(side_effect=render_only)
+    selected = {
+        "type": "tool_call", "name": "search", "tool_call_id": "selected",
+        "arguments": {"q": "selected query"},
+    }
+    sibling = {**selected, "tool_call_id": "sibling", "arguments": {"q": "unselected query"}}
+    outcomes = ({"value": "selected success"}, {"error": "selected timeout"})
+    for outcome in outcomes:
+        response = [
+            {"role": "tool", "tool_call_id": "sibling",
+             "content": [{"type": result_type, result_type: "unselected result"}]},
+            {"role": "tool", "tool_call_id": "selected",
+             "content": [{"type": result_type, result_type: outcome}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "Done."}]},
+        ]
+        if include_response_calls:
+            response.insert(0, {"role": "assistant", "content": [
+                sibling, {**selected, "arguments": {"q": "response arguments must not replace selection"}},
+            ]})
+        inputs = {
+            "query": "Find selected query", "tool_calls": deepcopy(selected) if as_dict else [deepcopy(selected)],
+            "response": response, "tool_definitions": [{"name": "search", "parameters": {}}],
+        }
+        original = deepcopy(inputs)
+        evaluator(**inputs)
+        prepared, rendered = captured[-1]
+        assert prepared["tool_calls"] == [{**selected, "tool_result": outcome}]
+        assert set(prepared) == {"query", "tool_calls", "tool_definitions"}
+        assert next(iter(outcome.values())) in rendered
+        assert all(text not in rendered for text in (
+            "unselected query", "unselected result", "response arguments must not replace selection",
+        ))
+        assert inputs == original
+    assert captured[0][1] != captured[1][1]
+    assert evaluator._flow.await_count == 2
+
+
+@pytest.mark.parametrize("as_dict", [False, True])
+@pytest.mark.parametrize("include_response_calls", [False, True])
+@pytest.mark.parametrize("result_type", ["tool_result", "function_call_output", "openapi_call_output"])
+def test_chat_selected_calls_render_matching_execution_results(as_dict, include_response_calls, result_type):
+    """Render distinct success/error evidence without replacing selected calls, leaking siblings or mutating inputs."""
+    module = runpy.run_path(str(BUILTIN / "tool_call_accuracy" / "evaluator" / "_tool_call_accuracy.py"))
+    _exercise_selected_chat_results(
+        module["ToolCallAccuracyEvaluator"], as_dict=as_dict,
+        include_response_calls=include_response_calls, result_type=result_type,
+    )
+
+
+@pytest.mark.parametrize("call_id", [None, "unmatched"])
+def test_chat_selected_calls_do_not_guess_execution_result_matches(call_id):
+    """Leave existing selected evidence untouched when no nonempty call ID matches."""
+    module = runpy.run_path(str(BUILTIN / "tool_call_accuracy" / "evaluator" / "_tool_call_accuracy.py"))
+    evaluator = module["ToolCallAccuracyEvaluator"](dict(CHAT_CONFIG))
+    selected = {
+        "type": "tool_call", "name": "search", "arguments": {"q": "selected"},
+        "tool_result": "explicit result",
+    }
+    if call_id is not None:
+        selected["tool_call_id"] = call_id
+    inputs = {
+        "query": "Search", "tool_calls": [selected], "tool_definitions": [{"name": "search"}],
+        "response": [{"role": "tool", "tool_call_id": "other",
+                      "content": [{"type": "tool_result", "tool_result": "unrelated result"}]}],
+    }
+    original = deepcopy(inputs)
+    assert evaluator._convert_kwargs_to_eval_input(**inputs)["tool_calls"] == [selected]
+    assert inputs == original
 
 
 @pytest.mark.parametrize("name,class_name", EVALUATORS)

@@ -4,6 +4,7 @@
 import logging
 import json
 import os
+from copy import deepcopy
 from typing import Dict, List, Tuple, Union, TypeVar
 from typing_extensions import overload, override
 from azure.ai.evaluation._evaluators import _common as _sdk_common
@@ -236,9 +237,9 @@ class ToolCallAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
         ``type="decision"``, an ``azure_endpoint`` (the Foundry resource endpoint) and an ``azure_deployment``
         (the Microsoft-Decision-1 deployment name) selects a decision model instead; authenticate with
         ``api_key`` or ``credential``.
-        For Decision models, ``response`` supplies execution results and retry evidence;
-        only the explicitly selected ``tool_calls`` are scored. When ``tool_calls`` is ``None`` or empty,
-        calls are extracted from ``response``.
+        Both backends evaluate the same selected ``tool_calls`` with matching execution results attached
+        by ``tool_call_id``. Assistant text from structured responses is not passed to either judge.
+        When ``tool_calls`` is ``None`` or empty, calls are extracted from ``response``.
     :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
         ~azure.ai.evaluation.OpenAIModelConfiguration]
 
@@ -377,13 +378,10 @@ class ToolCallAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
         :keyword tool_calls: Optional List of tool calls to evaluate. If not provided response should be provided
             and should have tool call(s) in it.
         :paramtype tool_calls: Union[dict, List[dict]]
-        :keyword response: Optional response to be evaluated alongside the tool calls.
-            If provided all tool calls in response will be evaluated when tool_calls parameter is not provided.
-            If provided and tool_calls parameter is provided, only the tool calls in tool_calls parameter
-            will be evaluated.
-                If response has extra tool calls they will not be evaluated, response will be used to extract
-                any tool calls that are needed for evaluating a certain tool call.
-            Recommended to provide it when there are tool calls that depend on output of a previous tool call.
+        :keyword response: Optional response used to extract calls or match execution results.
+            When tool_calls is omitted or empty, calls are extracted from response.
+            Otherwise only the selected calls are evaluated, with matching results attached by tool_call_id.
+            For structured responses, assistant text and unselected calls/results are not passed to the judge.
         :paramtype response: Union[str, List[dict]]
         :return: The tool selection evaluation results.
         :rtype: Dict[str, Union[str, float]]
@@ -451,14 +449,19 @@ class ToolCallAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
         if not needed_tool_definitions:
             return {"error_message": self._NO_TOOL_DEFINITIONS_MESSAGE}
 
-        eval_input = {
+        if (isinstance(tool_calls, list) and isinstance(response, list)
+                and all(isinstance(call, dict) and call.get("type") == "tool_call" for call in tool_calls)):
+            # Reuse call-ID result matching without admitting response-only calls into the selection.
+            tool_calls = self._parse_tools_from_response([
+                {"role": "assistant", "content": tool_calls},
+                *[message for message in response if isinstance(message, dict) and message.get("role") == "tool"],
+            ])
+
+        return {
             "query": query,
             "tool_calls": tool_calls,
             "tool_definitions": needed_tool_definitions,
         }
-        if self._decision_selected and response is not None:
-            eval_input["response"] = response
-        return eval_input
 
     @override
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:  # type: ignore[override]
@@ -558,9 +561,9 @@ class ToolCallAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
                 self._threshold,
             )
         if "response" in kwargs:
-            kwargs["response"] = _preprocess_messages(kwargs["response"])
+            kwargs["response"] = _preprocess_messages(deepcopy(kwargs["response"]))
         if "query" in kwargs:
-            kwargs["query"] = _preprocess_messages(kwargs["query"])
+            kwargs["query"] = _preprocess_messages(deepcopy(kwargs["query"]))
         # Convert inputs into list of evaluable inputs.
         eval_input = self._convert_kwargs_to_eval_input(**kwargs)
         if isinstance(eval_input, dict) and eval_input.get("error_message"):
@@ -669,13 +672,10 @@ class ToolCallAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
         :keyword tool_calls: Optional List of tool calls to evaluate. If not provided response should be provided
             and should have tool call(s) in it.
         :paramtype tool_calls: Union[dict, List[dict]]
-        :keyword response: Optional response to be evaluated alongside the tool calls.
-            If provided all tool calls in response will be evaluated when tool_calls parameter is not provided.
-            If provided and tool_calls parameter is provided, only the tool calls in tool_calls parameter
-            will be evaluated.
-                If response has extra tool calls they will not be evaluated, response will be used to extract
-                any tool calls that are needed for evaluating a certain tool call.
-            Recommended to provide it when there are tool calls that depend on output of a previous tool call.
+        :keyword response: Optional response used to extract calls or match execution results.
+            When tool_calls is omitted or empty, calls are extracted from response.
+            Otherwise only the selected calls are evaluated, with matching results attached by tool_call_id.
+            For structured responses, assistant text and unselected calls/results are not passed to the judge.
         :paramtype response: Union[str, List[dict]]
         :return: The tool selection evaluation results.
         :rtype: Dict[str, Union[str, float]]

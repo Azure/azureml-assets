@@ -145,6 +145,60 @@ def test_accuracy_score_and_metadata():
     assert state["tool_calls"] == calls
 
 
+@pytest.mark.parametrize("as_dict", [False, True])
+@pytest.mark.parametrize("result_type", ["tool_result", "function_call_output", "openapi_call_output"])
+def test_accuracy_chat_and_decision_receive_identical_inputs(as_dict, result_type):
+    """Match actual judge inputs while excluding final assistant text and unselected evidence."""
+    decision = ToolCallAccuracyEvaluator(CONFIG)
+    post = stub(decision, native("tool_call_accuracy", {
+        "type": "score", "score": 4, "confidence": 1,
+        "probabilities": {"0": 0, "1": 0, "2": 0, "3": 0, "4": 1},
+    }))
+    chat = ToolCallAccuracyEvaluator({
+        "azure_endpoint": "https://example.openai.azure.com", "azure_deployment": "chat",
+    })
+    flow = chat._flow
+    observed = []
+
+    async def render_only(timeout, **prepared):
+        observed.append((deepcopy(prepared), json.dumps(flow.render(**prepared))))
+        return {"llm_output": {"score": 5, "reason": "Mocked judgment."}}
+
+    chat._flow = AsyncMock(side_effect=render_only)
+    call = {"type": "tool_call", "name": "weather", "tool_call_id": "selected", "arguments": {"city": "Paris"}}
+    states = []
+    for outcome in ({"temperature": 20}, {"error": "timeout"}):
+        inputs = {
+            "query": "Weather in Paris?", "tool_calls": deepcopy(call) if as_dict else [deepcopy(call)],
+            "tool_definitions": [{"name": "weather", "parameters": {}}],
+            "response": [
+                {"role": "assistant", "content": [{**call, "arguments": {"city": "Wrong response arguments"}}]},
+                {"role": "tool", "tool_call_id": "unselected",
+                 "content": [{"type": result_type, result_type: "Unselected result"}]},
+                {"role": "tool", "tool_call_id": "selected",
+                 "content": [{"type": result_type, result_type: outcome}]},
+                {"role": "assistant",
+                 "content": [{"type": "text", "text": "Final answer must not reach either judge"}]},
+            ],
+        }
+        original = deepcopy(inputs)
+        chat(**inputs)
+        decision(**inputs)
+        state, _ = request_evidence(post)
+        prepared, rendered = observed[-1]
+        assert state == prepared == {
+            "query": inputs["query"], "tool_calls": [{**call, "tool_result": outcome}],
+            "tool_definitions": inputs["tool_definitions"],
+        }
+        assert all(text not in json.dumps(state) + rendered for text in (
+            "Final answer must not reach either judge", "Unselected result", "Wrong response arguments",
+        ))
+        assert inputs == original
+        states.append(state)
+    assert states[0] != states[1]
+    assert observed[0][1] != observed[1][1]
+
+
 def test_accuracy_model_status_skips_before_parsing_score():
     """Skip inapplicable tool calls before reading an unusable accuracy answer."""
     evaluator = ToolCallAccuracyEvaluator(CONFIG)
@@ -230,29 +284,22 @@ def test_accuracy_response_evidence_preserves_selection_and_retry(selected):
                        tool_definitions=definitions, **inputs)
     assert result["tool_call_accuracy"] == 4
     state, questions = request_evidence(post)
-    assert set(state) == {"query", "tool_calls", "tool_definitions", "response"}
+    assert set(state) == {"query", "tool_calls", "tool_definitions"}
     assert state["query"] == "Weather in Paris?"
     assert state["tool_definitions"] == definitions
-    if selected:
-        assert state["tool_calls"] == calls
-    else:
-        assert [call["tool_call_id"] for call in state["tool_calls"]] == ["context", "failed", "retry"]
-        assert state["tool_calls"][1]["tool_result"] == {"error": "timeout"}
-        assert state["tool_calls"][2]["tool_result"] == {"temperature": 20}
-    expected_response = deepcopy(response)
-    for message in expected_response:
-        for item in message["content"]:
-            if item["type"] == "function_call":
-                item["type"] = "tool_call"
-            elif item["type"] == "function_call_output":
-                item["type"] = "tool_result"
-                item["tool_result"] = item.pop("function_call_output")
-    assert state["response"] == expected_response
+    expected_calls = [
+        {**calls[0], "tool_result": {"error": "timeout"}},
+        {**calls[1], "tool_result": {"temperature": 20}},
+    ]
+    if not selected:
+        expected_calls.insert(0, {**context_call, "tool_result": {"city": "Paris"}})
+    assert state["tool_calls"] == expected_calls
+    assert "20 degrees" not in json.dumps(state)
     assert "must not be scored" in questions["tool_call_accuracy"]["instructions"]
 
 
 @pytest.mark.parametrize("tool", ["OPENAPI", "FILE_SEARCH"])
-def test_accuracy_response_only_definitions_and_normalized_state(tool):
+def test_accuracy_response_only_definitions_and_normalized_calls(tool):
     """Preserve OpenAPI and built-in call extraction in native Decision state."""
     evaluator = ToolCallAccuracyEvaluator(CONFIG)
     post = stub(evaluator, native("tool_call_accuracy", {
@@ -273,7 +320,9 @@ def test_accuracy_response_only_definitions_and_normalized_state(tool):
     }]
     assert state["tool_calls"] == expected_calls
     assert all(call["type"] == "tool_call" for call in state["tool_calls"])
-    assert state["response"] == response
+    assert set(state) == {"query", "tool_calls", "tool_definitions"}
+    assert response == getattr(data, f"{tool}_RESPONSE")
+    assert query == getattr(data, f"{tool}_QUERY")
     assert {call["name"] for call in state["tool_calls"]} <= {
         definition["name"] for definition in state["tool_definitions"]
     }

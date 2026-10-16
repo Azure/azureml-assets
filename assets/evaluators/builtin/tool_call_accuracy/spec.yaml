@@ -40,7 +40,7 @@ dataMappingSchema:
           items:
             type: "object"
     tool_calls:
-      description: "Tool calls to evaluate. When provided and non-empty, they are used even if response is also passed; when omitted or empty, calls are parsed from response."
+      description: "Tool calls to evaluate. When provided and non-empty, they are used even if response is also passed, with matching execution results attached by tool_call_id. Assistant text from structured responses is excluded. When omitted or empty, calls are parsed from response."
       anyOf:
         - type: "object"
         - type: "array"

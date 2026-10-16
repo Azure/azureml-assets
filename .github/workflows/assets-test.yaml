@@ -165,7 +165,7 @@ jobs:
     permissions:
       contents: read
     env:
-      AZUREML_COMPAT_SDK_ROOT: ${{ runner.temp }}/released-sdk-compatibility
+      AZUREML_COMPAT_SDK_ROOT: ${{ github.workspace }}/.released-sdk-compatibility
 
     steps:
       - name: Clone branch

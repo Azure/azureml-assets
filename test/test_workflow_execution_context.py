@@ -129,6 +129,9 @@ def test_assets_test_has_fixed_summary_check():
     )
     assert set(compatibility["needs"]) == {GATE_JOB, "check-directory-file-changes"}
     assert "released-sdk-compatibility" in jobs["report"]["needs"]
+    assert compatibility["env"]["AZUREML_COMPAT_SDK_ROOT"] == (
+        "${{ github.workspace }}/.released-sdk-compatibility"
+    )
 
 
 @pytest.mark.parametrize(
