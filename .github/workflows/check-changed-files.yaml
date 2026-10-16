@@ -32,7 +32,7 @@ jobs:
 
     steps:
       - name: Clone branch
-        uses: Azure/azureml-assets/.github/actions/clone-repo@main
+        uses: Azure/azureml-assets/.github/actions/clone-repo@4ed8b0cd1a4c0620233865c72e08e83c953a7cdf # pre-benchmark-removal
         with:
           forked-pr: ${{ inputs.forked_pr_input }}
           fetch-depth: 2
