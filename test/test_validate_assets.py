@@ -4,6 +4,7 @@
 """Test validate_assets script."""
 
 from pathlib import Path
+from unittest.mock import patch
 import pytest
 import re
 
@@ -81,3 +82,30 @@ def test_validate_assets(test_subdir: str, check_images: bool, check_names: bool
         check_names_skip_pattern=check_names_skip_pattern,
         check_images=check_images,
         check_build_context=True) == expected
+
+
+@pytest.mark.parametrize(
+    "changed_file,expected,expected_model_validations",
+    [
+        ("good-validation/context/Dockerfile", True, 0),
+        ("model-microsoft-good/spec.yaml", False, 1),
+        ("model-microsoft-good/asset.yaml", False, 1),
+        (None, False, 1),
+        ("", False, 1),
+    ]
+)
+def test_model_validation_changed_files(changed_file, expected, expected_model_validations):
+    """Apply model spec validation only to selected assets, or all assets without a filter."""
+    resources_dir = Path(__file__).parent / RESOURCES_DIR
+    changed_files = None if changed_file is None else (
+        [resources_dir / changed_file] if changed_file else []
+    )
+
+    with patch("azureml.assets.validate_assets.validate_model_spec", return_value=1) as validate_model_spec:
+        assert assets.validate_assets(
+            input_dirs=[resources_dir / "good-validation", resources_dir / "model-microsoft-good"],
+            asset_config_filename=assets.DEFAULT_ASSET_FILENAME,
+            changed_files=changed_files,
+        ) == expected
+
+    assert validate_model_spec.call_count == expected_model_validations
