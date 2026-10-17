@@ -180,8 +180,8 @@ jobs:
 
       - name: Prepare isolated released SDK installations
         run: |
-          python -m pip install pytest azure-ai-evaluation==1.18.8
-          for version in 1.17.0 1.18.2 1.18.8; do
+          python -m pip install pytest azure-ai-evaluation==1.18.9
+          for version in 1.17.0 1.18.2 1.18.8 1.18.9; do
             python -m pip install --target "$AZUREML_COMPAT_SDK_ROOT/azureml-compat-sdk-$version" "azure-ai-evaluation==$version"
           done
 
@@ -195,7 +195,7 @@ jobs:
           import xml.etree.ElementTree as ET
           report = ET.parse(Path(os.environ["pytest_reports"]) / "released-sdk-compatibility.xml")
           cases = report.findall(".//testcase")
-          assert len(cases) == 12, f"Expected all 12 released SDK cases, got {len(cases)}"
+          assert len(cases) == 16, f"Expected all 16 released SDK cases, got {len(cases)}"
           assert not report.findall(".//skipped"), "Released SDK compatibility cases must not skip in CI"
           PY
 
@@ -215,7 +215,7 @@ jobs:
     permissions:
       contents: read
     env:
-      SDK_CANDIDATE_COMMIT: a69217c33402ce432dafbb2cf7bc43e1246240c5
+      SDK_CANDIDATE_COMMIT: 1156379b5a79cdb6dd6f50e761d4985d4892ce40
       SDK_CANDIDATE_VERSION: 1.18.10
     steps:
       - name: Clone branch

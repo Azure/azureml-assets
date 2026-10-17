@@ -3,9 +3,9 @@
 
 """Offline released-SDK checks opt in via AZUREML_COMPAT_SDK_ROOT.
 
-The root must contain azureml-compat-sdk-1.17.0, azureml-compat-sdk-1.18.2, and
-azureml-compat-sdk-1.18.8 isolated installations. Tests never install packages or
-assume global temp targets.
+The root must contain azureml-compat-sdk-1.17.0, azureml-compat-sdk-1.18.2,
+azureml-compat-sdk-1.18.8, and azureml-compat-sdk-1.18.9 isolated installations.
+Tests never install packages or assume global temp targets.
 """
 
 import os

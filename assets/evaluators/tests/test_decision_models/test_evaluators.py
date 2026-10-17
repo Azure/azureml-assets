@@ -105,6 +105,50 @@ def test_completion_conversation_and_cutoff():
     assert "end to end" in questions["task_completion"]["instructions"]
 
 
+@pytest.mark.parametrize("decision", [False, True], ids=["chat", "decision"])
+@pytest.mark.parametrize("shape", ["text/text", "list/list", "text/list", "list/text", "messages"])
+def test_completion_conversation_preserves_input_shapes(decision, shape):
+    """Send both sides of mixed conversation inputs to the actual judge without mutating callers."""
+    messages = [
+        {"role": "user", "content": [{"type": "text", "text": "Plan a trip."}]},
+        {"role": "assistant", "content": [{"type": "text", "text": "Here is your itinerary."}]},
+    ]
+    inputs = {
+        "query": messages[:1] if shape.startswith("list") else "Plan a trip.",
+        "response": messages[1:] if shape.endswith("list") else "Here is your itinerary.",
+    }
+    if shape == "messages":
+        inputs = {"messages": messages, "query": "Ignored query", "response": "Ignored response"}
+    original = deepcopy(inputs)
+    evaluator = TaskCompletionEvaluator(CONFIG if decision else {
+        "azure_endpoint": "https://example.openai.azure.com", "azure_deployment": "chat", "api_key": "test-only",
+    }, evaluation_level="conversation")
+    if decision:
+        post = stub(evaluator, native("task_completion", {"type": "noul", "noul": 1}))
+    else:
+        flow = evaluator._multi_turn_flow
+        rendered = []
+
+        async def render_only(timeout, **prepared):
+            rendered.append(json.dumps(flow.render(**prepared)))
+            return {"llm_output": {"score": 1, "reason": "Mocked judgment."}}
+
+        evaluator._multi_turn_flow = AsyncMock(side_effect=render_only)
+    result = evaluator(**inputs)
+    if decision:
+        post.assert_awaited_once()
+        state, _ = request_evidence(post)
+        transcript = state["messages"]
+    else:
+        evaluator._multi_turn_flow.assert_awaited_once()
+        transcript = evaluator._multi_turn_flow.call_args.kwargs["messages"]
+        assert "Plan a trip." in rendered[0] and "Here is your itinerary." in rendered[0]
+    assert transcript.index("Plan a trip.") < transcript.index("Here is your itinerary.")
+    assert "Ignored" not in transcript
+    assert result["task_completion"] == 1
+    assert inputs == original
+
+
 def test_completion_intermediate_skips_without_call():
     """Skip intermediate tool responses without invoking the Decision model."""
     evaluator = TaskCompletionEvaluator(CONFIG)

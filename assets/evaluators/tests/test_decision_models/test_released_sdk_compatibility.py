@@ -312,7 +312,7 @@ def test_broken_strategy_import_is_not_hidden(monkeypatch, name, class_name, err
     assert caught.value is error
 
 
-@pytest.mark.parametrize("version", ["1.17.0", "1.18.2", "1.18.8"])
+@pytest.mark.parametrize("version", ["1.17.0", "1.18.2", "1.18.8", "1.18.9"])
 @pytest.mark.parametrize("name,class_name", EVALUATORS)
 def test_actual_released_wheel_standalone_asset(tmp_path, version, name, class_name, released_sdk_target):
     """Verify standalone asset chat evaluation with an isolated released SDK installation."""
@@ -352,7 +352,7 @@ print('Released SDK standalone sync/async chat checks passed')
 @pytest.mark.parametrize("name,class_name", [
     ("output_quality", "OutputQualityEvaluator"), ("tool_use_quality", "ToolUseQualityEvaluator"),
 ])
-@pytest.mark.parametrize("version", ["1.17.0", "1.18.2", "1.18.8"])
+@pytest.mark.parametrize("version", ["1.17.0", "1.18.2", "1.18.8", "1.18.9"])
 def test_actual_released_wheel_composite_package(tmp_path, name, class_name, version, released_sdk_target):
     """Exercise copied composite packages against explicitly provisioned released SDKs without providers."""
     target = released_sdk_target(version)
@@ -442,7 +442,7 @@ print('Released composite package chat/threshold/capability checks passed')
     assert result.returncode == 0, result.stdout + result.stderr
 
 
-@pytest.mark.parametrize("version", ["1.17.0", "1.18.2", "1.18.8"])
+@pytest.mark.parametrize("version", ["1.17.0", "1.18.2", "1.18.8", "1.18.9"])
 @pytest.mark.parametrize("configured", [False, True])
 def test_released_sdk_absence_is_an_actionable_skip(tmp_path, monkeypatch, released_sdk_target, version, configured):
     """Explain missing opt-in or isolated SDK installations without failing clean machines."""

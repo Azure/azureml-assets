@@ -28,6 +28,7 @@ dataMappingSchema:
   type: "object"
   properties:
     query:
+      description: "Conversation-level evaluation accepts text or message lists independently for query and response, merging them when messages is not supplied."
       anyOf:
         - type: "string"
         - type: "array"
