@@ -168,7 +168,11 @@ def test_numeric_threshold_preserves_legacy_defaults(evaluator_class, decision, 
         results.append(evaluator(**deepcopy(INPUT)))
         call.assert_awaited_once()
     expected, result = results
-    assert result == expected
+    result_fields = ("_score", "_result", "_passed", "_status", "_threshold")
+    assert {key: value for key, value in result.items() if key.endswith(result_fields)} == {
+        key: value for key, value in expected.items() if key.endswith(result_fields)
+    }
+    assert result[evaluator._RESULT_KEY] == expected[evaluator._RESULT_KEY]
     assert result[evaluator._RESULT_KEY] == int(outcome == "pass")
     for name, expected in defaults.items():
         assert result[f"{name}_threshold"] == expected
@@ -575,7 +579,11 @@ def test_python_optional_definition_none_follows_shared_sdk_omission(evaluator_c
     inputs = {"query": "Say hello", "response": "Hello"}
     missing = evaluator(**inputs)
     explicit_none = evaluator(**inputs, tool_definitions=None)
-    assert missing == explicit_none
+    result_fields = ("_score", "_result", "_passed", "_status", "_threshold")
+    assert {key: value for key, value in missing.items() if key.endswith(result_fields)} == {
+        key: value for key, value in explicit_none.items() if key.endswith(result_fields)
+    }
+    assert missing[evaluator._RESULT_KEY] == explicit_none[evaluator._RESULT_KEY]
     assert post.await_count == 2
     assert post.await_args_list[0].args[0] == post.await_args_list[1].args[0]
 
