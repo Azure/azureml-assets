@@ -36,7 +36,7 @@ RUN printf '%s\n' 'msgpack>=1.2.1' 'setuptools>=83.0.0' > /tmp/pip-security-cons
     conda run -p $CONDA_PREFIX pip install --no-cache-dir \
     --no-build-isolation \
     --constraint /tmp/pip-security-constraints.txt \
-    scikit-learn-intelex==2026.1.0 \
+    scikit-learn-intelex==2026.2.0 \
     azureml-core==1.61.0.post4 \
     azureml-defaults==1.62.0 \
     azureml-inference-server-http==1.5.1 \
