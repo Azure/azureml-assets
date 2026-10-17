@@ -215,7 +215,7 @@ jobs:
     permissions:
       contents: read
     env:
-      SDK_CANDIDATE_COMMIT: 1156379b5a79cdb6dd6f50e761d4985d4892ce40
+      SDK_CANDIDATE_COMMIT: a30074f3deb0070774252c74aeab3ea83f9fda68
       SDK_CANDIDATE_VERSION: 1.18.10
     steps:
       - name: Clone branch
