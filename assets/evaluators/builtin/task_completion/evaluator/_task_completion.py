@@ -1022,7 +1022,10 @@ class TaskCompletionEvaluator(ModelEvaluatorBase[Union[str, int]]):
                 target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
             )
         if answer.get("status", "completed") == "skipped":
-            return self._return_not_applicable_result(answer.get("reason", ""), self._threshold)
+            return self._build_result(
+                None, "not_applicable", f"Not applicable: {answer.get('reason', '')}", "skipped",
+                answer.get("properties", {}) or {}, model_output_dict,
+            )
         score = float(answer.get("score", 0))
         return self._build_result(
             score, "pass" if score >= 1.0 else "fail", answer.get("reason", ""), "completed",

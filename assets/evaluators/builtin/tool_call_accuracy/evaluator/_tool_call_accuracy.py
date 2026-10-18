@@ -265,6 +265,8 @@ class ToolCallAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
     .. note::
 
         The output field "details" has been renamed to "tool_call_accuracy_properties" for clarity.
+        Chat token counts and model metadata are also returned with the ``tool_call_accuracy_``
+        prefix so batch evaluation can attribute usage to the model.
 
         The `gpt_` prefix is deprecated. Use `_score` suffix instead.
 
@@ -355,6 +357,7 @@ class ToolCallAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
                 missing_score=None,
                 score_range=(self._MIN_TOOL_CALL_ACCURACY_SCORE, self._MAX_TOOL_CALL_ACCURACY_SCORE),
                 error_target=ErrorTarget.TOOL_CALL_ACCURACY_EVALUATOR,
+                top_level_usage=True,
             )
         else:
             self._strategy = None
@@ -505,7 +508,11 @@ class ToolCallAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
                 target=ErrorTarget.TOOL_CALL_ACCURACY_EVALUATOR,
             )
         if answer.get("status", "completed") == "skipped":
-            return self._return_not_applicable_result(answer.get("reason", ""), self._threshold)
+            result = self._return_not_applicable_result(answer.get("reason", ""), self._threshold)
+            metadata = self._get_token_metadata(model_output_dict)
+            result[f"{self._result_key}_properties"] = {**(answer.get("properties", {}) or {}), **metadata}
+            result.update({f"{self._result_key}_{key}": value for key, value in metadata.items()})
+            return result
         score = answer.get("score")
         if not score or not check_score_is_valid(
             score, self._MIN_TOOL_CALL_ACCURACY_SCORE, self._MAX_TOOL_CALL_ACCURACY_SCORE
@@ -518,8 +525,9 @@ class ToolCallAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
                 blame=ErrorBlame.SYSTEM_ERROR,
             )
         score = float(score)
+        metadata = self._get_token_metadata(model_output_dict)
         properties = dict(answer.get("properties", {}) or {})
-        properties.update(self._get_token_metadata(model_output_dict))
+        properties.update(metadata)
         return {
             self._result_key: score,
             f"{self._result_key}_score": score,
@@ -529,6 +537,7 @@ class ToolCallAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
             f"{self._result_key}_status": "completed",
             f"{self._result_key}_threshold": self._threshold,
             f"{self._result_key}_properties": properties,
+            **{f"{self._result_key}_{key}": value for key, value in metadata.items()},
         }
 
     async def _real_call(self, **kwargs):

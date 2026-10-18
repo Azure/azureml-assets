@@ -92,6 +92,94 @@ def _inputs(name):
     }
 
 
+def _exercise_chat_usage(
+    module, tmp_path, name="tool_call_accuracy", class_name="ToolCallAccuracyEvaluator",
+    *, skipped=False, conversation=False, intermediate=False,
+):
+    from azure.ai.evaluation import evaluate
+
+    with patch("azure.ai.evaluation._legacy.prompty.AsyncPrompty.load"):
+        evaluator = module[class_name](
+            dict(CHAT_CONFIG), **({"evaluation_level": "conversation"} if conversation else {}),
+        )
+    metadata = {
+        "input_token_count": 9 if skipped else 10, "output_token_count": 3,
+        "total_token_count": 12 if skipped else 13,
+        "model_id": "chat-judge-skip-fixture" if skipped else "measured-chat-model",
+    }
+    flow = AsyncMock(return_value={
+        "llm_output": {
+            "score": None if skipped else 5, "status": "skipped" if skipped else "completed",
+            "reason": "not applicable" if skipped else "Measured chat judgment.", "properties": {"custom": True},
+        }, **metadata,
+    })
+    evaluator._flow = flow
+    if conversation:
+        evaluator._multi_turn_flow = flow
+    inputs = _inputs(name)
+    if intermediate:
+        inputs["query"] = [{"role": "user", "content": [{"type": "text", "text": inputs["query"]}]}]
+        inputs["response"] = [{"role": "assistant", "content": [
+            {"type": "function_call", "name": "weather", "arguments": {}, "tool_call_id": "call-1"},
+        ]}]
+    data = tmp_path / "usage.jsonl"
+    data.write_text(json.dumps(inputs) + "\n", encoding="utf-8")
+    result = evaluate(
+        data=str(data), evaluators={"accuracy": evaluator}, _convert_to_aoai_evaluation_result=True,
+    )
+    row, = result["_evaluation_results_list"]
+    metric, = row["results"]
+    assert metric["metric"] == name
+    if skipped or intermediate:
+        assert metric["status"] == "skipped"
+        assert metric["score"] is None and metric["passed"] is None
+    if intermediate:
+        flow.assert_not_awaited()
+        assert result["_evaluation_summary"]["per_model_usage"] == []
+        assert not any(metric.get("sample", {}).get("usage", {}).values())
+        return
+    flow.assert_awaited_once()
+    if skipped:
+        assert metric["reason"] == "Not applicable: not applicable"
+        assert metric["properties"]["custom"] is True
+    else:
+        assert metric["score"] == 5 and metric["passed"] is True
+    usage = {
+        "prompt_tokens": metadata["input_token_count"], "completion_tokens": 3,
+        "total_tokens": metadata["total_token_count"],
+    }
+    assert {key: metric["properties"][key] for key in usage} == usage
+    assert metric["sample"]["model"] == metadata["model_id"]
+    assert metric["sample"]["usage"] == usage
+    assert result["_evaluation_summary"]["per_model_usage"] == [{
+        "model_name": metadata["model_id"], "invocation_count": 1,
+        **usage, "cached_tokens": 0,
+    }]
+
+
+def test_chat_usage_reaches_actual_batch_conversion_and_totals(tmp_path):
+    """Retain measured chat usage exactly once through the installed SDK's public batch path."""
+    module = runpy.run_path(str(BUILTIN / "tool_call_accuracy" / "evaluator" / "_tool_call_accuracy.py"))
+    _exercise_chat_usage(module, tmp_path)
+
+
+@pytest.mark.parametrize("name,class_name,conversation,intermediate", [
+    ("task_completion", "TaskCompletionEvaluator", False, False),
+    ("task_completion", "TaskCompletionEvaluator", True, False),
+    ("tool_call_accuracy", "ToolCallAccuracyEvaluator", False, False),
+    ("task_completion", "TaskCompletionEvaluator", False, True),
+    ("tool_call_accuracy", "ToolCallAccuracyEvaluator", False, True),
+])
+def test_skipped_chat_usage_reaches_actual_batch_conversion(
+    tmp_path, name, class_name, conversation, intermediate,
+):
+    """Distinguish measured model skips from pre-inference skips through actual SDK conversion."""
+    module = runpy.run_path(str(BUILTIN / name / "evaluator" / f"_{name}.py"))
+    _exercise_chat_usage(
+        module, tmp_path, name, class_name, skipped=True, conversation=conversation, intermediate=intermediate,
+    )
+
+
 def _expected(name, score, threshold, *, skipped=False, metadata=None):
     passed = score >= (1 if name == "task_completion" else threshold) if not skipped else None
     result = {
@@ -102,10 +190,9 @@ def _expected(name, score, threshold, *, skipped=False, metadata=None):
         f"{name}_reason": "Not applicable: reason" if skipped else "reason",
         f"{name}_status": "skipped" if skipped else "completed",
         f"{name}_threshold": threshold,
-        f"{name}_properties": None if skipped else {"custom": True, **metadata},
+        f"{name}_properties": metadata if skipped else {"custom": True, **metadata},
     }
-    if name == "task_completion":
-        result.update({f"{name}_{key}": value for key, value in metadata.items()})
+    result.update({f"{name}_{key}": value for key, value in metadata.items()})
     return result
 
 
@@ -132,7 +219,7 @@ def _exercise_chat(module, name, class_name):
 
     replacement.return_value = {"llm_output": {"status": "skipped", "reason": "reason"}, **OUTPUT_METADATA}
     empty_metadata = {key: 0 if key.endswith("tokens") else "" for key in METADATA}
-    expected = _expected(name, None, threshold, skipped=True, metadata=empty_metadata)
+    expected = _expected(name, None, threshold, skipped=True, metadata=METADATA)
     assert evaluator(**_inputs(name)) == expected
     assert asyncio.run(evaluator._to_async()(**_inputs(name))) == expected
 
@@ -334,6 +421,16 @@ assert module['PromptyEvaluationStrategy'] is None
 assert not module['_SDK_SUPPORTS_DECISION']
 assert module['ModelEvaluatorBase'] is sdk._evaluators._common.PromptyEvaluatorBase
 tests['_exercise_chat'](module, sys.argv[4], sys.argv[5])
+if sys.argv[4] == 'tool_call_accuracy' and VERSION == '1.18.9':
+    tests['_exercise_chat_usage'](module, Path(sys.argv[3]).parent)
+if VERSION == '1.18.9':
+    for conversation in ([False, True] if sys.argv[4] == 'task_completion' else [False]):
+        tests['_exercise_chat_usage'](
+            module, Path(sys.argv[3]).parent, sys.argv[4], sys.argv[5], skipped=True, conversation=conversation,
+        )
+    tests['_exercise_chat_usage'](
+        module, Path(sys.argv[3]).parent, sys.argv[4], sys.argv[5], skipped=True, intermediate=True,
+    )
 for name, loaded in tuple(sys.modules.items()):
     if name.startswith('azure.ai.evaluation') and getattr(loaded, '__file__', None):
         assert Path(loaded.__file__).is_relative_to(Path(sys.argv[1])), (name, loaded.__file__)
