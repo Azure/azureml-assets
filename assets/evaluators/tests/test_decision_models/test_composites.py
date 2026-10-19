@@ -5,15 +5,18 @@
 
 from copy import deepcopy
 import hashlib
+import inspect
 import json
 import logging
 from pathlib import Path
+from typing import get_args, get_type_hints
 from unittest.mock import AsyncMock, Mock
 
 import jsonschema
 import pandas as pd
 import pytest
 import yaml
+from typing_extensions import get_overloads
 
 from azure.ai.evaluation import evaluate
 from azure.ai.evaluation._evaluate._evaluate import (
@@ -586,6 +589,23 @@ def test_python_optional_definition_none_follows_shared_sdk_omission(evaluator_c
     assert missing[evaluator._RESULT_KEY] == explicit_none[evaluator._RESULT_KEY]
     assert post.await_count == 2
     assert post.await_args_list[0].args[0] == post.await_args_list[1].args[0]
+
+
+@pytest.mark.parametrize("inputs", [
+    {"query": "Say hello", "response": "Hello"},
+    {"messages": [{"role": "user", "content": "Say hello"},
+                  {"role": "assistant", "content": "Hello"}]},
+], ids=["turn", "conversation"])
+def test_tool_use_public_overloads_accept_optional_definitions(inputs):
+    """Advertise the same omitted/None definitions accepted by both runtime input routes."""
+    overload = next(
+        candidate for candidate in get_overloads(ToolUseQualityEvaluator.__call__)
+        if ("messages" in inspect.signature(candidate).parameters) == ("messages" in inputs)
+    )
+    signature = inspect.signature(overload)
+    signature.bind(None, **inputs)
+    signature.bind(None, **inputs, tool_definitions=None)
+    assert type(None) in get_args(get_type_hints(overload)["tool_definitions"])
 
 
 @pytest.mark.parametrize("evaluator_class", COMPOSITES)

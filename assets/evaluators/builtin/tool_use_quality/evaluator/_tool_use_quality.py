@@ -804,9 +804,9 @@ class ToolUseQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         *,
         query: Union[str, List[dict]],
         response: Union[str, List[dict]],
-        tool_definitions: Union[dict, List[dict]],
+        tool_definitions: Optional[Union[dict, List[dict]]] = None,
     ) -> Dict[str, Union[str, int]]:
-        """Evaluate tool-use quality for the last agent response given a query, response, and tool definitions.
+        """Evaluate tool-use quality for the last agent response with optional tool definitions.
 
         The query and response can be either a string or a list of messages.
 
@@ -818,8 +818,9 @@ class ToolUseQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         :paramtype query: Union[str, List[dict]]
         :keyword response: The response being evaluated, either a string or a list of messages.
         :paramtype response: Union[str, List[dict]]
-        :keyword tool_definitions: The tool definitions the agent is aware of.
-        :paramtype tool_definitions: Union[dict, List[dict]]
+        :keyword tool_definitions: Optional tool definitions known to the agent. Omitting them may still
+            invoke the model; each member determines whether it has enough evidence to be evaluated.
+        :paramtype tool_definitions: Optional[Union[dict, List[dict]]]
         :return: A dictionary with the primary aggregate and raw results for all five evaluators.
         :rtype: Dict[str, Union[str, int]]
         """
@@ -829,7 +830,7 @@ class ToolUseQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         self,
         *,
         messages: List[dict],
-        tool_definitions: Union[dict, List[dict]],
+        tool_definitions: Optional[Union[dict, List[dict]]] = None,
     ) -> Dict[str, Union[str, int]]:
         """Evaluate tool-use quality for a full multi-turn conversation.
 
@@ -839,8 +840,9 @@ class ToolUseQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
 
         :keyword messages: The full multi-turn conversation as a list of message dicts.
         :paramtype messages: List[dict]
-        :keyword tool_definitions: The tool definitions the agent is aware of.
-        :paramtype tool_definitions: Union[dict, List[dict]]
+        :keyword tool_definitions: Optional tool definitions known to the agent. Omitting them may still
+            invoke the model; each member determines whether it has enough evidence to be evaluated.
+        :paramtype tool_definitions: Optional[Union[dict, List[dict]]]
         :return: A dictionary with the primary aggregate and raw results for all five evaluators.
         :rtype: Dict[str, Union[str, int]]
         """

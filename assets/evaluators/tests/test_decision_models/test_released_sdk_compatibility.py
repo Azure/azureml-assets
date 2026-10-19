@@ -59,6 +59,12 @@ def test_standalone_asset_packages_native_rubrics_without_public_auth(tmp_path, 
     schema = spec["initParameterSchema"]
     public_config = {key: value for key, value in DECISION_CONFIG.items() if key != "api_key"}
     validate({"deployment_name": "chat-model"}, schema)
+    for level in spec["supportedEvaluationLevels"]:
+        validate({"deployment_name": "chat-model", "evaluation_level": level}, schema)
+    if name == "tool_call_accuracy":
+        for level in ("conversation", "unsupported"):
+            with pytest.raises(ValidationError):
+                validate({"deployment_name": "chat-model", "evaluation_level": level}, schema)
     assert "model_config" not in schema["properties"]
     assert "not" not in schema
     for selection in ({}, {"model_config": public_config}):

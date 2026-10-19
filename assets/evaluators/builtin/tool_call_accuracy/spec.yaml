@@ -23,6 +23,7 @@ initParameterSchema:
       multipleOf: 1
     evaluation_level:
       type: "string"
+      enum: ["turn"]
   required: ["deployment_name"]
 dataMappingSchema:
   type: "object"
