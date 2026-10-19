@@ -2,7 +2,7 @@ type: "evaluator"
 name: "builtin.task_level_rubric"
 version: 1
 displayName: "Task-Level-Rubric-Evaluator-(Preview)"
-description: "Evaluates each Task (one dataset row containing a trace) against that row's rubric dimensions. Returns overall and per-dimension pass/fail with explanations. This skeleton requires the judge prompt before model-backed evaluation is available."
+description: "Evaluates each Task (one dataset row containing a trace) against that row's rubric dimensions. Returns overall and per-dimension pass/fail with explanations. Uses a temporary placeholder judge prompt for integration testing, not approved production grading."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
 categories: ["agents", "quality"]
@@ -62,10 +62,7 @@ dataMappingSchema:
           weight:
             type: "integer"
             minimum: 1
-          always_applicable:
-            type: "boolean"
-            description: "Retained for compatibility; every supplied dimension is scored."
-        required: ["id", "description", "weight", "always_applicable"]
+        required: ["id", "description", "weight"]
         additionalProperties: true
     tool_definitions:
       anyOf:

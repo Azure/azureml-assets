@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Row-specific rubric evaluation plumbing; the judge prompt is not configured."""
+"""Row-specific rubric evaluation with a temporary, testing-only judge prompt."""
 
 import hashlib
 import json
@@ -37,7 +37,6 @@ class _RubricDimension(TypedDict):
     id: str
     description: str
     weight: int
-    always_applicable: bool
 
 
 class _JudgeInput(TypedDict):
@@ -92,7 +91,6 @@ def _validate_dimensions(value: Any) -> list[_RubricDimension]:
         dimension_id = dimension.get("id")
         description = dimension.get("description")
         weight = dimension.get("weight")
-        always_applicable = dimension.get("always_applicable")
         if not isinstance(dimension_id, str) or not dimension_id.strip():
             raise _input_error(
                 f"rubric_dimensions[{index}].id must be a nonblank string."
@@ -109,17 +107,12 @@ def _validate_dimensions(value: Any) -> list[_RubricDimension]:
             raise _input_error(
                 f"rubric_dimensions[{index}].weight must be a positive integer."
             )
-        if not isinstance(always_applicable, bool):
-            raise _input_error(
-                f"rubric_dimensions[{index}].always_applicable must be a boolean."
-            )
         seen_ids.add(dimension_id)
         dimensions.append(
             {
                 "id": dimension_id,
                 "description": description,
                 "weight": weight,
-                "always_applicable": always_applicable,
             }
         )
     return dimensions
@@ -268,9 +261,10 @@ def _criteria_hash(dimensions: list[_RubricDimension]) -> str:
 class TaskLevelRubricEvaluator(PromptyEvaluatorBase[bool]):
     """Evaluate a full trace, returning verdicts, explanations, and run metadata.
 
-    The judge is intentionally unconfigured until the grading prompt is supplied.
+    The judge uses a temporary placeholder prompt for integration testing,
+    not an approved production grading prompt.
 
-    :param model_config: Model configuration used by the eventual judge flow.
+    :param model_config: Model configuration used by the temporary judge flow.
     :keyword credential: Optional credential for the judge deployment.
     :keyword threshold: Internal weighted pass threshold in [0, 1], default 1.
     :keyword is_reasoning_model: Whether the deployment is a reasoning model.
@@ -324,7 +318,7 @@ class TaskLevelRubricEvaluator(PromptyEvaluatorBase[bool]):
         tool_definitions: dict[str, Any] | list[dict[str, Any]] | None = None,
         test_case_description: str = "",
     ) -> dict[str, Any]:
-        """Evaluate one Task; the judge prompt must be configured before real evaluation."""
+        """Evaluate one Task using the temporary, testing-only judge prompt."""
         return super().__call__(
             rubric_dimensions=rubric_dimensions,
             query=query,
@@ -350,13 +344,15 @@ class TaskLevelRubricEvaluator(PromptyEvaluatorBase[bool]):
         return self._parse_judge_output(judge_output, dimensions)
 
     async def _invoke_judge(self, judge_input: _JudgeInput) -> dict[str, Any]:
-        """Return a Prompty response envelope when the approved prompt is supplied.
-
-        Keep transport usage metadata outside the model-generated ``llm_output``.
-        """
-        raise _judge_error(
-            "Task Level Rubric judge prompt not configured; model-backed evaluation is unavailable."
-        )
+        """Call the temporary judge, preserving the response metadata envelope."""
+        prompt_input = {
+            field: json.dumps(value, allow_nan=False)
+            for field, value in judge_input.items()
+        }
+        try:
+            return await self._flow(timeout=self._LLM_CALL_TIMEOUT, **prompt_input)
+        except json.JSONDecodeError as exc:
+            raise _judge_error("Judge output must be valid JSON.") from exc
 
     def _build_sample(self, metadata: dict[str, Any]) -> dict[str, Any]:
         usage: dict[str, int | None] = {}
@@ -404,9 +400,11 @@ class TaskLevelRubricEvaluator(PromptyEvaluatorBase[bool]):
             if (
                 isinstance(score, bool)
                 or not isinstance(score, (int, float))
-                or score not in (0, 1)
+                or score not in (1, 2, 3, 4, 5)
             ):
-                raise _judge_error("Each judge dimension score must be numeric 0 or 1.")
+                raise _judge_error(
+                    "Each judge dimension score must be a whole number from 1 to 5."
+                )
             reason = result.get("reason")
             if not isinstance(reason, str) or not reason.strip():
                 raise _judge_error(
@@ -414,17 +412,20 @@ class TaskLevelRubricEvaluator(PromptyEvaluatorBase[bool]):
                 )
             by_id[dimension_id] = result
 
+        dimension_passed = {
+            dimension_id: result["score"] >= 3 for dimension_id, result in by_id.items()
+        }
         # Exact arithmetic prevents a tiny failed weight from rounding an almost-perfect score to 1.
         weighted_score = Fraction(
             sum(
                 dimension["weight"]
                 for dimension in dimensions
-                if by_id[dimension["id"]]["score"] == 1
+                if dimension_passed[dimension["id"]]
             ),
             sum(dimension["weight"] for dimension in dimensions),
         )
         passed = weighted_score >= self._threshold
-        all_passed = all(result["score"] == 1 for result in by_id.values())
+        all_passed = all(dimension_passed.values())
         reason = (
             "All rubric dimensions passed."
             if all_passed
@@ -451,7 +452,7 @@ class TaskLevelRubricEvaluator(PromptyEvaluatorBase[bool]):
                     {
                         "id": dimension["id"],
                         "result": "pass"
-                        if by_id[dimension["id"]]["score"] == 1
+                        if dimension_passed[dimension["id"]]
                         else "fail",
                         "reason": by_id[dimension["id"]]["reason"],
                     }

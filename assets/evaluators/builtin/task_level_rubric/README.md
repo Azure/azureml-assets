@@ -1,13 +1,14 @@
-# Task Level Rubric evaluator skeleton
+# Task Level Rubric evaluator (temporary judge)
 
 Each Task is one dataset row containing a complete trace and its own rubric.
 Unlike a fixed-rubric evaluator, this evaluator requires row dimensions and never
 falls back to evaluator-level dimensions.
 
-**The judge prompt is not configured.** Real evaluation raises an explicit
-`EvaluationException` before any model call. This asset is not ready to publish
-for production use. The placeholder prompt defines the interface, not grading
-instructions.
+**The judge uses a temporary placeholder prompt for integration testing.** Valid
+inputs now invoke the configured model deployment. The prompt explicitly tells
+the LLM it is temporary and includes successful and failed grading response JSON
+examples. It returns one result per actual rubric dimension, not fixed example
+results. This prompt is not approved for production grading.
 
 ## Inputs
 
@@ -33,17 +34,16 @@ content blocks; assistant tool calls and tool results are preserved.
   {
     "id": "states_refund_deadline",
     "description": "The response must state that refunds must be requested within 30 days.",
-    "weight": 8,
-    "always_applicable": true
+    "weight": 8
   }
 ]
 ```
 
-All four fields are required. IDs are nonblank, unique, case-sensitive, and
+All three fields are required. IDs are nonblank, unique, case-sensitive, and
 preserved exactly. Descriptions are nonblank; weights are positive integers
 (booleans are not integers here). Extra dimension fields are accepted but excluded
-from judging and hashing. Every supplied dimension is scored, even if
-`always_applicable` is `false`.
+from judging and hashing. This includes `always_applicable`: it is ignored
+regardless of its value if present. Every supplied dimension is scored.
 
 Optional inputs are `tool_definitions` and `test_case_description`. Raw annotations,
 expected responses outside the rubric, and `rubric_metadata` are not judge inputs.
@@ -54,22 +54,27 @@ not produce partial grades.
 
 ## Internal grading and public results
 
-The pending judge must return this internal shape, with exactly one result per
+The temporary judge must return this internal shape, with exactly one result per
 supplied ID:
 
 ```json
 {
   "dimensions": [
-    {"id": "states_refund_deadline", "score": 1, "reason": "The response states the required deadline."}
+    {"id": "states_refund_deadline", "score": 3, "reason": "The response states the required deadline."}
   ]
 }
 ```
 
-Code validates those results, computes the weighted mean, and applies the
-evaluator-wide threshold (default `1`). Thresholds are finite numbers in `[0, 1]`;
-there are no per-row thresholds. Rubric hashes and source information stay in
-internal debug diagnostics. Numeric grading details are not returned in fields or
-properties. A public result looks like:
+Judge scores must be whole numbers from 1 to 5. Scores 3-5 become `pass`; scores
+1-2 become `fail`. Fractional, out-of-range, boolean, or nonnumeric scores are
+errors, not grades.
+
+Code converts each dimension verdict internally to 1 (pass) or 0 (fail), computes
+their weighted mean, and applies the evaluator-wide threshold (default `1`, so
+every dimension must pass). It does not average the raw 1-5 ratings. Thresholds
+are finite numbers in `[0, 1]`; there are no per-row thresholds. Rubric hashes
+and source information stay in internal debug diagnostics. Numeric grading
+details are not returned in fields or properties. A public result looks like:
 
 ```json
 {
@@ -117,13 +122,17 @@ totals are not inferred. Model-generated usage fields are ignored.
 ## Complete later
 
 Replace the placeholder with the approved grading prompt and implement
-`TaskLevelRubricEvaluator._invoke_judge`, adapting the model response to the
-internal contract above. Return a Prompty envelope with the grading content in
+live quality evaluation before production publishing. The current
+`TaskLevelRubricEvaluator._invoke_judge` serializes the full validated inputs
+into the prompt, invokes the configured flow once, and preserves the
+Prompty envelope with the grading content in
 `llm_output` and transport fields `input_token_count`, `output_token_count`,
 `total_token_count`, and `cached_tokens` outside it. These map to the four public
 usage fields in the order shown. Bare grading JSON is also accepted, with all
 usage counts `null`. Keep the current invocation-local state and strict result
-validation. Add live quality tests before publishing.
+validation. Malformed JSON is an evaluation error; model-client and context-window
+errors propagate without partial grading or evaluator-added retries.
 
 ACA/API routing, external UI rendering, and deployment are separate integration
-work. The skeleton alone does not enable the evaluator in Eval service.
+work. This asset alone does not enable the evaluator in Eval service or verify
+that ACA continues after an individual row error.
