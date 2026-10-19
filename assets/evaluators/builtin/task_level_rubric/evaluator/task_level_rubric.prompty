@@ -1,0 +1,32 @@
+---
+name: Task Level Rubric - Unconfigured
+description: Contract placeholder only. The evaluator must not invoke this prompt.
+model:
+  api: chat
+  parameters:
+    response_format:
+      type: json_object
+inputs:
+  messages:
+    type: list
+  rubric_dimensions:
+    type: list
+  tool_definitions:
+    type: object
+    optional: true
+    default: []
+  test_case_description:
+    type: string
+    optional: true
+    default: ""
+---
+system:
+UNCONFIGURED PLACEHOLDER. No grading instructions have been supplied.
+The evaluator blocks model invocation until the approved judge prompt is integrated.
+
+user:
+Reserved inputs: messages, rubric_dimensions, tool_definitions, test_case_description.
+Reserved internal JSON output:
+{"dimensions":[{"id":"<exact rubric ID>","score":0,"reason":"<brief explanation>"}]}
+There must be exactly one result per supplied dimension, with a numeric score of 0 or 1.
+Numeric grading details are internal, not customer-facing results.
