@@ -1,4 +1,4 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Evaluators behavior tests init file."""
+"""Behavior tests for built-in evaluators."""
