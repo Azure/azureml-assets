@@ -113,6 +113,7 @@ def _inputs(**overrides):
 
 
 def test_temporary_judge_calls_flow_once_with_serialized_full_inputs():
+    """Verify one judge call receives serialized inputs and returns usage."""
     evaluator = _make_evaluator()
     evaluator._flow = AsyncMock(
         return_value={
@@ -149,6 +150,7 @@ def test_temporary_judge_calls_flow_once_with_serialized_full_inputs():
 def test_temporary_prompt_renders_and_parses_real_flow_responses_offline(
     scores, passed
 ):
+    """Verify prompt rendering and response parsing with an offline judge."""
     evaluator = _make_evaluator()
     response = ChatCompletion(
         id="offline-response",
@@ -205,6 +207,7 @@ def test_temporary_prompt_renders_and_parses_real_flow_responses_offline(
 
 
 def test_invalid_input_never_invokes_temporary_judge_flow():
+    """Reject invalid input before invoking the temporary judge flow."""
     evaluator = _make_evaluator()
     evaluator._flow = AsyncMock()
     with pytest.raises(EvaluationException) as error:
@@ -214,6 +217,7 @@ def test_invalid_input_never_invokes_temporary_judge_flow():
 
 
 def test_invalid_json_from_flow_is_a_judge_error_without_retry():
+    """Classify malformed judge JSON as a system error without retrying."""
     evaluator = _make_evaluator()
     malformed = json.JSONDecodeError("Invalid judge JSON", "{", 1)
     evaluator._flow = AsyncMock(side_effect=malformed)
@@ -229,6 +233,7 @@ def test_invalid_json_from_flow_is_a_judge_error_without_retry():
     "exception", [TimeoutError("Judge timeout"), asyncio.CancelledError()]
 )
 def test_temporary_judge_does_not_swallow_transport_failures_or_cancellation(exception):
+    """Propagate transport failures and cancellation without retrying."""
     evaluator = _make_evaluator()
     evaluator._flow = AsyncMock(side_effect=exception)
 
@@ -242,6 +247,7 @@ def test_temporary_judge_does_not_swallow_transport_failures_or_cancellation(exc
 
 
 def test_public_result_contains_verdicts_and_allowed_metadata_without_grading_numbers():
+    """Expose only public verdicts and allowed metadata, not grading numbers."""
     evaluator = _mocked_evaluator()
     output = _judge_output()
     output["secret_score"] = 0.9
@@ -285,6 +291,7 @@ def test_public_result_contains_verdicts_and_allowed_metadata_without_grading_nu
 
 
 def test_sample_uses_transport_usage_and_configured_deployment():
+    """Build sample metadata from transport usage and the configured deployment."""
     evaluator = _mocked_evaluator()
     output = {
         "llm_output": _judge_output(),
@@ -329,6 +336,7 @@ def test_sample_uses_transport_usage_and_configured_deployment():
     ],
 )
 def test_unknown_usage_is_null_and_real_zero_is_preserved(metadata, expected):
+    """Represent unknown usage as null while preserving reported zero counts."""
     evaluator = _mocked_evaluator()
     evaluator._invoke_judge.return_value = {"llm_output": _judge_output(), **metadata}
     usage = evaluator(**_inputs())["sample"]["usage"]
@@ -349,6 +357,7 @@ def test_unknown_usage_is_null_and_real_zero_is_preserved(metadata, expected):
 )
 @pytest.mark.parametrize("value", [True, -1, 1.5, "100", float("nan"), float("inf")])
 def test_invalid_transport_usage_is_system_error(field, value):
+    """Classify invalid transport token counts as system errors."""
     evaluator = _mocked_evaluator()
     evaluator._invoke_judge.return_value = {"llm_output": _judge_output(), field: value}
     with pytest.raises(EvaluationException, match="Judge usage") as error:
@@ -359,6 +368,7 @@ def test_invalid_transport_usage_is_system_error(field, value):
 
 @pytest.mark.parametrize("wrapped", [False, True])
 def test_model_generated_usage_is_not_transport_telemetry(wrapped):
+    """Exclude model-generated usage values from transport telemetry."""
     evaluator = _mocked_evaluator()
     content = _judge_output()
     content.update(
@@ -377,6 +387,7 @@ def test_model_generated_usage_is_not_transport_telemetry(wrapped):
 
 
 def test_missing_usage_does_not_reuse_previous_row_telemetry():
+    """Keep missing usage independent of the previous row's telemetry."""
     evaluator = _mocked_evaluator()
     evaluator._invoke_judge.side_effect = [
         {"llm_output": _judge_output(), "input_token_count": 100, "cached_tokens": 0},
@@ -400,6 +411,7 @@ def test_missing_usage_does_not_reuse_previous_row_telemetry():
     ],
 )
 def test_internal_weighted_score_controls_only_public_verdict(threshold, passed):
+    """Apply the weighted threshold without changing dimension verdicts."""
     evaluator = _mocked_evaluator(scores=[3, 2], threshold=threshold)
     result = evaluator(**_inputs())
     assert result["task_level_rubric"] is passed
@@ -410,6 +422,7 @@ def test_internal_weighted_score_controls_only_public_verdict(threshold, passed)
 
 
 def test_exact_threshold_boundary():
+    """Pass an overall score that exactly equals the threshold."""
     dimensions = deepcopy(DIMENSIONS)
     for dimension in dimensions:
         dimension["weight"] = 1
@@ -419,6 +432,7 @@ def test_exact_threshold_boundary():
 
 
 def test_tiny_failed_weight_does_not_round_to_overall_pass():
+    """Preserve a failed verdict when a tiny failed weight prevents full credit."""
     dimensions = deepcopy(DIMENSIONS)
     dimensions[0]["weight"] = 10**100
     dimensions[1]["weight"] = 1
@@ -432,6 +446,7 @@ def test_tiny_failed_weight_does_not_round_to_overall_pass():
     "value", [True, False, None, 1, "invalid", {}, [], float("nan"), object()]
 )
 def test_always_applicable_is_ignored_by_validation_judge_hash_and_results(value):
+    """Ignore always_applicable values throughout validation and evaluation."""
     dimensions = [{**dimension, "always_applicable": value} for dimension in DIMENSIONS]
     evaluator = _mocked_evaluator(scores=[3, 2])
     result = evaluator(**_inputs(rubric_dimensions=dimensions))
@@ -454,6 +469,7 @@ def test_always_applicable_is_ignored_by_validation_judge_hash_and_results(value
     [(1, "fail"), (2, "fail"), (3, "pass"), (4, "pass"), (5, "pass"), (3.0, "pass")],
 )
 def test_whole_number_judge_scores_are_converted_to_public_verdicts(score, verdict):
+    """Convert valid whole-number judge ratings into public pass/fail verdicts."""
     result = _mocked_evaluator(scores=[score, score])(**_inputs())
     assert result["task_level_rubric"] is (verdict == "pass")
     assert result["task_level_rubric_passed"] is (verdict == "pass")
@@ -464,6 +480,7 @@ def test_whole_number_judge_scores_are_converted_to_public_verdicts(score, verdi
 
 
 def test_overall_verdict_uses_weighted_pass_fail_not_average_of_raw_ratings():
+    """Aggregate dimension verdicts rather than averaging raw judge ratings."""
     result = _mocked_evaluator(scores=[5, 2])(**_inputs())
     assert result["task_level_rubric"] is False
     assert [
@@ -476,6 +493,7 @@ def test_overall_verdict_uses_weighted_pass_fail_not_average_of_raw_ratings():
     "threshold", [True, False, -0.1, 1.1, "1", None, float("nan"), float("inf")]
 )
 def test_invalid_threshold_raises(threshold):
+    """Reject invalid thresholds as user errors during initialization."""
     with pytest.raises(EvaluationException) as error:
         _make_evaluator(threshold=threshold)
     assert error.value.blame == ErrorBlame.USER_ERROR
@@ -483,6 +501,7 @@ def test_invalid_threshold_raises(threshold):
 
 @pytest.mark.parametrize("rubric", [None, [], "[]", {}, [None], DIMENSIONS * 6])
 def test_invalid_rubric_fails_before_judge(rubric):
+    """Reject invalid rubric collections before invoking the judge."""
     evaluator = _mocked_evaluator()
     with pytest.raises(EvaluationException) as error:
         evaluator(**_inputs(rubric_dimensions=rubric))
@@ -491,6 +510,7 @@ def test_invalid_rubric_fails_before_judge(rubric):
 
 
 def test_missing_rubric_is_missing_field_error():
+    """Classify an omitted rubric as a missing-field error."""
     with pytest.raises(EvaluationException) as error:
         _make_evaluator()(query="Refund deadline?", response="Within 30 days.")
     assert error.value.category == ErrorCategory.MISSING_FIELD
@@ -517,6 +537,7 @@ def test_missing_rubric_is_missing_field_error():
     ],
 )
 def test_invalid_dimension_fields(field, value):
+    """Reject invalid dimension identifiers, descriptions, and weights."""
     dimensions = deepcopy(DIMENSIONS)
     dimensions[0][field] = value
     with pytest.raises(EvaluationException):
@@ -525,6 +546,7 @@ def test_invalid_dimension_fields(field, value):
 
 @pytest.mark.parametrize("field", ["id", "description", "weight"])
 def test_each_dimension_field_is_required(field):
+    """Require every dimension to define its identifier, description, and weight."""
     dimensions = deepcopy(DIMENSIONS)
     del dimensions[0][field]
     with pytest.raises(EvaluationException):
@@ -532,6 +554,7 @@ def test_each_dimension_field_is_required(field):
 
 
 def test_duplicate_ids_rejected_but_case_and_whitespace_preserved():
+    """Reject duplicate identifiers while preserving case and whitespace."""
     dimensions = deepcopy(DIMENSIONS)
     dimensions[1]["id"] = dimensions[0]["id"]
     with pytest.raises(EvaluationException, match="unique"):
@@ -547,6 +570,7 @@ def test_duplicate_ids_rejected_but_case_and_whitespace_preserved():
 
 @pytest.mark.parametrize("count,valid", [(1, True), (10, True), (11, False)])
 def test_dimension_count_boundary(count, valid):
+    """Accept one to ten dimensions and reject collections above that limit."""
     dimensions = [
         {**DIMENSIONS[0], "id": f"criterion_{index}"} for index in range(count)
     ]
@@ -562,6 +586,7 @@ def test_dimension_count_boundary(count, valid):
 
 
 def test_full_trace_and_optional_context_are_preserved_once():
+    """Forward the complete trace and optional context in one judge call."""
     evaluator = _mocked_evaluator()
     tools = [{"type": "web_search", "name": "web_search"}]
     evaluator(
@@ -575,6 +600,7 @@ def test_full_trace_and_optional_context_are_preserved_once():
 
 
 def test_query_response_string_and_message_array_inputs_are_preserved():
+    """Preserve message arrays and convert query/response strings into messages."""
     evaluator = _mocked_evaluator()
     evaluator(rubric_dimensions=DIMENSIONS, query=MESSAGES[:-1], response=MESSAGES[-1:])
     assert evaluator._invoke_judge.call_args.args[0]["messages"] == MESSAGES
@@ -590,6 +616,7 @@ def test_query_response_string_and_message_array_inputs_are_preserved():
 
 
 def test_dataframe_preserves_query_response_formats_and_missing_optional_defaults():
+    """Preserve dataframe row inputs and normalize missing optional values."""
     rows = pd.DataFrame(
         [
             _inputs(
@@ -631,6 +658,7 @@ def test_dataframe_preserves_query_response_formats_and_missing_optional_default
     ],
 )
 def test_nan_normalization_does_not_accept_invalid_or_missing_required_data(inputs):
+    """Reject invalid or missing required data despite NaN normalization."""
     evaluator = _mocked_evaluator()
     with pytest.raises(EvaluationException) as error:
         evaluator(**inputs)
@@ -640,6 +668,7 @@ def test_nan_normalization_does_not_accept_invalid_or_missing_required_data(inpu
 
 @pytest.mark.parametrize("field", ["query", "response", "tool_definitions"])
 def test_deeply_nested_input_is_classified_before_judge(field):
+    """Classify excessive input nesting as a user error before judging."""
     nested = {}
     for _ in range(sys.getrecursionlimit() // 2 + 50):
         nested = {"child": nested}
@@ -660,6 +689,7 @@ def test_deeply_nested_input_is_classified_before_judge(field):
 
 
 def test_serialization_recursion_failure_is_classified_before_judge():
+    """Classify serialization recursion failures as user errors before judging."""
     evaluator = _mocked_evaluator()
     with (
         patch(
@@ -675,6 +705,7 @@ def test_serialization_recursion_failure_is_classified_before_judge():
 
 
 def test_assistant_tool_calls_do_not_require_final_text():
+    """Accept assistant tool calls without a final textual response."""
     evaluator = _mocked_evaluator()
     evaluator(**_inputs(query=MESSAGES[:3], response=MESSAGES[3:-1]))
     assert evaluator._invoke_judge.call_args.args[0]["messages"] == MESSAGES[:-1]
@@ -682,6 +713,7 @@ def test_assistant_tool_calls_do_not_require_final_text():
 
 @pytest.mark.parametrize("messages", [MESSAGES, [], None, float("nan"), "[]"])
 def test_standalone_messages_argument_is_not_supported(messages):
+    """Reject the unsupported messages keyword at the public call boundary."""
     evaluator = _make_evaluator()
     evaluator._flow = AsyncMock()
     with pytest.raises(TypeError, match="messages"):
@@ -694,6 +726,7 @@ def test_standalone_messages_argument_is_not_supported(messages):
 def test_messages_is_rejected_by_input_preparation_and_mapping_schema(
     messages, include_query_response
 ):
+    """Reject messages inputs in both input preparation and the mapping schema."""
     inputs = (
         _inputs(messages=messages)
         if include_query_response
@@ -712,6 +745,7 @@ def test_messages_is_rejected_by_input_preparation_and_mapping_schema(
 def test_nonnull_messages_is_rejected_by_sdk_async_boundary(
     messages, include_query_response
 ):
+    """Reject nonnull messages inputs at the SDK's asynchronous boundary."""
     inputs = (
         _inputs(messages=messages)
         if include_query_response
@@ -768,6 +802,7 @@ def test_nonnull_messages_is_rejected_by_sdk_async_boundary(
     ],
 )
 def test_invalid_trace_fails_before_judge(trace):
+    """Reject invalid query/response traces before invoking the judge."""
     evaluator = _mocked_evaluator()
     with pytest.raises(EvaluationException):
         evaluator(rubric_dimensions=DIMENSIONS, **trace)
@@ -791,6 +826,7 @@ def test_invalid_trace_fails_before_judge(trace):
     ],
 )
 def test_invalid_optional_or_non_json_inputs(extra):
+    """Reject invalid optional context and non-JSON input values."""
     with pytest.raises(EvaluationException):
         _mocked_evaluator()(**_inputs(**extra))
 
@@ -798,6 +834,7 @@ def test_invalid_optional_or_non_json_inputs(extra):
 def test_unknown_dimension_fields_and_raw_annotations_do_not_reach_judge_or_hash(
     caplog,
 ):
+    """Exclude unknown fields and annotations from judge inputs, hashes, and logs."""
     dimensions = deepcopy(DIMENSIONS)
     dimensions[0]["annotation"] = {"secret_feedback": "Do not forward this."}
     evaluator = _mocked_evaluator()
@@ -841,6 +878,7 @@ def test_unknown_dimension_fields_and_raw_annotations_do_not_reach_judge_or_hash
     ],
 )
 def test_invalid_judge_structure_is_system_error(output):
+    """Classify malformed judge response structures as system errors."""
     evaluator = _mocked_evaluator()
     evaluator._invoke_judge.return_value = output
     with pytest.raises(EvaluationException) as error:
@@ -876,6 +914,7 @@ def test_invalid_judge_structure_is_system_error(output):
     ],
 )
 def test_invalid_judge_result_fields(field, value):
+    """Classify invalid judge identifiers, scores, and reasons as system errors."""
     evaluator = _mocked_evaluator()
     output = _judge_output()
     output["dimensions"][0][field] = value
@@ -887,6 +926,7 @@ def test_invalid_judge_result_fields(field, value):
 
 
 def test_judge_result_order_does_not_change_public_dimension_order():
+    """Preserve rubric dimension order when judge results arrive out of order."""
     evaluator = _mocked_evaluator()
     evaluator._invoke_judge.return_value = {
         "dimensions": list(reversed(_judge_output()["dimensions"]))
@@ -899,6 +939,7 @@ def test_judge_result_order_does_not_change_public_dimension_order():
 
 
 def test_judge_adapter_cannot_mutate_row_or_scoring_weights():
+    """Isolate caller inputs and scoring weights from judge adapter mutations."""
     evaluator = _mocked_evaluator()
     row = _inputs()
     original = deepcopy(row)
@@ -917,6 +958,7 @@ def test_judge_adapter_cannot_mutate_row_or_scoring_weights():
 
 
 def test_sequential_rows_do_not_reuse_the_previous_rubric():
+    """Keep sequential evaluations independent of previous rows' rubrics."""
     evaluator = _mocked_evaluator()
 
     async def judge(request):
@@ -937,6 +979,7 @@ def test_sequential_rows_do_not_reuse_the_previous_rubric():
 
 
 def test_concurrent_rows_use_their_own_rubrics():
+    """Keep concurrent rows' rubrics and transport usage independent."""
     evaluator = _make_evaluator()
     original = deepcopy(DIMENSIONS)
     other_dimensions = [{**DIMENSIONS[0], "id": "flight_booking"}]
@@ -993,6 +1036,7 @@ def test_concurrent_rows_use_their_own_rubrics():
 
 
 def test_judge_error_propagates_without_truncation_retry_or_partial_grading():
+    """Propagate judge errors without retrying, truncating, or partially grading."""
     evaluator = _mocked_evaluator()
     error = EvaluationException("Judge context window exceeded.")
     evaluator._invoke_judge.side_effect = error
@@ -1004,6 +1048,7 @@ def test_judge_error_propagates_without_truncation_retry_or_partial_grading():
 
 
 def test_caller_can_collect_mixed_row_failures_without_losing_successful_results():
+    """Collect row-level failures alongside successful concurrent evaluations."""
     evaluator = _mocked_evaluator()
 
     async def judge(request):
@@ -1041,6 +1086,7 @@ def test_caller_can_collect_mixed_row_failures_without_losing_successful_results
 
 
 def test_judge_cancellation_is_not_converted_to_a_row_validation_error():
+    """Propagate judge cancellation without converting it to a validation error."""
     evaluator = _mocked_evaluator()
     evaluator._invoke_judge.side_effect = asyncio.CancelledError()
 
@@ -1053,6 +1099,7 @@ def test_judge_cancellation_is_not_converted_to_a_row_validation_error():
 
 
 def test_asset_schemas_and_test_configuration():
+    """Validate asset schemas, required inputs, and referenced test configuration."""
     spec = yaml.safe_load((ASSET_DIR / "spec.yaml").read_text(encoding="utf-8"))
     for name in ("initParameterSchema", "dataMappingSchema", "outputSchema"):
         Draft202012Validator.check_schema(spec[name])
@@ -1098,5 +1145,6 @@ def test_asset_schemas_and_test_configuration():
     ],
 )
 def test_mapping_schema_rejects_invalid_rows(inputs):
+    """Reject invalid rubric and query/response rows through the mapping schema."""
     spec = yaml.safe_load((ASSET_DIR / "spec.yaml").read_text(encoding="utf-8"))
     assert list(Draft202012Validator(spec["dataMappingSchema"]).iter_errors(inputs))

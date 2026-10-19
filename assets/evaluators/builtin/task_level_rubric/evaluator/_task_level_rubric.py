@@ -273,6 +273,7 @@ class TaskLevelRubricEvaluator(PromptyEvaluatorBase[bool]):
         threshold: float = 1,
         is_reasoning_model: bool = False,
     ):
+        """Initialize the judge flow with a validated threshold and deployment."""
         if (
             isinstance(threshold, bool)
             or not isinstance(threshold, (int, float))
