@@ -40,11 +40,6 @@ dataMappingSchema:
           minItems: 1
           items:
             type: "object"
-    messages:
-      type: "array"
-      minItems: 1
-      items:
-        type: "object"
     rubric_dimensions:
       type: "array"
       minItems: 1
@@ -72,16 +67,9 @@ dataMappingSchema:
             type: "object"
     test_case_description:
       type: "string"
-  required: ["rubric_dimensions"]
-  oneOf:
-    - required: ["query", "response"]
-      not:
-        required: ["messages"]
-    - required: ["messages"]
-      not:
-        anyOf:
-          - required: ["query"]
-          - required: ["response"]
+  required: ["rubric_dimensions", "query", "response"]
+  not:
+    required: ["messages"]
 outputSchema:
   task_level_rubric:
     type: "boolean"

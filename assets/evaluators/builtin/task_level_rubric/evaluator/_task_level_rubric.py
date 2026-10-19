@@ -169,32 +169,23 @@ def _validate_messages(value: Any, field: str) -> list[dict[str, Any]]:
 
 
 def _trace_messages(eval_input: dict[str, Any]) -> list[dict[str, Any]]:
-    messages = eval_input.get("messages")
+    if "messages" in eval_input:
+        raise _input_error("messages is not supported. Provide query and response.")
     query = eval_input.get("query")
     response = eval_input.get("response")
-    if messages is not None:
-        if query is not None or response is not None:
-            raise _input_error(
-                "Provide messages or query and response, not both input forms."
-            )
-        trace = _validate_messages(messages, "messages")
-        assistant_messages = trace
-    else:
-        if query is None or response is None:
-            raise _input_error(
-                "Provide messages or both query and response.", missing=True
-            )
-        query_messages = (
-            [{"role": "user", "content": query}] if isinstance(query, str) else query
-        )
-        response_messages = (
-            [{"role": "assistant", "content": response}]
-            if isinstance(response, str)
-            else response
-        )
-        trace = _validate_messages(query_messages, "query")
-        assistant_messages = _validate_messages(response_messages, "response")
-        trace.extend(assistant_messages)
+    if query is None or response is None:
+        raise _input_error("Both query and response are required.", missing=True)
+    query_messages = (
+        [{"role": "user", "content": query}] if isinstance(query, str) else query
+    )
+    response_messages = (
+        [{"role": "assistant", "content": response}]
+        if isinstance(response, str)
+        else response
+    )
+    trace = _validate_messages(query_messages, "query")
+    assistant_messages = _validate_messages(response_messages, "response")
+    trace.extend(assistant_messages)
     if not any(message["role"] == "assistant" for message in assistant_messages):
         raise _input_error("The Task trace must include an assistant response.")
     return trace
@@ -208,7 +199,6 @@ def _prepare_judge_input(eval_input: dict[str, Any]) -> _JudgeInput:
         if not (
             field
             in {
-                "messages",
                 "query",
                 "response",
                 "tool_definitions",
@@ -314,16 +304,14 @@ class TaskLevelRubricEvaluator(PromptyEvaluatorBase[bool]):
         rubric_dimensions: list[dict[str, Any]] | None = None,
         query: str | list[dict[str, Any]] | None = None,
         response: str | list[dict[str, Any]] | None = None,
-        messages: list[dict[str, Any]] | None = None,
         tool_definitions: dict[str, Any] | list[dict[str, Any]] | None = None,
         test_case_description: str = "",
     ) -> dict[str, Any]:
-        """Evaluate one Task using the temporary, testing-only judge prompt."""
+        """Evaluate required query/response inputs with the temporary judge prompt."""
         return super().__call__(
             rubric_dimensions=rubric_dimensions,
             query=query,
             response=response,
-            messages=messages,
             tool_definitions=tool_definitions,
             test_case_description=test_case_description,
         )

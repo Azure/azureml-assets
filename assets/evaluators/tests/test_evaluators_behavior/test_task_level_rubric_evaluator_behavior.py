@@ -105,7 +105,8 @@ def _mocked_evaluator(*, scores=None, **kwargs):
 
 def _inputs(**overrides):
     return {
-        "messages": deepcopy(MESSAGES),
+        "query": deepcopy(MESSAGES[:-1]),
+        "response": deepcopy(MESSAGES[-1:]),
         "rubric_dimensions": deepcopy(DIMENSIONS),
         **overrides,
     }
@@ -490,7 +491,7 @@ def test_invalid_rubric_fails_before_judge(rubric):
 
 def test_missing_rubric_is_missing_field_error():
     with pytest.raises(EvaluationException) as error:
-        _make_evaluator()(messages=MESSAGES)
+        _make_evaluator()(query="Refund deadline?", response="Within 30 days.")
     assert error.value.category == ErrorCategory.MISSING_FIELD
 
 
@@ -572,12 +573,10 @@ def test_full_trace_and_optional_context_are_preserved_once():
     assert request["test_case_description"] == "Refund request"
 
 
-def test_query_response_and_messages_have_equivalent_full_trace_inputs():
+def test_query_response_string_and_message_array_inputs_are_preserved():
     evaluator = _mocked_evaluator()
     evaluator(rubric_dimensions=DIMENSIONS, query=MESSAGES[:-1], response=MESSAGES[-1:])
-    query_response_request = evaluator._invoke_judge.call_args.args[0]
-    evaluator(**_inputs())
-    assert evaluator._invoke_judge.call_args.args[0] == query_response_request
+    assert evaluator._invoke_judge.call_args.args[0]["messages"] == MESSAGES
     evaluator(
         rubric_dimensions=DIMENSIONS,
         query="Refund deadline?",
@@ -589,7 +588,7 @@ def test_query_response_and_messages_have_equivalent_full_trace_inputs():
     ]
 
 
-def test_dataframe_missing_columns_preserve_mixed_input_forms_and_optional_defaults():
+def test_dataframe_preserves_query_response_formats_and_missing_optional_defaults():
     rows = pd.DataFrame(
         [
             _inputs(
@@ -624,10 +623,10 @@ def test_dataframe_missing_columns_preserve_mixed_input_forms_and_optional_defau
         _inputs(rubric_dimensions=float("nan")),
         _inputs(rubric_dimensions=[{**DIMENSIONS[0], "description": float("nan")}]),
         _inputs(tool_definitions={"metadata": float("nan")}),
-        _inputs(messages=[{"role": "assistant", "content": float("nan")}]),
+        _inputs(response=[{"role": "assistant", "content": float("nan")}]),
         {"rubric_dimensions": DIMENSIONS, "query": float("nan"), "response": "Hello"},
         {"rubric_dimensions": DIMENSIONS, "query": "Hello", "response": float("nan")},
-        {"rubric_dimensions": DIMENSIONS, "messages": float("nan")},
+        {"rubric_dimensions": DIMENSIONS, "response": "Missing query"},
     ],
 )
 def test_nan_normalization_does_not_accept_invalid_or_missing_required_data(inputs):
@@ -638,7 +637,7 @@ def test_nan_normalization_does_not_accept_invalid_or_missing_required_data(inpu
     evaluator._invoke_judge.assert_not_called()
 
 
-@pytest.mark.parametrize("field", ["messages", "query", "response", "tool_definitions"])
+@pytest.mark.parametrize("field", ["query", "response", "tool_definitions"])
 def test_deeply_nested_input_is_classified_before_judge(field):
     nested = {}
     for _ in range(sys.getrecursionlimit() // 2 + 50):
@@ -649,15 +648,7 @@ def test_deeply_nested_input_is_classified_before_judge(field):
         inputs = _inputs(tool_definitions=nested)
     else:
         messages = [{"role": "assistant", "content": "Hello", "metadata": nested}]
-        inputs = (
-            _inputs(messages=messages)
-            if field == "messages"
-            else {
-                "rubric_dimensions": DIMENSIONS,
-                "query": messages if field == "query" else "Hello",
-                "response": messages if field == "response" else "Hello",
-            }
-        )
+        inputs = _inputs(**{field: messages})
     evaluator = _mocked_evaluator()
     with pytest.raises(EvaluationException, match="too deeply nested") as error:
         evaluator(**inputs)
@@ -684,33 +675,95 @@ def test_serialization_recursion_failure_is_classified_before_judge():
 
 def test_assistant_tool_calls_do_not_require_final_text():
     evaluator = _mocked_evaluator()
-    evaluator(**_inputs(messages=MESSAGES[:-1]))
+    evaluator(**_inputs(query=MESSAGES[:3], response=MESSAGES[3:-1]))
     assert evaluator._invoke_judge.call_args.args[0]["messages"] == MESSAGES[:-1]
+
+
+@pytest.mark.parametrize("messages", [MESSAGES, [], None, float("nan"), "[]"])
+def test_standalone_messages_argument_is_not_supported(messages):
+    evaluator = _make_evaluator()
+    evaluator._flow = AsyncMock()
+    with pytest.raises(TypeError, match="messages"):
+        evaluator(**_inputs(messages=messages))
+    evaluator._flow.assert_not_awaited()
+
+
+@pytest.mark.parametrize("messages", [MESSAGES, [], None, float("nan"), "[]"])
+@pytest.mark.parametrize("include_query_response", [False, True])
+def test_messages_is_rejected_by_input_preparation_and_mapping_schema(
+    messages, include_query_response
+):
+    inputs = (
+        _inputs(messages=messages)
+        if include_query_response
+        else {"rubric_dimensions": DIMENSIONS, "messages": messages}
+    )
+    with pytest.raises(EvaluationException, match="messages is not supported") as error:
+        _prepare_judge_input(inputs)
+    assert error.value.blame == ErrorBlame.USER_ERROR
+    assert error.value.category == ErrorCategory.INVALID_VALUE
+    spec = yaml.safe_load((ASSET_DIR / "spec.yaml").read_text(encoding="utf-8"))
+    assert list(Draft202012Validator(spec["dataMappingSchema"]).iter_errors(inputs))
+
+
+@pytest.mark.parametrize("messages", [MESSAGES, [], float("nan"), "[]"])
+@pytest.mark.parametrize("include_query_response", [False, True])
+def test_nonnull_messages_is_rejected_by_sdk_async_boundary(
+    messages, include_query_response
+):
+    inputs = (
+        _inputs(messages=messages)
+        if include_query_response
+        else {"rubric_dimensions": DIMENSIONS, "messages": messages}
+    )
+    evaluator = _make_evaluator()
+    evaluator._flow = AsyncMock()
+
+    async def run():
+        with pytest.raises(
+            EvaluationException, match="messages is not supported"
+        ) as error:
+            await evaluator._to_async()(**inputs)
+        assert error.value.blame == ErrorBlame.USER_ERROR
+        assert error.value.category == ErrorCategory.INVALID_VALUE
+
+    asyncio.run(run())
+    evaluator._flow.assert_not_awaited()
 
 
 @pytest.mark.parametrize(
     "trace",
     [
         {},
-        {"messages": []},
-        {"messages": "[]"},
-        {"messages": [{"role": "user", "content": "Hello"}]},
-        {"messages": MESSAGES, "query": "Hello"},
-        {"messages": MESSAGES, "response": "Hello"},
+        {"query": "Missing response"},
+        {"response": "Missing query"},
+        {"query": None, "response": "Hello"},
+        {"query": "Hello", "response": None},
+        {"query": [], "response": "Hello"},
+        {"query": "[]", "response": {}},
         {"query": "", "response": "Hello"},
+        {"query": " ", "response": "Hello"},
         {"query": "Hello", "response": " "},
         {"query": "Hello", "response": []},
         {
             "query": MESSAGES,
             "response": [{"role": "tool", "content": "No assistant response"}],
         },
-        {"messages": [None]},
-        {"messages": [{"role": [], "content": "Hello"}]},
-        {"messages": [{"role": "unknown", "content": "Hello"}]},
-        {"messages": [{"role": "assistant", "content": 1}]},
-        {"messages": [{"role": "assistant", "content": [{}]}]},
-        {"messages": [{"role": "assistant", "content": [{"type": "text", "text": 1}]}]},
-        {"messages": [{"role": "assistant", "content": None, "tool_calls": "bad"}]},
+        {"query": "Hello", "response": [None]},
+        {"query": "Hello", "response": [{"role": [], "content": "Hello"}]},
+        {"query": "Hello", "response": [{"role": "unknown", "content": "Hello"}]},
+        {"query": "Hello", "response": [{"role": "assistant", "content": 1}]},
+        {"query": "Hello", "response": [{"role": "assistant", "content": [{}]}]},
+        {
+            "query": "Hello",
+            "response": [
+                {"role": "assistant", "content": [{"type": "text", "text": 1}]}
+            ],
+        },
+        {
+            "query": "Hello",
+            "response": [{"role": "assistant", "content": None, "tool_calls": "bad"}],
+        },
     ],
 )
 def test_invalid_trace_fails_before_judge(trace):
@@ -727,7 +780,7 @@ def test_invalid_trace_fails_before_judge(trace):
         {"tool_definitions": [1]},
         {"test_case_description": None},
         {
-            "messages": [
+            "response": [
                 {
                     "role": "assistant",
                     "content": [{"type": "tool_result", "value": float("nan")}],
@@ -1005,6 +1058,12 @@ def test_asset_schemas_and_test_configuration():
     assert spec["name"] == "builtin.task_level_rubric"
     assert spec["version"] == TaskLevelRubricEvaluator._VERSION
     assert spec["outputSchema"]["task_level_rubric"]["type"] == "boolean"
+    assert spec["dataMappingSchema"]["required"] == [
+        "rubric_dimensions",
+        "query",
+        "response",
+    ]
+    assert "messages" not in spec["dataMappingSchema"]["properties"]
     dimension_schema = spec["dataMappingSchema"]["properties"]["rubric_dimensions"][
         "items"
     ]
@@ -1026,12 +1085,14 @@ def test_asset_schemas_and_test_configuration():
 @pytest.mark.parametrize(
     "inputs",
     [
-        {"messages": MESSAGES},
+        {"query": "Hello", "response": "Hi"},
+        {"rubric_dimensions": DIMENSIONS},
         _inputs(rubric_dimensions="[]"),
         _inputs(rubric_dimensions=[]),
         _inputs(rubric_dimensions=DIMENSIONS * 6),
-        _inputs(query="Conflict"),
+        _inputs(query=""),
         {"rubric_dimensions": DIMENSIONS, "query": "Missing response"},
+        {"rubric_dimensions": DIMENSIONS, "response": "Missing query"},
         _inputs(rubric_dimensions=[{**DIMENSIONS[0], "weight": True}]),
     ],
 )

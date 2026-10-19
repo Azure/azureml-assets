@@ -23,9 +23,11 @@ Map the dataset column to the evaluator argument:
 ```
 
 Use the dataset response instead of `${run.output}` when evaluating stored traces.
-Supply either `query` and `response` (strings or message arrays), or one `messages`
-array. The full trace is evaluated once. Message content may be text or structured
-content blocks; assistant tool calls and tool results are preserved.
+Both `query` and `response` are required, as strings or message arrays. A
+standalone `messages` argument is not supported, even alongside valid `query`
+and `response`. The two inputs are combined internally into a full trace and
+evaluated once. Message content may be text or structured content blocks;
+assistant tool calls and tool results are preserved.
 
 `rubric_dimensions` must be an actual array, not a JSON string, with 1-10 objects:
 
@@ -47,7 +49,7 @@ regardless of its value if present. Every supplied dimension is scored.
 
 Optional inputs are `tool_definitions` and `test_case_description`. Raw annotations,
 expected responses outside the rubric, and `rubric_metadata` are not judge inputs.
-Missing/invalid rubrics, conflicting input forms, empty traces, and traces without
+Missing/invalid rubrics, missing query/response, empty traces, and traces without
 an assistant response raise row validation errors. Inputs are never silently
 truncated or summarized. Judge/context-window errors must propagate as errors,
 not produce partial grades.
