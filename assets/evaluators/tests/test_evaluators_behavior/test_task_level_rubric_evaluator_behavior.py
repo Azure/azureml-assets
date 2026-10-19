@@ -189,7 +189,8 @@ def test_temporary_prompt_renders_and_parses_real_flow_responses_offline(
         ("Example failed grading response", [2, 1]),
     ]:
         example_text = messages[0]["content"].split(label, 1)[1]
-        example, _ = decoder.raw_decode(example_text[example_text.index("{") :])
+        example_start = example_text.index("{")
+        example, _ = decoder.raw_decode(example_text[example_start:])
         assert [
             dimension["score"] for dimension in example["dimensions"]
         ] == expected_scores
