@@ -417,6 +417,15 @@ def test_split_conversation_usage_is_summed(cls):
     assert result[f"{name}_completion_tokens"] == 10
     assert result[f"{name}_total_tokens"] == 40
     assert result[f"{name}_model"] == "actual-native"
+    properties = result[f"{name}_properties"]
+    for field in ("prompt_tokens", "completion_tokens", "total_tokens", "model"):
+        assert properties[field] == result[f"{name}_{field}"]
+    assert properties["decision_model"]["model"] == "actual-native"
+    assert properties["decision_model"]["usage_available"] is True
+    assert properties["decision_model"]["result_usage_scope"] == "reported_turns_only"
+    assert "execution" not in properties["decision_model"]
+    turns = result["evaluation_per_turn"][f"{name}_properties"]
+    assert [turn["total_tokens"] for turn in turns] == [18, 22]
 
 
 @pytest.mark.parametrize("cls", EVALUATORS)

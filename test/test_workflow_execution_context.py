@@ -232,10 +232,16 @@ def test_assets_test_summary_result(state, expected, tmp_path):
 def test_candidate_native_report_rejects_incomplete_or_skipped_coverage(tmp_path, change):
     """Reject missing native modules, required cases or nonpassing results."""
     runner = runpy.run_path(str(WORKFLOWS_DIR.parents[1] / "scripts" / "test" / "check_native_sdk.py"))
+
+    def owning_module(name):
+        if name.startswith("test_packaged_expansion_public_usage["):
+            return "test_expansion_compatibility"
+        return "test_composites" if "public_evaluate" in name else "test_evaluators"
+
     tree = ET.Element("testsuite")
     for module, minimum in runner["MINIMUM_CASES"].items():
-        required = sorted(name for name in runner["REQUIRED_CASES"]
-                          if ("public_evaluate" in name) == (module == "test_composites"))
+        required = sorted(name for name in runner["REQUIRED_CASES"] if owning_module(name) == module)
+        assert len(required) <= minimum
         names = required + [f"test_additional[{index}]" for index in range(minimum - len(required))]
         for name in names:
             ET.SubElement(tree, "testcase", classname=f"assets.tests.{module}", name=name)

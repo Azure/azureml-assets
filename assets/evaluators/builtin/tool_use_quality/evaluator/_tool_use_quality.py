@@ -1078,7 +1078,12 @@ class ToolUseQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         per_turn_results = []
         # Evaluate all inputs.
         for eval_input in eval_input_list:
-            result = await self._do_eval(eval_input)
+            try:
+                result = await self._do_eval(eval_input)
+            except EvaluationException as error:
+                if _SDK_SUPPORTS_DECISION and self._uses_decision_model:
+                    self._on_evaluation_error(error, per_turn_results)
+                raise
             per_turn_results.append(result)
         # Return results as-is if only one result was produced.
         if len(per_turn_results) == 1:

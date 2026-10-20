@@ -3,6 +3,7 @@
 
 """Composite contracts exercised against the actual shared Decision SDK."""
 
+import asyncio
 from copy import deepcopy
 import hashlib
 import inspect
@@ -25,11 +26,12 @@ from azure.ai.evaluation._evaluate._evaluate import (
     _extract_from_evaluator_base,
     _extract_metrics_from_evaluator_name,
 )
-from azure.ai.evaluation._exceptions import EvaluationException
+from azure.ai.evaluation._exceptions import ErrorBlame, ErrorCategory, EvaluationException
 from azure.ai.evaluation._legacy.prompty._yaml_utils import load_yaml
 from azure.ai.evaluation._evaluate._batch_run._run_submitter_client import RunSubmitterClient
 from ...builtin.output_quality.evaluator._output_quality import OutputQualityEvaluator
 from ...builtin.tool_use_quality.evaluator._tool_use_quality import ToolUseQualityEvaluator
+from ...builtin.task_completion.evaluator._task_completion import TaskCompletionEvaluator
 from ...builtin.f1_score.evaluator._f1_score import F1ScoreEvaluator
 
 
@@ -97,6 +99,80 @@ def _native(evaluator_class, skipped=False):
              "probabilities": {str(index): float(index == 4) for index in range(5)}}
         )
     return {"model": "actual-model", "answers": answers, "usage": {"input_tokens": 30, "output_tokens": 4}}
+
+
+@pytest.mark.parametrize("evaluator_class", COMPOSITES)
+@pytest.mark.parametrize("failure", ["semantic", "timeout"])
+def test_composite_failed_split_retains_prior_paid_usage(evaluator_class, failure):
+    evaluator = evaluator_class(CONFIG)
+    first, second = _native(evaluator_class), _native(evaluator_class)
+    first["usage"] = {"input_tokens": 12, "output_tokens": 3}
+    second["usage"] = {"input_tokens": 34, "output_tokens": 5}
+    member = evaluator_class._EVALUATORS[0]["name"]
+    second["answers"][f"{member}_status"]["noul"] = 2
+    post = AsyncMock(side_effect=[first, asyncio.TimeoutError() if failure == "timeout" else second])
+    evaluator._decision_model_runner._post = post
+    conversation = {
+        "messages": [
+            {"role": role, "content": f"{role}-{turn}"}
+            for turn in range(3) for role in ("user", "assistant")
+        ]
+    }
+    with pytest.raises(EvaluationException) as raised:
+        evaluator(conversation=conversation)
+    assert post.await_count == 2
+    assert raised.value.blame == ErrorBlame.SYSTEM_ERROR
+    assert raised.value.category == ErrorCategory.FAILED_EXECUTION
+    properties = raised.value.properties
+    expected = (
+        {"prompt_tokens": 12, "completion_tokens": 3, "total_tokens": 15}
+        if failure == "timeout" else {"prompt_tokens": 46, "completion_tokens": 8, "total_tokens": 54}
+    )
+    assert {field: properties[field] for field in expected} == expected
+    assert properties["model"] == "actual-model"
+    assert properties["decision_model"]["usage_available"] is True
+    assert properties["decision_model"]["result_usage_scope"] == "reported_turns_only"
+    assert "execution" not in properties["decision_model"]
+
+
+@pytest.mark.parametrize("evaluator_class", COMPOSITES)
+def test_composite_successful_split_properties_match_aggregate_usage(evaluator_class):
+    evaluator = evaluator_class(CONFIG)
+    first, second = _native(evaluator_class), _native(evaluator_class)
+    first["usage"] = {"input_tokens": 12, "output_tokens": 3}
+    second["usage"] = {"input_tokens": 34, "output_tokens": 5}
+    post = AsyncMock(side_effect=[first, second])
+    evaluator._decision_model_runner._post = post
+    result = evaluator(conversation={
+        "messages": [
+            {"role": role, "content": f"{role}-{turn}"}
+            for turn in range(2) for role in ("user", "assistant")
+        ]
+    })
+    assert post.await_count == 2
+    name = evaluator._result_key
+    properties = result[f"{name}_properties"]
+    for field, expected in (("prompt_tokens", 46), ("completion_tokens", 8), ("total_tokens", 54)):
+        assert properties[field] == result[f"{name}_{field}"] == expected
+    assert properties["model"] == result[f"{name}_model"] == "actual-model"
+    assert properties["decision_model"] == {
+        "model": "actual-model", "usage_available": True, "result_usage_scope": "reported_turns_only",
+    }
+    assert all(
+        "decision_model" not in turn for turn in result["evaluation_per_turn"][f"{name}_properties"]
+    )
+
+
+@pytest.mark.parametrize("evaluator_class", [TaskCompletionEvaluator, *COMPOSITES])
+def test_chat_failure_does_not_invoke_native_accounting(evaluator_class):
+    evaluator = evaluator_class(CHAT_CONFIG)
+    error = EvaluationException("unchanged chat failure")
+    evaluator._do_eval = AsyncMock(side_effect=error)
+    evaluator._on_evaluation_error = Mock(side_effect=AssertionError("Native accounting must not run for chat"))
+    with pytest.raises(EvaluationException) as raised:
+        evaluator(query="Query", response="Response", tool_definitions=[])
+    assert raised.value is error
+    evaluator._on_evaluation_error.assert_not_called()
 
 
 def _metadata(evaluator, source):

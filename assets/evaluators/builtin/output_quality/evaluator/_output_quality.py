@@ -882,7 +882,13 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
 
         per_turn_results = []
         for eval_input in eval_input_list:
-            per_turn_results.append(await self._do_eval(eval_input))
+            try:
+                result = await self._do_eval(eval_input)
+            except EvaluationException as error:
+                if _SDK_SUPPORTS_DECISION and self._uses_decision_model:
+                    self._on_evaluation_error(error, per_turn_results)
+                raise
+            per_turn_results.append(result)
         if len(per_turn_results) == 1:
             return per_turn_results[0]
         if not per_turn_results:
