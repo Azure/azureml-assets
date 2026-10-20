@@ -290,8 +290,19 @@ def update_metadata(
     ml_client: MLClient,
     asset_type: assets.AssetType,
     allow_no_op_update: bool = False,
+    raise_on_error: bool = False,
 ):
-    """Update the mutable metadata of an already registered asset."""
+    """Update the mutable metadata of an already registered asset.
+
+    Args:
+        name (str): Asset name.
+        version (str): Asset version.
+        update (AssetVersionUpdate): Updates to apply.
+        ml_client (MLClient): ML client.
+        asset_type (assets.AssetType): Asset type.
+        allow_no_op_update (bool): Send the update even if nothing changed.
+        raise_on_error (bool): Re-raise metadata update failures instead of only logging them.
+    """
     try:
         # Get existing asset
         operations = RegistryUtils.get_operations_from_type(asset_type=asset_type, ml_client=ml_client)
@@ -319,7 +330,10 @@ def update_metadata(
 
         # Update system_metadata
         if update.system_metadata and hasattr(asset, '_system_metadata'):
-            updated_system_metadata = copy.deepcopy(asset._system_metadata)
+            # Registry GETs can return no system_metadata even when the asset has some. The registry merges
+            # system_metadata on update (omitted keys keep their values), so starting from empty is safe.
+            existing_system_metadata = asset._system_metadata or {}
+            updated_system_metadata = copy.deepcopy(existing_system_metadata)
 
             if update.system_metadata.replace is not None:
                 updated_system_metadata = update.system_metadata.replace
@@ -331,7 +345,7 @@ def update_metadata(
                     for k in update.system_metadata.delete:
                         updated_system_metadata.pop(k, None)
 
-            if updated_system_metadata != asset._system_metadata:
+            if updated_system_metadata != existing_system_metadata:
                 logger.print("system_metadata has been updated.")
                 asset._system_metadata = updated_system_metadata
                 need_update = True
@@ -364,6 +378,8 @@ def update_metadata(
             logger.print(f"No update found for {asset_type.value} {name}. Skipping")
     except Exception as e:
         logger.log_error(f"Failed to update metadata for {asset_type.value} : {name} : {e}")
+        if raise_on_error:
+            raise
 
     # Archive or restore asset based on stage
     try:
