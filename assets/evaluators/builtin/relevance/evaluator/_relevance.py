@@ -4,11 +4,14 @@
 import logging
 import math
 import os
+import json
 from typing import Dict, Union, List, Tuple
 
 from typing_extensions import overload, override
 
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
+
+from azure.ai.evaluation._evaluators import _common as _sdk_common
 
 # ---------------------------------------------------------------------------
 # Imports target azure-ai-evaluation >= 1.18.1. Each ``except ImportError``
@@ -26,7 +29,6 @@ from azure.ai.evaluation._common.utils import (
 from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
 
 from azure.ai.evaluation._model_configurations import Conversation
-from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 from azure.ai.evaluation._evaluators._common._validators import (
     ValidatorInterface,
     ConversationValidator,
@@ -72,10 +74,30 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
     )
 
 
+ModelEvaluatorBase = getattr(_sdk_common, "ModelEvaluatorBase", _sdk_common.PromptyEvaluatorBase)
+try:
+    from azure.ai.evaluation._evaluators._common._decision_strategy import DecisionEvaluationStrategy, LikertScoring
+except ImportError as exc:
+    if exc.name != "azure.ai.evaluation._evaluators._common._decision_strategy":
+        raise
+    DecisionEvaluationStrategy = LikertScoring = None
+_SDK_SUPPORTS_DECISION = (
+    hasattr(_sdk_common, "ModelEvaluatorBase") and DecisionEvaluationStrategy is not None and LikertScoring is not None
+)
+
+
+def _load_decision_questions(path: str, question_id: str) -> Dict:
+    """Load the packaged applicability and rating questions without initializing a chat flow."""
+    from azure.ai.evaluation._legacy.prompty._yaml_utils import load_yaml
+
+    rubric = json.loads(json.dumps(load_yaml(path)))
+    return {"status": rubric["status"], question_id: rubric["result"]}
+
+
 logger = logging.getLogger(__name__)
 
 
-class RelevanceEvaluator(PromptyEvaluatorBase):
+class RelevanceEvaluator(ModelEvaluatorBase):
     """
     Evaluates relevance score for a given query and response or a multi-turn conversation, including reasoning.
 
@@ -88,7 +110,9 @@ class RelevanceEvaluator(PromptyEvaluatorBase):
 
     Relevance scores range from 1 to 5, with 1 being the worst and 5 being the best.
 
-    :param model_config: Configuration for the Azure OpenAI model.
+    :param model_config: Configuration for a chat model, or a mapping with ``type="decision"``,
+        ``azure_endpoint`` and ``azure_deployment`` for a native Decision model.
+        Authenticate with ``api_key`` or ``credential``.
     :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
         ~azure.ai.evaluation.OpenAIModelConfiguration]
     :param threshold: The threshold for the relevance evaluator. Default is 3.
@@ -135,6 +159,8 @@ class RelevanceEvaluator(PromptyEvaluatorBase):
     """
 
     # Constants must be defined within eval's directory to be save/loadable
+    _supports_decision_models = True
+    _DECISION_FILE = "relevance.decision.yaml"
     _PROMPTY_FILE = "relevance.prompty"
     _RESULT_KEY = "relevance"
 
@@ -147,7 +173,9 @@ class RelevanceEvaluator(PromptyEvaluatorBase):
     def __init__(self, model_config, *, credential=None, threshold=3, **kwargs):
         """Initialize the Relevance evaluator.
 
-        :param model_config: Configuration for the Azure OpenAI model.
+        :param model_config: Configuration for a chat model, or a mapping with ``type="decision"``,
+        ``azure_endpoint`` and ``azure_deployment`` for a native Decision model.
+        Authenticate with ``api_key`` or ``credential``.
         :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
             ~azure.ai.evaluation.OpenAIModelConfiguration]
         :param credential: The credential for authentication.
@@ -161,6 +189,16 @@ class RelevanceEvaluator(PromptyEvaluatorBase):
         # Initialize input validator
         self._validator = ConversationValidator(error_target=ErrorTarget.RELEVANCE_EVALUATOR)
 
+        self._decision_selected = isinstance(model_config, dict) and model_config.get("type") == "decision"
+        self._strategy = None
+        if self._decision_selected and not _SDK_SUPPORTS_DECISION:
+            raise EvaluationException(
+                message="Decision models require an azure-ai-evaluation version with decision model support.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=ErrorTarget.RELEVANCE_EVALUATOR,
+            )
+
         super().__init__(
             model_config=model_config,
             prompty_file=prompty_path,
@@ -169,6 +207,21 @@ class RelevanceEvaluator(PromptyEvaluatorBase):
             credential=credential,
             _higher_is_better=True,
             **kwargs,
+        )
+
+        if self._decision_selected:
+            self._strategy = self._create_decision_strategy(os.path.join(current_dir, self._DECISION_FILE))
+
+    def _create_decision_strategy(self, path: str):
+        """Use the SDK runner and scoring with this asset's packaged rubric."""
+        return DecisionEvaluationStrategy(
+            self._decision_model_runner,
+            result_key=self._result_key,
+            error_target=ErrorTarget.RELEVANCE_EVALUATOR,
+            questions=_load_decision_questions(path, self._result_key),
+            scoring=LikertScoring(5, minimum=1),
+            threshold=self._threshold,
+            timeout=self._LLM_CALL_TIMEOUT,
         )
 
     @overload
@@ -309,6 +362,9 @@ class RelevanceEvaluator(PromptyEvaluatorBase):
         :return: The evaluation result.
         :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
         """
+        if self._decision_selected:
+            return await super()._real_call(**kwargs)
+
         # Convert inputs into list of evaluable inputs.
         try:
             eval_input_list = self._convert_kwargs_to_eval_input(**kwargs)
@@ -402,6 +458,9 @@ class RelevanceEvaluator(PromptyEvaluatorBase):
         if not isinstance(eval_input["response"], str):
             eval_input["response"] = reformat_agent_response(eval_input["response"], logger)
         eval_input.pop("messages", None)
+        if self._decision_selected:
+            return await self._strategy.evaluate(eval_input)
+
         result = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         llm_output = result.get("llm_output", result)
         score = math.nan
@@ -411,7 +470,11 @@ class RelevanceEvaluator(PromptyEvaluatorBase):
             llm_status = llm_output.get("status", "completed")
             if llm_status == "skipped":
                 reason = llm_output.get("reason", "")
-                return self._return_not_applicable_result(reason, self._threshold)
+                skipped = self._return_not_applicable_result(reason, self._threshold)
+                metadata = self._get_token_metadata(result)
+                skipped[f"{self._result_key}_properties"] = {**(llm_output.get("properties") or {}), **metadata}
+                skipped.update({f"{self._result_key}_{key}": value for key, value in metadata.items()})
+                return skipped
 
             score = float(llm_output.get("score", math.nan))
             reason = llm_output.get("reason", "")

@@ -1,11 +1,13 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 import os
+import json
 import logging
+from copy import deepcopy
 from enum import Enum
 from typing import Dict, List, Tuple, Union, TypeVar, cast
 from typing_extensions import override
-from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
+from azure.ai.evaluation._evaluators import _common as _sdk_common
 from azure.ai.evaluation._exceptions import (
     ErrorBlame,
     ErrorCategory,
@@ -24,6 +26,19 @@ from azure.ai.evaluation._evaluators._common._validators import (  # noqa: F401
     ValidatorInterface,
     ConversationValidator,
     ToolDefinitionsValidator,
+)
+
+ModelEvaluatorBase = getattr(_sdk_common, "ModelEvaluatorBase", _sdk_common.PromptyEvaluatorBase)
+try:
+    from azure.ai.evaluation._evaluators._common._decision_strategy import BinaryScoring, DecisionEvaluationStrategy
+except ImportError as exc:
+    if exc.name != "azure.ai.evaluation._evaluators._common._decision_strategy":
+        raise
+    BinaryScoring = DecisionEvaluationStrategy = None
+_SDK_SUPPORTS_DECISION = (
+    hasattr(_sdk_common, "ModelEvaluatorBase")
+    and BinaryScoring is not None
+    and callable(getattr(DecisionEvaluationStrategy, "parse", None))
 )
 
 # ---------------------------------------------------------------------------
@@ -471,8 +486,16 @@ def _extract_needed_tool_definitions(
     return needed_tool_definitions
 
 
+def _load_decision_questions(path: str, question_id: str) -> Dict:
+    """Load this independently packaged evaluator's applicability and scoring questions."""
+    from azure.ai.evaluation._legacy.prompty._yaml_utils import load_yaml
+
+    rubric = json.loads(json.dumps(load_yaml(path)))
+    return {"status": rubric["status"], question_id: rubric["result"]}
+
+
 @experimental
-class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
+class ToolInputAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
     """The Tool Input Accuracy evaluator performs an evaluations of parameters passed to tool calls.
 
        The evaluation criteria are as follows:
@@ -519,6 +542,9 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         however, it is recommended to use the new key moving forward as the old key will be deprecated in the future.
     """
 
+    _supports_decision_models = True
+    _binary_decision = True
+    _DECISION_FILE = "tool_input_accuracy.decision.yaml"
     _PROMPTY_FILE = "tool_input_accuracy.prompty"
     _RESULT_KEY = "tool_input_accuracy"
 
@@ -533,6 +559,7 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         model_config,
         *,
         credential=None,
+        probability_threshold=None,
         **kwargs,
     ):
         """Initialize the Tool Input Accuracy evaluator.
@@ -544,6 +571,11 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :type credential: Optional[Any]
         :param kwargs: Additional keyword arguments.
         :type kwargs: Any
+
+        :keyword probability_threshold: Decision-only probability cutoff in [0, 1].
+            Overrides model_config["probability_threshold"] without mutating the configuration.
+            The default is 0.75; applicability uses a separate fixed cutoff of 0.5.
+        :paramtype probability_threshold: Optional[float]
         """
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
@@ -554,6 +586,24 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             check_for_unsupported_tools=False,
         )
 
+        decision_selected = isinstance(model_config, dict) and model_config.get("type") == "decision"
+        if probability_threshold is not None:
+            if not decision_selected:
+                raise EvaluationException(
+                    message="probability_threshold is only supported for Decision models.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=ExtendedErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR,
+                )
+            model_config = {**model_config, "probability_threshold": probability_threshold}
+        if decision_selected and not _SDK_SUPPORTS_DECISION:
+            raise EvaluationException(
+                message="Decision models require an azure-ai-evaluation version with Decision strategy parse support.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=ExtendedErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR,
+            )
+
         super().__init__(
             model_config=model_config,
             prompty_file=prompty_path,
@@ -562,6 +612,19 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             threshold=1,
             **kwargs,
         )
+
+        self._decision_strategy = None
+        if decision_selected:
+            runner = self._decision_model_runner
+            self._decision_strategy = DecisionEvaluationStrategy(
+                runner,
+                result_key=self._result_key,
+                error_target=ExtendedErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR,
+                questions=_load_decision_questions(os.path.join(current_dir, self._DECISION_FILE), self._result_key),
+                scoring=BinaryScoring(runner.probability_threshold),
+                threshold=self._threshold,
+                timeout=self._LLM_CALL_TIMEOUT,
+            )
 
     def _convert_kwargs_to_eval_input(self, **kwargs):
         """Convert kwargs to evaluation input format.
@@ -657,6 +720,9 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         )
 
         # Call the LLM to evaluate
+        if self._decision_strategy is not None:
+            return await self._decision_strategy.evaluate(eval_input)
+
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
 
@@ -665,7 +731,13 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             llm_status = llm_output.get("status", "completed")
             if llm_status == "skipped":
                 reason = llm_output.get("reason", "")
-                return self._return_not_applicable_result(reason, self._threshold)
+                result = self._return_not_applicable_result(reason, self._threshold)
+                token_metadata = self._get_token_metadata(prompty_output_dict)
+                result[f"{self._result_key}_properties"] = {
+                    **(llm_output.get("properties", {}) or {}), **token_metadata,
+                }
+                result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+                return result
 
             score = llm_output.get("score", None)
             if score not in [0, 1]:
@@ -741,9 +813,9 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 self._threshold,
             )
         if "response" in kwargs:
-            kwargs["response"] = _preprocess_messages(kwargs["response"])
+            kwargs["response"] = _preprocess_messages(deepcopy(kwargs["response"]))
         if "query" in kwargs:
-            kwargs["query"] = _preprocess_messages(kwargs["query"])
+            kwargs["query"] = _preprocess_messages(deepcopy(kwargs["query"]))
         # Convert inputs into list of evaluable inputs.
         eval_input = self._convert_kwargs_to_eval_input(**kwargs)
         if isinstance(eval_input, dict) and eval_input.get("error_message"):

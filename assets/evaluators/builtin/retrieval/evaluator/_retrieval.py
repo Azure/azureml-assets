@@ -9,10 +9,11 @@ import re
 from typing import Any, Dict, List, Union
 from typing_extensions import overload, override
 
-from azure.ai.evaluation._evaluators._common._base_prompty_eval import PromptyEvaluatorBase
 from azure.ai.evaluation._model_configurations import Conversation
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
 from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
+
+from azure.ai.evaluation._evaluators import _common as _sdk_common
 
 # ---------------------------------------------------------------------------
 # Imports target azure-ai-evaluation >= 1.18.1. Each ``except ImportError``
@@ -47,10 +48,30 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
         _normalize_function_call_types,
     )
 
+ModelEvaluatorBase = getattr(_sdk_common, "ModelEvaluatorBase", _sdk_common.PromptyEvaluatorBase)
+try:
+    from azure.ai.evaluation._evaluators._common._decision_strategy import DecisionEvaluationStrategy, LikertScoring
+except ImportError as exc:
+    if exc.name != "azure.ai.evaluation._evaluators._common._decision_strategy":
+        raise
+    DecisionEvaluationStrategy = LikertScoring = None
+_SDK_SUPPORTS_DECISION = (
+    hasattr(_sdk_common, "ModelEvaluatorBase") and DecisionEvaluationStrategy is not None and LikertScoring is not None
+)
+
+
+def _load_decision_questions(path: str, question_id: str) -> Dict:
+    """Load the packaged applicability and rating questions without initializing a chat flow."""
+    from azure.ai.evaluation._legacy.prompty._yaml_utils import load_yaml
+
+    rubric = json.loads(json.dumps(load_yaml(path)))
+    return {"status": rubric["status"], question_id: rubric["result"]}
+
+
 logger = logging.getLogger(__name__)
 
 
-class RetrievalEvaluator(PromptyEvaluatorBase[Union[str, float]]):
+class RetrievalEvaluator(ModelEvaluatorBase[Union[str, float]]):
     """
     Evaluate retrieval score for a given query and context or a multi-turn conversation, including reasoning.
 
@@ -65,7 +86,9 @@ class RetrievalEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     has failed to surface the most relevant context chunks at the top of the list
     and/or introduced bias and ignored factual correctness.
 
-    :param model_config: Configuration for the Azure OpenAI model.
+    :param model_config: Configuration for a chat model, or a mapping with ``type="decision"``,
+        ``azure_endpoint`` and ``azure_deployment`` for a native Decision model.
+        Authenticate with ``api_key`` or ``credential``.
     :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
         ~azure.ai.evaluation.OpenAIModelConfiguration]
     :param threshold: The threshold for the evaluation. Default is 3.
@@ -113,6 +136,8 @@ class RetrievalEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         however, it is recommended to use the new key moving forward as the old key will be deprecated in the future.
     """
 
+    _supports_decision_models = True
+    _DECISION_FILE = "retrieval.decision.yaml"
     _PROMPTY_FILE = "retrieval.prompty"
     _RESULT_KEY = "retrieval"
 
@@ -123,7 +148,9 @@ class RetrievalEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     def __init__(self, model_config, *, threshold: float = 3, credential=None, **kwargs):
         """Initialize the Retrieval evaluator.
 
-        :param model_config: Configuration for the Azure OpenAI model.
+        :param model_config: Configuration for a chat model, or a mapping with ``type="decision"``,
+        ``azure_endpoint`` and ``azure_deployment`` for a native Decision model.
+        Authenticate with ``api_key`` or ``credential``.
         :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
             ~azure.ai.evaluation.OpenAIModelConfiguration]
         :param threshold: The threshold for evaluation.
@@ -135,6 +162,16 @@ class RetrievalEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
         self._threshold = threshold
         self._higher_is_better = True
+        self._decision_selected = isinstance(model_config, dict) and model_config.get("type") == "decision"
+        self._strategy = None
+        if self._decision_selected and not _SDK_SUPPORTS_DECISION:
+            raise EvaluationException(
+                message="Decision models require an azure-ai-evaluation version with decision model support.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=ErrorTarget.RETRIEVAL_EVALUATOR,
+            )
+
         super().__init__(
             model_config=model_config,
             prompty_file=prompty_path,
@@ -143,6 +180,21 @@ class RetrievalEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             credential=credential,
             _higher_is_better=self._higher_is_better,
             **kwargs,
+        )
+
+        if self._decision_selected:
+            self._strategy = self._create_decision_strategy(os.path.join(current_dir, self._DECISION_FILE))
+
+    def _create_decision_strategy(self, path: str):
+        """Use the SDK runner and scoring with this asset's packaged rubric."""
+        return DecisionEvaluationStrategy(
+            self._decision_model_runner,
+            result_key=self._result_key,
+            error_target=ErrorTarget.RETRIEVAL_EVALUATOR,
+            questions=_load_decision_questions(path, self._result_key),
+            scoring=LikertScoring(5, minimum=1),
+            threshold=self._threshold,
+            timeout=self._LLM_CALL_TIMEOUT,
         )
 
     @overload
@@ -446,6 +498,9 @@ class RetrievalEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         if isinstance(eval_input.get("query"), list):
             eval_input["query"] = _preprocess_messages(eval_input["query"])
         # Call the prompty flow to get the evaluation result.
+        if self._decision_selected:
+            return await self._strategy.evaluate(eval_input)
+
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         score = math.nan
         reason = ""
@@ -464,7 +519,11 @@ class RetrievalEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 llm_status = parsed_output.get("status", "completed")
                 if llm_status == "skipped":
                     skip_reason = parsed_output.get("reason", "")
-                    return self._return_not_applicable_result(skip_reason, self._threshold)
+                    skipped = self._return_not_applicable_result(skip_reason, self._threshold)
+                    metadata = self._get_token_metadata(prompty_output_dict)
+                    skipped[f"{self._result_key}_properties"] = {**(parsed_output.get("properties") or {}), **metadata}
+                    skipped.update({f"{self._result_key}_{key}": value for key, value in metadata.items()})
+                    return skipped
                 score = parsed_output.get("score", math.nan)
                 reason = parsed_output.get("reason", "")
                 llm_properties = parsed_output.get("properties", {}) or {}
@@ -552,6 +611,9 @@ class RetrievalEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: The evaluation result.
         :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
         """
+        if self._decision_selected:
+            return await super()._real_call(**kwargs)
+
         # Convert inputs into list of evaluable inputs.
         try:
             eval_input_list = self._convert_kwargs_to_eval_input(**kwargs)

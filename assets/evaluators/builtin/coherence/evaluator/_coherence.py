@@ -16,7 +16,19 @@ if os.getenv("AI_EVALS_USE_PF_PROMPTY", "false").lower() == "true":
 else:
     from azure.ai.evaluation._legacy.prompty import AsyncPrompty
 
-from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
+from azure.ai.evaluation._evaluators import _common as _sdk_common
+
+ModelEvaluatorBase = getattr(_sdk_common, "ModelEvaluatorBase", _sdk_common.PromptyEvaluatorBase)
+try:
+    from azure.ai.evaluation._evaluators._common._decision_strategy import LikertScoring, DecisionEvaluationStrategy
+except ImportError as exc:
+    if exc.name != "azure.ai.evaluation._evaluators._common._decision_strategy":
+        raise
+    LikertScoring = DecisionEvaluationStrategy = None
+_SDK_SUPPORTS_DECISION = (
+    hasattr(_sdk_common, "ModelEvaluatorBase") and LikertScoring is not None and DecisionEvaluationStrategy is not None
+)
+
 from azure.ai.evaluation._model_configurations import Conversation
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
 from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
@@ -412,7 +424,7 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
 logger = logging.getLogger(__name__)
 
 
-class CoherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
+class CoherenceEvaluator(ModelEvaluatorBase[Union[str, float]]):
     """
     Evaluates coherence score for a given query and response or a multi-turn conversation, including reasoning.
 
@@ -420,7 +432,9 @@ class CoherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     flows smoothly, and resembles human-like language in its responses. Use it when assessing the readability
     and user-friendliness of a model's generated responses in real-world applications.
 
-    :param model_config: Configuration for the Azure OpenAI model.
+    :param model_config: Configuration for the Azure OpenAI model. Set ``type="decision"`` with
+        a Foundry ``azure_endpoint`` and ``azure_deployment`` to use a native Decision model;
+        authenticate with ``api_key`` or ``credential``.
     :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
         ~azure.ai.evaluation.OpenAIModelConfiguration]
     :param threshold: The threshold for the coherence evaluator. Default is 3.
@@ -468,6 +482,9 @@ class CoherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
     _PROMPTY_FILE = "coherence.prompty"
     _MULTI_TURN_PROMPTY_FILE = "coherence_multi_turn.prompty"
+    _DECISION_FILE = "coherence.decision.yaml"
+    _MULTI_TURN_DECISION_FILE = "coherence_multi_turn.decision.yaml"
+    _supports_decision_models = True
     _RESULT_KEY = "coherence"
     _OPTIONAL_PARAMS = ["messages"]
 
@@ -508,6 +525,15 @@ class CoherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             error_target=ErrorTarget.COHERENCE_EVALUATOR,
         )
 
+        decision_selected = isinstance(model_config, dict) and model_config.get("type") == "decision"
+        if decision_selected and not _SDK_SUPPORTS_DECISION:
+            raise EvaluationException(
+                message="Decision models require an azure-ai-evaluation version with decision model support.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=ErrorTarget.COHERENCE_EVALUATOR,
+            )
+
         super().__init__(
             model_config=model_config,
             prompty_file=prompty_path,
@@ -517,6 +543,14 @@ class CoherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             _higher_is_better=self._higher_is_better,
             **kwargs,
         )
+
+        self._decision = None
+        if decision_selected:
+            self._decision = self._decision_strategy(os.path.join(current_dir, self._DECISION_FILE))
+            self._multi_turn_decision = self._decision_strategy(
+                os.path.join(current_dir, self._MULTI_TURN_DECISION_FILE)
+            )
+            return
 
         # Load the multi-turn prompty flow for conversation-level evaluation
         multi_turn_prompty_path = os.path.join(current_dir, self._MULTI_TURN_PROMPTY_FILE)
@@ -530,6 +564,22 @@ class CoherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             model=prompty_model_config,
             token_credential=credential,
             is_reasoning_model=self._is_reasoning_model,
+        )
+
+    def _decision_strategy(self, rubric_path: str):
+        """Load this package's rubric and reuse the SDK's native scoring and accounting."""
+        from azure.ai.evaluation._legacy.prompty._yaml_utils import load_yaml
+
+        rubric = json.loads(json.dumps(load_yaml(rubric_path)))
+        runner = self._decision_model_runner
+        return DecisionEvaluationStrategy(
+            runner,
+            result_key=self._result_key,
+            error_target=ErrorTarget.COHERENCE_EVALUATOR,
+            questions={"status": rubric["status"], self._result_key: rubric["result"]},
+            scoring=LikertScoring(5, minimum=1),
+            threshold=self._threshold,
+            timeout=self._LLM_CALL_TIMEOUT,
         )
 
     @overload
@@ -599,7 +649,7 @@ class CoherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         return super().__call__(*args, **kwargs)
 
     def _return_not_applicable_result(
-        self, error_message: str, threshold: Union[int, float]
+        self, error_message: str, threshold: Union[int, float], prompty_output=None
     ) -> Dict[str, Union[str, float, Dict, None]]:
         """Return a result indicating that the tool call is not applicable for evaluation.
 
@@ -607,10 +657,12 @@ class CoherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :type error_message: str
         :param threshold: The threshold value for the evaluation.
         :type threshold: Union[int, float]
+        :param prompty_output: Optional paid model response whose usage must be retained for a skip.
+        :type prompty_output: Optional[Dict]
         :return: A dictionary containing the result of the evaluation.
         :rtype: Dict[str, Union[str, float, None]]
         """
-        token_metadata = self._get_token_metadata({})
+        token_metadata = self._get_token_metadata(prompty_output or {})
         result = {
             f"{self._result_key}": None,
             f"{self._result_key}_score": None,
@@ -623,6 +675,17 @@ class CoherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         }
         # Add top-level token metadata fields for backward compatibility.
         result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+        if prompty_output is not None:
+            answer = prompty_output.get("llm_output", prompty_output)
+            if isinstance(answer, str):
+                try:
+                    answer = json.loads(answer)
+                except (ValueError, TypeError):
+                    answer = {}
+            properties = answer.get("properties") if isinstance(answer, dict) else None
+            properties = dict(properties) if isinstance(properties, dict) else {}
+            properties.update(token_metadata)
+            result[f"{self._result_key}_properties"] = properties
         return result
 
     async def _the_super_do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:
@@ -653,6 +716,8 @@ class CoherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         if isinstance(eval_input.get("query"), list):
             eval_input["query"] = _preprocess_messages(eval_input["query"])
         # Call the prompty flow to get the evaluation result.
+        if self._decision is not None:
+            return await self._decision.evaluate(eval_input)
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         score = math.nan
         reason = ""
@@ -671,7 +736,7 @@ class CoherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 llm_status = parsed_output.get("status", "completed")
                 if llm_status == "skipped":
                     skip_reason = parsed_output.get("reason", "")
-                    return self._return_not_applicable_result(skip_reason, self._threshold)
+                    return self._return_not_applicable_result(skip_reason, self._threshold, prompty_output_dict)
                 score = parsed_output.get("score", math.nan)
                 reason = parsed_output.get("reason", "")
                 llm_properties = parsed_output.get("properties", {}) or {}
@@ -791,6 +856,9 @@ class CoherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: The evaluation result.
         :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
         """
+        if self._decision is not None:
+            return await super()._real_call(**kwargs)
+
         # Convert inputs into list of evaluable inputs.
         try:
             eval_input_list = self._convert_kwargs_to_eval_input(**kwargs)
@@ -889,6 +957,8 @@ class CoherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """Evaluate coherence for a full multi-turn conversation."""
         messages = _preprocess_messages(eval_input["messages"])
         conversation_text = serialize_messages(messages)
+        if self._decision is not None:
+            return await self._multi_turn_decision.evaluate({"messages": conversation_text})
         prompty_output_dict = await self._multi_turn_flow(
             timeout=self._LLM_CALL_TIMEOUT,
             messages=conversation_text,

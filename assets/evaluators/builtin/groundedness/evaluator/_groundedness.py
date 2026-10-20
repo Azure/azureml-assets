@@ -17,7 +17,19 @@ if os.getenv("AI_EVALS_USE_PF_PROMPTY", "false").lower() == "true":
 else:
     from azure.ai.evaluation._legacy.prompty import AsyncPrompty
 
-from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
+from azure.ai.evaluation._evaluators import _common as _sdk_common
+
+ModelEvaluatorBase = getattr(_sdk_common, "ModelEvaluatorBase", _sdk_common.PromptyEvaluatorBase)
+try:
+    from azure.ai.evaluation._evaluators._common._decision_strategy import LikertScoring, DecisionEvaluationStrategy
+except ImportError as exc:
+    if exc.name != "azure.ai.evaluation._evaluators._common._decision_strategy":
+        raise
+    LikertScoring = DecisionEvaluationStrategy = None
+_SDK_SUPPORTS_DECISION = (
+    hasattr(_sdk_common, "ModelEvaluatorBase") and LikertScoring is not None and DecisionEvaluationStrategy is not None
+)
+
 from azure.ai.evaluation._model_configurations import Conversation
 from azure.ai.evaluation._common.constants import PROMPT_BASED_REASON_EVALUATORS
 from azure.ai.evaluation._common.utils import (
@@ -547,7 +559,7 @@ def simplify_messages(messages, drop_system=True, drop_tool_calls=False, logger=
 # ```
 
 
-class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
+class GroundednessEvaluator(ModelEvaluatorBase[Union[str, float]]):
     """
     Evaluates groundedness score.
 
@@ -561,7 +573,9 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
     Groundedness scores range from 1 to 5, with 1 being the least grounded and 5 being the most grounded.
 
-    :param model_config: Configuration for the Azure OpenAI model.
+    :param model_config: Configuration for the Azure OpenAI model. Set ``type="decision"`` with
+        a Foundry ``azure_endpoint`` and ``azure_deployment`` to use a native Decision model;
+        authenticate with ``api_key`` or ``credential``.
     :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
         ~azure.ai.evaluation.OpenAIModelConfiguration]
     :param threshold: The threshold for the groundedness evaluator. Default is 3.
@@ -609,6 +623,10 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     _PROMPTY_FILE_NO_QUERY = "groundedness_without_query.prompty"
     _PROMPTY_FILE_WITH_QUERY = "groundedness_with_query.prompty"
     _MULTI_TURN_PROMPTY_FILE = "groundedness_multi_turn.prompty"
+    _DECISION_FILE = "groundedness.decision.yaml"
+    _MULTI_TURN_DECISION_FILE = "groundedness_multi_turn.decision.yaml"
+    _NO_QUERY_DECISION_FILE = "groundedness_without_query.decision.yaml"
+    _supports_decision_models = True
     _RESULT_KEY = "groundedness"
     _MIN_GROUNDEDNESS_SCORE = 1
     _MAX_GROUNDEDNESS_SCORE = 5
@@ -666,6 +684,15 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             check_for_unsupported_tools=False,
         )
 
+        decision_selected = isinstance(model_config, dict) and model_config.get("type") == "decision"
+        if decision_selected and not _SDK_SUPPORTS_DECISION:
+            raise EvaluationException(
+                message="Decision models require an azure-ai-evaluation version with decision model support.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=ErrorTarget.GROUNDEDNESS_EVALUATOR,
+            )
+
         super().__init__(
             model_config=model_config,
             prompty_file=prompty_path,
@@ -679,6 +706,17 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         self.threshold = threshold
         self._credential = credential
 
+        self._decision = None
+        if decision_selected:
+            self._decision = self._decision_strategy(os.path.join(current_dir, self._DECISION_FILE))
+            self._multi_turn_decision = self._decision_strategy(
+                os.path.join(current_dir, self._MULTI_TURN_DECISION_FILE)
+            )
+            self._no_query_decision = self._decision_strategy(
+                os.path.join(current_dir, self._NO_QUERY_DECISION_FILE)
+            )
+            return
+
         # Load the multi-turn prompty flow for conversation-level evaluation
         multi_turn_prompty_path = os.path.join(current_dir, self._MULTI_TURN_PROMPTY_FILE)
         prompty_model_config = construct_prompty_model_config(
@@ -691,6 +729,22 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             model=prompty_model_config,
             is_reasoning_model=self._is_reasoning_model,
             token_credential=credential,
+        )
+
+    def _decision_strategy(self, rubric_path: str):
+        """Load this package's rubric and reuse the SDK's native scoring and accounting."""
+        from azure.ai.evaluation._legacy.prompty._yaml_utils import load_yaml
+
+        rubric = json.loads(json.dumps(load_yaml(rubric_path)))
+        runner = self._decision_model_runner
+        return DecisionEvaluationStrategy(
+            runner,
+            result_key=self._result_key,
+            error_target=ErrorTarget.GROUNDEDNESS_EVALUATOR,
+            questions={"status": rubric["status"], self._result_key: rubric["result"]},
+            scoring=LikertScoring(5, minimum=1),
+            threshold=self._threshold,
+            timeout=self._LLM_CALL_TIMEOUT,
         )
 
     @overload
@@ -805,6 +859,8 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
     def _ensure_query_prompty_loaded(self):
         """Switch to the query prompty file if not already loaded."""
+        if self._decision is not None:
+            return
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE_WITH_QUERY)
 
@@ -879,7 +935,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         return parsed_result
 
     def _return_not_applicable_result(
-        self, error_message: str, threshold: Union[int, float]
+        self, error_message: str, threshold: Union[int, float], prompty_output=None
     ) -> Dict[str, Union[str, float, Dict, None]]:
         """Return a result indicating that the tool call is not applicable for evaluation.
 
@@ -887,10 +943,12 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :type error_message: str
         :param threshold: The threshold value for the evaluation.
         :type threshold: Union[int, float]
+        :param prompty_output: Optional paid model response whose usage must be retained for a skip.
+        :type prompty_output: Optional[Dict]
         :return: A dictionary containing the result of the evaluation.
         :rtype: Dict[str, Union[str, float, None]]
         """
-        token_metadata = self._get_token_metadata({})
+        token_metadata = self._get_token_metadata(prompty_output or {})
         result = {
             f"{self._result_key}": None,
             f"{self._result_key}_score": None,
@@ -903,6 +961,17 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         }
         # Add top-level token metadata fields for backward compatibility.
         result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+        if prompty_output is not None:
+            answer = prompty_output.get("llm_output", prompty_output)
+            if isinstance(answer, str):
+                try:
+                    answer = json.loads(answer)
+                except (ValueError, TypeError):
+                    answer = {}
+            properties = answer.get("properties") if isinstance(answer, dict) else None
+            properties = dict(properties) if isinstance(properties, dict) else {}
+            properties.update(token_metadata)
+            result[f"{self._result_key}_properties"] = properties
         return result
 
     async def _the_super_do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:
@@ -933,6 +1002,9 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         if isinstance(eval_input.get("query"), list):
             eval_input["query"] = _preprocess_messages(eval_input["query"])
         # Call the prompty flow to get the evaluation result.
+        if self._decision is not None:
+            strategy = self._decision if eval_input.get("query") is not None else self._no_query_decision
+            return await strategy.evaluate(eval_input)
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         score = math.nan
         reason = ""
@@ -951,7 +1023,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 llm_status = parsed_output.get("status", "completed")
                 if llm_status == "skipped":
                     skip_reason = parsed_output.get("reason", "")
-                    return self._return_not_applicable_result(skip_reason, self._threshold)
+                    return self._return_not_applicable_result(skip_reason, self._threshold, prompty_output_dict)
                 score = parsed_output.get("score", math.nan)
                 reason = parsed_output.get("reason", "")
                 llm_properties = parsed_output.get("properties", {}) or {}
@@ -1088,6 +1160,10 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         if tool_definitions:
             prompty_kwargs["tool_definitions"] = reformat_tool_definitions(tool_definitions, logger)
 
+        if eval_input.get("context") is not None:
+            prompty_kwargs["context"] = eval_input["context"]
+        if self._decision is not None:
+            return await self._multi_turn_decision.evaluate(prompty_kwargs)
         prompty_output_dict = await self._multi_turn_flow(timeout=self._LLM_CALL_TIMEOUT, **prompty_kwargs)
         return self._parse_prompty_output(prompty_output_dict)
 
@@ -1199,6 +1275,9 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: The evaluation result.
         :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
         """
+        if self._decision is not None:
+            return await super()._real_call(**kwargs)
+
         # Convert inputs into list of evaluable inputs.
         try:
             eval_input_list = self._convert_kwargs_to_eval_input(**kwargs)
@@ -1270,7 +1349,16 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
     def _convert_kwargs_to_eval_input(self, **kwargs):
         if kwargs.get("messages") is not None:
-            return super()._convert_kwargs_to_eval_input(**kwargs)
+            # Exclude context only while matching the messages overload, so it
+            # cannot select the response/context overload instead.
+            context = kwargs.pop("context", None)
+            kwargs.pop("query", None)
+            kwargs.pop("response", None)
+            inputs = super()._convert_kwargs_to_eval_input(**kwargs)
+            if context is not None:
+                for eval_input in inputs:
+                    eval_input["context"] = context
+            return inputs
 
         if kwargs.get("context") or kwargs.get("conversation"):
             return super()._convert_kwargs_to_eval_input(**kwargs)

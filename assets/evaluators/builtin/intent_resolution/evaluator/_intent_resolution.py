@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+import json
 import math
 import logging
 from typing import Dict, Union, List, Optional, Tuple
@@ -9,7 +10,19 @@ from typing import Dict, Union, List, Optional, Tuple
 from typing_extensions import overload, override
 
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
-from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
+from azure.ai.evaluation._evaluators import _common as _sdk_common
+
+ModelEvaluatorBase = getattr(_sdk_common, "ModelEvaluatorBase", _sdk_common.PromptyEvaluatorBase)
+try:
+    from azure.ai.evaluation._evaluators._common._decision_strategy import LikertScoring, DecisionEvaluationStrategy
+except ImportError as exc:
+    if exc.name != "azure.ai.evaluation._evaluators._common._decision_strategy":
+        raise
+    LikertScoring = DecisionEvaluationStrategy = None
+_SDK_SUPPORTS_DECISION = (
+    hasattr(_sdk_common, "ModelEvaluatorBase") and LikertScoring is not None and DecisionEvaluationStrategy is not None
+)
+
 
 # ---------------------------------------------------------------------------
 # Imports target azure-ai-evaluation >= 1.18.1. Each ``except ImportError``
@@ -78,13 +91,15 @@ logger = logging.getLogger(__name__)
 
 
 @experimental
-class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
+class IntentResolutionEvaluator(ModelEvaluatorBase[Union[str, float]]):
     """
     Evaluates intent resolution for a given query and response or a multi-turn conversation, including reasoning.
 
     The intent resolution evaluator assesses whether the user intent was correctly identified and resolved.
 
-    :param model_config: Configuration for the Azure OpenAI model.
+    :param model_config: Configuration for the Azure OpenAI model. Set ``type="decision"`` with
+        a Foundry ``azure_endpoint`` and ``azure_deployment`` to use a native Decision model;
+        authenticate with ``api_key`` or ``credential``.
     :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
         ~azure.ai.evaluation.OpenAIModelConfiguration]
 
@@ -110,6 +125,8 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     """
 
     _PROMPTY_FILE = "intent_resolution.prompty"
+    _DECISION_FILE = "intent_resolution.decision.yaml"
+    _supports_decision_models = True
     _RESULT_KEY = "intent_resolution"
     _OPTIONAL_PARAMS = ["tool_definitions"]
 
@@ -145,6 +162,15 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         # Initialize input validator
         self._validator = ToolDefinitionsValidator(error_target=ErrorTarget.INTENT_RESOLUTION_EVALUATOR)
 
+        decision_selected = isinstance(model_config, dict) and model_config.get("type") == "decision"
+        if decision_selected and not _SDK_SUPPORTS_DECISION:
+            raise EvaluationException(
+                message="Decision models require an azure-ai-evaluation version with decision model support.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=ErrorTarget.INTENT_RESOLUTION_EVALUATOR,
+            )
+
         super().__init__(
             model_config=model_config,
             prompty_file=prompty_path,
@@ -153,6 +179,27 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             credential=credential,
             _higher_is_better=higher_is_better_value,
             **kwargs,
+        )
+
+        self._decision = None
+        if decision_selected:
+            self._decision = self._decision_strategy(os.path.join(current_dir, self._DECISION_FILE))
+            return
+
+    def _decision_strategy(self, rubric_path: str):
+        """Load this package's rubric and reuse the SDK's native scoring and accounting."""
+        from azure.ai.evaluation._legacy.prompty._yaml_utils import load_yaml
+
+        rubric = json.loads(json.dumps(load_yaml(rubric_path)))
+        runner = self._decision_model_runner
+        return DecisionEvaluationStrategy(
+            runner,
+            result_key=self._result_key,
+            error_target=ErrorTarget.INTENT_RESOLUTION_EVALUATOR,
+            questions={"status": rubric["status"], self._result_key: rubric["result"]},
+            scoring=LikertScoring(5, minimum=1),
+            threshold=self._threshold,
+            timeout=self._LLM_CALL_TIMEOUT,
         )
 
     @overload
@@ -263,7 +310,7 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         return super().__call__(*args, **kwargs)
 
     def _return_not_applicable_result(
-        self, error_message: str, threshold: Union[int, float]
+        self, error_message: str, threshold: Union[int, float], prompty_output=None
     ) -> Dict[str, Union[str, float, Dict, None]]:
         """Return a result indicating that the tool call is not applicable for evaluation.
 
@@ -271,10 +318,12 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :type error_message: str
         :param threshold: The threshold value for the evaluation.
         :type threshold: Union[int, float]
+        :param prompty_output: Optional paid model response whose usage must be retained for a skip.
+        :type prompty_output: Optional[Dict]
         :return: A dictionary containing the result of the evaluation.
         :rtype: Dict[str, Union[str, float, None]]
         """
-        token_metadata = self._get_token_metadata({})
+        token_metadata = self._get_token_metadata(prompty_output or {})
         result = {
             f"{self._result_key}": None,
             f"{self._result_key}_score": None,
@@ -287,6 +336,17 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         }
         # Add top-level token metadata fields for backward compatibility.
         result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+        if prompty_output is not None:
+            answer = prompty_output.get("llm_output", prompty_output)
+            if isinstance(answer, str):
+                try:
+                    answer = json.loads(answer)
+                except (ValueError, TypeError):
+                    answer = {}
+            properties = answer.get("properties") if isinstance(answer, dict) else None
+            properties = dict(properties) if isinstance(properties, dict) else {}
+            properties.update(token_metadata)
+            result[f"{self._result_key}_properties"] = properties
         return result
 
     @staticmethod
@@ -336,6 +396,9 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: The evaluation result.
         :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
         """
+        if self._decision is not None:
+            return await super()._real_call(**kwargs)
+
         # Convert inputs into list of evaluable inputs.
         try:
             eval_input_list = self._convert_kwargs_to_eval_input(**kwargs)
@@ -431,6 +494,8 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         eval_input["query"] = reformat_conversation_history(eval_input["query"], logger)
         eval_input["response"] = reformat_agent_response(eval_input["response"], logger)
 
+        if self._decision is not None:
+            return await self._decision.evaluate(eval_input)
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
         score = math.nan
@@ -439,7 +504,7 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             llm_status = llm_output.get("status", "completed")
             if llm_status == "skipped":
                 reason = llm_output.get("reason", "")
-                return self._return_not_applicable_result(reason, self._threshold)
+                return self._return_not_applicable_result(reason, self._threshold, prompty_output_dict)
 
             score = llm_output.get("score", math.nan)
             if not check_score_is_valid(

@@ -13,11 +13,22 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 
 
-MINIMUM_CASES = {"test_evaluators": 45, "test_composites": 274}
+MINIMUM_CASES = {
+    "test_evaluators": 45, "test_composites": 274,
+    "test_quality_expansion": 132, "test_tool_expansion": 92, "test_judge_expansion": 108,
+    "test_expansion_compatibility": 60,
+}
 REQUIRED_CASES = {
     "test_completion_sync_without_prompty", "test_accuracy_score_and_metadata",
     *(f"test_public_evaluate_preserves_member_provenance_and_root_usage[passed-{name}]"
       for name in ("OutputQualityEvaluator", "ToolUseQualityEvaluator")),
+    *(f"test_packaged_expansion_public_usage[{skipped}-{backend}-{name}]"
+      for name in (
+          "fluency", "coherence", "groundedness", "intent_resolution", "task_adherence",
+          "tool_call_success", "tool_input_accuracy", "tool_output_utilization", "tool_selection",
+          "customer_satisfaction", "deflection_rate", "relevance", "response_completeness", "retrieval", "similarity",
+      )
+      for backend in ("native", "chat") for skipped in ("False", "True")),
 }
 
 

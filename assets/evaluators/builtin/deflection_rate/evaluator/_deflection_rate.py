@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 import os
+import json
 import logging
 from enum import Enum
 from typing import Any, Dict, Optional, Union, List, Tuple
@@ -13,7 +14,8 @@ else:
     from azure.ai.evaluation._legacy.prompty import AsyncPrompty
 
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
-from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
+
+from azure.ai.evaluation._evaluators import _common as _sdk_common
 
 # ---------------------------------------------------------------------------
 # Imports target azure-ai-evaluation >= 1.18.1. Each ``except ImportError``
@@ -404,6 +406,44 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
             return ConversationValidator.validate_eval_input(self, eval_input)
 
 
+ModelEvaluatorBase = getattr(_sdk_common, "ModelEvaluatorBase", _sdk_common.PromptyEvaluatorBase)
+try:
+    from azure.ai.evaluation._evaluators._common._decision_strategy import DecisionEvaluationStrategy, LikertScoring
+except ImportError as exc:
+    if exc.name != "azure.ai.evaluation._evaluators._common._decision_strategy":
+        raise
+    DecisionEvaluationStrategy = LikertScoring = None
+_SDK_SUPPORTS_DECISION = (
+    hasattr(_sdk_common, "ModelEvaluatorBase") and DecisionEvaluationStrategy is not None and LikertScoring is not None
+)
+
+
+def _load_decision_questions(path: str, question_id: str) -> Dict:
+    """Load the packaged applicability and rating questions without initializing a chat flow."""
+    from azure.ai.evaluation._legacy.prompty._yaml_utils import load_yaml
+
+    rubric = json.loads(json.dumps(load_yaml(path)))
+    return {"status": rubric["status"], question_id: rubric["result"]}
+
+
+class _DeflectionScoring(LikertScoring if LikertScoring is not None else object):
+    """Map the selected native deflection category to the established binary, lower-is-better metric."""
+
+    def interpret(self, response, result_key, error_target):
+        category, _, details = super().interpret(response, result_key, error_target)
+        deflection_type = ("plain_answer", "plain_denial", "send_elsewhere", "reframe")[int(category)]
+        details["native_category"] = int(category)
+        details["expected_category"] = details.pop("expected_score")
+        details["expected_score"] = 1 - details["probabilities"]["0"]
+        details["deflection_type"] = deflection_type
+        score = float(category != 0)
+        reason = f"Selected deflection category {deflection_type}; deflection score is {score:g}."
+        return score, reason, details
+
+    def passes(self, score, threshold):
+        return score <= threshold
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -412,7 +452,7 @@ _ERROR_TARGET = getattr(ErrorTarget, "DEFLECTION_RATE_EVALUATOR", ErrorTarget.EV
 
 
 @experimental
-class DeflectionRateEvaluator(PromptyEvaluatorBase[Union[str, int]]):
+class DeflectionRateEvaluator(ModelEvaluatorBase[Union[str, int]]):
     """The Deflection Rate evaluator determines whether an AI assistant deflected a user query.
 
     A deflection occurs when the AI indicates the topic is out of scope, suggests seeking help
@@ -433,7 +473,9 @@ class DeflectionRateEvaluator(PromptyEvaluatorBase[Union[str, int]]):
 
     Note: Lower scores are better for this evaluator (desirable_direction: decrease).
 
-    :param model_config: Configuration for the Azure OpenAI model.
+    :param model_config: Configuration for a chat model, or a mapping with ``type="decision"``,
+        ``azure_endpoint`` and ``azure_deployment`` for a native Decision model.
+        Authenticate with ``api_key`` or ``credential``.
     :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
         ~azure.ai.evaluation.OpenAIModelConfiguration]
 
@@ -447,8 +489,11 @@ class DeflectionRateEvaluator(PromptyEvaluatorBase[Union[str, int]]):
 
     """
 
+    _supports_decision_models = True
+    _DECISION_FILE = "deflection_rate.decision.yaml"
     _PROMPTY_FILE = "deflection_rate.prompty"
     _MULTI_TURN_PROMPTY_FILE = "deflection_rate_multi_turn.prompty"
+    _MULTI_TURN_DECISION_FILE = "deflection_rate_multi_turn.decision.yaml"
     _RESULT_KEY = "deflection_rate"
     _OPTIONAL_PARAMS = ["messages"]
 
@@ -461,7 +506,9 @@ class DeflectionRateEvaluator(PromptyEvaluatorBase[Union[str, int]]):
     def __init__(self, model_config, *, credential=None, threshold=0, evaluation_level=None, **kwargs):
         """Initialize the DeflectionRateEvaluator.
 
-        :param model_config: Configuration for the Azure OpenAI model.
+        :param model_config: Configuration for a chat model, or a mapping with ``type="decision"``,
+        ``azure_endpoint`` and ``azure_deployment`` for a native Decision model.
+        Authenticate with ``api_key`` or ``credential``.
         :type model_config: Union[AzureOpenAIModelConfiguration, OpenAIModelConfiguration]
         :keyword credential: Credential for authentication.
         :type credential: Optional[TokenCredential]
@@ -483,6 +530,16 @@ class DeflectionRateEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             requires_query=False,
         )
 
+        self._decision_selected = isinstance(model_config, dict) and model_config.get("type") == "decision"
+        self._strategy = None
+        if self._decision_selected and not _SDK_SUPPORTS_DECISION:
+            raise EvaluationException(
+                message="Decision models require an azure-ai-evaluation version with decision model support.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=_ERROR_TARGET,
+            )
+
         super().__init__(
             model_config=model_config,
             prompty_file=prompty_path,
@@ -492,6 +549,13 @@ class DeflectionRateEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             _higher_is_better=self._higher_is_better,
             **kwargs,
         )
+
+        if self._decision_selected:
+            self._strategy = self._create_decision_strategy(os.path.join(current_dir, self._DECISION_FILE))
+            self._multi_turn_strategy = self._create_decision_strategy(
+                os.path.join(current_dir, self._MULTI_TURN_DECISION_FILE)
+            )
+            return
 
         multi_turn_prompty_path = os.path.join(current_dir, self._MULTI_TURN_PROMPTY_FILE)
         prompty_model_config = construct_prompty_model_config(
@@ -504,6 +568,18 @@ class DeflectionRateEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             model=prompty_model_config,
             token_credential=credential,
             is_reasoning_model=self._is_reasoning_model,
+        )
+
+    def _create_decision_strategy(self, path: str):
+        """Use the SDK runner and scoring with this asset's packaged rubric."""
+        return DecisionEvaluationStrategy(
+            self._decision_model_runner,
+            result_key=self._result_key,
+            error_target=_ERROR_TARGET,
+            questions=_load_decision_questions(path, self._result_key),
+            scoring=_DeflectionScoring(4, minimum=0),
+            threshold=self._threshold,
+            timeout=self._LLM_CALL_TIMEOUT,
         )
 
     @overload
@@ -640,6 +716,9 @@ class DeflectionRateEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         eval_input.pop("query", None)
         eval_input.pop("messages", None)
 
+        if self._decision_selected:
+            return await self._evaluate_decision(self._strategy, eval_input)
+
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         return self._parse_prompty_output(prompty_output_dict)
 
@@ -647,11 +726,20 @@ class DeflectionRateEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         """Evaluate deflection rate across a full serialized conversation."""
         messages = _preprocess_messages(eval_input["messages"])
         conversation_text = serialize_messages(messages)
+        if self._decision_selected:
+            return await self._evaluate_decision(self._multi_turn_strategy, {"messages": conversation_text})
+
         prompty_output_dict = await self._multi_turn_flow(
             timeout=self._LLM_CALL_TIMEOUT,
             messages=conversation_text,
         )
         return self._parse_prompty_output(prompty_output_dict)
+
+    async def _evaluate_decision(self, strategy, eval_input: Dict) -> Dict:
+        result = await strategy.evaluate(eval_input)
+        details = result[f"{self._result_key}_properties"]["decision_model"]
+        result[f"{self._result_key}_deflection_type"] = details.get("deflection_type", "")
+        return result
 
     def _build_result(
         self,
@@ -707,7 +795,15 @@ class DeflectionRateEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         llm_status = str(llm_output.get("status") or "completed").strip().lower()
         if llm_status == "skipped":
             reason = llm_output.get("reason", llm_output.get("explanation", ""))
-            return self._return_not_applicable_result(reason, self._threshold)
+            return self._build_result(
+                score=None,
+                result="not_applicable",
+                reason=f"Not applicable: {reason}",
+                status="skipped",
+                properties=llm_output.get("properties") or {},
+                prompty_output_dict=prompty_output_dict,
+                deflection_type=llm_output.get("deflection_type", ""),
+            )
 
         score_value = llm_output.get("score", 0)
         if isinstance(score_value, str):
