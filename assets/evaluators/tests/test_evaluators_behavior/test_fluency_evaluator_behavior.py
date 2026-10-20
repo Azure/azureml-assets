@@ -3,7 +3,12 @@
 
 """Behavioral tests for Fluency Evaluator."""
 
+import builtins
+import json
+from unittest.mock import AsyncMock
+
 import pytest
+from azure.ai.evaluation._exceptions import EvaluationException
 from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest, _TurnLevelUtilE2ETests
 from .base_validator_unit_test import (
     ConversationValidatorToolCheckUnitTests,
@@ -14,6 +19,7 @@ from .base_validator_unit_test import (
 )
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
+from . import base_decision_routing_test as routing
 from ...builtin.fluency.evaluator._fluency import FluencyEvaluator
 from ..common.evaluator_mock_config import create_mocked_evaluator, run_none_score_not_applicable
 
@@ -187,3 +193,79 @@ class TestFluencyValidatorUnit(
     """Low-level unit tests for fluency's repeated validators, utils and methods."""
 
     evaluator_class = FluencyEvaluator
+
+
+# region Decision routing (released SDK)
+
+
+@pytest.mark.unittest
+class TestFluencyDecisionRouting(routing.DecisionRoutingTests):
+    """Cover the native Decision branches on the released SDK the asset job installs."""
+
+    result_key = "fluency"
+    class_name = "FluencyEvaluator"
+    inputs = {"response": "It is sunny today."}
+    strategy_attribute = "_decision"
+
+    def _native(self, monkeypatch):
+        """Construct an evaluator that routes natively against mocked strategies and return it."""
+        module = self.load()
+        routing.enable_fake_decision_sdk(monkeypatch, module, self.class_name, result_key=self.result_key)
+        evaluator, _ = routing.construct_evaluator(module, self.class_name)
+        return evaluator
+
+    def test_public_call_routes_through_the_shared_base_loop(self, monkeypatch):
+        """A public native call reaches the SDK loop and sends exactly the response fluency.prompty renders."""
+        evaluator = self._native(monkeypatch)
+        messages = [
+            {"role": "user", "content": "Hi"},
+            {"role": "assistant", "content": [{"type": "text", "text": "Hello there."}]},
+        ]
+        assert evaluator(messages=messages) == {"fluency": 1}
+        evaluator._decision.evaluate.assert_awaited_once_with({"response": "Hello there."})
+
+    def test_messages_without_a_user_turn_are_reported_as_user_error(self, monkeypatch):
+        """A message split failure surfaces as an evaluation error on the chat path."""
+        module = self.load()
+
+        def fail(messages):
+            raise ValueError("messages must contain at least one message with role 'user'.")
+
+        monkeypatch.setitem(routing.module_namespace(module, self.class_name), "_split_messages_at_latest_user", fail)
+        evaluator, _ = routing.construct_evaluator(module, self.class_name, config=routing.CHAT_CONFIG)
+        with pytest.raises(EvaluationException, match="at least one message with role 'user'"):
+            evaluator(messages=[{"role": "assistant", "content": "Hello"}])
+
+    def test_chat_skip_delivered_as_text_keeps_usage_and_properties(self):
+        """A skipped chat judgment delivered as JSON text keeps its properties and measured usage."""
+        evaluator = routing.construct_evaluator(self.load(), self.class_name, config=routing.CHAT_CONFIG)[0]
+        usage = {"input_token_count": 4, "output_token_count": 2, "total_token_count": 6, "model_id": "judge"}
+        skipped = json.dumps({"status": "skipped", "reason": "No evidence", "properties": {"custom": True}})
+        evaluator._flow = AsyncMock(return_value={"llm_output": skipped, **usage})
+        result = evaluator(**self.inputs)
+        assert result["fluency"] is None
+        assert result["fluency_result"] == "not_applicable"
+        assert result["fluency_total_tokens"] == 6
+        assert result["fluency_properties"]["custom"] is True
+        assert result["fluency_properties"]["model"] == "judge"
+        fallback = evaluator._return_not_applicable_result("Empty", 3, {"llm_output": "not json", **usage})
+        assert fallback["fluency_properties"]["total_tokens"] == 6
+        assert "custom" not in fallback["fluency_properties"]
+
+    def test_broken_decision_import_is_not_hidden(self, monkeypatch):
+        """A dependency failure inside the strategy module propagates instead of reading as an older SDK."""
+        original_import = builtins.__import__
+        error = ModuleNotFoundError(name="broken_dependency")
+
+        def broken_import(name, *args, **kwargs):
+            if name == "azure.ai.evaluation._evaluators._common._decision_strategy":
+                raise error
+            return original_import(name, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", broken_import)
+        with pytest.raises(ModuleNotFoundError) as caught:
+            self.load()
+        assert caught.value is error
+
+
+# endregion
