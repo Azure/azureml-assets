@@ -24,4 +24,6 @@ result:
     Empty objects are valid when the tool is not expected to return data.
   criteria:
     "true": Every evaluated call technically succeeded.
+    # The chat prompty examines every call and fails the evaluation when one or more
+    # results failed (rule C), so an earlier failed call still fails when a retry succeeds.
     "false": Any evaluated call technically failed, even if a later retry succeeded.

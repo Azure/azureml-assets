@@ -12,6 +12,9 @@ status:
     "false": Query or response is empty, or no tool outputs are available to be used.
 result:
   type: noul
+  # The chat prompty's examples 2 to 4 judge outputs returned by calls inside the
+  # response itself, so a result within response counts as a use alongside prior
+  # outputs from query.
   instructions: >-
     Did the agent correctly understand and use tool outputs in response? A use
     is a prior tool output from query or a result within response appearing as a

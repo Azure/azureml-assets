@@ -21,7 +21,8 @@ result:
     instructions for this decision.
   criteria:
   - 'Not grounded: Pervasive fabrication or responses largely disconnected from available sources.'
-  - Contains at least one substantive incorrect, fabricated, contradictory or unsupported claim.
+  - Contains at least one substantive incorrect, fabricated, contradictory or unsupported claim, including
+    inferences and extrapolations beyond what the grounding sources explicitly state.
   - 'Nothing to ground: Zero factual propositions; only fillers, clarifications, follow-ups or acknowledgments.'
   - 'Fully grounded but incomplete: Every factual claim supported, with relevant available detail omitted.'
   - 'Fully grounded and complete: Every factual claim supported and all relevant details accurately conveyed.'

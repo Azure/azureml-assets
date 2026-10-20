@@ -20,6 +20,6 @@ result:
   - Disjointed, self-contradictory responses or failure to relate to prior conversation.
   - Frequent disconnects, contradictions, or dropped context; often does not build on earlier turns.
   - Multiple rough transitions, occasional non-sequiturs, or a noticeable local contradiction; mostly followable.
-  - Minor rough transitions or a small inconsistency, but the overall thread is easy to follow.
+  - Mostly well-structured across turns, with clear continuity and an understandable progression.
   - Every agent response follows naturally from prior context, is internally consistent and smooth; no contradictions
     or non-sequiturs.

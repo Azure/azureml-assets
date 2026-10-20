@@ -6,17 +6,17 @@ existing chat path remains available on supported released SDKs.
 
 | Evaluators | Public score | Required evidence |
 | --- | --- | --- |
-| `fluency` | 1–5 | Final assistant text |
-| `coherence`, `intent_resolution`, `relevance` | 1–5 | Query/history and response |
-| `groundedness` | 1–5 | Response and grounding evidence; optional query |
-| `task_adherence` | 0–1 | Query, response and applicable instructions/procedure |
-| `tool_call_success` | 0–1 | Tool calls with matching execution results |
-| `tool_input_accuracy`, `tool_output_utilization`, `tool_selection` | 0–1 | Query, response/tool evidence and definitions |
-| `customer_satisfaction` | 1–5 | Query/response or conversation |
-| `deflection_rate` | 0–1, lower is better | Response or conversation |
-| `response_completeness` | 1–5 | Response and ground truth |
-| `retrieval` | 1–5 | Query and ordered retrieved context, including extracted tool output |
-| `similarity` | 1–5 | Query, response and ground truth |
+| `fluency` | 1 to 5 | Final assistant text |
+| `coherence`, `intent_resolution`, `relevance` | 1 to 5 | Query/history and response |
+| `groundedness` | 1 to 5 | Response and grounding evidence; optional query |
+| `task_adherence` | 0 to 1 | Query, response and applicable instructions/procedure |
+| `tool_call_success` | 0 to 1 | Tool calls with matching execution results |
+| `tool_input_accuracy`, `tool_output_utilization`, `tool_selection` | 0 to 1 | Query, response/tool evidence and definitions |
+| `customer_satisfaction` | 1 to 5 | Query/response or conversation |
+| `deflection_rate` | 0 to 1, lower is better | Response or conversation |
+| `response_completeness` | 1 to 5 | Response and ground truth |
+| `retrieval` | 1 to 5 | Query and ordered retrieved context, including extracted tool output |
+| `similarity` | 1 to 5 | Query, response and ground truth |
 | Existing: `task_completion`, `tool_call_accuracy`, `output_quality`, `tool_use_quality` | Existing standalone/composite scales | See each asset's schema |
 
 These are native strategies within the existing assets, selected by the SDK's
@@ -56,6 +56,15 @@ Local native command, after installing the pinned candidate wheel and test depen
 ```shell
 python -m pytest assets/evaluators/tests/test_decision_models/test_evaluators.py assets/evaluators/tests/test_decision_models/test_composites.py assets/evaluators/tests/test_decision_models/test_quality_expansion.py assets/evaluators/tests/test_decision_models/test_tool_expansion.py assets/evaluators/tests/test_decision_models/test_judge_expansion.py assets/evaluators/tests/test_decision_models/test_expansion_compatibility.py -k "not actual_released_wheel" -q
 ```
+
+The per-asset CI job runs each asset's behavior module from
+`tests/test_evaluators_behavior` on the released SDK pinned in
+`tests/requirements.txt`, with a 98 percent coverage gate on the asset's
+`evaluator` directory. That released SDK has no Decision support, so every
+expanded asset's behavior module carries released-SDK routing coverage through
+`base_decision_routing_test.py`, which makes a fresh copy of the module believe
+the SDK supports Decision models and asserts the routing without any transport.
+The expansion suites in this directory run only in the candidate-SDK job.
 
 Released checks require `AZUREML_COMPAT_SDK_ROOT` to contain the four isolated
 `azureml-compat-sdk-<version>` installations. Without them, local compatibility
