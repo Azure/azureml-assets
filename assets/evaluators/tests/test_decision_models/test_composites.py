@@ -104,6 +104,7 @@ def _native(evaluator_class, skipped=False):
 @pytest.mark.parametrize("evaluator_class", COMPOSITES)
 @pytest.mark.parametrize("failure", ["semantic", "timeout"])
 def test_composite_failed_split_retains_prior_paid_usage(evaluator_class, failure):
+    """Preserve measured prior-turn usage when a later native composite turn fails."""
     evaluator = evaluator_class(CONFIG)
     first, second = _native(evaluator_class), _native(evaluator_class)
     first["usage"] = {"input_tokens": 12, "output_tokens": 3}
@@ -137,6 +138,7 @@ def test_composite_failed_split_retains_prior_paid_usage(evaluator_class, failur
 
 @pytest.mark.parametrize("evaluator_class", COMPOSITES)
 def test_composite_successful_split_properties_match_aggregate_usage(evaluator_class):
+    """Reconcile composite root usage without changing per-turn properties."""
     evaluator = evaluator_class(CONFIG)
     first, second = _native(evaluator_class), _native(evaluator_class)
     first["usage"] = {"input_tokens": 12, "output_tokens": 3}
@@ -165,6 +167,7 @@ def test_composite_successful_split_properties_match_aggregate_usage(evaluator_c
 
 @pytest.mark.parametrize("evaluator_class", [TaskCompletionEvaluator, *COMPOSITES])
 def test_chat_failure_does_not_invoke_native_accounting(evaluator_class):
+    """Keep chat failures on their original path without native accounting."""
     evaluator = evaluator_class(CHAT_CONFIG)
     error = EvaluationException("unchanged chat failure")
     evaluator._do_eval = AsyncMock(side_effect=error)
