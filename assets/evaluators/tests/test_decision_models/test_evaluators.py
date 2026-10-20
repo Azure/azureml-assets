@@ -9,7 +9,7 @@ from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from azure.ai.evaluation._exceptions import EvaluationException
+from azure.ai.evaluation._exceptions import ErrorBlame, ErrorCategory, EvaluationException
 
 from ...builtin.task_completion.evaluator._task_completion import TaskCompletionEvaluator
 from ...builtin.tool_call_accuracy.evaluator._tool_call_accuracy import ToolCallAccuracyEvaluator
@@ -90,6 +90,37 @@ def test_completion_model_status_skips_before_parsing_score(conversation):
     assert result["task_completion_result"] == "not_applicable"
     assert result["task_completion"] is None
     assert result["task_completion_passed"] is None
+
+
+@pytest.mark.parametrize("failure", ["semantic", "timeout"])
+def test_completion_failed_split_retains_prior_paid_usage(failure):
+    evaluator = TaskCompletionEvaluator(CONFIG)
+    first = native("task_completion", {"type": "noul", "noul": 0.9})
+    first["usage"] = {"input_tokens": 12, "output_tokens": 3}
+    second = native("task_completion", {"type": "noul", "noul": 0.9}, completion_probability=2)
+    second["usage"] = {"input_tokens": 34, "output_tokens": 5}
+    post = stub(evaluator, side_effect=[first, asyncio.TimeoutError() if failure == "timeout" else second])
+    conversation = {
+        "messages": [
+            {"role": role, "content": f"{role}-{turn}"}
+            for turn in range(3) for role in ("user", "assistant")
+        ]
+    }
+    with pytest.raises(EvaluationException) as raised:
+        evaluator(conversation=conversation)
+    assert post.await_count == 2
+    assert raised.value.blame == ErrorBlame.SYSTEM_ERROR
+    assert raised.value.category == ErrorCategory.FAILED_EXECUTION
+    properties = raised.value.properties
+    expected = (
+        {"prompt_tokens": 12, "completion_tokens": 3, "total_tokens": 15}
+        if failure == "timeout" else {"prompt_tokens": 46, "completion_tokens": 8, "total_tokens": 54}
+    )
+    assert {field: properties[field] for field in expected} == expected
+    assert properties["model"] == "actual-model"
+    assert properties["decision_model"]["usage_available"] is True
+    assert properties["decision_model"]["result_usage_scope"] == "reported_turns_only"
+    assert "execution" not in properties["decision_model"]
 
 
 def test_completion_conversation_and_cutoff():
