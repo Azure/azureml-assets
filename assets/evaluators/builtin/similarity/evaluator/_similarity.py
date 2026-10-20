@@ -378,7 +378,9 @@ class SimilarityEvaluator(ModelEvaluatorBase):
             eval_input["query"] = _preprocess_messages(eval_input["query"])
         # Call the prompty flow to get the evaluation result.
         if self._decision_selected:
-            return await self._strategy.evaluate(eval_input)
+            # The native state is exactly the inputs similarity.prompty renders.
+            state = {key: eval_input[key] for key in ("query", "response", "ground_truth")}
+            return await self._strategy.evaluate(state)
 
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         score = math.nan

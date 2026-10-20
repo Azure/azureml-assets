@@ -34,10 +34,17 @@ INPUTS = {
         "query": "Where is the Amazon River?", "response": "South America", "ground_truth": "South America",
     },
 }
-OPTIONAL_INPUTS = {
-    "customer_satisfaction": {"messages": None}, "deflection_rate": {}, "relevance": {},
-    "response_completeness": {"messages": None}, "retrieval": {"response": None},
-    "similarity": {"messages": None},
+# The native state is exactly the set of inputs each chat prompt renders for the turn path, after the shared
+# preparation: never a None-valued routing key and never an input the prompt does not render.
+NATIVE_STATE = {
+    "customer_satisfaction": {"query": "Cancel my order", "response": "Your order is cancelled."},
+    "deflection_rate": {"response": "Your order is cancelled."},
+    "relevance": {"query": "Cancel my order", "response": "Your order is cancelled."},
+    "response_completeness": {"response": "The Amazon River is in South America.", "ground_truth": "Amazon River"},
+    "retrieval": {"query": "Where is the Amazon River?", "context": "[South America, Europe]"},
+    "similarity": {
+        "query": "Where is the Amazon River?", "response": "South America", "ground_truth": "South America",
+    },
 }
 MESSAGES = [
     {"role": "user", "content": "Cancel my order"},
@@ -45,18 +52,26 @@ MESSAGES = [
     {"role": "user", "content": "That did not help. Try again."},
     {"role": "assistant", "content": "Your order is cancelled."},
 ]
+LATEST_TURN_STATE_KEYS = {
+    "relevance": {"query", "response"},
+    "response_completeness": {"response", "ground_truth"},
+    "similarity": {"query", "response", "ground_truth"},
+}
 
 
 def module(name):
+    """Import the packaged evaluator module for ``name``."""
     return importlib.import_module(f"assets.evaluators.builtin.{name}.evaluator._{name}")
 
 
 def evaluator(name, decision=True, **kwargs):
+    """Construct the evaluator for ``name`` with the native or the chat configuration."""
     cls = getattr(module(name), "".join(part.title() for part in name.split("_")) + "Evaluator")
     return cls(CONFIG if decision else CHAT_CONFIG, **kwargs)
 
 
 def native(name, level=0, *, status=1, probabilities=None):
+    """Build a native transport response selecting ``level`` (zero-based) with the given status probability."""
     levels = 4 if name == "deflection_rate" else 5
     probabilities = probabilities or {str(i): float(i == level) for i in range(levels)}
     return {
@@ -70,14 +85,17 @@ def native(name, level=0, *, status=1, probabilities=None):
 
 
 def stub(instance, payload=None, **kwargs):
+    """Replace only the SDK transport call of a native evaluator and return the stub for assertions."""
     instance._model_runner._post = AsyncMock(return_value=payload, **kwargs)
     return instance._model_runner._post
 
 
 def request(post, index=-1):
+    """Decode the serialized native request and return its state and questions."""
     body = json.loads(post.call_args_list[index].args[0])
     assert set(body) == {"model", "state", "questions"}
     assert body["model"] == CONFIG["azure_deployment"]
+    assert None not in body["state"].values()
     return body["state"], body["questions"]
 
 
@@ -90,7 +108,7 @@ def test_native_construction_request_contract_and_usage(name):
     result = instance(**deepcopy(INPUTS[name]))
     post.assert_awaited_once()
     state, questions = request(post)
-    assert state == {**INPUTS[name], **OPTIONAL_INPUTS[name]}
+    assert state == NATIVE_STATE[name]
     assert set(questions) == {"status", name}
     assert questions["status"]["type"] == "noul"
     assert questions[name]["type"] == "score"
@@ -112,6 +130,7 @@ def test_native_construction_request_contract_and_usage(name):
 @pytest.mark.parametrize("name", LIKERT_NAMES)
 @pytest.mark.parametrize("level,passed", [(0, False), (2, True), (4, True)])
 def test_rating_boundaries_and_public_threshold(name, level, passed):
+    """Native levels map to the public one-to-five score and the inclusive default threshold of three."""
     instance = evaluator(name)
     stub(instance, native(name, level))
     result = instance(**INPUTS[name])
@@ -122,6 +141,7 @@ def test_rating_boundaries_and_public_threshold(name, level, passed):
 
 @pytest.mark.parametrize("name", LIKERT_NAMES)
 def test_tied_ratings_choose_lower_level_and_honor_custom_threshold(name):
+    """Equal top probabilities select the lower level, which a custom threshold then judges."""
     instance = evaluator(name, threshold=4)
     stub(instance, native(name, probabilities={"0": 0, "1": 0, "2": 0.5, "3": 0.5, "4": 0}))
     result = instance(**INPUTS[name])
@@ -132,6 +152,7 @@ def test_tied_ratings_choose_lower_level_and_honor_custom_threshold(name):
 @pytest.mark.parametrize("name", NAMES)
 @pytest.mark.parametrize("status", [0.499, 0.5])
 def test_status_boundary_is_separate_from_score_and_retains_usage(name, status):
+    """The applicability cutoff is applied before the score is read and a paid skip keeps its usage."""
     instance = evaluator(name)
     payload = native(name, status=status)
     if status < 0.5:
@@ -151,6 +172,7 @@ def test_status_boundary_is_separate_from_score_and_retains_usage(name, status):
 
 @pytest.mark.parametrize("name", NAMES)
 def test_malformed_native_score_fails_with_known_usage_and_no_chat_fallback(name):
+    """An invalid native answer raises with the measured usage attached instead of falling back to chat."""
     instance = evaluator(name)
     payload = native(name)
     payload["answers"][name]["probabilities"] = {"0": 1.1}
@@ -163,6 +185,7 @@ def test_malformed_native_score_fails_with_known_usage_and_no_chat_fallback(name
 
 @pytest.mark.parametrize("name", NAMES)
 def test_missing_required_evidence_is_rejected_before_transport(name):
+    """Missing required evidence is rejected by validation before any native request is sent."""
     instance = evaluator(name)
     post = stub(instance, side_effect=AssertionError("No request expected"))
     inputs = deepcopy(INPUTS[name])
@@ -174,6 +197,7 @@ def test_missing_required_evidence_is_rejected_before_transport(name):
 
 @pytest.mark.parametrize("name", [item for item in NAMES if item != "retrieval"])
 def test_intermediate_tool_response_skips_without_transport(name):
+    """An intermediate tool-call response is skipped deterministically without a paid request."""
     instance = evaluator(name)
     post = stub(instance, side_effect=AssertionError("No request expected"))
     inputs = deepcopy(INPUTS[name])
@@ -206,6 +230,7 @@ def test_paid_chat_skip_retains_usage_and_properties(name):
 
 @pytest.mark.parametrize("name", NAMES)
 def test_chat_transport_and_preparation_remain_unchanged(name):
+    """The chat flow still receives the prepared inputs, plus only None-valued routing keys, and renders them."""
     instance = evaluator(name, decision=False)
     flow = instance._flow
     rendered = []
@@ -217,9 +242,10 @@ def test_chat_transport_and_preparation_remain_unchanged(name):
     instance._flow = AsyncMock(side_effect=render_only)
     result = instance(**INPUTS[name])
     assert result[name] == (0 if name == "deflection_rate" else 4)
-    assert instance._flow.call_args.kwargs == {
-        "timeout": instance._LLM_CALL_TIMEOUT, **INPUTS[name], **OPTIONAL_INPUTS[name],
-    }
+    kwargs = dict(instance._flow.call_args.kwargs)
+    assert kwargs.pop("timeout") == instance._LLM_CALL_TIMEOUT
+    assert {key: value for key, value in kwargs.items() if value is not None} == INPUTS[name]
+    assert all(value is None for key, value in kwargs.items() if key not in INPUTS[name])
     for value in INPUTS[name].values():
         assert value in rendered[0]
 
@@ -229,6 +255,7 @@ def test_chat_transport_and_preparation_remain_unchanged(name):
 )
 @pytest.mark.parametrize("threshold", [0, 1])
 def test_deflection_categories_keep_binary_direction_and_type(level, type_name, threshold):
+    """Each native category maps to the lower-is-better binary score and surfaces as the deflection type."""
     instance = evaluator("deflection_rate", threshold=threshold)
     stub(instance, native("deflection_rate", level))
     result = instance(**INPUTS["deflection_rate"])
@@ -242,6 +269,7 @@ def test_deflection_categories_keep_binary_direction_and_type(level, type_name, 
 
 
 def test_deflection_category_ties_and_concurrent_results_are_independent():
+    """Tied categories select the lower one and concurrent evaluations never share state."""
     instance = evaluator("deflection_rate")
 
     async def transport(content, **kwargs):
@@ -264,6 +292,7 @@ def test_deflection_category_ties_and_concurrent_results_are_independent():
 @pytest.mark.parametrize("name", ["customer_satisfaction", "deflection_rate"])
 @pytest.mark.parametrize("level", [None, "conversation", "turn"])
 def test_conversation_levels_preserve_transcript_and_select_distinct_questions(name, level):
+    """Each evaluation level sends exactly the fields its prompt renders and selects its own rubric."""
     instance = evaluator(name, evaluation_level=level)
     post = stub(instance, native(name))
     messages = deepcopy(MESSAGES)
@@ -271,7 +300,7 @@ def test_conversation_levels_preserve_transcript_and_select_distinct_questions(n
     state, questions = request(post)
     assert messages == MESSAGES
     if level == "turn":
-        assert set(state) == ({"response"} if name == "deflection_rate" else {"query", "response", "messages"})
+        assert set(state) == ({"response"} if name == "deflection_rate" else {"query", "response"})
         assert "Your order is cancelled" in json.dumps(state["response"])
     else:
         assert set(state) == ({"messages"} if name == "deflection_rate" else {"conversation"})
@@ -284,18 +313,20 @@ def test_conversation_levels_preserve_transcript_and_select_distinct_questions(n
 
 @pytest.mark.parametrize("name", ["relevance", "response_completeness", "similarity"])
 def test_messages_preserve_reference_inputs_and_latest_turn_shape(name):
+    """Messages select the latest turn and the native state keeps only the fields the prompt renders."""
     instance = evaluator(name)
     post = stub(instance, native(name))
     extra = {"ground_truth": "Order cancelled"} if name != "relevance" else {}
     instance(messages=deepcopy(MESSAGES), **extra)
     state, _ = request(post)
-    assert state.get("messages") is None
+    assert set(state) == LATEST_TURN_STATE_KEYS[name]
     assert "Your order is cancelled" in json.dumps(state["response"])
     if extra:
         assert state["ground_truth"] == "Order cancelled"
 
 
 def retrieval_messages():
+    """Build a two-turn conversation whose tool outputs are the retrieval evidence."""
     return [
         {"role": "user", "content": "First query"},
         {"role": "tool", "content": "First context"},
@@ -307,6 +338,7 @@ def retrieval_messages():
 
 
 def test_retrieval_extracts_ordered_tool_context_and_sums_split_usage():
+    """Retrieval evaluates each user turn with its tool context and sums the usage across the turns."""
     instance = evaluator("retrieval")
     post = stub(instance, side_effect=[native("retrieval", 1), native("retrieval", 4)])
     result = instance(messages=retrieval_messages())
@@ -323,6 +355,7 @@ def test_retrieval_extracts_ordered_tool_context_and_sums_split_usage():
 )
 @pytest.mark.parametrize("fail_second", [False, True])
 def test_split_turn_usage_survives_aggregation_and_later_failure(name, fail_second):
+    """Split conversations sum paid usage on success and keep it on the error when a later turn fails."""
     instance = evaluator(name)
     second = native(name, 4)
     if fail_second:
@@ -350,6 +383,7 @@ def test_split_turn_usage_survives_aggregation_and_later_failure(name, fail_seco
 
 @pytest.mark.parametrize("name", NAMES)
 def test_unsupported_sdk_rejects_native_before_loading_prompty(name):
+    """Without Decision support the native configuration fails clearly and no chat prompt is loaded."""
     with patch.object(module(name), "_SDK_SUPPORTS_DECISION", False), patch(
         PROMPTY_LOAD, side_effect=AssertionError("Chat must not initialize")
     ):
@@ -359,6 +393,7 @@ def test_unsupported_sdk_rejects_native_before_loading_prompty(name):
 
 @pytest.mark.parametrize("name", NAMES)
 def test_rubrics_are_contained_in_each_independent_asset(name):
+    """Each asset package ships exactly the rubric files its evaluation levels need."""
     path = Path(module(name).__file__).parent
     expected = {f"{name}.decision.yaml"}
     if name in ("customer_satisfaction", "deflection_rate"):

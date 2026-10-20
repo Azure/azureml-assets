@@ -22,12 +22,14 @@ NAMES = (
     "tool_call_success", "tool_input_accuracy", "tool_output_utilization", "tool_selection",
     "customer_satisfaction", "deflection_rate", "relevance", "response_completeness", "retrieval", "similarity",
 )
-CHAT_CONFIG = {"azure_endpoint": "https://example.openai.azure.com", "azure_deployment": "chat", "api_key": "test-only"}
+CHAT_CONFIG = {"azure_endpoint": "https://example.openai.azure.com", "azure_deployment": "chat",
+               "api_key": "test-only"}
 NATIVE_CONFIG = {**CHAT_CONFIG, "type": "decision", "azure_deployment": "Decision-1"}
 USAGE = {"prompt_tokens": 10, "completion_tokens": 3, "total_tokens": 13}
 
 
 def _inputs(name):
+    """Turn-level inputs for one asset: a completed tool turn for the tool family, a text pair otherwise."""
     if name.startswith("tool_"):
         return {
             "query": "Look up the weather in Paris.",
@@ -50,10 +52,12 @@ def _inputs(name):
 
 
 def _class(module, name):
+    """Resolve the evaluator class of a loaded asset module from the asset name."""
     return module["".join(part.title() for part in name.split("_")) + "Evaluator"]
 
 
 def _package(tmp_path, name):
+    """Copy the asset's published evaluator directory into an independent package and return its module path."""
     from azure.ai.evaluation._legacy.prompty._yaml_utils import load_yaml
 
     spec = load_yaml(str(BUILTIN / name / "spec.yaml"))
@@ -63,6 +67,7 @@ def _package(tmp_path, name):
 
 
 def _post_response(name, skipped):
+    """Build a transport stub returning a paid native verdict, or a paid skip, for the asset's question types."""
     async def respond(content, *, deadline, execution):
         assert deadline is not None and execution is not None
         body = json.loads(content)
@@ -137,10 +142,11 @@ def _exercise_released_asset(path, name):
     captured = []
     http_attempts = []
 
+    score = 0 if name == "deflection_rate" else 1 if name.startswith("tool_") or name == "task_adherence" else 5
+
     async def render_only(flow, timeout, **prepared):
         captured.append(flow.render(**prepared))
-        return {"llm_output": {"score": 0 if name == "deflection_rate" else 1 if name.startswith("tool_")
-                              or name == "task_adherence" else 5, "reason": "Fixture", "status": "completed"}}
+        return {"llm_output": {"score": score, "reason": "Fixture", "status": "completed"}}
 
     def reject_http(*args, **kwargs):
         http_attempts.append(True)

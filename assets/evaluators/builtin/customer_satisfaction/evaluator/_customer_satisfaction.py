@@ -427,6 +427,11 @@ def _load_decision_questions(path: str, question_id: str) -> Dict:
     return {"status": rubric["status"], question_id: rubric["result"]}
 
 
+def _native_state(eval_input: Dict, *names: str) -> Dict:
+    """Project prepared inputs to the fields the chat prompt renders, omitting absent values."""
+    return {name: eval_input[name] for name in names if eval_input.get(name) is not None}
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -829,7 +834,8 @@ class CustomerSatisfactionEvaluator(ModelEvaluatorBase[Union[str, float]]):
             )
 
         if self._decision_selected:
-            return await self._strategy.evaluate(eval_input)
+            # The native state is the evidence the chat prompt renders: the prepared query and response.
+            return await self._strategy.evaluate(_native_state(eval_input, "query", "response"))
 
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         return self._parse_prompty_output(prompty_output_dict)

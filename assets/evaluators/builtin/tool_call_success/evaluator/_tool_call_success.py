@@ -17,6 +17,13 @@ from azure.ai.evaluation._exceptions import (
 from azure.ai.evaluation._evaluators import _common as _sdk_common
 from azure.ai.evaluation._common._experimental import experimental
 from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
+from azure.ai.evaluation._common.utils import _format_value
+# ConversationValidator is re-exported for the test suite / capability surface (unused here).
+from azure.ai.evaluation._evaluators._common._validators import (  # noqa: F401
+    ValidatorInterface,
+    ConversationValidator,
+    ToolDefinitionsValidator,
+)
 
 ModelEvaluatorBase = getattr(_sdk_common, "ModelEvaluatorBase", _sdk_common.PromptyEvaluatorBase)
 try:
@@ -39,14 +46,6 @@ _SDK_SUPPORTS_DECISION = (
 # for backward compatibility and can be removed once 1.17.x is no longer
 # supported.
 # ---------------------------------------------------------------------------
-
-from azure.ai.evaluation._common.utils import _format_value
-# ConversationValidator is re-exported for the test suite / capability surface (unused here).
-from azure.ai.evaluation._evaluators._common._validators import (  # noqa: F401
-    ValidatorInterface,
-    ConversationValidator,
-    ToolDefinitionsValidator,
-)
 
 try:  # azure-ai-evaluation >= 1.18.1
     from azure.ai.evaluation._common.utils import (
@@ -497,7 +496,7 @@ class ToolCallSuccessEvaluator(ModelEvaluatorBase[Union[str, float]]):
             model_config = {**model_config, "probability_threshold": probability_threshold}
         if decision_selected and not _SDK_SUPPORTS_DECISION:
             raise EvaluationException(
-                message="Decision models require an azure-ai-evaluation version with Decision strategy parse support.",
+                message="Decision models require an azure-ai-evaluation version with decision model support.",
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.INVALID_VALUE,
                 target=ExtendedErrorTarget.TOOL_CALL_SUCCESS_EVALUATOR,
@@ -832,7 +831,12 @@ class ToolCallSuccessEvaluator(ModelEvaluatorBase[Union[str, float]]):
             )
 
         if self._decision_strategy is not None:
-            return await self._decision_strategy.evaluate(eval_input)
+            # The prompty renders only the prepared tool calls and, when supplied, the tool
+            # definitions, so the native request carries exactly those inputs.
+            state = {"tool_calls": eval_input["tool_calls"]}
+            if eval_input.get("tool_definitions") is not None:
+                state["tool_definitions"] = eval_input["tool_definitions"]
+            return await self._decision_strategy.evaluate(state)
 
         prompty_output_dict = await self._flow(
             timeout=self._LLM_CALL_TIMEOUT, **eval_input

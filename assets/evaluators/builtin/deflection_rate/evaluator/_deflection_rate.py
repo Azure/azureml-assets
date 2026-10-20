@@ -426,6 +426,11 @@ def _load_decision_questions(path: str, question_id: str) -> Dict:
     return {"status": rubric["status"], question_id: rubric["result"]}
 
 
+def _native_state(eval_input: Dict, *names: str) -> Dict:
+    """Project prepared inputs to the fields the chat prompt renders, omitting absent values."""
+    return {name: eval_input[name] for name in names if eval_input.get(name) is not None}
+
+
 class _DeflectionScoring(LikertScoring if LikertScoring is not None else object):
     """Map the selected native deflection category to the established binary, lower-is-better metric."""
 
@@ -717,7 +722,8 @@ class DeflectionRateEvaluator(ModelEvaluatorBase[Union[str, int]]):
         eval_input.pop("messages", None)
 
         if self._decision_selected:
-            return await self._evaluate_decision(self._strategy, eval_input)
+            # The native state is the evidence the chat prompt renders: the prepared response only.
+            return await self._evaluate_decision(self._strategy, _native_state(eval_input, "response"))
 
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         return self._parse_prompty_output(prompty_output_dict)
@@ -736,9 +742,12 @@ class DeflectionRateEvaluator(ModelEvaluatorBase[Union[str, int]]):
         return self._parse_prompty_output(prompty_output_dict)
 
     async def _evaluate_decision(self, strategy, eval_input: Dict) -> Dict:
+        """Run a native strategy and surface the selected category as the public deflection type field."""
         result = await strategy.evaluate(eval_input)
-        details = result[f"{self._result_key}_properties"]["decision_model"]
-        result[f"{self._result_key}_deflection_type"] = details.get("deflection_type", "")
+        properties = result.get(f"{self._result_key}_properties")
+        details = properties.get("decision_model") if isinstance(properties, dict) else None
+        if isinstance(details, dict):
+            result[f"{self._result_key}_deflection_type"] = details.get("deflection_type", "")
         return result
 
     def _build_result(

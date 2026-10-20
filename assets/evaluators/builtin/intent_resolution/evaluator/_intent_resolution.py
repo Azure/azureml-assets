@@ -12,18 +12,6 @@ from typing_extensions import overload, override
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
 from azure.ai.evaluation._evaluators import _common as _sdk_common
 
-ModelEvaluatorBase = getattr(_sdk_common, "ModelEvaluatorBase", _sdk_common.PromptyEvaluatorBase)
-try:
-    from azure.ai.evaluation._evaluators._common._decision_strategy import LikertScoring, DecisionEvaluationStrategy
-except ImportError as exc:
-    if exc.name != "azure.ai.evaluation._evaluators._common._decision_strategy":
-        raise
-    LikertScoring = DecisionEvaluationStrategy = None
-_SDK_SUPPORTS_DECISION = (
-    hasattr(_sdk_common, "ModelEvaluatorBase") and LikertScoring is not None and DecisionEvaluationStrategy is not None
-)
-
-
 # ---------------------------------------------------------------------------
 # Imports target azure-ai-evaluation >= 1.18.1. Each ``except ImportError``
 # branch below inlines the corresponding azure-ai-evaluation 1.18.1
@@ -85,6 +73,22 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
         _drop_mcp_approval_messages,
         _normalize_function_call_types,
     )
+
+ModelEvaluatorBase = getattr(_sdk_common, "ModelEvaluatorBase", _sdk_common.PromptyEvaluatorBase)
+try:
+    from azure.ai.evaluation._evaluators._common._decision_strategy import LikertScoring, DecisionEvaluationStrategy
+except ImportError as exc:
+    if exc.name != "azure.ai.evaluation._evaluators._common._decision_strategy":
+        raise
+    LikertScoring = DecisionEvaluationStrategy = None
+_SDK_SUPPORTS_DECISION = (
+    hasattr(_sdk_common, "ModelEvaluatorBase") and LikertScoring is not None and DecisionEvaluationStrategy is not None
+)
+
+
+def _native_state(eval_input: Dict, *names: str) -> Dict:
+    """Project prepared inputs to the fields the chat prompt renders, omitting absent values."""
+    return {name: eval_input[name] for name in names if eval_input.get(name) is not None}
 
 
 logger = logging.getLogger(__name__)
@@ -495,7 +499,8 @@ class IntentResolutionEvaluator(ModelEvaluatorBase[Union[str, float]]):
         eval_input["response"] = reformat_agent_response(eval_input["response"], logger)
 
         if self._decision is not None:
-            return await self._decision.evaluate(eval_input)
+            # The native state is the evidence the chat prompt renders: the prepared query and response.
+            return await self._decision.evaluate(_native_state(eval_input, "query", "response"))
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
         score = math.nan

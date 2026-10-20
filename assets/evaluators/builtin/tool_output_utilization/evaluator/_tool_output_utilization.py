@@ -396,7 +396,7 @@ class ToolOutputUtilizationEvaluator(ModelEvaluatorBase[Union[str, float]]):
             model_config = {**model_config, "probability_threshold": probability_threshold}
         if decision_selected and not _SDK_SUPPORTS_DECISION:
             raise EvaluationException(
-                message="Decision models require an azure-ai-evaluation version with Decision strategy parse support.",
+                message="Decision models require an azure-ai-evaluation version with decision model support.",
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.INVALID_VALUE,
                 target=ErrorTarget.TOOL_OUTPUT_UTILIZATION_EVALUATOR,

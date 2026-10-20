@@ -459,7 +459,8 @@ class RelevanceEvaluator(ModelEvaluatorBase):
             eval_input["response"] = reformat_agent_response(eval_input["response"], logger)
         eval_input.pop("messages", None)
         if self._decision_selected:
-            return await self._strategy.evaluate(eval_input)
+            # The native state is exactly the inputs relevance.prompty renders: the prepared query and response.
+            return await self._strategy.evaluate({"query": eval_input["query"], "response": eval_input["response"]})
 
         result = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         llm_output = result.get("llm_output", result)

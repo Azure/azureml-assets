@@ -10,18 +10,6 @@ from typing_extensions import overload, override
 
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
 from azure.ai.evaluation._evaluators import _common as _sdk_common
-
-ModelEvaluatorBase = getattr(_sdk_common, "ModelEvaluatorBase", _sdk_common.PromptyEvaluatorBase)
-try:
-    from azure.ai.evaluation._evaluators._common._decision_strategy import BinaryScoring, DecisionEvaluationStrategy
-except ImportError as exc:
-    if exc.name != "azure.ai.evaluation._evaluators._common._decision_strategy":
-        raise
-    BinaryScoring = DecisionEvaluationStrategy = None
-_SDK_SUPPORTS_DECISION = (
-    hasattr(_sdk_common, "ModelEvaluatorBase") and BinaryScoring is not None and DecisionEvaluationStrategy is not None
-)
-
 from azure.ai.evaluation._common._experimental import experimental
 from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
 from azure.ai.evaluation._common.utils import (
@@ -417,6 +405,22 @@ if os.getenv("AI_EVALS_USE_PF_PROMPTY", "false").lower() == "true":
     from promptflow.core._flow import AsyncPrompty
 else:
     from azure.ai.evaluation._legacy.prompty import AsyncPrompty
+
+ModelEvaluatorBase = getattr(_sdk_common, "ModelEvaluatorBase", _sdk_common.PromptyEvaluatorBase)
+try:
+    from azure.ai.evaluation._evaluators._common._decision_strategy import BinaryScoring, DecisionEvaluationStrategy
+except ImportError as exc:
+    if exc.name != "azure.ai.evaluation._evaluators._common._decision_strategy":
+        raise
+    BinaryScoring = DecisionEvaluationStrategy = None
+_SDK_SUPPORTS_DECISION = (
+    hasattr(_sdk_common, "ModelEvaluatorBase") and BinaryScoring is not None and DecisionEvaluationStrategy is not None
+)
+
+
+def _native_state(eval_input: Dict, *names: str) -> Dict:
+    """Project prepared inputs to the fields the chat prompt renders, omitting absent values."""
+    return {name: eval_input[name] for name in names if eval_input.get(name) is not None}
 
 
 logger = logging.getLogger(__name__)
@@ -950,7 +954,10 @@ class TaskAdherenceEvaluator(ModelEvaluatorBase[Union[str, float]]):
 
         prompty_input.pop("messages", None)
         if self._decision is not None:
-            return await self._decision.evaluate(prompty_input)
+            # The native state is the evidence the chat prompt renders: the four prepared prompt inputs.
+            return await self._decision.evaluate(
+                _native_state(prompty_input, "system_message", "query", "response", "tool_calls")
+            )
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **prompty_input)
         return self._parse_prompty_output(prompty_output_dict)
 

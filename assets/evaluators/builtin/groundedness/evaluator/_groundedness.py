@@ -18,18 +18,6 @@ else:
     from azure.ai.evaluation._legacy.prompty import AsyncPrompty
 
 from azure.ai.evaluation._evaluators import _common as _sdk_common
-
-ModelEvaluatorBase = getattr(_sdk_common, "ModelEvaluatorBase", _sdk_common.PromptyEvaluatorBase)
-try:
-    from azure.ai.evaluation._evaluators._common._decision_strategy import LikertScoring, DecisionEvaluationStrategy
-except ImportError as exc:
-    if exc.name != "azure.ai.evaluation._evaluators._common._decision_strategy":
-        raise
-    LikertScoring = DecisionEvaluationStrategy = None
-_SDK_SUPPORTS_DECISION = (
-    hasattr(_sdk_common, "ModelEvaluatorBase") and LikertScoring is not None and DecisionEvaluationStrategy is not None
-)
-
 from azure.ai.evaluation._model_configurations import Conversation
 from azure.ai.evaluation._common.constants import PROMPT_BASED_REASON_EVALUATORS
 from azure.ai.evaluation._common.utils import (
@@ -483,6 +471,18 @@ except ImportError:  # pragma: no cover
             return "None"
 
 
+ModelEvaluatorBase = getattr(_sdk_common, "ModelEvaluatorBase", _sdk_common.PromptyEvaluatorBase)
+try:
+    from azure.ai.evaluation._evaluators._common._decision_strategy import LikertScoring, DecisionEvaluationStrategy
+except ImportError as exc:
+    if exc.name != "azure.ai.evaluation._evaluators._common._decision_strategy":
+        raise
+    LikertScoring = DecisionEvaluationStrategy = None
+_SDK_SUPPORTS_DECISION = (
+    hasattr(_sdk_common, "ModelEvaluatorBase") and LikertScoring is not None and DecisionEvaluationStrategy is not None
+)
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -906,6 +906,24 @@ class GroundednessEvaluator(ModelEvaluatorBase[Union[str, float]]):
             return bool(context.strip())
         return True
 
+    def _normalize_explicit_context(self, context) -> Optional[str]:
+        """Return separately supplied conversation context as one string, or None when it carries no evidence.
+
+        Context that fails :meth:`_validate_context` (None, blank text, the ``<>`` marker, or a list of blank
+        entries) is dropped so the chat prompt and the native rubric both treat it as absent. Non-string context
+        is serialized to one JSON string so both judges receive identical text.
+
+        :param context: The context supplied alongside ``messages``.
+        :type context: Any
+        :return: The normalized context text, or None.
+        :rtype: Optional[str]
+        """
+        if not self._validate_context(context):
+            return None
+        if isinstance(context, str):
+            return context
+        return json.dumps(context, ensure_ascii=False, default=str)
+
     def _build_result(
         self,
         score: Optional[Union[int, float]],
@@ -1003,8 +1021,12 @@ class GroundednessEvaluator(ModelEvaluatorBase[Union[str, float]]):
             eval_input["query"] = _preprocess_messages(eval_input["query"])
         # Call the prompty flow to get the evaluation result.
         if self._decision is not None:
-            strategy = self._decision if eval_input.get("query") is not None else self._no_query_decision
-            return await strategy.evaluate(eval_input)
+            # The native state is exactly the inputs the selected groundedness prompty renders.
+            if eval_input.get("query") is not None:
+                state = {key: eval_input[key] for key in ("query", "response", "context")}
+                return await self._decision.evaluate(state)
+            state = {key: eval_input[key] for key in ("response", "context")}
+            return await self._no_query_decision.evaluate(state)
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         score = math.nan
         reason = ""
@@ -1160,9 +1182,12 @@ class GroundednessEvaluator(ModelEvaluatorBase[Union[str, float]]):
         if tool_definitions:
             prompty_kwargs["tool_definitions"] = reformat_tool_definitions(tool_definitions, logger)
 
-        if eval_input.get("context") is not None:
-            prompty_kwargs["context"] = eval_input["context"]
+        context = eval_input.get("context")
+        if context:
+            # groundedness_multi_turn.prompty renders CONTEXT only when it is non-empty.
+            prompty_kwargs["context"] = context
         if self._decision is not None:
+            # The native state is exactly the inputs groundedness_multi_turn.prompty renders.
             return await self._multi_turn_decision.evaluate(prompty_kwargs)
         prompty_output_dict = await self._multi_turn_flow(timeout=self._LLM_CALL_TIMEOUT, **prompty_kwargs)
         return self._parse_prompty_output(prompty_output_dict)
@@ -1350,8 +1375,9 @@ class GroundednessEvaluator(ModelEvaluatorBase[Union[str, float]]):
     def _convert_kwargs_to_eval_input(self, **kwargs):
         if kwargs.get("messages") is not None:
             # Exclude context only while matching the messages overload, so it
-            # cannot select the response/context overload instead.
-            context = kwargs.pop("context", None)
+            # cannot select the response/context overload instead. Messages take
+            # precedence over query and response fields supplied alongside them.
+            context = self._normalize_explicit_context(kwargs.pop("context", None))
             kwargs.pop("query", None)
             kwargs.pop("response", None)
             inputs = super()._convert_kwargs_to_eval_input(**kwargs)
@@ -1383,6 +1409,14 @@ class GroundednessEvaluator(ModelEvaluatorBase[Union[str, float]]):
 
         # If response is a string, we can skip the context extraction and just return the eval input
         if response and isinstance(response, str):
+            if self._decision is not None:
+                # The chat prompt receives the response text as its own context; the native rubric must not.
+                raise EvaluationException(
+                    message="Groundedness requires grounding context; none was provided with a plain text response.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.NOT_APPLICABLE,
+                    target=ErrorTarget.GROUNDEDNESS_EVALUATOR,
+                )
             return super()._convert_kwargs_to_eval_input(query=query, response=response, context=response)
 
         context = self._get_context_from_agent_response(response, tool_definitions)

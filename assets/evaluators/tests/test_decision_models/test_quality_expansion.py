@@ -6,6 +6,7 @@
 import asyncio
 from copy import deepcopy
 import json
+import logging
 from pathlib import Path
 import runpy
 import shutil
@@ -13,12 +14,20 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from azure.ai.evaluation._exceptions import EvaluationException
+from azure.ai.evaluation._common.utils import (
+    reformat_agent_response,
+    reformat_conversation_history,
+    serialize_messages,
+)
 
 from ...builtin.fluency.evaluator._fluency import FluencyEvaluator
 from ...builtin.coherence.evaluator._coherence import CoherenceEvaluator
 from ...builtin.groundedness.evaluator._groundedness import GroundednessEvaluator
 from ...builtin.intent_resolution.evaluator._intent_resolution import IntentResolutionEvaluator
 from ...builtin.task_adherence.evaluator._task_adherence import TaskAdherenceEvaluator
+from ...builtin.relevance.evaluator._relevance import RelevanceEvaluator
+from ...builtin.response_completeness.evaluator._response_completeness import ResponseCompletenessEvaluator
+from ...builtin.similarity.evaluator._similarity import SimilarityEvaluator
 from ..test_evaluators_behavior import common_tool_test_data as data
 
 
@@ -37,6 +46,21 @@ MESSAGES = [{"role": "user", "content": "First question"},
             {"role": "assistant", "content": "Latest answer"}]
 USAGE = {"input_token_count": 11, "output_token_count": 7, "total_token_count": 18,
          "model_id": "actual-chat", "finish_reason": "stop", "sample_input": "input", "sample_output": "output"}
+BLOCK_MESSAGES = [
+    {"role": message["role"], "content": [{"type": "text", "text": message["content"]}]} for message in MESSAGES
+]
+REFERENCE_EVALUATORS = [RelevanceEvaluator, ResponseCompletenessEvaluator, SimilarityEvaluator]
+# Every input any of an evaluator's prompts renders; the native state may never carry a key outside this set.
+PROMPTY_INPUTS = {
+    "fluency": {"response"},
+    "coherence": {"query", "response", "messages"},
+    "groundedness": {"query", "response", "context", "messages", "tool_definitions"},
+    "intent_resolution": {"query", "response"},
+    "task_adherence": {"system_message", "query", "response", "tool_calls", "messages", "tool_definitions"},
+}
+PREPARED = object()
+"""Marks a state value fixed only by chat parity because its preparation is evaluator specific."""
+LOGGER = logging.getLogger(__name__)
 
 
 def native(name, *, level=5, probability=1, status=1, usage=None):
@@ -66,6 +90,7 @@ def stub(evaluator, response=None, **kwargs):
 
 
 def evidence(post, index=-1):
+    """Return the state and questions of the ``index``-th request the stubbed transport received."""
     content, = post.call_args_list[index].args
     request = json.loads(content)
     assert set(request) == {"model", "state", "questions"}
@@ -219,18 +244,61 @@ def test_invalid_native_configuration_never_falls_back(cls, invalid):
             cls(config)
 
 
+def shaped_inputs(cls, shape):
+    """Return caller inputs for ``shape``: plain text, content-block messages, or a file search tool exchange."""
+    if shape == "text":
+        return inputs_for(cls)
+    if shape == "messages":
+        inputs = {"messages": deepcopy(BLOCK_MESSAGES)}
+        if cls is GroundednessEvaluator:
+            inputs["context"] = "The first answer and latest answer are supplied evidence."
+        return inputs
+    return {"query": deepcopy(data.FILE_SEARCH_QUERY), "response": deepcopy(data.FILE_SEARCH_RESPONSE),
+            "tool_definitions": deepcopy(data.FILE_SEARCH_TOOL_DEFINITIONS)}
+
+
+def expected_state(cls, shape, inputs):
+    """Return the exact native state for ``shape``: the inputs the evaluator's prompt renders, nothing else.
+
+    Values are literal where the preparation is plain text or a known fixture, computed with the SDK's own
+    message helpers where the prompt renders a transcript, and ``PREPARED`` where a tool exchange goes through
+    evaluator-specific extraction; those are pinned to the chat flow's inputs by the caller.
+    """
+    if shape == "text":
+        query, response = inputs.get("query"), inputs["response"]
+        if cls is FluencyEvaluator:
+            return {"response": response}
+        if cls is GroundednessEvaluator:
+            return {"response": response, "context": inputs["context"]}
+        if cls is TaskAdherenceEvaluator:
+            return {"system_message": "", "query": query, "response": response, "tool_calls": ""}
+        return {"query": query, "response": response}
+    if shape == "messages":
+        query, response = BLOCK_MESSAGES[:3], BLOCK_MESSAGES[3:]
+        if cls is FluencyEvaluator:
+            return {"response": "Latest answer"}
+        if cls is GroundednessEvaluator:
+            return {"messages": serialize_messages(BLOCK_MESSAGES), "context": inputs["context"]}
+        if cls in (CoherenceEvaluator, TaskAdherenceEvaluator):
+            return {"messages": serialize_messages(BLOCK_MESSAGES)}
+        return {"query": reformat_conversation_history(query, LOGGER),
+                "response": reformat_agent_response(response, LOGGER)}
+    if cls is FluencyEvaluator:
+        return {"response": data.FILE_SEARCH_RESPONSE[-1]["content"][0]["text"]}
+    if cls is CoherenceEvaluator:
+        return {"query": data.FILE_SEARCH_QUERY, "response": data.FILE_SEARCH_RESPONSE}
+    if cls is GroundednessEvaluator:
+        return {"query": PREPARED, "response": PREPARED, "context": PREPARED}
+    if cls is TaskAdherenceEvaluator:
+        return {"system_message": PREPARED, "query": PREPARED, "response": PREPARED, "tool_calls": PREPARED}
+    return {"query": PREPARED, "response": PREPARED}
+
+
 @pytest.mark.parametrize("cls", EVALUATORS)
 @pytest.mark.parametrize("shape", ["text", "messages", "tool_messages"])
 def test_native_and_chat_receive_identical_prepared_inputs(cls, shape):
-    """The native transport consumes exactly the legacy flow's prepared evidence."""
-    inputs = inputs_for(cls)
-    if shape == "messages":
-        inputs = {"messages": deepcopy(MESSAGES)}
-        if cls is GroundednessEvaluator:
-            inputs["context"] = "The first answer and latest answer are supplied evidence."
-    elif shape == "tool_messages":
-        inputs = {"query": deepcopy(data.FILE_SEARCH_QUERY), "response": deepcopy(data.FILE_SEARCH_RESPONSE),
-                  "tool_definitions": deepcopy(data.FILE_SEARCH_TOOL_DEFINITIONS)}
+    """The native state is exactly the evidence the chat prompt renders, after the same preparation."""
+    inputs = shaped_inputs(cls, shape)
     original = deepcopy(inputs)
     evaluator = cls(CONFIG)
     name = evaluator._result_key
@@ -250,7 +318,17 @@ def test_native_and_chat_receive_identical_prepared_inputs(cls, shape):
     flow.assert_awaited_once()
     prepared = {key: value for key, value in flow.call_args.kwargs.items() if key != "timeout"}
     state, _ = evidence(post)
-    assert state == json.loads(json.dumps(prepared))
+    expected = expected_state(cls, shape, inputs)
+    assert set(state) == set(expected)
+    assert set(state) <= PROMPTY_INPUTS[name]
+    assert None not in state.values()
+    assert state == json.loads(json.dumps({key: prepared[key] for key in expected}))
+    for key, value in expected.items():
+        if value is not PREPARED:
+            assert state[key] == value, key
+    if shape == "tool_messages" and cls is GroundednessEvaluator:
+        assert "Le Jardin de Paris" in state["context"]
+        assert "system" not in json.dumps(state["query"])
     assert inputs == original
 
 
@@ -297,8 +375,8 @@ def test_paid_chat_skip_preserves_measured_usage(cls, conversation):
     """Skipped model judgments retain charged tokens and supplied properties in both existing paths."""
     chat = cls(CHAT)
     name = chat._result_key
-    output = {"llm_output": {"score": None, "status": "skipped", "reason": "Not enough evidence",
-                              "properties": {"custom": True}}, **USAGE}
+    skipped = {"score": None, "status": "skipped", "reason": "Not enough evidence", "properties": {"custom": True}}
+    output = {"llm_output": skipped, **USAGE}
     flow = AsyncMock(return_value=output)
     chat._flow = flow
     inputs = inputs_for(cls)
@@ -434,3 +512,112 @@ def test_unsupported_sdk_rejects_native_clearly_without_chat(cls):
     ):
         with pytest.raises(EvaluationException, match="version with decision model support"):
             cls(CONFIG)
+
+
+def test_groundedness_native_plain_text_response_without_context_skips_before_transport():
+    """A query with a plain text response and no context is not applicable natively and is never paid for."""
+    evaluator = GroundednessEvaluator(CONFIG)
+    post = stub(evaluator, side_effect=AssertionError("Plain text response reached transport"))
+    result = evaluator(query="When does the museum open?", response="The museum opens at noon.")
+    assert result["groundedness"] is None
+    assert result["groundedness_result"] == "not_applicable"
+    assert result["groundedness_status"] == "skipped"
+    assert "requires grounding context" in result["groundedness_reason"]
+    assert result["groundedness_total_tokens"] == 0
+    assert result["groundedness_properties"] is None
+    post.assert_not_called()
+
+
+def test_groundedness_chat_plain_text_response_without_context_is_unchanged():
+    """The chat path keeps supplying the response text as its own context."""
+    chat = GroundednessEvaluator(CHAT)
+    flow = AsyncMock(return_value={"llm_output": {"score": 5, "status": "completed", "reason": "Fixture"}})
+    chat._flow = flow
+    with patch(PROMPTY_LOAD, return_value=flow):
+        result = chat(query="When does the museum open?", response="The museum opens at noon.")
+    assert result["groundedness"] == 5.0
+    assert flow.await_args.kwargs["context"] == "The museum opens at noon."
+
+
+def chat_multi_turn_inputs(inputs):
+    """Run the chat groundedness conversation path on ``inputs`` and return the prompt inputs it rendered."""
+    chat = GroundednessEvaluator(CHAT)
+    chat._multi_turn_flow = AsyncMock(return_value={"llm_output": {"score": 5, "status": "completed", "reason": "F"}})
+    chat(**deepcopy(inputs))
+    return {key: value for key, value in chat._multi_turn_flow.await_args.kwargs.items() if key != "timeout"}
+
+
+@pytest.mark.parametrize("context,rendered", [
+    (["Opens at noon.", {"closed": "Monday"}], '["Opens at noon.", {"closed": "Monday"}]'),
+    ({"closed": "Monday"}, '{"closed": "Monday"}'),
+    ("Opens at noon.", "Opens at noon."),
+])
+def test_groundedness_messages_context_reaches_both_judges_as_one_string(context, rendered):
+    """Separately supplied conversation context is normalized to one string for the native and chat judges."""
+    inputs = {"messages": deepcopy(MESSAGES), "context": context}
+    evaluator = GroundednessEvaluator(CONFIG)
+    post = stub(evaluator, native("groundedness"))
+    evaluator(**deepcopy(inputs))
+    state, _ = evidence(post)
+    assert state == {"messages": serialize_messages(MESSAGES), "context": rendered}
+    assert chat_multi_turn_inputs(inputs) == state
+
+
+@pytest.mark.parametrize("context", ["", "<>", [" ", ""], None])
+def test_groundedness_messages_blank_context_is_dropped_for_both_judges(context):
+    """Blank or placeholder context is absent from the native state and from the chat prompt inputs."""
+    inputs = {"messages": deepcopy(MESSAGES)}
+    if context is not None:
+        inputs["context"] = context
+    evaluator = GroundednessEvaluator(CONFIG)
+    post = stub(evaluator, native("groundedness"))
+    evaluator(**deepcopy(inputs))
+    state, _ = evidence(post)
+    assert state == {"messages": serialize_messages(MESSAGES)}
+    assert chat_multi_turn_inputs(inputs) == state
+
+
+def test_groundedness_messages_tool_definitions_are_sent_only_when_supplied():
+    """Tool definitions join the transcript only when the caller supplies them, as the prompt renders them."""
+    tools = [{"name": "lookup_hours", "description": "Look up opening hours.",
+              "parameters": {"type": "object", "properties": {}}}]
+    evaluator = GroundednessEvaluator(CONFIG)
+    post = stub(evaluator, native("groundedness"))
+    evaluator(messages=deepcopy(MESSAGES), tool_definitions=deepcopy(tools))
+    state, _ = evidence(post)
+    assert set(state) == {"messages", "tool_definitions"}
+    assert "lookup_hours" in state["tool_definitions"]
+
+
+@pytest.mark.parametrize("cls,expected", [
+    (RelevanceEvaluator, {"query": "When does the museum open?", "response": "The museum opens at noon."}),
+    (ResponseCompletenessEvaluator, {"response": "The museum opens at noon.", "ground_truth": "Noon."}),
+    (SimilarityEvaluator, {"query": "When does the museum open?", "response": "The museum opens at noon.",
+                           "ground_truth": "Noon."}),
+])
+def test_reference_evaluators_send_exactly_the_prompt_inputs(cls, expected):
+    """Relevance, response completeness and similarity send exactly what their prompts render, nothing else."""
+    evaluator = cls(CONFIG)
+    post = stub(evaluator, native(evaluator._result_key))
+    evaluator(**expected)
+    state, _ = evidence(post)
+    assert state == expected
+
+
+@pytest.mark.parametrize("cls", REFERENCE_EVALUATORS)
+def test_reference_evaluators_messages_send_only_rendered_inputs(cls):
+    """The messages overload still sends only the rendered inputs, with no leftover ``messages`` key."""
+    evaluator = cls(CONFIG)
+    post = stub(evaluator, native(evaluator._result_key))
+    extra = {} if cls is RelevanceEvaluator else {"ground_truth": "Latest answer"}
+    evaluator(messages=deepcopy(BLOCK_MESSAGES), **extra)
+    state, _ = evidence(post)
+    query, response = BLOCK_MESSAGES[:3], BLOCK_MESSAGES[3:]
+    if cls is RelevanceEvaluator:
+        expected = {"query": reformat_conversation_history(query, LOGGER),
+                    "response": reformat_agent_response(response, LOGGER)}
+    elif cls is ResponseCompletenessEvaluator:
+        expected = {"response": response, "ground_truth": "Latest answer"}
+    else:
+        expected = {"query": query, "response": response, "ground_truth": "Latest answer"}
+    assert state == expected

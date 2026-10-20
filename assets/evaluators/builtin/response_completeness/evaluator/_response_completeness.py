@@ -364,7 +364,9 @@ class ResponseCompletenessEvaluator(ModelEvaluatorBase[Union[str, float]]):
             eval_input["query"] = _preprocess_messages(eval_input["query"])
 
         if self._decision_selected:
-            return await self._strategy.evaluate(eval_input)
+            # The native state is exactly the inputs response_completeness.prompty renders.
+            state = {"response": eval_input["response"], "ground_truth": eval_input["ground_truth"]}
+            return await self._strategy.evaluate(state)
 
         result = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         llm_output = result.get("llm_output", result) if isinstance(result, dict) else result

@@ -11,18 +11,6 @@ from typing import Dict, List, Tuple, Union
 from typing_extensions import overload, override
 
 from azure.ai.evaluation._evaluators import _common as _sdk_common
-
-ModelEvaluatorBase = getattr(_sdk_common, "ModelEvaluatorBase", _sdk_common.PromptyEvaluatorBase)
-try:
-    from azure.ai.evaluation._evaluators._common._decision_strategy import LikertScoring, DecisionEvaluationStrategy
-except ImportError as exc:
-    if exc.name != "azure.ai.evaluation._evaluators._common._decision_strategy":
-        raise
-    LikertScoring = DecisionEvaluationStrategy = None
-_SDK_SUPPORTS_DECISION = (
-    hasattr(_sdk_common, "ModelEvaluatorBase") and LikertScoring is not None and DecisionEvaluationStrategy is not None
-)
-
 from azure.ai.evaluation._model_configurations import Conversation
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
 from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
@@ -83,6 +71,19 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
         _drop_mcp_approval_messages,
         _normalize_function_call_types,
     )
+
+
+ModelEvaluatorBase = getattr(_sdk_common, "ModelEvaluatorBase", _sdk_common.PromptyEvaluatorBase)
+try:
+    from azure.ai.evaluation._evaluators._common._decision_strategy import LikertScoring, DecisionEvaluationStrategy
+except ImportError as exc:
+    if exc.name != "azure.ai.evaluation._evaluators._common._decision_strategy":
+        raise
+    LikertScoring = DecisionEvaluationStrategy = None
+_SDK_SUPPORTS_DECISION = (
+    hasattr(_sdk_common, "ModelEvaluatorBase") and LikertScoring is not None and DecisionEvaluationStrategy is not None
+)
+
 
 logger = logging.getLogger(__name__)
 
@@ -390,7 +391,8 @@ class FluencyEvaluator(ModelEvaluatorBase[Union[str, float]]):
         # Call the prompty flow to get the evaluation result.
         eval_input.pop("messages", None)
         if self._decision is not None:
-            return await self._decision.evaluate(eval_input)
+            # The native state is exactly the input fluency.prompty renders: the prepared response.
+            return await self._decision.evaluate({"response": eval_input["response"]})
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         score = math.nan
         reason = ""

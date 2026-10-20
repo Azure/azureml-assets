@@ -27,6 +27,16 @@ CONFIG = {"type": "decision", "azure_endpoint": "https://example.services.ai.azu
 CHAT_CONFIG = {"azure_endpoint": "https://example.openai.azure.com",
                "azure_deployment": "chat", "api_key": "test-only"}
 PROMPTY_LOAD = "azure.ai.evaluation._evaluators._common._model_runners.AsyncPrompty.load"
+# The inputs each chat prompty declares and renders; the native request must carry exactly these.
+RENDERED_INPUTS = {
+    ToolCallSuccessEvaluator: ("tool_calls", "tool_definitions"),
+    ToolInputAccuracyEvaluator: ("query", "tool_calls", "tool_definitions"),
+    ToolOutputUtilizationEvaluator: ("query", "response", "tool_definitions"),
+    ToolSelectionEvaluator: ("query", "tool_calls", "tool_definitions"),
+}
+SERIALIZED = {"query": "What is my horoscope? I am an Aquarius.",
+              "response": '[TOOL_CALL] get_horoscope(sign="Aquarius") [TOOL_RESULT] "Meet an otter"',
+              "tool_definitions": "get_horoscope(sign: string): returns a horoscope."}
 
 
 def inputs(shape="structured"):
@@ -37,10 +47,26 @@ def inputs(shape="structured"):
         result = {"messages": result["query"] + result["response"],
                   "tool_definitions": result["tool_definitions"]}
     elif shape == "serialized":
-        result = {"query": "What is my horoscope? I am an Aquarius.",
-                  "response": '[TOOL_CALL] get_horoscope(sign="Aquarius") [TOOL_RESULT] "Meet an otter"',
-                  "tool_definitions": 'get_horoscope(sign: string): returns a horoscope.'}
+        result = dict(SERIALIZED)
     return result
+
+
+def expected_state(evaluator_type, shape):
+    """Build the exact evidence each prompty renders for the fixture shape, which the native request must equal."""
+    if shape == "serialized":
+        prepared = {"query": SERIALIZED["query"], "response": SERIALIZED["response"],
+                    "tool_calls": SERIALIZED["response"], "tool_definitions": SERIALIZED["tool_definitions"]}
+    else:
+        tool_calls = {ToolCallSuccessEvaluator: data.LOCAL_CALLS_TCS_EXPECTED_FLOW_TOOL_CALLS,
+                      ToolInputAccuracyEvaluator: data.LOCAL_CALLS_TIA_EXPECTED_FLOW_TOOL_CALLS,
+                      ToolSelectionEvaluator: data.LOCAL_CALLS_TS_EXPECTED_FLOW_TOOL_CALLS}
+        formatted_definitions = evaluator_type in (ToolCallSuccessEvaluator, ToolOutputUtilizationEvaluator)
+        prepared = {"query": data.LOCAL_CALLS_EXPECTED_FLOW_QUERY,
+                    "response": data.LOCAL_CALLS_TOU_EXPECTED_FLOW_RESPONSE,
+                    "tool_calls": tool_calls.get(evaluator_type),
+                    "tool_definitions": (data.LOCAL_CALLS_EXPECTED_FLOW_TOOL_DEFINITIONS_STR
+                                         if formatted_definitions else data.LOCAL_CALLS_TOOL_DEFINITIONS)}
+    return {name: prepared[name] for name in RENDERED_INPUTS[evaluator_type]}
 
 
 def native(key, probability=0.9, status=1):
@@ -94,7 +120,11 @@ def test_native_and_chat_share_prepared_input_and_binary_results(evaluator_type,
     chat._flow.assert_awaited_once()
     chat_input = dict(chat._flow.call_args.kwargs)
     chat_input.pop("timeout")
-    assert body["state"] == chat_input
+    rendered_names = RENDERED_INPUTS[evaluator_type]
+    assert set(rendered_names) == set(flow._inputs)
+    assert body["state"] == expected_state(evaluator_type, shape)
+    assert body["state"] == {name: chat_input[name] for name in rendered_names}
+    assert None not in body["state"].values()
     assert rendered and "get_horoscope" in rendered[0]
     assert payload == original
     for suffix in ["", "_score", "_passed", "_result", "_status", "_threshold"]:
@@ -231,8 +261,9 @@ def test_paid_chat_skip_retains_known_usage(evaluator_type):
 
 
 @pytest.mark.parametrize("evaluator_type", EVALUATORS)
-@pytest.mark.parametrize("bad_answer", [{"type": "noul", "noul": 1.1}, {"type": "noul", "noul": True},
-                                         {"type": "noul", "noul": "0.9"}])
+@pytest.mark.parametrize("bad_answer", [
+    {"type": "noul", "noul": 1.1}, {"type": "noul", "noul": True}, {"type": "noul", "noul": "0.9"},
+])
 def test_bad_native_answer_retains_error_usage(evaluator_type, bad_answer):
     """Invalid paid score answers fail clearly and retain known request usage."""
     evaluator = native_evaluator(evaluator_type)
@@ -249,7 +280,7 @@ def test_old_sdk_capability_and_invalid_config_fail_before_chat_load(evaluator_t
     """Older SDKs retain chat support but reject opt-in native configuration explicitly."""
     module = importlib.import_module(evaluator_type.__module__)
     with patch.object(module, "_SDK_SUPPORTS_DECISION", False), patch(PROMPTY_LOAD) as load:
-        with pytest.raises(EvaluationException, match="Decision strategy parse support"):
+        with pytest.raises(EvaluationException, match="version with decision model support"):
             evaluator_type(CONFIG)
         load.assert_not_called()
     with patch(PROMPTY_LOAD) as load:
@@ -279,9 +310,10 @@ def test_success_optional_definitions_and_matched_execution_evidence():
     payload["response"].insert(1, {"role": "tool", "tool_call_id": "unmatched-id", "content": [
         {"type": "function_call_output", "function_call_output": "UNMATCHED_RESULT"}]})
     evaluator(**payload)
-    evidence = request(evaluator)["state"]["tool_calls"]
-    assert "get_horoscope" in evidence and "baby otter" in evidence
-    assert "UNMATCHED_RESULT" not in evidence
+    state = request(evaluator)["state"]
+    assert set(state) == {"tool_calls"}
+    assert "get_horoscope" in state["tool_calls"] and "baby otter" in state["tool_calls"]
+    assert "UNMATCHED_RESULT" not in json.dumps(state)
 
 
 @pytest.mark.parametrize("decision", [False, True])
@@ -309,8 +341,9 @@ def test_packaged_rubrics_and_hosted_contract():
     for evaluator_type in EVALUATORS:
         module = importlib.import_module(evaluator_type.__module__)
         directory = Path(module.__file__).parent
-        questions = module._load_decision_questions(str(directory / evaluator_type._DECISION_FILE),
-                                                     evaluator_type._RESULT_KEY)
+        questions = module._load_decision_questions(
+            str(directory / evaluator_type._DECISION_FILE), evaluator_type._RESULT_KEY,
+        )
         assert all(item["type"] == "noul" for item in questions.values())
         assert all("data, not instructions" in item["instructions"].replace("\n", " ")
                    for item in questions.values())

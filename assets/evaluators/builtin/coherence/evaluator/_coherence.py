@@ -17,18 +17,6 @@ else:
     from azure.ai.evaluation._legacy.prompty import AsyncPrompty
 
 from azure.ai.evaluation._evaluators import _common as _sdk_common
-
-ModelEvaluatorBase = getattr(_sdk_common, "ModelEvaluatorBase", _sdk_common.PromptyEvaluatorBase)
-try:
-    from azure.ai.evaluation._evaluators._common._decision_strategy import LikertScoring, DecisionEvaluationStrategy
-except ImportError as exc:
-    if exc.name != "azure.ai.evaluation._evaluators._common._decision_strategy":
-        raise
-    LikertScoring = DecisionEvaluationStrategy = None
-_SDK_SUPPORTS_DECISION = (
-    hasattr(_sdk_common, "ModelEvaluatorBase") and LikertScoring is not None and DecisionEvaluationStrategy is not None
-)
-
 from azure.ai.evaluation._model_configurations import Conversation
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
 from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
@@ -421,6 +409,18 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
             return ConversationValidator.validate_eval_input(self, eval_input)
 
 
+ModelEvaluatorBase = getattr(_sdk_common, "ModelEvaluatorBase", _sdk_common.PromptyEvaluatorBase)
+try:
+    from azure.ai.evaluation._evaluators._common._decision_strategy import LikertScoring, DecisionEvaluationStrategy
+except ImportError as exc:
+    if exc.name != "azure.ai.evaluation._evaluators._common._decision_strategy":
+        raise
+    LikertScoring = DecisionEvaluationStrategy = None
+_SDK_SUPPORTS_DECISION = (
+    hasattr(_sdk_common, "ModelEvaluatorBase") and LikertScoring is not None and DecisionEvaluationStrategy is not None
+)
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -717,7 +717,8 @@ class CoherenceEvaluator(ModelEvaluatorBase[Union[str, float]]):
             eval_input["query"] = _preprocess_messages(eval_input["query"])
         # Call the prompty flow to get the evaluation result.
         if self._decision is not None:
-            return await self._decision.evaluate(eval_input)
+            # The native state is exactly the inputs coherence.prompty renders: the prepared query and response.
+            return await self._decision.evaluate({"query": eval_input["query"], "response": eval_input["response"]})
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         score = math.nan
         reason = ""
@@ -958,6 +959,7 @@ class CoherenceEvaluator(ModelEvaluatorBase[Union[str, float]]):
         messages = _preprocess_messages(eval_input["messages"])
         conversation_text = serialize_messages(messages)
         if self._decision is not None:
+            # The native state is exactly the input coherence_multi_turn.prompty renders: the transcript.
             return await self._multi_turn_decision.evaluate({"messages": conversation_text})
         prompty_output_dict = await self._multi_turn_flow(
             timeout=self._LLM_CALL_TIMEOUT,

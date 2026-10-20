@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 import os
 import json
+import inspect as _inspect
 import logging
 from copy import deepcopy
 from enum import Enum
@@ -20,6 +21,9 @@ from azure.ai.evaluation._common.utils import (
     reformat_agent_response,
     _extract_text_from_content,
     _format_value,
+)
+from azure.ai.evaluation._common.utils import (
+    reformat_conversation_history as _sdk_reformat_conversation_history,
 )
 # ConversationValidator is re-exported for the test suite / capability surface (unused here).
 from azure.ai.evaluation._evaluators._common._validators import (  # noqa: F401
@@ -204,11 +208,6 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
 # we use the SDK helper when it is available and otherwise fall back to the
 # inlined 1.18.1 implementation for azure-ai-evaluation 1.17.x (backward compat;
 # remove the fallback once 1.17.x is no longer supported).
-import inspect as _inspect
-from azure.ai.evaluation._common.utils import (
-    reformat_conversation_history as _sdk_reformat_conversation_history,
-)
-
 if "include_tool_calls" in _inspect.signature(_sdk_reformat_conversation_history).parameters:
     reformat_conversation_history = _sdk_reformat_conversation_history
     # Re-exported so the module keeps exposing these helpers to the test suite.
@@ -534,12 +533,6 @@ class ToolInputAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
             :dedent: 8
             :caption: Initialize and call ToolInputAccuracyEvaluator using Azure AI Project URL in the following format
                 https://{resource_name}.services.ai.azure.com/api/projects/{project_name}
-
-    .. note::
-
-        To align with our support of a diverse set of models, an output key without the `gpt_` prefix has been added.
-        To maintain backwards compatibility, the old key with the `gpt_` prefix is still be present in the output;
-        however, it is recommended to use the new key moving forward as the old key will be deprecated in the future.
     """
 
     _supports_decision_models = True
@@ -598,7 +591,7 @@ class ToolInputAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
             model_config = {**model_config, "probability_threshold": probability_threshold}
         if decision_selected and not _SDK_SUPPORTS_DECISION:
             raise EvaluationException(
-                message="Decision models require an azure-ai-evaluation version with Decision strategy parse support.",
+                message="Decision models require an azure-ai-evaluation version with decision model support.",
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.INVALID_VALUE,
                 target=ExtendedErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR,
