@@ -94,6 +94,7 @@ def test_completion_model_status_skips_before_parsing_score(conversation):
 
 @pytest.mark.parametrize("failure", ["semantic", "timeout"])
 def test_completion_failed_split_retains_prior_paid_usage(failure):
+    """Preserve earlier paid task-completion usage when a later turn fails."""
     evaluator = TaskCompletionEvaluator(CONFIG)
     first = native("task_completion", {"type": "noul", "noul": 0.9})
     first["usage"] = {"input_tokens": 12, "output_tokens": 3}
