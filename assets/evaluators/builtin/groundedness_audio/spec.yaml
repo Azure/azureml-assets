@@ -1,0 +1,49 @@
+type: "evaluator"
+name: "builtin.groundedness_audio"
+version: 1
+displayName: "Groundedness-Audio-Evaluator-(Preview)"
+description: "Evaluates whether an AI agent's spoken responses across a full audio conversation are factually grounded in the available conversation context, tool results, and user-stated facts on a 1–5 scale."
+evaluatorType: "builtin"
+evaluatorSubType: "code"
+categories: ["quality", "agents"]
+tags:
+  is_continuous_scenario: "true"
+  is_audio_evaluator: "true"
+  provider: "Microsoft"
+supportedEvaluationLevels: ["conversation"]
+initParameterSchema:
+  type: "object"
+  properties:
+    deployment_name:
+      type: "string"
+    threshold:
+      type: "number"
+      minimum: 1
+      maximum: 5
+      multipleOf: 1
+    evaluation_level:
+      type: "string"
+  required: ["deployment_name"]
+dataMappingSchema:
+  type: "object"
+  properties:
+    messages:
+      type: "array"
+      items:
+        type: "object"
+    tool_definitions:
+      anyOf:
+        - type: "object"
+        - type: "array"
+          items:
+            type: "object"
+    audio_path:
+      type: "string"
+  required: ["audio_path"]
+outputSchema:
+  groundedness:
+    type: "ordinal"
+    desirable_direction: "increase"
+    min_value: 1
+    max_value: 5
+path: ./evaluator
