@@ -1,6 +1,6 @@
 ## 1.17.8 (2026-10-20)
 ### 🐛 Bugs Fixed
-- [#TBD](https://github.com/Azure/azureml-assets/pull/TBD) Allow typed (list/object) values in deployment config `system_metadata` updates, handle registry models whose `system_metadata` is returned as `None`, and add `raise_on_error` to `update_metadata`
+- [#5392](https://github.com/Azure/azureml-assets/pull/5392) Allow typed (list/object) values in deployment config `system_metadata` updates, handle registry models whose `system_metadata` is returned as `None`, and add `raise_on_error` to `update_metadata`
 
 ## 1.17.7 (2026-07-16)
 ### 🚀 New Features
