@@ -15,12 +15,9 @@ import xml.etree.ElementTree as ET
 
 MINIMUM_CASES = {
     "test_evaluators": 45, "test_composites": 274,
+    "test_quality_expansion": 132, "test_tool_expansion": 92, "test_judge_expansion": 108,
+    "test_expansion_compatibility": 60,
     "test_output_quality_evaluator_behavior": 115, "test_tool_use_quality_evaluator_behavior": 132,
-}
-REQUIRED_CASES = {
-    "test_completion_sync_without_prompty", "test_accuracy_score_and_metadata",
-    *(f"test_public_evaluate_preserves_member_provenance_and_root_usage[passed-{name}]"
-      for name in ("OutputQualityEvaluator", "ToolUseQualityEvaluator")),
 }
 REQUIRED_MODULE_CASES = {
     "test_output_quality_evaluator_behavior": {
@@ -39,6 +36,24 @@ REQUIRED_MODULE_CASES = {
           for query in ("omitted", "none", "empty_text", "empty_list")
           for backend in ("native", "chat")),
     },
+    "test_quality_expansion": {
+        *(f"test_conversation_public_calls_preserve_both_input_sides[{shape}-{backend}-{name}]"
+          for shape in ("text_list", "list_text", "text_text", "list_list", "messages")
+          for backend in ("native", "chat")
+          for name in ("CoherenceEvaluator", "GroundednessEvaluator", "TaskAdherenceEvaluator",
+                       "CustomerSatisfactionEvaluator")),
+        *(f"test_groundedness_queryless_conversation_preserves_response_and_context[{response}-{query}-{backend}]"
+          for response in ("text", "list")
+          for query in ("omitted", "none", "empty_text", "empty_list")
+          for backend in ("native", "chat")),
+        *(f"test_groundedness_explicit_assistant_only_messages_remain_invalid[{backend}]"
+          for backend in ("native", "chat")),
+        *(f"test_groundedness_queryless_conversation_requires_original_context[{context}-{response}-{query}-{backend}]"
+          for context in ("omitted", "none", "empty_text", "empty_list")
+          for response in ("text", "list")
+          for query in ("omitted", "none", "empty_text", "empty_list")
+          for backend in ("native", "chat")),
+    },
 }
 
 
@@ -48,6 +63,20 @@ def report_module(case):
     modules = set(classname.split(".")) & MINIMUM_CASES.keys()
     assert len(modules) == 1, f"Unexpected or ambiguous native classname: {classname}"
     return modules.pop()
+
+
+REQUIRED_CASES = {
+    "test_completion_sync_without_prompty", "test_accuracy_score_and_metadata",
+    *(f"test_public_evaluate_preserves_member_provenance_and_root_usage[passed-{name}]"
+      for name in ("OutputQualityEvaluator", "ToolUseQualityEvaluator")),
+    *(f"test_packaged_expansion_public_usage[{skipped}-{backend}-{name}]"
+      for name in (
+          "fluency", "coherence", "groundedness", "intent_resolution", "task_adherence",
+          "tool_call_success", "tool_input_accuracy", "tool_output_utilization", "tool_selection",
+          "customer_satisfaction", "deflection_rate", "relevance", "response_completeness", "retrieval", "similarity",
+      )
+      for backend in ("native", "chat") for skipped in ("False", "True")),
+}
 
 
 def verify_report(report):

@@ -10,9 +10,10 @@ from typing import Dict, List, Tuple, Union
 
 from typing_extensions import overload, override
 
-from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
 from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
+
+from azure.ai.evaluation._evaluators import _common as _sdk_common
 
 # ---------------------------------------------------------------------------
 # Imports target azure-ai-evaluation >= 1.18.1. Each ``except ImportError``
@@ -65,6 +66,26 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
         _normalize_function_call_types,
     )
 
+ModelEvaluatorBase = getattr(_sdk_common, "ModelEvaluatorBase", _sdk_common.PromptyEvaluatorBase)
+try:
+    from azure.ai.evaluation._evaluators._common._decision_strategy import DecisionEvaluationStrategy, LikertScoring
+except ImportError as exc:
+    if exc.name != "azure.ai.evaluation._evaluators._common._decision_strategy":
+        raise
+    DecisionEvaluationStrategy = LikertScoring = None
+_SDK_SUPPORTS_DECISION = (
+    hasattr(_sdk_common, "ModelEvaluatorBase") and DecisionEvaluationStrategy is not None and LikertScoring is not None
+)
+
+
+def _load_decision_questions(path: str, question_id: str) -> Dict:
+    """Load the packaged applicability and rating questions without initializing a chat flow."""
+    from azure.ai.evaluation._legacy.prompty._yaml_utils import load_yaml
+
+    rubric = json.loads(json.dumps(load_yaml(path)))
+    return {"status": rubric["status"], question_id: rubric["result"]}
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -92,7 +113,7 @@ def _parse_json_response_if_applicable(response):
     return response
 
 
-class SimilarityEvaluator(PromptyEvaluatorBase):
+class SimilarityEvaluator(ModelEvaluatorBase):
     """
     Evaluates similarity score for a given query, response, and ground truth.
 
@@ -107,7 +128,9 @@ class SimilarityEvaluator(PromptyEvaluatorBase):
 
     Similarity scores range from 1 to 5, with 1 being the least similar and 5 being the most similar.
 
-    :param model_config: Configuration for the Azure OpenAI model.
+    :param model_config: Configuration for a chat model, or a mapping with ``type="decision"``,
+        ``azure_endpoint`` and ``azure_deployment`` for a native Decision model.
+        Authenticate with ``api_key`` or ``credential``.
     :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
         ~azure.ai.evaluation.OpenAIModelConfiguration]
     :param threshold: The threshold for the similarity evaluator. Default is 3.
@@ -155,6 +178,8 @@ class SimilarityEvaluator(PromptyEvaluatorBase):
 
     # Constants must be defined within eval's directory to be save/loadable
 
+    _supports_decision_models = True
+    _DECISION_FILE = "similarity.decision.yaml"
     _PROMPTY_FILE = "similarity.prompty"
     _RESULT_KEY = "similarity"
 
@@ -165,7 +190,9 @@ class SimilarityEvaluator(PromptyEvaluatorBase):
     def __init__(self, model_config, *, threshold=3, credential=None, **kwargs):
         """Initialize the Similarity evaluator.
 
-        :param model_config: Configuration for the Azure OpenAI model.
+        :param model_config: Configuration for a chat model, or a mapping with ``type="decision"``,
+        ``azure_endpoint`` and ``azure_deployment`` for a native Decision model.
+        Authenticate with ``api_key`` or ``credential``.
         :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
             ~azure.ai.evaluation.OpenAIModelConfiguration]
         :param threshold: The threshold for evaluation.
@@ -177,6 +204,16 @@ class SimilarityEvaluator(PromptyEvaluatorBase):
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
         self._threshold = threshold
         self._higher_is_better = True
+        self._decision_selected = isinstance(model_config, dict) and model_config.get("type") == "decision"
+        self._strategy = None
+        if self._decision_selected and not _SDK_SUPPORTS_DECISION:
+            raise EvaluationException(
+                message="Decision models require an azure-ai-evaluation version with decision model support.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=ErrorTarget.SIMILARITY_EVALUATOR,
+            )
+
         super().__init__(
             model_config=model_config,
             prompty_file=prompty_path,
@@ -187,11 +224,26 @@ class SimilarityEvaluator(PromptyEvaluatorBase):
             **kwargs,
         )
 
+        if self._decision_selected:
+            self._strategy = self._create_decision_strategy(os.path.join(current_dir, self._DECISION_FILE))
+
     # Ignoring a mypy error about having only 1 overload function.
     # We want to use the overload style for all evals, even single-inputs. This is both to make
     # refactoring to multi-input styles easier, stylistic consistency consistency across evals,
     # and due to the fact that non-overloaded syntax now causes various parsing issues that
     # we don't want to deal with.
+    def _create_decision_strategy(self, path: str):
+        """Use the SDK runner and scoring with this asset's packaged rubric."""
+        return DecisionEvaluationStrategy(
+            self._decision_model_runner,
+            result_key=self._result_key,
+            error_target=ErrorTarget.SIMILARITY_EVALUATOR,
+            questions=_load_decision_questions(path, self._result_key),
+            scoring=LikertScoring(5, minimum=1),
+            threshold=self._threshold,
+            timeout=self._LLM_CALL_TIMEOUT,
+        )
+
     @overload  # type: ignore
     def __call__(self, *, query: str, response: str, ground_truth: str) -> Dict[str, float]:
         """
@@ -325,6 +377,11 @@ class SimilarityEvaluator(PromptyEvaluatorBase):
         if isinstance(eval_input.get("query"), list):
             eval_input["query"] = _preprocess_messages(eval_input["query"])
         # Call the prompty flow to get the evaluation result.
+        if self._decision_selected:
+            # The native state is exactly the inputs similarity.prompty renders.
+            state = {key: eval_input[key] for key in ("query", "response", "ground_truth")}
+            return await self._strategy.evaluate(state)
+
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         score = math.nan
         reason = ""
@@ -343,7 +400,11 @@ class SimilarityEvaluator(PromptyEvaluatorBase):
                 llm_status = parsed_output.get("status", "completed")
                 if llm_status == "skipped":
                     skip_reason = parsed_output.get("reason", "")
-                    return self._return_not_applicable_result(skip_reason, self._threshold)
+                    skipped = self._return_not_applicable_result(skip_reason, self._threshold)
+                    metadata = self._get_token_metadata(prompty_output_dict)
+                    skipped[f"{self._result_key}_properties"] = {**(parsed_output.get("properties") or {}), **metadata}
+                    skipped.update({f"{self._result_key}_{key}": value for key, value in metadata.items()})
+                    return skipped
                 score = parsed_output.get("score", math.nan)
                 reason = parsed_output.get("reason", "")
                 llm_properties = parsed_output.get("properties", {}) or {}
@@ -434,6 +495,9 @@ class SimilarityEvaluator(PromptyEvaluatorBase):
                 ) from exc
             kwargs["query"] = query_messages
             kwargs["response"] = response_messages
+
+        if self._decision_selected:
+            return await super()._real_call(**kwargs)
 
         # Convert inputs into list of evaluable inputs.
         try:

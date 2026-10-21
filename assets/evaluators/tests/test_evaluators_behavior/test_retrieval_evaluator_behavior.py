@@ -1,9 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Behavioral tests for Retrieval Evaluator — None score handling."""
+"""Behavioral tests for Retrieval Evaluator, including None score handling."""
 
 import asyncio
+import builtins
 import json
 from types import SimpleNamespace
 
@@ -15,6 +16,7 @@ from .base_validator_unit_test import (
     MessagePreprocessUnitTests,
     SuperDoEvalNotApplicableUnitTests,
 )
+from .base_decision_routing_test import DecisionRoutingTests, construct_evaluator, enable_fake_decision_sdk
 from ...builtin.retrieval.evaluator._retrieval import RetrievalEvaluator
 from ..common.evaluator_mock_config import (
     INTERMEDIATE_FUNCTION_CALL_RESPONSE,
@@ -431,3 +433,66 @@ class TestRetrievalConversationContextExtraction:
 
         with pytest.raises(EvaluationException, match="No valid context"):
             evaluator._convert_kwargs_to_eval_input(messages=messages)
+
+
+# region Native Decision routing coverage on the released SDK
+
+DECISION_STRATEGY_MODULE = "azure.ai.evaluation._evaluators._common._decision_strategy"
+
+
+@pytest.mark.unittest
+class TestRetrievalDecisionRouting(DecisionRoutingTests):
+    """Cover the native Decision branches of retrieval without a Decision-capable SDK."""
+
+    result_key = "retrieval"
+    class_name = "RetrievalEvaluator"
+    inputs = {"query": "What are the office hours?", "context": "The office is open 9 to 5."}
+
+    def test_broken_decision_import_is_not_hidden(self, monkeypatch):
+        """A broken SDK dependency propagates instead of being read as a missing Decision capability."""
+        original_import = builtins.__import__
+        error = ModuleNotFoundError(name="broken_dependency")
+
+        def broken_import(name, *args, **kwargs):
+            if name == DECISION_STRATEGY_MODULE:
+                raise error
+            return original_import(name, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", broken_import)
+        with pytest.raises(ModuleNotFoundError) as caught:
+            self.load()
+        assert caught.value is error
+
+    def test_native_state_is_the_query_and_context_only(self, monkeypatch):
+        """The native state carries exactly the query and the retrieved context, never a response key."""
+        module = self.load()
+        enable_fake_decision_sdk(monkeypatch, module, self.class_name, result_key=self.result_key)
+        evaluator, _ = construct_evaluator(module, self.class_name)
+        result = evaluator(query="What are the office hours?", context="The office is open 9 to 5.")
+        assert result == {"retrieval": 1}
+        state = evaluator._strategy.evaluate.await_args.args[0]
+        assert state == {"query": "What are the office hours?", "context": "The office is open 9 to 5."}
+
+    def test_conversation_turns_each_reach_the_strategy_with_tool_context(self, monkeypatch):
+        """Each user turn with tool output becomes its own query and context state and the turns aggregate."""
+        module = self.load()
+        enable_fake_decision_sdk(monkeypatch, module, self.class_name, result_key=self.result_key)
+        evaluator, _ = construct_evaluator(module, self.class_name)
+        messages = [
+            {"role": "user", "content": "First query"},
+            {"role": "tool", "content": "First context"},
+            {"role": "assistant", "content": "First answer"},
+            {"role": "user", "content": "Second query"},
+            {"role": "tool", "content": [{"type": "tool_result", "tool_result": {"city": "Paris"}}]},
+            {"role": "assistant", "content": "Second answer"},
+        ]
+        result = evaluator(messages=messages)
+        assert result["retrieval"] == 1
+        states = [call.args[0] for call in evaluator._strategy.evaluate.await_args_list]
+        assert states == [
+            {"query": "First query", "context": "First context"},
+            {"query": "Second query", "context": '{"city": "Paris"}'},
+        ]
+
+
+# endregion

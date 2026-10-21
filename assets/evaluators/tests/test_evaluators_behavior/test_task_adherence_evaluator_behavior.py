@@ -4,12 +4,23 @@
 """Behavioral tests for Task Adherence Evaluator."""
 
 import asyncio
+import builtins
+from copy import deepcopy
 from typing import Any, Dict, List
+from unittest.mock import patch
 
 import pytest
 from azure.ai.evaluation._exceptions import EvaluationException
 
 from .base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
+from .base_decision_routing_test import (
+    CHAT_CONFIG,
+    DECISION_CONFIG,
+    PROMPTY_LOAD,
+    DecisionRoutingTests,
+    construct_evaluator,
+    enable_fake_decision_sdk,
+)
 from .base_evaluator_behavior_test import _TurnLevelUtilE2ETests, _MessagesUtilE2ETests
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from .base_validator_unit_test import (
@@ -626,3 +637,121 @@ class TestTaskAdherenceDoEvalBranches:
         evaluator = create_mocked_evaluator(TaskAdherenceEvaluator, "task_adherence")
         with pytest.raises(EvaluationException):
             asyncio.run(evaluator._do_eval({}))
+
+
+# region Native Decision routing coverage on the released SDK
+
+DECISION_STRATEGY_MODULE = "azure.ai.evaluation._evaluators._common._decision_strategy"
+
+
+@pytest.mark.unittest
+class TestTaskAdherenceDecisionRouting(DecisionRoutingTests):
+    """Cover the native Decision branches of task_adherence without a Decision-capable SDK."""
+
+    result_key = "task_adherence"
+    class_name = "TaskAdherenceEvaluator"
+    inputs = {"query": "Plan a trip to Paris.", "response": "Here is your itinerary."}
+    strategy_attribute = "_decision"
+    scorings = ("BinaryScoring",)
+    expected_strategies = 2
+
+    def test_broken_decision_import_is_not_hidden(self, monkeypatch):
+        """A broken SDK dependency propagates instead of being read as a missing Decision capability."""
+        original_import = builtins.__import__
+        error = ModuleNotFoundError(name="broken_dependency")
+
+        def broken_import(name, *args, **kwargs):
+            if name == DECISION_STRATEGY_MODULE:
+                raise error
+            return original_import(name, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", broken_import)
+        with pytest.raises(ModuleNotFoundError) as caught:
+            self.load()
+        assert caught.value is error
+
+    def test_turn_state_is_the_rendered_prompt_inputs(self, monkeypatch):
+        """The turn-level native state is exactly the four fields the chat prompt renders, as strings."""
+        module = self.load()
+        sdk = enable_fake_decision_sdk(monkeypatch, module, self.class_name, result_key=self.result_key,
+                                       scorings=self.scorings)
+        evaluator, _ = construct_evaluator(module, self.class_name)
+        result = evaluator(
+            query=deepcopy(data.LOCAL_CALLS_QUERY),
+            response=deepcopy(data.LOCAL_CALLS_RESPONSE),
+            tool_definitions=deepcopy(data.LOCAL_CALLS_TOOL_DEFINITIONS),
+        )
+        assert result == {"task_adherence": 1}
+        state = evaluator._decision.evaluate.await_args.args[0]
+        assert state == {
+            "system_message": "",
+            "query": data.LOCAL_CALLS_EXPECTED_FLOW_QUERY,
+            "response": data.LOCAL_CALLS_EXPECTED_FLOW_RESPONSE,
+            "tool_calls": "",
+        }
+        sdk.scorings["BinaryScoring"].assert_called_with(sdk.runner.probability_threshold)
+        evaluator._multi_turn_decision.evaluate.assert_not_awaited()
+
+    def test_conversation_state_is_the_transcript_with_optional_tool_definitions(self, monkeypatch):
+        """Messages route to the conversation strategy with the serialized transcript and rendered tools."""
+        module = self.load()
+        enable_fake_decision_sdk(monkeypatch, module, self.class_name, result_key=self.result_key,
+                                 scorings=self.scorings)
+        evaluator, _ = construct_evaluator(module, self.class_name)
+        assert evaluator(messages=deepcopy(VALID_MESSAGES)) == {"task_adherence": 1}
+        state = evaluator._multi_turn_decision.evaluate.await_args.args[0]
+        assert set(state) == {"messages"}
+        assert "Book a flight from NYC to London" in state["messages"]
+        evaluator(messages=deepcopy(VALID_MESSAGES), tool_definitions=deepcopy(VALID_TOOL_DEFINITIONS))
+        state = evaluator._multi_turn_decision.evaluate.await_args.args[0]
+        assert set(state) == {"messages", "tool_definitions"}
+        assert "search_flights" in state["tool_definitions"]
+        evaluator._decision.evaluate.assert_not_awaited()
+
+    def test_probability_cutoff_override_builds_a_new_configuration(self, monkeypatch):
+        """The explicit cutoff reaches the model configuration without mutating the caller's mapping."""
+        module = self.load()
+        enable_fake_decision_sdk(monkeypatch, module, self.class_name, result_key=self.result_key,
+                                 scorings=self.scorings)
+        base = module["ModelEvaluatorBase"]
+        chat_initializer = base.__init__
+        seen = {}
+
+        def capture(instance, **kwargs):
+            seen.update(kwargs["model_config"])
+            chat_initializer(instance, **kwargs)
+
+        monkeypatch.setattr(base, "__init__", capture)
+        config = dict(DECISION_CONFIG)
+        original = dict(config)
+        with patch(PROMPTY_LOAD):
+            evaluator = module[self.class_name](config, probability_threshold=0.9)
+        assert seen["probability_threshold"] == 0.9
+        assert config == original
+        assert evaluator._decision is not None
+
+    def test_chat_configuration_rejects_probability_cutoff_before_loading_prompts(self):
+        """A Decision-only cutoff on a chat configuration fails before any prompt is loaded."""
+        with patch(PROMPTY_LOAD) as load:
+            with pytest.raises(EvaluationException, match="only supported for Decision models"):
+                TaskAdherenceEvaluator(dict(CHAT_CONFIG), probability_threshold=0.8)
+        load.assert_not_called()
+
+    def test_chat_skip_with_string_model_output_keeps_usage(self):
+        """A skipped chat answer delivered as a JSON string keeps its properties and measured usage."""
+        evaluator = _create_mocked_evaluator()
+        usage = {"input_token_count": 4, "output_token_count": 2, "total_token_count": 6, "model_id": "chat"}
+        parsed = evaluator._return_not_applicable_result(
+            "No evidence", 0, {"llm_output": '{"properties": {"diagnostic": "empty"}}', **usage}
+        )
+        assert parsed["task_adherence"] is None
+        assert parsed["task_adherence_status"] == "skipped"
+        assert parsed["task_adherence_properties"]["diagnostic"] == "empty"
+        assert parsed["task_adherence_properties"]["total_tokens"] == 6
+        assert parsed["task_adherence_total_tokens"] == 6
+        malformed = evaluator._return_not_applicable_result("No evidence", 0, {"llm_output": "not json", **usage})
+        assert "diagnostic" not in malformed["task_adherence_properties"]
+        assert malformed["task_adherence_properties"]["total_tokens"] == 6
+
+
+# endregion

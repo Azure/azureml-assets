@@ -188,6 +188,7 @@ jobs:
       - name: Run offline released SDK compatibility checks
         run: |
           python -m pytest assets/evaluators/tests/test_decision_models/test_released_sdk_compatibility.py \
+            assets/evaluators/tests/test_decision_models/test_expansion_compatibility.py \
             -k actual_released_wheel --junitxml="$pytest_reports/released-sdk-compatibility.xml"
           python - <<'PY'
           from pathlib import Path
@@ -195,7 +196,7 @@ jobs:
           import xml.etree.ElementTree as ET
           report = ET.parse(Path(os.environ["pytest_reports"]) / "released-sdk-compatibility.xml")
           cases = report.findall(".//testcase")
-          assert len(cases) == 16, f"Expected all 16 released SDK cases, got {len(cases)}"
+          assert len(cases) == 76, f"Expected all 76 released SDK cases, got {len(cases)}"
           assert not report.findall(".//skipped"), "Released SDK compatibility cases must not skip in CI"
           PY
 
@@ -237,8 +238,13 @@ jobs:
           python scripts/test/check_native_sdk.py "$wheel" "$pytest_reports" --provenance-only
           python -m pytest assets/evaluators/tests/test_decision_models/test_evaluators.py \
             assets/evaluators/tests/test_decision_models/test_composites.py \
+            assets/evaluators/tests/test_decision_models/test_quality_expansion.py \
+            assets/evaluators/tests/test_decision_models/test_tool_expansion.py \
+            assets/evaluators/tests/test_decision_models/test_judge_expansion.py \
+            assets/evaluators/tests/test_decision_models/test_expansion_compatibility.py \
             assets/evaluators/tests/test_evaluators_behavior/test_output_quality_evaluator_behavior.py \
-            assets/evaluators/tests/test_evaluators_behavior/test_tool_use_quality_evaluator_behavior.py -q \
+            assets/evaluators/tests/test_evaluators_behavior/test_tool_use_quality_evaluator_behavior.py \
+            -k 'not actual_released_wheel' -q \
             --junitxml="$pytest_reports/candidate-native-sdk.xml"
           python scripts/test/check_native_sdk.py "$wheel" "$pytest_reports"
 
