@@ -1,10 +1,10 @@
 type: "evaluator"
 name: "builtin.task_level_rubric"
-version: 1
+version: 2
 displayName: "Task-Level-Rubric-Evaluator-(Preview)"
 description: "Evaluates each Task (one dataset row containing a trace) against that row's rubric dimensions. Returns overall and per-dimension pass/fail with explanations. Uses a temporary placeholder judge prompt for integration testing, not approved production grading."
 evaluatorType: "builtin"
-evaluatorSubType: "code"
+evaluatorSubType: "service"
 categories: ["agents", "quality"]
 tags:
   provider: "Microsoft"
@@ -75,4 +75,3 @@ outputSchema:
     type: "boolean"
     desirable_direction: "increase"
     is_primary: true
-path: ./evaluator
