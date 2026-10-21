@@ -1260,14 +1260,21 @@ class GroundednessEvaluator(ModelEvaluatorBase[Union[str, float]]):
         :return: The evaluation result.
         :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
         """
+        validation_input = kwargs
         # Reshape inputs based on evaluation level before validation
         if self._evaluation_level == EvaluationLevel.CONVERSATION and not kwargs.get("messages"):
             query = kwargs.get("query")
             response = kwargs.get("response")
-            if isinstance(query, str) and isinstance(response, str) and query and response:
-                query, response = _wrap_string_messages(query, response)
-            if isinstance(query, list) and isinstance(response, list):
-                kwargs["messages"] = _merge_query_response_messages(query, response)
+            if isinstance(query, str) and query:
+                query, _ = _wrap_string_messages(query, "")
+            if isinstance(response, str) and response:
+                _, response = _wrap_string_messages("", response)
+            if isinstance(response, list):
+                if query is None or (isinstance(query, (str, list)) and not query):
+                    validation_input = dict(kwargs)
+                    kwargs["messages"] = response
+                elif isinstance(query, list):
+                    kwargs["messages"] = _merge_query_response_messages(query, response)
         elif self._evaluation_level == EvaluationLevel.TURN and kwargs.get("messages"):
             if any(m.get("role") == MessageRole.USER for m in kwargs["messages"]):
                 query_messages, response_messages = _split_messages_at_latest_user(kwargs["messages"])
@@ -1276,12 +1283,16 @@ class GroundednessEvaluator(ModelEvaluatorBase[Union[str, float]]):
                 kwargs.pop("messages", None)
 
         # Validate input before processing
-        if kwargs.get("messages"):
-            self._validator_messages.validate_eval_input(kwargs)
-        elif kwargs.get("query"):
-            self._validator_with_query.validate_eval_input(kwargs)
+        if validation_input.get("messages"):
+            self._validator_messages.validate_eval_input(validation_input)
+        elif validation_input.get("query"):
+            self._validator_with_query.validate_eval_input(validation_input)
         else:
-            self._validator.validate_eval_input(kwargs)
+            self._validator.validate_eval_input(validation_input)
+
+        if validation_input is not kwargs:
+            # Preserve queryless admission before the messages overload takes precedence.
+            self._convert_kwargs_to_eval_input(**validation_input)
 
         # Convert inputs into list of evaluable inputs.
         try:

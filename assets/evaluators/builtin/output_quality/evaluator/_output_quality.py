@@ -7,6 +7,7 @@ import functools
 import json
 import logging
 import os
+from asyncio import CancelledError
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -853,6 +854,8 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
             response = kwargs.get("response")
             if isinstance(query, str) and query:
                 query, _ = _wrap_string_messages(query, "")
+            elif isinstance(query, str):
+                query = []
             if isinstance(response, str) and response:
                 _, response = _wrap_string_messages("", response)
             if isinstance(query, list) and isinstance(response, list):
@@ -884,7 +887,7 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         for eval_input in eval_input_list:
             try:
                 result = await self._do_eval(eval_input)
-            except EvaluationException as error:
+            except (EvaluationException, CancelledError) as error:
                 if _SDK_SUPPORTS_DECISION and self._uses_decision_model:
                     self._on_evaluation_error(error, per_turn_results)
                 raise

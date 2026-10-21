@@ -701,8 +701,10 @@ class CustomerSatisfactionEvaluator(ModelEvaluatorBase[Union[str, float]]):
         if self._evaluation_level == EvaluationLevel.CONVERSATION and not kwargs.get("messages"):
             query = kwargs.get("query")
             response = kwargs.get("response")
-            if isinstance(query, str) and isinstance(response, str) and query and response:
-                query, response = _wrap_string_messages(query, response)
+            if isinstance(query, str) and query:
+                query, _ = _wrap_string_messages(query, "")
+            if isinstance(response, str) and response:
+                _, response = _wrap_string_messages("", response)
             if isinstance(query, list) and isinstance(response, list):
                 kwargs["messages"] = _merge_query_response_messages(query, response)
         elif self._evaluation_level == EvaluationLevel.TURN and kwargs.get("messages"):

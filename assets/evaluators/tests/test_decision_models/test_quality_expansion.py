@@ -25,6 +25,7 @@ from ...builtin.coherence.evaluator._coherence import CoherenceEvaluator
 from ...builtin.groundedness.evaluator._groundedness import GroundednessEvaluator
 from ...builtin.intent_resolution.evaluator._intent_resolution import IntentResolutionEvaluator
 from ...builtin.task_adherence.evaluator._task_adherence import TaskAdherenceEvaluator
+from ...builtin.customer_satisfaction.evaluator._customer_satisfaction import CustomerSatisfactionEvaluator
 from ...builtin.relevance.evaluator._relevance import RelevanceEvaluator
 from ...builtin.response_completeness.evaluator._response_completeness import ResponseCompletenessEvaluator
 from ...builtin.similarity.evaluator._similarity import SimilarityEvaluator
@@ -96,6 +97,110 @@ def evidence(post, index=-1):
     assert set(request) == {"model", "state", "questions"}
     assert request["model"] == CONFIG["azure_deployment"]
     return request["state"], request["questions"]
+
+
+@pytest.mark.parametrize("cls", [*CONVERSATION_EVALUATORS, CustomerSatisfactionEvaluator])
+@pytest.mark.parametrize("backend", ["native", "chat"])
+@pytest.mark.parametrize("shape", ["text_list", "list_text", "text_text", "list_list", "messages"])
+def test_conversation_public_calls_preserve_both_input_sides(cls, backend, shape):
+    """Mixed shapes must prepare the same complete conversation as explicit-message controls."""
+    query, response = "When does the museum open?", "The museum opens at noon."
+    query_messages = [{"role": "user", "content": [{"type": "text", "text": query}]}]
+    response_messages = [{"role": "assistant", "content": [{"type": "text", "text": response}]}]
+    variants = {
+        "text_list": {"query": query, "response": response_messages},
+        "list_text": {"query": query_messages, "response": response},
+        "text_text": {"query": query, "response": response},
+        "list_list": {"query": query_messages, "response": response_messages},
+        "messages": {"messages": query_messages + response_messages},
+    }
+    inputs = deepcopy(variants[shape])
+    if cls is GroundednessEvaluator:
+        inputs["context"] = "Museum opening time: noon."
+    flow = AsyncMock(return_value={
+        "llm_output": {"score": 1 if cls is TaskAdherenceEvaluator else 5, "reason": "grounded", "status": "completed"},
+        **USAGE,
+    })
+    with patch(PROMPTY_LOAD, return_value=flow):
+        instance = cls(CONFIG if backend == "native" else CHAT, evaluation_level="conversation")
+        post = stub(instance, native(instance._result_key)) if backend == "native" else None
+        result = instance(**inputs)
+    state = evidence(post)[0] if post is not None else flow.await_args.kwargs
+    transcript = state.get("messages", state.get("conversation"))
+    assert isinstance(transcript, str) and query in transcript and response in transcript
+    assert result[f"{instance._result_key}_status"] == "completed"
+    if cls is GroundednessEvaluator:
+        assert state["context"] == inputs["context"]
+
+
+@pytest.mark.parametrize("backend", ["native", "chat"])
+@pytest.mark.parametrize("query_shape", ["omitted", "none", "empty_text", "empty_list"])
+@pytest.mark.parametrize("response_shape", ["text", "list"])
+def test_groundedness_queryless_conversation_preserves_response_and_context(backend, query_shape, response_shape):
+    """An optional query must not erase a valid response or fabricate a user message."""
+    response, context = "The museum opens at noon.", "Museum opening time: noon."
+    inputs = {
+        "response": response if response_shape == "text" else [
+            {"role": "assistant", "content": [{"type": "text", "text": response}]}
+        ],
+        "context": context,
+    }
+    if query_shape != "omitted":
+        inputs["query"] = {"none": None, "empty_text": "", "empty_list": []}[query_shape]
+    flow = AsyncMock(return_value={"llm_output": {"score": 5, "status": "completed"}, **USAGE})
+    with patch(PROMPTY_LOAD, return_value=flow):
+        instance = GroundednessEvaluator(CONFIG if backend == "native" else CHAT, evaluation_level="conversation")
+        post = stub(instance, native("groundedness")) if backend == "native" else None
+        result = instance(**inputs)
+    state = evidence(post)[0] if post is not None else flow.await_args.kwargs
+    assert response in state["messages"]
+    assert "User turn" not in state["messages"]
+    assert state["context"] == context
+    assert result["groundedness_status"] == "completed"
+
+
+@pytest.mark.parametrize("backend", ["native", "chat"])
+@pytest.mark.parametrize("query_shape", ["omitted", "none", "empty_text", "empty_list"])
+@pytest.mark.parametrize("response_shape", ["text", "list"])
+@pytest.mark.parametrize("context_shape", ["omitted", "none", "empty_text", "empty_list"])
+def test_groundedness_queryless_conversation_requires_original_context(
+    backend, query_shape, response_shape, context_shape
+):
+    """Synthesized messages must not bypass the original queryless grounding admission."""
+    inputs = {
+        "response": "The museum opens at noon." if response_shape == "text" else [
+            {"role": "assistant", "content": "The museum opens at noon."}
+        ],
+    }
+    values = {"none": None, "empty_text": "", "empty_list": []}
+    if query_shape != "omitted":
+        inputs["query"] = values[query_shape]
+    if context_shape != "omitted":
+        inputs["context"] = values[context_shape]
+    flow = AsyncMock()
+    with patch(PROMPTY_LOAD, return_value=flow):
+        instance = GroundednessEvaluator(CONFIG if backend == "native" else CHAT, evaluation_level="conversation")
+        post = stub(instance, native("groundedness")) if backend == "native" else None
+        with pytest.raises(EvaluationException) as raised:
+            instance(**inputs)
+    assert raised.value.category.value == "MISSING FIELD"
+    flow.assert_not_awaited()
+    if post is not None:
+        post.assert_not_awaited()
+
+
+@pytest.mark.parametrize("backend", ["native", "chat"])
+def test_groundedness_explicit_assistant_only_messages_remain_invalid(backend):
+    """Queryless adaptation must not weaken the existing explicit-messages validator."""
+    flow = AsyncMock()
+    with patch(PROMPTY_LOAD, return_value=flow):
+        instance = GroundednessEvaluator(CONFIG if backend == "native" else CHAT, evaluation_level="conversation")
+        post = stub(instance, native("groundedness")) if backend == "native" else None
+        with pytest.raises(EvaluationException, match="role 'user'"):
+            instance(messages=[{"role": "assistant", "content": "A response"}], context="Grounding context")
+    flow.assert_not_awaited()
+    if post is not None:
+        post.assert_not_awaited()
 
 
 @pytest.mark.parametrize("cls", EVALUATORS)
