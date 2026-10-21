@@ -1,11 +1,11 @@
-# Shared Go toolchain version used across builder stages; compiled from source so the
-# trivy and oras binaries link a patched Go stdlib. Go 1.26.9 is the 2026-10-08
-# security release for this line (crypto/tls, html/template, net/http, net/textproto,
-# os, including CVE-2026-97032, CVE-2026-78659, and CVE-2026-97031). Stay on 1.26;
-# move this pin when a newer patched 1.26 release ships.
-ARG GO_VERSION=1.26.9
+# Build the source-compiled tools with Go 1.26.10 (2026-10-19 security release) to block the
+# untrusted certificate chains covered by CVE-2026-111943. Stay on the supported
+# 1.26 line when applying later security updates.
+ARG GO_VERSION=1.26.10
 ARG TRIVY_VERSION=0.74.0
 ARG ORAS_VERSION=1.3.4
+ARG BUILDX_VERSION=0.38.1
+ARG COMPOSE_VERSION=5.6.0
 
 # Mode toggles: "build" (compile from source with patched Go + deps) or
 # "install" (download the upstream release binary). Both default to "build"
@@ -16,11 +16,10 @@ ARG TRIVY_MODE=build
 ARG ORAS_MODE=build
 
 # =========================================
-# Builder: compile ORAS with patched Go
+# Shared toolchain for source-built tools
 # =========================================
-FROM ubuntu:24.04 AS oras-build
+FROM ubuntu:24.04 AS go-build
 ARG GO_VERSION
-ARG ORAS_VERSION
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates curl git \
@@ -28,7 +27,10 @@ RUN apt-get update \
 RUN curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tar.gz \
  && tar -C /usr/local -xzf /tmp/go.tar.gz \
  && rm /tmp/go.tar.gz
-ENV PATH=/usr/local/go/bin:$PATH
+ENV PATH=/usr/local/go/bin:$PATH GOTOOLCHAIN=local
+
+FROM go-build AS oras-build
+ARG ORAS_VERSION
 # Build ORAS; pin patched module versions on top of the release tag for any dep the
 # tagged release still carries that the scanner flags.
 RUN git clone --depth 1 --branch v${ORAS_VERSION} https://github.com/oras-project/oras.git /tmp/oras \
@@ -64,30 +66,25 @@ FROM oras-${ORAS_MODE} AS oras-final
 # Builder: compile Trivy with patched Go + deps
 # =========================================
 # Build Trivy from source so it links a patched Go stdlib (GO_VERSION). Prefer bumping
-# TRIVY_VERSION to the latest release (its go.mod carries fixed modules) over hand-pinning
-# deps; add a `go get pkg@version` below only for a module the latest release still lags.
-FROM ubuntu:24.04 AS trivy-build
-ARG GO_VERSION
+# TRIVY_VERSION to a release carrying fixed modules when it supports the selected Go
+# line. Otherwise apply targeted module overrides without changing the tool's behavior.
+FROM go-build AS trivy-build
 ARG TRIVY_VERSION
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update \
- && apt-get install -y --no-install-recommends ca-certificates curl git \
- && rm -rf /var/lib/apt/lists/*
-RUN curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tar.gz \
- && tar -C /usr/local -xzf /tmp/go.tar.gz \
- && rm /tmp/go.tar.gz
-ENV PATH=/usr/local/go/bin:$PATH
 # Build env replicates trivy's magefile (CGO disabled, jsonv2 experiment, version ldflag).
 # Trivy v0.74.0 still needs these module fixes:
 # grpc 1.83.2: CVE-2026-84304, CVE-2026-84303, CVE-2026-84445.
-# x/crypto 0.56.0: CVE-2026-78662, CVE-2026-56855.
+# x/crypto 0.57.0: retains the CVE-2026-78662/CVE-2026-56855 fixes and is
+# required by x/net 0.60.0.
+# x/net 0.60.0: CVE-2026-78659, CVE-2026-78660, CVE-2026-78663,
+# CVE-2026-78669, CVE-2026-97032.
 # containerd/v2 2.3.6: CVE-2026-53495, CVE-2026-53493.
 # swag/jsonutils 0.27.1: GHSA-xh24-9qpg-8w28.
 # Drop each override once the Trivy release includes that fixed version or newer.
 RUN git clone --depth 1 --branch v${TRIVY_VERSION} https://github.com/aquasecurity/trivy.git /tmp/trivy \
  && cd /tmp/trivy \
  && go get google.golang.org/grpc@v1.83.2 \
-      golang.org/x/crypto@v0.56.0 \
+      golang.org/x/crypto@v0.57.0 \
+      golang.org/x/net@v0.60.0 \
       github.com/containerd/containerd/v2@v2.3.6 \
       github.com/go-openapi/swag/jsonutils@v0.27.1 \
  && go mod tidy \
@@ -123,6 +120,46 @@ RUN apt-get update \
 FROM trivy-${TRIVY_MODE} AS trivy-final
 
 # =========================================
+# Builders: Docker CLI plugins with patched Go + x/net
+# =========================================
+# Docker's packaged plugins still use Go 1.26.8 and x/net below 0.60.0.
+# Rebuild them too; changing the ORAS/Trivy toolchain does not update these binaries.
+FROM go-build AS buildx-build
+ARG BUILDX_VERSION
+RUN git clone --depth 1 --branch v${BUILDX_VERSION} https://github.com/docker/buildx.git /tmp/buildx \
+ && cd /tmp/buildx \
+ && go get golang.org/x/net@v0.60.0 golang.org/x/crypto@v0.57.0 \
+ && go mod tidy \
+ && go mod vendor \
+ && CGO_ENABLED=0 go build -mod=vendor -trimpath \
+      -ldflags="-s -w -X github.com/docker/buildx/version.Version=v${BUILDX_VERSION} -X github.com/docker/buildx/version.Revision=$(git rev-parse HEAD).m -X github.com/docker/buildx/version.Package=github.com/docker/buildx" \
+      -o /out/docker-buildx ./cmd/buildx \
+ && /out/docker-buildx version \
+ && mkdir -p /out/licenses/buildx \
+ && cp LICENSE /out/licenses/buildx/ \
+ && find vendor -type f \( -iname '*license*' -o -iname '*notice*' -o -iname '*copying*' -o -iname '*copyright*' \) \
+      -exec cp --parents -t /out/licenses/buildx {} + \
+ && rm -rf /tmp/buildx
+
+FROM go-build AS compose-build
+ARG COMPOSE_VERSION
+# Match the upstream Linux release flags, including its e2e build tag.
+RUN git clone --depth 1 --branch v${COMPOSE_VERSION} https://github.com/docker/compose.git /tmp/compose \
+ && cd /tmp/compose \
+ && go get golang.org/x/net@v0.60.0 golang.org/x/crypto@v0.57.0 \
+ && go mod tidy \
+ && go mod vendor \
+ && CGO_ENABLED=0 go build -mod=vendor -trimpath -tags e2e \
+      -ldflags="-w -X github.com/docker/compose/v5/internal.Version=v${COMPOSE_VERSION}" \
+      -o /out/docker-compose ./cmd \
+ && /out/docker-compose version \
+ && mkdir -p /out/licenses/compose \
+ && cp LICENSE NOTICE /out/licenses/compose/ \
+ && find vendor -type f \( -iname '*license*' -o -iname '*notice*' -o -iname '*copying*' -o -iname '*copyright*' \) \
+      -exec cp --parents -t /out/licenses/compose {} + \
+ && rm -rf /tmp/compose
+
+# =========================================
 # Runtime: AzureML base + Docker + Trivy + conda
 # =========================================
 FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
@@ -138,8 +175,17 @@ RUN apt-get update \
    $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" \
    | tee /etc/apt/sources.list.d/docker.list > /dev/null \
  && apt-get update \
- && apt-get install -y --no-install-recommends docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin \
+ && apt-get install -y --no-install-recommends docker-ce docker-ce-cli containerd.io \
  && rm -rf /var/lib/apt/lists/*
+
+COPY --from=buildx-build /out/docker-buildx /usr/libexec/docker/cli-plugins/docker-buildx
+COPY --from=compose-build /out/docker-compose /usr/libexec/docker/cli-plugins/docker-compose
+
+# Retain upstream, dependency and Go runtime notices for the rebuilt plugins.
+COPY --from=buildx-build /out/licenses/buildx /usr/share/doc/docker-buildx-plugin/licenses
+COPY --from=compose-build /out/licenses/compose /usr/share/doc/docker-compose-plugin/licenses
+COPY --from=go-build /usr/local/go/LICENSE /usr/share/doc/docker-tools/Go-LICENSE
+COPY --from=go-build /usr/local/go/PATENTS /usr/share/doc/docker-tools/Go-PATENTS
 
 # Trivy from the mode-selected stage (build | install).
 # Symlinked at /usr/bin/trivy too so anything assuming the apt-install location keeps working.
