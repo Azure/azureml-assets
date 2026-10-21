@@ -386,6 +386,28 @@ class TestOutputQualityEvaluatorBehavior:
         evaluator._multi_turn_flow.assert_called_once()
         evaluator._flow.assert_not_called()
 
+    @pytest.mark.parametrize("query_shape", ["omitted", "none", "empty_text", "empty_list"])
+    @pytest.mark.parametrize("response_shape", ["text", "messages"])
+    def test_queryless_conversation_preserves_response(self, query_shape, response_shape):
+        """Empty optional queries retain the response without fabricating a user turn."""
+        evaluator = _mock_flows(_make_evaluator(evaluation_level="conversation"), _all_completed_llm_output())
+        inputs = {
+            "response": VALID_RESPONSE if response_shape == "text" else deepcopy(VALID_MESSAGES[-1:]),
+        }
+        if query_shape != "omitted":
+            inputs["query"] = {"none": None, "empty_text": "", "empty_list": []}[query_shape]
+        original = deepcopy(inputs)
+
+        result = evaluator(**inputs)
+
+        evaluator._multi_turn_flow.assert_called_once()
+        evaluator._flow.assert_not_called()
+        prepared = evaluator._multi_turn_flow.call_args.kwargs
+        assert VALID_RESPONSE in prepared["messages"]
+        assert "User turn" not in prepared["messages"]
+        assert result["output_quality"] == 1
+        assert inputs == original
+
     def test_evaluation_level_forces_turn(self):
         """Turn evaluation level routes message input to the single-turn flow."""
         evaluator = _mock_flows(_make_evaluator(evaluation_level="turn"), _all_completed_llm_output())
@@ -572,6 +594,20 @@ class TestOutputQualityEvaluatorBehavior:
         assert evaluator._threshold["fluency"] == 4
         assert evaluator._threshold["task_completion"] == 0
         assert evaluator._threshold["groundedness"] == 3
+
+    @pytest.mark.parametrize("threshold", [
+        pytest.param(True, id="boolean"),
+        pytest.param("3", id="string"),
+        pytest.param({"unknown": 3}, id="unknown-member"),
+        pytest.param({"fluency": 0}, id="below-range"),
+        pytest.param({"fluency": True}, id="boolean-member"),
+        pytest.param({"task_completion": 2}, id="binary-range"),
+        pytest.param({"fluency": float("nan")}, id="nonfinite-member"),
+    ])
+    def test_invalid_member_thresholds_are_rejected_for_chat(self, threshold):
+        """Chat construction enforces the same member threshold contract as Decision."""
+        with pytest.raises(EvaluationException, match="threshold"):
+            _make_evaluator(threshold=threshold)
 
     def test_chat_rejects_decision_probability_threshold(self):
         """Reject Decision-only cutoff options on an unchanged chat configuration."""
