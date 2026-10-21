@@ -1,0 +1,47 @@
+type: "evaluator"
+name: "builtin.task_completion_audio"
+version: 1
+displayName: "Task-Completion-Audio-Evaluator-(Preview)"
+description: "Evaluates whether an AI agent successfully completed the requested task
+  end to end across a full audio conversation by analyzing the call recording, conversation
+  history, and tool interactions to determine if all task requirements were met, ignoring
+  rule adherence or intent understanding."
+evaluatorType: "builtin"
+evaluatorSubType: "code"
+categories: ["agents", "business"]
+tags:
+  is_continuous_scenario: "true"
+  is_audio_evaluator: "true"
+  provider: "Microsoft"
+supportedEvaluationLevels: ["conversation"]
+initParameterSchema:
+  type: "object"
+  properties:
+    deployment_name:
+      type: "string"
+    evaluation_level:
+      type: "string"
+  required: ["deployment_name"]
+dataMappingSchema:
+  type: "object"
+  properties:
+    messages:
+      type: "array"
+      items:
+        type: "object"
+    tool_definitions:
+      anyOf:
+      - type: "object"
+      - type: "array"
+        items:
+          type: "object"
+    audio_path:
+      type: "string"
+  required: ["audio_path"]
+outputSchema:
+  task_completion:
+    type: "boolean"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
+path: ./evaluator
