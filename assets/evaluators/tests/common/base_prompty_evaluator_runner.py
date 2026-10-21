@@ -151,19 +151,23 @@ class BasePromptyEvaluatorRunner(BaseEvaluatorRunner):
             MISSING_FIELD: Indicates test should assert a missing field error.
             INVALID_VALUE: Indicates test should assert an invalid value error.
             NOT_APPLICABLE: Indicates test should assert a not applicable error.
+            SKIPPED: Indicates test should assert the row was skipped as not applicable (a "not_applicable"
+                result with "skipped" status, no score and no error).
             PASS: Indicates test should assert a passing result.
         """
 
         MISSING_FIELD = "MISSING_FIELD"
         INVALID_VALUE = "INVALID_VALUE"
         NOT_APPLICABLE = "NOT_APPLICABLE"
+        SKIPPED = "SKIPPED"
         PASS = "PASS"
 
     def assert_expected_behavior(self, assert_type: AssertType, result_data: Dict[str, Any]):
         """Assert the expected behavior based on the assert type.
 
         Args:
-            assert_type: Type of assertion to perform (MISSING_FIELD, INVALID_VALUE, NOT_APPLICABLE, or PASS).
+            assert_type: Type of assertion to perform (MISSING_FIELD, INVALID_VALUE, NOT_APPLICABLE, SKIPPED,
+                or PASS).
             result_data: Dictionary containing evaluation result data to validate.
 
         Raises:
@@ -175,6 +179,8 @@ class BasePromptyEvaluatorRunner(BaseEvaluatorRunner):
             self.assert_invalid_value_error(result_data)
         elif assert_type == self.AssertType.NOT_APPLICABLE:
             self.assert_not_applicable_error(result_data)
+        elif assert_type == self.AssertType.SKIPPED:
+            self.assert_skipped(result_data)
         elif assert_type == self.AssertType.PASS:
             self.assert_pass(result_data)
         else:
@@ -236,3 +242,17 @@ class BasePromptyEvaluatorRunner(BaseEvaluatorRunner):
             AssertionError: If the result does not contain the expected not applicable error.
         """
         self.assert_error(result_data, ErrorCategory.NOT_APPLICABLE.name)
+
+    def assert_skipped(self, result_data: Dict[str, Any]):
+        """Assert the row was skipped as not applicable rather than scored or failed.
+
+        Args:
+            result_data: Dictionary containing evaluation result data.
+
+        Raises:
+            AssertionError: If the result is not a skipped, not applicable result without an error.
+        """
+        assert result_data["score"] is None
+        assert result_data["label"] == "not_applicable"
+        assert result_data["status"] == "skipped"
+        assert not result_data.get("error_code")

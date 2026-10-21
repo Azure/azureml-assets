@@ -78,6 +78,7 @@ class TestToolInputAccuracyEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, Bas
     # endregion
 
     evaluator_type = ToolInputAccuracyEvaluator
+    prompty_tool_definitions_optional = True
 
     # Restricted built-in tool types are accepted by the validator as of asset version 13 (formerly
     # rejected with NOT_APPLICABLE). Per-tool expected_flow_inputs for the newly-enabled tool types
@@ -86,7 +87,7 @@ class TestToolInputAccuracyEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, Bas
     check_for_unsupported_tools = False
 
     # Test Configs
-    requires_tool_definitions = True
+    absent_tool_definitions_assert_type = BaseToolsEvaluatorBehaviorTest.AssertType.SKIPPED
 
     MINIMAL_RESPONSE = BaseToolsEvaluatorBehaviorTest.tool_calls_with_arguments
 

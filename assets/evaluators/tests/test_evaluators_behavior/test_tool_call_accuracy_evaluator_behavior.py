@@ -79,14 +79,13 @@ class TestToolCallAccuracyEvaluatorBehavior(BaseToolCallEvaluatorBehaviorTest, B
     # endregion
 
     evaluator_type = ToolCallAccuracyEvaluator
+    prompty_tool_definitions_optional = True
 
     # Restricted built-in tool types are accepted by the validator as of asset version 12 (formerly
     # rejected with NOT_APPLICABLE). Per-tool expected_flow_inputs for the newly-enabled tool types
     # are tracked in a follow-up PR; until they are captured the flow-mock arg matcher is relaxed
     # for tools with an empty expected_flow_inputs dict.
     check_for_unsupported_tools = False
-
-    is_tool_definition_required = True
 
     MINIMAL_RESPONSE = BaseToolCallEvaluatorBehaviorTest.email_tool_call_and_assistant_response
 

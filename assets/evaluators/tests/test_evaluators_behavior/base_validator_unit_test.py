@@ -92,10 +92,10 @@ class _ValidatorUnitTestSupport:
         "deflection_rate": ("completed", "completed", EvaluationException),
     }
 
-    # _do_eval with a missing score: groundedness/tool_output_utilization raise
-    # KeyError (they require extra inputs before scoring); the evaluators below
-    # degrade to a result dict; every other evaluator raises EvaluationException.
-    _DO_EVAL_MISSING_SCORE_KEYERROR = frozenset({"groundedness", "tool_output_utilization"})
+    # _do_eval with a missing score: groundedness raises KeyError (it requires 'context'
+    # before scoring); the evaluators below degrade to a result dict; every other
+    # evaluator raises EvaluationException.
+    _DO_EVAL_MISSING_SCORE_KEYERROR = frozenset({"groundedness"})
     _DO_EVAL_MISSING_SCORE_RETURNS_DICT = frozenset(
         {
             "relevance",
@@ -105,8 +105,19 @@ class _ValidatorUnitTestSupport:
             "deflection_rate",
             "quality_grader",
             "tool_call_success",
+            "tool_output_utilization",
         }
     )
+
+    # Extra inputs an evaluator needs to get past its own input guards and reach the scoring path.
+    # tool_output_utilization skips the row as not applicable when tool_definitions is absent.
+    _DO_EVAL_EXTRA_INPUTS = {
+        "tool_output_utilization": {
+            "tool_definitions": [
+                {"name": "search", "description": "Search.", "parameters": {"type": "object", "properties": {}}}
+            ]
+        }
+    }
 
     # quality_grader overrides _return_not_applicable_result with a 1-arg
     # signature incompatible with the base _do_eval (which passes a threshold),
@@ -505,15 +516,16 @@ class CorePromptyValidatorUnitTests(_ValidatorUnitTestSupport):
         # The invariant: a missing score is handled deterministically (never an
         # unhandled TypeError from math.isnan(None)). The exact handling diverges
         # by evaluator and is tracked in EVALUATOR_DISCREPANCIES.md.
+        eval_input = {"query": "q", "response": "r", **self._DO_EVAL_EXTRA_INPUTS.get(result_key, {})}
         if result_key in self._DO_EVAL_MISSING_SCORE_KEYERROR:
             with pytest.raises(KeyError):
-                self._run_async(evaluator._do_eval({"query": "q", "response": "r"}))
+                self._run_async(evaluator._do_eval(eval_input))
         elif result_key in self._DO_EVAL_MISSING_SCORE_RETURNS_DICT:
-            res = self._run_async(evaluator._do_eval({"query": "q", "response": "r"}))
+            res = self._run_async(evaluator._do_eval(eval_input))
             assert isinstance(res, dict)
         else:
             with pytest.raises(EvaluationException):
-                self._run_async(evaluator._do_eval({"query": "q", "response": "r"}))
+                self._run_async(evaluator._do_eval(eval_input))
 
     def test_the_super_do_eval_missing_inputs_raises(self):
         """Raise when required inputs are missing."""

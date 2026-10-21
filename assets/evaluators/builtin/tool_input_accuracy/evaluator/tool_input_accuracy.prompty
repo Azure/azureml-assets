@@ -19,6 +19,8 @@ inputs:
     type: List
   tool_definitions:
     type: Dict
+    optional: true
+    default: {}
 ---
 
 # system:
@@ -81,7 +83,9 @@ Otherwise, analyze each tool call and its parameters against the provided tool d
 ## Tool Calls Made:
 {{tool_calls}}
 
+{% if tool_definitions %}
 ## Tool Definitions:
 {{tool_definitions}}
 
+{% endif %}
 # Output
