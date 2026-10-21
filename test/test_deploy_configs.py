@@ -57,3 +57,21 @@ def test_load():
         elif env_update.name == "component4":
             assert delete.versions == ["3", "4"]
             assert delete.delete_container is True
+
+
+def test_load_system_metadata_typed_values():
+    """Test that system_metadata values keep their YAML types as plain JSON types."""
+    resources = Path(__file__).parent / RESOURCES_DIR
+
+    config = assets.DeploymentConfig.load(resources / "system_metadata.yaml")
+
+    model_updates = {u.name: u.updates[0] for u in config.update[AssetType.MODEL]}
+    add = model_updates["model1"].system_metadata.add
+    assert add == {
+        "modelCapabilities": ["agentsV2"],
+        "deprecation": {"deprecationDate": "2026-11-02"},
+        "summary": "Plain string value",
+    }
+    assert type(add["modelCapabilities"]) is list
+    assert type(add["deprecation"]) is dict
+    assert model_updates["model2"].system_metadata.delete == ["summary"]
