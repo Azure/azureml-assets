@@ -143,6 +143,11 @@ def test_assets_test_has_fixed_summary_check():
     command = next(step["run"] for step in native["steps"] if "run" in step)
     assert "python -m pip wheel --no-deps" in command
     assert "python scripts/test/check_native_sdk.py" in command
+    compatibility_command = "\n".join(step.get("run", "") for step in compatibility["steps"])
+    for module in ("output_quality", "tool_use_quality"):
+        path = f"assets/evaluators/tests/test_evaluators_behavior/test_{module}_evaluator_behavior.py"
+        assert path in command
+        assert path not in compatibility_command
     assert "environment" not in native
 
 
@@ -226,22 +231,35 @@ def test_assets_test_summary_result(state, expected, tmp_path):
 
 
 @pytest.mark.parametrize("change", [
-    None, "additive", "missing_module", "missing_cases", "missing_native_variant",
+    None, "additive", "nested_classes", "missing_module", "missing_cases", "missing_native_variant",
+    "missing_owned_native_case", "wrong_native_owner", "unknown_classname", "ambiguous_classname",
     "skipped", "failure", "error",
 ])
 def test_candidate_native_report_rejects_incomplete_or_skipped_coverage(tmp_path, change):
     """Reject missing native modules, required cases or nonpassing results."""
     runner = runpy.run_path(str(WORKFLOWS_DIR.parents[1] / "scripts" / "test" / "check_native_sdk.py"))
+
+    def owning_module(name):
+        if name.startswith("test_packaged_expansion_public_usage["):
+            return "test_expansion_compatibility"
+        return "test_composites" if "public_evaluate" in name else "test_evaluators"
+
     tree = ET.Element("testsuite")
     for module, minimum in runner["MINIMUM_CASES"].items():
-        required = sorted(name for name in runner["REQUIRED_CASES"]
-                          if ("public_evaluate" in name) == (module == "test_composites"))
+        required = sorted(
+            {name for name in runner["REQUIRED_CASES"] if owning_module(name) == module}
+            | runner["REQUIRED_MODULE_CASES"].get(module, set())
+        )
+        assert len(required) <= minimum
         names = required + [f"test_additional[{index}]" for index in range(minimum - len(required))]
         for name in names:
             ET.SubElement(tree, "testcase", classname=f"assets.tests.{module}", name=name)
     first = tree[0]
     if change == "additive":
         ET.SubElement(tree, "testcase", classname=first.get("classname"), name=first.get("name") + "[new]")
+    elif change == "nested_classes":
+        for case in tree:
+            case.set("classname", case.get("classname") + ".TestNativeBehavior")
     elif change == "missing_module":
         for case in list(tree):
             if case.get("classname") == first.get("classname"):
@@ -250,11 +268,23 @@ def test_candidate_native_report_rejects_incomplete_or_skipped_coverage(tmp_path
         tree.remove(first)
     elif change == "missing_native_variant":
         first.set("name", "test_replacement")
+    elif change in ("missing_owned_native_case", "wrong_native_owner"):
+        module, required = next(iter(runner["REQUIRED_MODULE_CASES"].items()))
+        name = sorted(required)[0]
+        case = next(case for case in tree
+                    if case.get("classname") == f"assets.tests.{module}" and case.get("name") == name)
+        case.set("name", "test_replacement")
+        if change == "wrong_native_owner":
+            ET.SubElement(tree, "testcase", classname=first.get("classname"), name=name)
+    elif change == "unknown_classname":
+        first.set("classname", "assets.tests.unexpected_module.TestNativeBehavior")
+    elif change == "ambiguous_classname":
+        first.set("classname", first.get("classname") + ".test_composites")
     elif change in ("skipped", "failure", "error"):
         ET.SubElement(first, change)
     report = tmp_path / "native.xml"
     ET.ElementTree(tree).write(report)
-    if change in (None, "additive"):
+    if change in (None, "additive", "nested_classes"):
         runner["verify_report"](report)
     else:
         with pytest.raises(AssertionError):

@@ -215,7 +215,7 @@ jobs:
     permissions:
       contents: read
     env:
-      SDK_CANDIDATE_COMMIT: 9e30668c68820769618e59d9e669d55196cb3f6c
+      SDK_CANDIDATE_COMMIT: 05962f00001044e22d54d34109d7b983c2a00d14
       SDK_CANDIDATE_VERSION: 1.18.10
     steps:
       - name: Clone branch
@@ -236,7 +236,9 @@ jobs:
           python -m pip install "$wheel" pytest pytest-asyncio jsonschema PyYAML
           python scripts/test/check_native_sdk.py "$wheel" "$pytest_reports" --provenance-only
           python -m pytest assets/evaluators/tests/test_decision_models/test_evaluators.py \
-            assets/evaluators/tests/test_decision_models/test_composites.py -q \
+            assets/evaluators/tests/test_decision_models/test_composites.py \
+            assets/evaluators/tests/test_evaluators_behavior/test_output_quality_evaluator_behavior.py \
+            assets/evaluators/tests/test_evaluators_behavior/test_tool_use_quality_evaluator_behavior.py -q \
             --junitxml="$pytest_reports/candidate-native-sdk.xml"
           python scripts/test/check_native_sdk.py "$wheel" "$pytest_reports"
 

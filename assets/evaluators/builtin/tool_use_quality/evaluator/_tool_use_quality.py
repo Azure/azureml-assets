@@ -5,6 +5,7 @@ import functools
 import json
 import os
 import logging
+from asyncio import CancelledError
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -1080,7 +1081,7 @@ class ToolUseQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         for eval_input in eval_input_list:
             try:
                 result = await self._do_eval(eval_input)
-            except EvaluationException as error:
+            except (EvaluationException, CancelledError) as error:
                 if _SDK_SUPPORTS_DECISION and self._uses_decision_model:
                     self._on_evaluation_error(error, per_turn_results)
                 raise

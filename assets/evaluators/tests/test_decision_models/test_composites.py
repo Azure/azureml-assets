@@ -136,6 +136,48 @@ def test_composite_failed_split_retains_prior_paid_usage(evaluator_class, failur
     assert "execution" not in properties["decision_model"]
 
 
+@pytest.mark.parametrize("evaluator_class", [TaskCompletionEvaluator, *COMPOSITES])
+def test_direct_task_cancellation_retains_prior_paid_native_usage(evaluator_class):
+    """Keep the shared SDK cancellation accounting wired through each copied asset loop."""
+    evaluator = evaluator_class(CONFIG)
+    first = (
+        {"model": "actual-model", "usage": {"input_tokens": 12, "output_tokens": 3},
+         "answers": {"status": {"type": "noul", "noul": 1}, "task_completion": {"type": "noul", "noul": 1}}}
+        if evaluator_class is TaskCompletionEvaluator else _native(evaluator_class)
+    )
+    first["usage"] = {"input_tokens": 12, "output_tokens": 3}
+
+    async def scenario():
+        entered = asyncio.Event()
+        calls = []
+
+        async def post(content, **kwargs):
+            calls.append(content)
+            if len(calls) == 1:
+                return first
+            entered.set()
+            await asyncio.sleep(10)
+            raise AssertionError("Cancelled inference must not complete")
+
+        evaluator._decision_model_runner._post = post
+        conversation = {"messages": [
+            {"role": role, "content": f"{role}-{turn}"}
+            for turn in range(3) for role in ("user", "assistant")
+        ]}
+        task = asyncio.create_task(evaluator._to_async()(conversation=conversation))
+        await asyncio.wait_for(entered.wait(), timeout=2)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError) as raised:
+            await task
+        assert len(calls) == 2
+        assert raised.value.properties["total_tokens"] == 15
+        assert raised.value.properties["model"] == "actual-model"
+        assert raised.value.properties["decision_model"]["result_usage_scope"] == "reported_turns_only"
+        assert "execution" not in raised.value.properties["decision_model"]
+
+    asyncio.run(scenario())
+
+
 @pytest.mark.parametrize("evaluator_class", COMPOSITES)
 def test_composite_successful_split_properties_match_aggregate_usage(evaluator_class):
     """Reconcile composite root usage without changing per-turn properties."""
@@ -516,6 +558,32 @@ def test_mixed_input_shapes_preserve_conversation_evidence(evaluator_class, quer
     assert "Agent turn 1:" in state["messages"] and "Hello" in state["messages"]
     assert state["messages"].count("User turn ") == 1
     assert state["messages"].count("Agent turn ") == 1
+
+
+@pytest.mark.parametrize("backend", ["native", "chat"])
+@pytest.mark.parametrize("query_shape", ["omitted", "none", "empty_text", "empty_list"])
+@pytest.mark.parametrize("response_shape", ["text", "list"])
+def test_output_quality_queryless_conversation_keeps_response(backend, query_shape, response_shape):
+    """An optional empty query must not discard the supplied response."""
+    from unittest.mock import patch
+
+    response = "The museum opens at noon."
+    inputs = {"response": response if response_shape == "text" else [{"role": "assistant", "content": response}]}
+    if query_shape != "omitted":
+        inputs["query"] = {"none": None, "empty_text": "", "empty_list": []}[query_shape]
+    flow = AsyncMock(return_value={"llm_output": {
+        member["name"]: {"score": member["max"], "status": "completed", "reason": "ok"}
+        for member in OutputQualityEvaluator._EVALUATORS
+    }})
+    with patch("azure.ai.evaluation._legacy.prompty.AsyncPrompty.load", return_value=flow):
+        evaluator = OutputQualityEvaluator(CONFIG if backend == "native" else CHAT_CONFIG, evaluation_level="conversation")
+        post = AsyncMock(return_value=_native(OutputQualityEvaluator)) if backend == "native" else None
+        if post is not None:
+            evaluator._decision_model_runner._post = post
+        evaluator(**inputs)
+    state = json.loads(post.call_args.args[0])["state"] if post is not None else flow.await_args.kwargs
+    assert response in state["messages"]
+    assert "User turn" not in state["messages"]
 
 
 def test_binary_public_member_threshold_is_independent_of_probability_cutoff():

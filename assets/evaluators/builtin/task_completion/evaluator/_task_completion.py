@@ -3,6 +3,7 @@
 import os
 import logging
 import json
+from asyncio import CancelledError
 from enum import Enum
 from typing import Dict, Union, List, Optional, Any, Tuple
 
@@ -888,7 +889,7 @@ class TaskCompletionEvaluator(ModelEvaluatorBase[Union[str, int]]):
         for eval_input in eval_input_list:
             try:
                 result = await self._do_eval(eval_input)
-            except EvaluationException as error:
+            except (EvaluationException, CancelledError) as error:
                 if _SDK_SUPPORTS_DECISION and self._uses_decision_model:
                     self._on_evaluation_error(error, per_turn_results)
                 raise

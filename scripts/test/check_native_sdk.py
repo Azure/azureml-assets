@@ -13,23 +13,56 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 
 
-MINIMUM_CASES = {"test_evaluators": 45, "test_composites": 274}
+MINIMUM_CASES = {
+    "test_evaluators": 45, "test_composites": 274,
+    "test_output_quality_evaluator_behavior": 115, "test_tool_use_quality_evaluator_behavior": 132,
+}
 REQUIRED_CASES = {
     "test_completion_sync_without_prompty", "test_accuracy_score_and_metadata",
     *(f"test_public_evaluate_preserves_member_provenance_and_root_usage[passed-{name}]"
       for name in ("OutputQualityEvaluator", "ToolUseQualityEvaluator")),
 }
+REQUIRED_MODULE_CASES = {
+    "test_output_quality_evaluator_behavior": {
+        f"test_native_decision_one_transport_twelve_questions_and_no_chat[{mode}]"
+        for mode in ("sync", "async", "sync_in_loop")
+    },
+    "test_tool_use_quality_evaluator_behavior": {
+        f"test_native_decision_one_request_ten_questions_and_metadata[{shape}-{level}]"
+        for shape in ("query", "messages") for level in ("None", "turn", "conversation")
+    },
+    "test_composites": {
+        *(f"test_direct_task_cancellation_retains_prior_paid_native_usage[{name}]"
+          for name in ("TaskCompletionEvaluator", "OutputQualityEvaluator", "ToolUseQualityEvaluator")),
+        *(f"test_output_quality_queryless_conversation_keeps_response[{response}-{query}-{backend}]"
+          for response in ("text", "list")
+          for query in ("omitted", "none", "empty_text", "empty_list")
+          for backend in ("native", "chat")),
+    },
+}
+
+
+def report_module(case):
+    """Resolve the module component for both function and class-based pytest cases."""
+    classname = case.get("classname", "")
+    modules = set(classname.split(".")) & MINIMUM_CASES.keys()
+    assert len(modules) == 1, f"Unexpected or ambiguous native classname: {classname}"
+    return modules.pop()
 
 
 def verify_report(report):
     """Allow additional cases but fail missing native coverage or any skips/errors/failures."""
     tree = ET.parse(report)
     cases = tree.findall(".//testcase")
-    counts = Counter(case.get("classname", "").rsplit(".", 1)[-1] for case in cases)
+    owned_cases = [(report_module(case), case) for case in cases]
+    counts = Counter(module for module, _ in owned_cases)
     assert set(counts) == set(MINIMUM_CASES), f"Unexpected native modules: {counts}"
     assert all(counts[name] >= minimum for name, minimum in MINIMUM_CASES.items()), counts
     names = {case.get("name") for case in cases}
     assert REQUIRED_CASES <= names, f"Missing native cases: {REQUIRED_CASES - names}"
+    for module, required in REQUIRED_MODULE_CASES.items():
+        names = {case.get("name") for owner, case in owned_cases if owner == module}
+        assert required <= names, f"Missing native cases in {module}: {required - names}"
     assert not any(tree.findall(f".//{tag}") for tag in ("skipped", "failure", "error")), "Native cases must pass"
     print(f"Verified native cases: {dict(counts)}")
 
