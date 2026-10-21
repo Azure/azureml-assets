@@ -63,6 +63,8 @@ def report_module(case):
     modules = set(classname.split(".")) & MINIMUM_CASES.keys()
     assert len(modules) == 1, f"Unexpected or ambiguous native classname: {classname}"
     return modules.pop()
+
+
 REQUIRED_CASES = {
     "test_completion_sync_without_prompty", "test_accuracy_score_and_metadata",
     *(f"test_public_evaluate_preserves_member_provenance_and_root_usage[passed-{name}]"

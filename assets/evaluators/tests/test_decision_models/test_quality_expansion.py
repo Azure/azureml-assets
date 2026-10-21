@@ -118,7 +118,10 @@ def test_conversation_public_calls_preserve_both_input_sides(cls, backend, shape
     if cls is GroundednessEvaluator:
         inputs["context"] = "Museum opening time: noon."
     flow = AsyncMock(return_value={
-        "llm_output": {"score": 1 if cls is TaskAdherenceEvaluator else 5, "reason": "grounded", "status": "completed"},
+        "llm_output": {
+            "score": 1 if cls is TaskAdherenceEvaluator else 5,
+            "reason": "grounded", "status": "completed",
+        },
         **USAGE,
     })
     with patch(PROMPTY_LOAD, return_value=flow):
