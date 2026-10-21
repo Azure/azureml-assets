@@ -576,7 +576,9 @@ def test_output_quality_queryless_conversation_keeps_response(backend, query_sha
         for member in OutputQualityEvaluator._EVALUATORS
     }})
     with patch("azure.ai.evaluation._legacy.prompty.AsyncPrompty.load", return_value=flow):
-        evaluator = OutputQualityEvaluator(CONFIG if backend == "native" else CHAT_CONFIG, evaluation_level="conversation")
+        evaluator = OutputQualityEvaluator(
+            CONFIG if backend == "native" else CHAT_CONFIG, evaluation_level="conversation"
+        )
         post = AsyncMock(return_value=_native(OutputQualityEvaluator)) if backend == "native" else None
         if post is not None:
             evaluator._decision_model_runner._post = post
