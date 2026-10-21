@@ -93,3 +93,25 @@ class TestTaskLevelRubricAsset:
         }
         validator = Draft202012Validator(SPEC["dataMappingSchema"])
         assert list(validator.iter_errors(row))
+
+    @pytest.mark.parametrize(
+        "count,valid",
+        [(0, False), (1, True), (10, True), (11, True), (20, True), (21, False)],
+    )
+    def test_dimension_count(self, count, valid):
+        """The public schema accepts 1-20 dimensions, matching ACA."""
+        schema = SPEC["dataMappingSchema"]
+        assert schema["properties"]["rubric_dimensions"]["maxItems"] == 20
+        row = {
+            "query": "Question",
+            "response": "Answer",
+            "rubric_dimensions": [
+                {
+                    "id": f"criterion_{index}",
+                    "description": "Answer the question",
+                    "weight": 1,
+                }
+                for index in range(count)
+            ],
+        }
+        assert Draft202012Validator(schema).is_valid(row) is valid

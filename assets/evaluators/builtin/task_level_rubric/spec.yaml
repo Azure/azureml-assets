@@ -43,7 +43,7 @@ dataMappingSchema:
     rubric_dimensions:
       type: "array"
       minItems: 1
-      maxItems: 10
+      maxItems: 20
       description: "Structured row rubric. Map from ${data.test_case_rubric}; JSON strings are not accepted."
       items:
         type: "object"
