@@ -18,8 +18,10 @@ custom model, not an MLflow package or a Foundry Local model.
 - License: MIT; the upstream license is included as `LICENSE`.
 
 `artifact-manifest.json` records the size and SHA-256 of every runtime file.
-Model binaries are stored in the dedicated `models` container in
-`foundrybenchmarkdatasets`, separate from the benchmark datasets in `data`.
+The publishing source is the dedicated `models` container in the AME account
+`foundrybenchmarkdata`. Artifacts uploaded to the CORP account
+`foundrybenchmarkdatasets` must be replicated to that AME container before
+publishing, separate from the benchmark datasets in `data`.
 The versioned blob prefix includes the source revision; existing artifacts
 must not be overwritten. Only the asset definitions, license, and manifest
 are stored in this repository.

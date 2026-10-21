@@ -1,7 +1,8 @@
 path:
   container_name: models
   container_path: bge-small-en-v1.5-onnx-q/v1/aa8f8b060edb00e03bfdd08813a2949946c8ba55
-  storage_name: foundrybenchmarkdatasets
+  storage_name: foundrybenchmarkdata
+  storage_arm_scope: /subscriptions/d4d34678-c0d7-4d69-a257-366e3cb4a7d8/resourceGroups/model-storage/providers/Microsoft.Storage/storageAccounts/foundrybenchmarkdata
   type: azureblob
 publish:
   description: description.md
