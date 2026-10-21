@@ -6,6 +6,8 @@ ARG TRIVY_VERSION=0.74.0
 ARG ORAS_VERSION=1.3.4
 ARG BUILDX_VERSION=0.38.1
 ARG COMPOSE_VERSION=5.6.0
+ARG CONTAINERD_VERSION=2.4.2
+ARG RUNC_VERSION=1.5.2
 
 # Mode toggles: "build" (compile from source with patched Go + deps) or
 # "install" (download the upstream release binary). Both default to "build"
@@ -79,6 +81,8 @@ ARG TRIVY_VERSION
 # CVE-2026-78669, CVE-2026-97032.
 # containerd/v2 2.3.6: CVE-2026-53495, CVE-2026-53493.
 # swag/jsonutils 0.27.1: GHSA-xh24-9qpg-8w28.
+# OpenTelemetry 1.45.0: CVE-2026-81870, exporter endpoint disclosure in
+# verbose internal logs.
 # Drop each override once the Trivy release includes that fixed version or newer.
 RUN git clone --depth 1 --branch v${TRIVY_VERSION} https://github.com/aquasecurity/trivy.git /tmp/trivy \
  && cd /tmp/trivy \
@@ -87,6 +91,9 @@ RUN git clone --depth 1 --branch v${TRIVY_VERSION} https://github.com/aquasecuri
       golang.org/x/net@v0.60.0 \
       github.com/containerd/containerd/v2@v2.3.6 \
       github.com/go-openapi/swag/jsonutils@v0.27.1 \
+      go.opentelemetry.io/otel/sdk@v1.45.0 \
+      go.opentelemetry.io/otel/exporters/otlp/otlptrace@v1.45.0 \
+      go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc@v1.45.0 \
  && go mod tidy \
  && CGO_ENABLED=0 GOEXPERIMENT=jsonv2 go build \
       -ldflags="-s -w -X=github.com/aquasecurity/trivy/pkg/version/app.ver=${TRIVY_VERSION}" \
@@ -126,14 +133,26 @@ FROM trivy-${TRIVY_MODE} AS trivy-final
 # Rebuild them too; changing the ORAS/Trivy toolchain does not update these binaries.
 FROM go-build AS buildx-build
 ARG BUILDX_VERSION
+# go-archive 0.3.0 fixes CVE-2026-17106; drop the override when Buildx includes it.
+# The legacy Docker module is used only for random builder names. Use BuildKit's
+# existing ID generator instead: new unnamed builders become builder-<id>;
+# explicit and saved names are unchanged. Drop this patch once upstream removes
+# the legacy dependency associated with CVE-2026-33997.
 RUN git clone --depth 1 --branch v${BUILDX_VERSION} https://github.com/docker/buildx.git /tmp/buildx \
  && cd /tmp/buildx \
- && go get golang.org/x/net@v0.60.0 golang.org/x/crypto@v0.57.0 \
+ && sed -i \
+      -e 's|"github.com/docker/docker/pkg/namesgenerator"|"github.com/moby/buildkit/identity"|' \
+      -e 's|for i := range 6 {|for range 6 {|' \
+      -e 's|namesgenerator.GetRandomName(i)|"builder-" + identity.NewID()|' store/util.go \
+ && grep -Fq '"builder-" + identity.NewID()' store/util.go \
+ && go get golang.org/x/net@v0.60.0 golang.org/x/crypto@v0.57.0 github.com/moby/go-archive@v0.3.0 \
  && go mod tidy \
  && go mod vendor \
  && CGO_ENABLED=0 go build -mod=vendor -trimpath \
       -ldflags="-s -w -X github.com/docker/buildx/version.Version=v${BUILDX_VERSION} -X github.com/docker/buildx/version.Revision=$(git rev-parse HEAD).m -X github.com/docker/buildx/version.Package=github.com/docker/buildx" \
       -o /out/docker-buildx ./cmd/buildx \
+ && go version -m /out/docker-buildx > /tmp/buildx-buildinfo.txt \
+ && awk '$1 == "dep" && $2 == "github.com/docker/docker" { found=1 } END { exit found }' /tmp/buildx-buildinfo.txt \
  && /out/docker-buildx version \
  && mkdir -p /out/licenses/buildx \
  && cp LICENSE /out/licenses/buildx/ \
@@ -160,6 +179,53 @@ RUN git clone --depth 1 --branch v${COMPOSE_VERSION} https://github.com/docker/c
  && rm -rf /tmp/compose
 
 # =========================================
+# Builders: preserve the runtime releases and Linux build features
+# =========================================
+FROM go-build AS runtime-build
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends gcc libc6-dev make pkg-config libseccomp-dev \
+ && rm -rf /var/lib/apt/lists/*
+
+FROM runtime-build AS containerd-build
+ARG CONTAINERD_VERSION
+# A compiler update alone does not replace containerd's embedded x/net.
+# Also fix CVE-2026-10722 in cilium/ebpf; retain the shim's upstream no_grpc build.
+# Drop these overrides when containerd includes x/net 0.60.0 and ebpf 0.22.0.
+RUN git clone --depth 1 --branch v${CONTAINERD_VERSION} https://github.com/containerd/containerd.git /tmp/containerd \
+ && cd /tmp/containerd \
+ && go get golang.org/x/net@v0.60.0 golang.org/x/crypto@v0.57.0 github.com/cilium/ebpf@v0.22.0 \
+ && go mod tidy \
+ && go mod vendor \
+ && CGO_ENABLED=1 make GO_BUILD_FLAGS=-mod=vendor VERSION=v${CONTAINERD_VERSION} \
+      bin/containerd bin/ctr bin/containerd-shim-runc-v2 \
+ && mkdir -p /out/bin /out/licenses/containerd \
+ && cp bin/containerd bin/ctr bin/containerd-shim-runc-v2 /out/bin/ \
+ && cp LICENSE /out/licenses/containerd/ \
+ && find . -maxdepth 1 -type f -iname '*notice*' -exec cp -t /out/licenses/containerd {} + \
+ && find vendor -type f \( -iname '*license*' -o -iname '*notice*' -o -iname '*copying*' -o -iname '*copyright*' \) \
+      -exec cp --parents -t /out/licenses/containerd {} + \
+ && rm -rf /tmp/containerd
+
+FROM runtime-build AS runc-build
+ARG RUNC_VERSION
+# moby/sys/user 0.4.1 fixes CVE-2026-61801. Keep seccomp and the packaged PIE mode.
+# Refresh the other embedded modules too; drop overrides once runc carries them.
+RUN git clone --depth 1 --branch v${RUNC_VERSION} https://github.com/opencontainers/runc.git /tmp/runc \
+ && cd /tmp/runc \
+ && go get golang.org/x/net@v0.60.0 golang.org/x/crypto@v0.57.0 \
+      github.com/cilium/ebpf@v0.22.0 github.com/moby/sys/user@v0.4.1 \
+ && go mod tidy \
+ && go mod vendor \
+ && make EXTRA_FLAGS=-mod=vendor BUILDTAGS="seccomp urfave_cli_no_docs" runc \
+ && mkdir -p /out/bin /out/licenses/runc \
+ && cp runc /out/bin/ \
+ && cp LICENSE /out/licenses/runc/ \
+ && find . -maxdepth 1 -type f -iname '*notice*' -exec cp -t /out/licenses/runc {} + \
+ && find vendor -type f \( -iname '*license*' -o -iname '*notice*' -o -iname '*copying*' -o -iname '*copyright*' \) \
+      -exec cp --parents -t /out/licenses/runc {} + \
+ && rm -rf /tmp/runc
+
+# =========================================
 # Runtime: AzureML base + Docker + Trivy + conda
 # =========================================
 FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
@@ -175,15 +241,19 @@ RUN apt-get update \
    $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" \
    | tee /etc/apt/sources.list.d/docker.list > /dev/null \
  && apt-get update \
- && apt-get install -y --no-install-recommends docker-ce docker-ce-cli containerd.io \
+ && apt-get install -y --no-install-recommends docker-ce docker-ce-cli containerd.io libseccomp2 \
  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=buildx-build /out/docker-buildx /usr/libexec/docker/cli-plugins/docker-buildx
 COPY --from=compose-build /out/docker-compose /usr/libexec/docker/cli-plugins/docker-compose
+COPY --from=containerd-build /out/bin/ /usr/bin/
+COPY --from=runc-build /out/bin/runc /usr/bin/runc
 
-# Retain upstream, dependency and Go runtime notices for the rebuilt plugins.
+# Retain upstream, dependency and Go runtime notices for the rebuilt binaries.
 COPY --from=buildx-build /out/licenses/buildx /usr/share/doc/docker-buildx-plugin/licenses
 COPY --from=compose-build /out/licenses/compose /usr/share/doc/docker-compose-plugin/licenses
+COPY --from=containerd-build /out/licenses/containerd /usr/share/doc/containerd.io/containerd-licenses
+COPY --from=runc-build /out/licenses/runc /usr/share/doc/containerd.io/runc-licenses
 COPY --from=go-build /usr/local/go/LICENSE /usr/share/doc/docker-tools/Go-LICENSE
 COPY --from=go-build /usr/local/go/PATENTS /usr/share/doc/docker-tools/Go-PATENTS
 
