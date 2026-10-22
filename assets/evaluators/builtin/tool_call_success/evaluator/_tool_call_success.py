@@ -780,7 +780,15 @@ class ToolCallSuccessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
             llm_properties = llm_output.get("properties", {}) or {}
 
-            score = float(llm_output.get("score", 0))
+            score = llm_output.get("score", 0)
+            if score is None:
+                raise EvaluationException(
+                    message="Evaluator returned a null score.",
+                    blame=ErrorBlame.SYSTEM_ERROR,
+                    category=ErrorCategory.FAILED_EXECUTION,
+                    target=ExtendedErrorTarget.TOOL_CALL_SUCCESS_EVALUATOR,
+                )
+            score = float(score)
             success_result = "pass" if score >= 1.0 else "fail"
             reason = llm_output.get("reason", "")
             token_metadata = self._get_token_metadata(prompty_output_dict)
