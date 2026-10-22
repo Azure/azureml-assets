@@ -7,6 +7,7 @@ import asyncio
 from typing import Any, Dict, List
 
 import pytest
+from .base_judge_score_handling_test import JudgeScoreHandlingTests
 from azure.ai.evaluation._exceptions import EvaluationException
 
 from .base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
@@ -33,6 +34,14 @@ from ..common.evaluator_mock_config import (
     create_mocked_evaluator,
     run_none_score_not_applicable,
 )
+
+
+@pytest.mark.unittest
+class TestTaskAdherenceJudgeScores(JudgeScoreHandlingTests):
+    """Collect binary zero/fail controls and null-score regressions in asset CI."""
+
+    evaluator_class = TaskAdherenceEvaluator
+    evaluator_name = "task_adherence"
 
 
 @pytest.mark.unittest

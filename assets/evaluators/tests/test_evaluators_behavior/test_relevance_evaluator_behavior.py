@@ -6,6 +6,7 @@
 import asyncio
 
 import pytest
+from .base_judge_score_handling_test import JudgeScoreHandlingTests
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
 from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest, _TurnLevelUtilE2ETests
 from .base_tool_evaluation_test import BaseToolEvaluationTest
@@ -23,6 +24,14 @@ from ..common.evaluator_mock_config import (
     run_intermediate_response_not_applicable,
 )
 from ...builtin.relevance.evaluator._relevance import RelevanceEvaluator
+
+
+@pytest.mark.unittest
+class TestRelevanceJudgeScores(JudgeScoreHandlingTests):
+    """Collect shared null-score regressions through this asset's CI selector."""
+
+    evaluator_class = RelevanceEvaluator
+    evaluator_name = "relevance"
 
 
 @pytest.mark.unittest

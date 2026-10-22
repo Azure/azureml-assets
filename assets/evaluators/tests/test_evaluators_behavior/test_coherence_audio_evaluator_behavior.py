@@ -12,6 +12,7 @@ from unittest.mock import AsyncMock, Mock
 
 import aiohttp
 import pytest
+from .base_judge_score_handling_test import AudioJudgeScoreHandlingTests
 from azure.ai.evaluation import AzureOpenAIModelConfiguration
 from azure.ai.evaluation._exceptions import EvaluationException
 
@@ -46,6 +47,19 @@ def _make_evaluator(**kwargs) -> CoherenceAudioEvaluator:
         azure_deployment="gpt-realtime-2",
     )
     return CoherenceAudioEvaluator(model_config=model_config, credential=Mock(), **kwargs)
+
+
+@pytest.mark.unittest
+class TestCoherenceAudioJudgeScores(AudioJudgeScoreHandlingTests):
+    """Exercise real Realtime validation as well as defensive parser guards."""
+
+    evaluator_class = CoherenceAudioEvaluator
+    evaluator_name = "coherence_audio"
+    judge_properties = {
+        "gating_summary": "Coherent user flow.",
+        "conversation_flow_summary": "Smooth flow.",
+        "agent_coherence_issues": "None",
+    }
 
 
 @pytest.mark.unittest
