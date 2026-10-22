@@ -3,10 +3,12 @@
 
 """Behavioral tests for Coherence Evaluator."""
 
+import builtins
+import json
 import os
 import pytest
 from typing import Any, Dict, List
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from azure.ai.evaluation import AzureOpenAIModelConfiguration
 from azure.ai.evaluation._exceptions import EvaluationException
@@ -27,6 +29,7 @@ from .base_validator_unit_test import (
     SuperDoEvalNotApplicableUnitTests,
 )
 from . import common_tool_test_data as data
+from . import base_decision_routing_test as routing
 from ...builtin.coherence.evaluator._coherence import (
     CoherenceEvaluator,
     EvaluationLevel,
@@ -453,6 +456,79 @@ class TestCoherenceNoneScoreHandling:
     def test_conversation_level_none_score_does_not_crash(self):
         """Conversation-level eval with score=None should not crash."""
         run_none_score_not_applicable(CoherenceEvaluator, "coherence", messages=VALID_MESSAGES)
+
+
+# endregion
+
+
+# region Decision routing (released SDK)
+
+
+@pytest.mark.unittest
+class TestCoherenceDecisionRouting(routing.DecisionRoutingTests):
+    """Cover the native Decision branches on the released SDK the asset job installs."""
+
+    result_key = "coherence"
+    class_name = "CoherenceEvaluator"
+    inputs = {"query": "What is photosynthesis?", "response": "It is how plants convert sunlight into energy."}
+    strategy_attribute = "_decision"
+    expected_strategies = 2
+
+    def _native(self, monkeypatch):
+        """Construct an evaluator that routes natively against mocked strategies and return it."""
+        module = self.load()
+        routing.enable_fake_decision_sdk(monkeypatch, module, self.class_name, result_key=self.result_key)
+        evaluator, _ = routing.construct_evaluator(module, self.class_name)
+        return evaluator
+
+    def test_public_call_routes_through_the_shared_base_loop(self, monkeypatch):
+        """A public native turn call reaches the SDK loop and sends exactly the query and response."""
+        evaluator = self._native(monkeypatch)
+        assert evaluator(**self.inputs) == {"coherence": 1}
+        evaluator._decision.evaluate.assert_awaited_once_with(dict(self.inputs))
+        evaluator._multi_turn_decision.evaluate.assert_not_awaited()
+
+    def test_messages_use_the_multi_turn_strategy_with_only_the_transcript(self, monkeypatch):
+        """A conversation call serializes the transcript and sends only ``messages`` to the multi-turn rubric."""
+        evaluator = self._native(monkeypatch)
+        assert evaluator(messages=VALID_MESSAGES) == {"coherence": 1}
+        evaluator._multi_turn_decision.evaluate.assert_awaited_once()
+        state = evaluator._multi_turn_decision.evaluate.await_args.args[0]
+        assert set(state) == {"messages"}
+        assert "User turn 1:" in state["messages"]
+        assert "plan a trip to Paris" in state["messages"]
+        evaluator._decision.evaluate.assert_not_awaited()
+
+    def test_chat_skip_delivered_as_text_keeps_usage_and_properties(self):
+        """A skipped chat judgment delivered as JSON text keeps its properties and measured usage."""
+        evaluator = routing.construct_evaluator(self.load(), self.class_name, config=routing.CHAT_CONFIG)[0]
+        usage = {"input_token_count": 4, "output_token_count": 2, "total_token_count": 6, "model_id": "judge"}
+        skipped = json.dumps({"status": "skipped", "reason": "No evidence", "properties": {"custom": True}})
+        evaluator._flow = AsyncMock(return_value={"llm_output": skipped, **usage})
+        result = evaluator(**self.inputs)
+        assert result["coherence"] is None
+        assert result["coherence_result"] == "not_applicable"
+        assert result["coherence_total_tokens"] == 6
+        assert result["coherence_properties"]["custom"] is True
+        assert result["coherence_properties"]["model"] == "judge"
+        fallback = evaluator._return_not_applicable_result("Empty", 3, {"llm_output": "not json", **usage})
+        assert fallback["coherence_properties"]["total_tokens"] == 6
+        assert "custom" not in fallback["coherence_properties"]
+
+    def test_broken_decision_import_is_not_hidden(self, monkeypatch):
+        """A dependency failure inside the strategy module propagates instead of reading as an older SDK."""
+        original_import = builtins.__import__
+        error = ModuleNotFoundError(name="broken_dependency")
+
+        def broken_import(name, *args, **kwargs):
+            if name == "azure.ai.evaluation._evaluators._common._decision_strategy":
+                raise error
+            return original_import(name, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", broken_import)
+        with pytest.raises(ModuleNotFoundError) as caught:
+            self.load()
+        assert caught.value is error
 
 
 # endregion

@@ -1,7 +1,7 @@
 type: "evaluator"
 id: "azureml://registries/azureml/evaluators/builtin.tool_use_quality/versions/1"
 name: "builtin.tool_use_quality"
-version: 6
+version: 7
 displayName: "Tool Use Quality Evaluator"
 description: "A composite evaluator that batches the tool_call_accuracy, tool_call_success, tool_input_accuracy, tool_output_utilization, and tool_selection evaluators into a single LLM call."
 evaluatorType: "builtin"
@@ -15,16 +15,47 @@ tags:
 supportedEvaluationLevels: ["conversation", "turn"]
 initParameterSchema:
   type: "object"
+  description: "Hosted initialization uses a named deployment resolved by the service."
   properties:
     deployment_name:
       type: "string"
     threshold:
+      anyOf:
+        - type: "number"
+          minimum: 0
+          maximum: 1
+          multipleOf: 1
+        - type: "object"
+      additionalProperties: false
+      description: "Per-evaluator pass thresholds, for example {tool_call_accuracy: 4}. Unspecified thresholds use defaults. Legacy numeric values are accepted but ignored."
+      properties:
+        tool_call_accuracy:
+          type: "number"
+          minimum: 1
+          maximum: 5
+        tool_call_success:
+          type: "number"
+          minimum: 0
+          maximum: 1
+        tool_input_accuracy:
+          type: "number"
+          minimum: 0
+          maximum: 1
+        tool_output_utilization:
+          type: "number"
+          minimum: 0
+          maximum: 1
+        tool_selection:
+          type: "number"
+          minimum: 0
+          maximum: 1
+    evaluation_level:
+      type: "string"
+    probability_threshold:
       type: "number"
       minimum: 0
       maximum: 1
-      multipleOf: 1
-    evaluation_level:
-      type: "string"
+      description: "Decision-only probability cutoff for binary members, checked after trusted named-deployment resolution. Overrides the resolved configuration cutoff; defaults to 0.75."
   required: ["deployment_name"]
 dataMappingSchema:
   type: "object"
@@ -43,6 +74,7 @@ dataMappingSchema:
             type: "object"
     messages:
       type: "array"
+      minItems: 1
       items:
         type: "object"
     tool_definitions:
@@ -52,8 +84,8 @@ dataMappingSchema:
           items:
             type: "object"
   anyOf:
-    - required: ["query", "response", "tool_definitions"]
-    - required: ["messages", "tool_definitions"]
+    - required: ["query", "response"]
+    - required: ["messages"]
 outputSchema:
   tool_use_quality:
     type: "boolean"

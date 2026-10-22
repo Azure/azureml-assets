@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.tool_output_utilization"
-version: 12
+version: 13
 displayName: "Tool-Output-Utilization-Evaluator"
 description: "Checks if an agent correctly interprets and contextually uses the outputs returned by invoked tools (e.g., APIs, DB queries, search results) without fabrication or omission. Use it to validate that agents accurately reuse and represent tool outputs in their responses across tool-dependent systems."
 evaluatorType: "builtin"
@@ -17,6 +17,11 @@ initParameterSchema:
       type: "string"
     evaluation_level:
       type: "string"
+    probability_threshold:
+      type: "number"
+      minimum: 0
+      maximum: 1
+      description: "Decision-only score probability cutoff. Overrides the resolved configuration cutoff; defaults to 0.75 when neither is supplied. Applicability uses a separate fixed cutoff of 0.5."
   required: ["deployment_name"]
 dataMappingSchema:
   type: "object"

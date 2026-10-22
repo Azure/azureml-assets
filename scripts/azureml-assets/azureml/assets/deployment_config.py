@@ -3,8 +3,9 @@
 
 """Deployment config classes."""
 
+import json
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Any, Dict, List
 import azureml.assets as assets
 from marshmallow import Schema, fields, post_load, validates, validates_schema
 from ruamel.yaml import YAML
@@ -37,6 +38,10 @@ update: # Assets to update
             - Tag1
             - Tag2
         stage: "Archived" # Use Active or Archived to control visibility to list operations
+        system_metadata: # System metadata updates (models only); values keep their YAML types
+          add: # Add or update existing system metadata
+            modelCapabilities: # Lists and objects are sent as-is, not as strings
+              - agentsV2
         update_on_create: # Update-on-create settings
           enabled: true
           clouds: ["public"] # Clouds where update-on-create applies
@@ -70,14 +75,22 @@ class AssetSystemMetadata:
     """Asset system metadata class.
 
     Args:
-        add (Dict[str, str]): System metadata to add.
-        replace (Dict[str, str]): Replace any existing system metadata with these.
+        add (Dict[str, Any]): System metadata to add.
+        replace (Dict[str, Any]): Replace any existing system metadata with these.
         delete (List[str]): System metadata to delete.
     """
 
-    add: Dict[str, str] = None
-    replace: Dict[str, str] = None
+    add: Dict[str, Any] = None
+    replace: Dict[str, Any] = None
     delete: List[str] = None
+
+    def __post_init__(self):
+        """Convert YAML-loaded values to plain JSON-serializable types."""
+        # ruamel loads lists and maps as CommentedSeq/CommentedMap; round-trip them to plain list/dict
+        if self.add is not None:
+            self.add = json.loads(json.dumps(self.add))
+        if self.replace is not None:
+            self.replace = json.loads(json.dumps(self.replace))
 
 
 @dataclass
@@ -281,12 +294,13 @@ class TagsSchema(Schema):
 class SystemMetadataSchema(Schema):
     """System metadata schema."""
 
-    add = fields.Dict(fields.Str(), fields.Str())
-    replace = fields.Dict(fields.Str(), fields.Str())
+    # Values are typed (e.g. modelCapabilities is a list), so they must not be coerced to strings
+    add = fields.Dict(fields.Str(), fields.Raw())
+    replace = fields.Dict(fields.Str(), fields.Raw())
     delete = fields.List(fields.Str())
 
     @validates('add')
-    def _validate_add(self, value: Dict[str, str]):
+    def _validate_add(self, value: Dict[str, Any]):
         if value is not None and not value:
             raise ValueError("add must be non-empty")
 
