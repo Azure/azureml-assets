@@ -413,7 +413,15 @@ class RelevanceEvaluator(PromptyEvaluatorBase):
                 reason = llm_output.get("reason", "")
                 return self._return_not_applicable_result(reason, self._threshold)
 
-            score = float(llm_output.get("score", math.nan))
+            score = llm_output.get("score", math.nan)
+            if score is None:
+                raise EvaluationException(
+                    message="Evaluator returned a null score.",
+                    blame=ErrorBlame.SYSTEM_ERROR,
+                    category=ErrorCategory.FAILED_EXECUTION,
+                    target=ErrorTarget.RELEVANCE_EVALUATOR,
+                )
+            score = float(score)
             reason = llm_output.get("reason", "")
             llm_properties = llm_output.get("properties", {}) or {}
             score_result = self._get_binary_result(score)

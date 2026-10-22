@@ -7,6 +7,7 @@ import asyncio
 import json
 
 import pytest
+from .base_judge_score_handling_test import JudgeScoreHandlingTests
 
 from azure.ai.evaluation._exceptions import EvaluationException
 
@@ -33,6 +34,14 @@ from ...builtin.tool_call_success.evaluator._tool_call_success import (
     _stringify_tool_result,
 )
 from ..common.evaluator_mock_config import create_mocked_evaluator
+
+
+@pytest.mark.unittest
+class TestToolCallSuccessJudgeScores(JudgeScoreHandlingTests):
+    """Collect shared null-score regressions through this asset's CI selector."""
+
+    evaluator_class = ToolCallSuccessEvaluator
+    evaluator_name = "tool_call_success"
 
 
 @pytest.mark.unittest

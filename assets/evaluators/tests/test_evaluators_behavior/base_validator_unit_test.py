@@ -85,7 +85,7 @@ class _ValidatorUnitTestSupport:
     # A string is the returned "<key>_status"; an exception class means it raises.
     _PARSE_MALFORMED_EXPECTATIONS = {
         "coherence": ("error", "error", "error"),
-        "customer_satisfaction": ("completed", TypeError, "error"),
+        "customer_satisfaction": ("error", "error", "error"),
         "groundedness": ("completed", "error", "error"),
         "task_adherence": ("completed", ValueError, EvaluationException),
         "task_completion": ("completed", ValueError, EvaluationException),

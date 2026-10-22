@@ -5,6 +5,7 @@
 
 import asyncio
 import pytest
+from .base_judge_score_handling_test import JudgeScoreHandlingTests
 from typing import Any, Dict, List
 
 from azure.ai.evaluation._exceptions import EvaluationException
@@ -33,6 +34,14 @@ from ..common.evaluator_mock_config import (
     create_mocked_evaluator,
     run_none_score_not_applicable,
 )
+
+
+@pytest.mark.unittest
+class TestTaskCompletionJudgeScores(JudgeScoreHandlingTests):
+    """Collect shared null-score regressions through this asset's CI selector."""
+
+    evaluator_class = TaskCompletionEvaluator
+    evaluator_name = "task_completion"
 
 
 @pytest.mark.unittest
