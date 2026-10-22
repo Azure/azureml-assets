@@ -35,7 +35,7 @@ Flint is designed for agentic software development tasks, including:
 
 ## Local inference
 
-Flint NVFP4 runs on llama.cpp built with CUDA, using a release with Flint support. It has been tested on NVIDIA B300, RTX PRO 6000 Blackwell, RTX Spark, and DGX Spark. The local-inference eligibility threshold is 31 GiB (33,285,996,544 bytes), which admits nominal 32 GB GPUs such as RTX 5090. This threshold does not mean inference at the full published context has been validated on that device. Spark systems may use unified memory.
+Flint NVFP4 runs on llama.cpp built with CUDA, using a release with Flint support. At least 32 GB of GPU memory is required, or unified memory on Spark systems.
 
 The recommended generation settings are temperature 1.0, top-p 0.95, and top-k 20. Use the bundled chat template and preserve returned reasoning content when replaying conversation history. Reasoning counts toward the output budget, so allow at least 32,768 output tokens for hard problems.
 
