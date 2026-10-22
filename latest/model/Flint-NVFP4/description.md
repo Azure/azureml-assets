@@ -1,0 +1,56 @@
+# Flint NVFP4 for local inference
+
+## Overview
+
+Flint is a mixture-of-experts language model from Recursive, built for coding agents. It is designed to investigate codebases, fix bugs, implement features, and write tests, and it supports reasoning and multi-turn tool use.
+
+This variant provides Flint as NVFP4 GGUF weights, primarily intended for local inference on NVIDIA GPUs using llama.cpp with CUDA. The 22.9 GB model file includes the weights, tokenizer, and chat template.
+
+## Model details
+
+| Property | Details |
+| --- | --- |
+| Model | Flint |
+| Provider | Recursive |
+| Model type | Decoder-only mixture-of-experts Transformer |
+| Total parameters | 39.8B |
+| Active parameters | Approximately 2.5B per token |
+| Primary use | Coding agents |
+| Deployment | Local inference |
+| Context length | Up to 262,144 tokens, shared by prompt and output |
+| Input / output | Text / text |
+| Quantization | NVFP4 (GGUF) |
+| Model size | 22.9 GB |
+| Knowledge cutoff | June 2026 |
+
+## Capabilities
+
+Flint is designed for agentic software development tasks, including:
+
+- Codebase investigation
+- Bug fixing
+- Feature implementation
+- Test writing
+- Reasoning and multi-turn tool use
+
+## Local inference
+
+Flint NVFP4 runs on llama.cpp built with CUDA, using a release with Flint support. At least 32 GB of GPU memory is required, or unified memory on Spark systems.
+
+The recommended generation settings are temperature 1.0, top-p 0.95, and top-k 20. Use the bundled chat template and preserve returned reasoning content when replaying conversation history. Reasoning counts toward the output budget, so allow at least 32,768 output tokens for hard problems.
+
+For more details, see the [Flint NVFP4 GGUF model card](https://huggingface.co/RecursiveSI/flint-nvfp4-gguf) and the [Flint model card](https://huggingface.co/RecursiveSI/flint).
+
+## Training
+
+Flint was trained from scratch through pretraining, mid-training, supervised fine-tuning, and reinforcement learning. Training data included publicly available and crawled web documents, text and code, commercially licensed data, and AI-generated synthetic data.
+
+## Limitations and responsible use
+
+Flint can produce incorrect or harmful content, faulty code, or inappropriate tool calls. Test generated code and review consequential changes before applying them. Tool-using applications should enforce their own permissions and execution boundaries.
+
+Long reasoning can increase latency and exhaust the output budget before an answer is complete. The 262,144-token context is a capacity limit, not a guarantee of uniform accuracy across all sequence lengths or tasks.
+
+## License
+
+Flint is released under the Apache License 2.0.
