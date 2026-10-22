@@ -1,7 +1,7 @@
 type: "evaluator"
 id: "azureml://registries/azureml/evaluators/builtin.output_quality/versions/1"
 name: "builtin.output_quality"
-version: 5
+version: 6
 displayName: "Output Quality Evaluator"
 description: "A composite evaluator that batches fluency, coherence, intent_resolution,
   task_adherence, groundedness, and task_completion into a single LLM call."
@@ -17,16 +17,54 @@ tags:
     task_completion"
 initParameterSchema:
   type: "object"
+  description: "Hosted initialization uses a named deployment resolved by the service."
   properties:
     deployment_name:
       type: "string"
     threshold:
-      type: "number"
-      minimum: 1
-      maximum: 5
-      multipleOf: 1
+      anyOf:
+      - type: "number"
+        minimum: 1
+        maximum: 5
+        multipleOf: 1
+      - type: "object"
+      additionalProperties: false
+      description: "Per-evaluator pass thresholds, for example {fluency: 4}. Unspecified
+        thresholds use defaults. Legacy numeric values are accepted but ignored."
+      properties:
+        fluency:
+          type: "number"
+          minimum: 1
+          maximum: 5
+        coherence:
+          type: "number"
+          minimum: 1
+          maximum: 5
+        intent_resolution:
+          type: "number"
+          minimum: 1
+          maximum: 5
+        task_adherence:
+          type: "number"
+          minimum: 0
+          maximum: 1
+        groundedness:
+          type: "number"
+          minimum: 1
+          maximum: 5
+        task_completion:
+          type: "number"
+          minimum: 0
+          maximum: 1
     evaluation_level:
       type: "string"
+    probability_threshold:
+      type: "number"
+      minimum: 0
+      maximum: 1
+      description: "Decision-only probability cutoff for task_adherence and task_completion,
+        checked after trusted named-deployment resolution. Overrides the resolved
+        configuration cutoff; defaults to 0.75. Public score thresholds are unchanged."
   required: ["deployment_name"]
 dataMappingSchema:
   type: "object"
@@ -51,10 +89,11 @@ dataMappingSchema:
           type: "object"
     messages:
       type: "array"
+      minItems: 1
       items:
         type: "object"
   anyOf:
-  - required: ["query", "response"]
+  - required: ["response"]
   - required: ["messages"]
 outputSchema:
   output_quality:
