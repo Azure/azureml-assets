@@ -790,7 +790,7 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
     def _build_result(
         self,
-        score: Optional[int],
+        score: Optional[Union[int, float]],
         result: str,
         reason: str,
         status: str,
@@ -799,7 +799,7 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     ) -> Dict[str, Union[str, int, float, Dict, None]]:
         """Build a standardized result dictionary.
 
-        :param score: The evaluation score (1, 0, or None).
+        :param score: The evaluation score between 1 and 5, or None when not scored.
         :param result: The result label ("pass", "fail", "not_applicable", or "error").
         :param reason: The reasoning or explanation string.
         :param status: The evaluation status ("completed", "skipped", or "error").
@@ -835,6 +835,7 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """Parse the prompty output into a standardized result dictionary.
 
         Shared between single-turn and multi-turn evaluation paths.
+        Missing or invalid scores produce an error result, never a default pass.
 
         :param prompty_output_dict: Raw output from the prompty flow.
         :type prompty_output_dict: Dict
@@ -857,9 +858,24 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             if status == "skipped":
                 score = None
                 result = "skipped"
+            elif status == "error":
+                score = None
+                result = "error"
+                reason = reason or "Evaluator reported an error."
             else:
-                score = llm_output.get("score", self._threshold)
-                result = "pass" if score >= self._threshold else "fail"
+                score = llm_output.get("score")
+                if (
+                    isinstance(score, bool)
+                    or not isinstance(score, (int, float))
+                    or not (1 <= score <= 5)
+                ):
+                    score = None
+                    result = "error"
+                    status = "error"
+                    message = "Evaluator returned an invalid score; expected a number between 1 and 5."
+                    reason = f"{message} {reason}" if reason else message
+                else:
+                    result = "pass" if score >= self._threshold else "fail"
 
         return self._build_result(
             score=score,
