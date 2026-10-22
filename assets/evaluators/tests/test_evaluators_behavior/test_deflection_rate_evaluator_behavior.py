@@ -4,12 +4,17 @@
 """Behavioral tests for Deflection Rate Evaluator."""
 
 import asyncio
+import builtins
+import sys
+import types
+from copy import deepcopy
 from typing import Any, Dict, List
 from unittest.mock import MagicMock
 
 import pytest
 from azure.ai.evaluation._exceptions import EvaluationException
 from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest, _MessagesUtilE2ETests, _TurnLevelUtilE2ETests
+from .base_decision_routing_test import DecisionRoutingTests, construct_evaluator, enable_fake_decision_sdk
 from ..common.evaluator_mock_config import create_mocked_evaluator, build_none_score_evaluator
 from .base_validator_unit_test import (
     ConversationValidatorUnitTests,
@@ -165,6 +170,19 @@ class TestDeflectionRateMultiturnBehavior:
         evaluator._flow.assert_called_once()
         evaluator._multi_turn_flow.assert_not_called()
 
+    def test_conversation_evaluation_level_uses_multi_turn_flow_for_messages(self):
+        """Forced conversation-level evaluation routes messages to the multi-turn flow."""
+        evaluator = create_mocked_evaluator(
+            DeflectionRateEvaluator,
+            "deflection_rate",
+            evaluation_level=EvaluationLevel.CONVERSATION,
+        )
+
+        evaluator(messages=VALID_MESSAGES)
+
+        evaluator._multi_turn_flow.assert_called_once()
+        evaluator._flow.assert_not_called()
+
     def test_conversation_evaluation_level_requires_messages(self):
         """Conversation-level evaluation without messages should raise an error."""
         evaluator = create_mocked_evaluator(
@@ -253,3 +271,116 @@ class TestDeflectionRateDoEvalBranches:
         evaluator._flow = MagicMock(side_effect=str_flow)
         with pytest.raises(EvaluationException):
             asyncio.run(evaluator._do_eval({"response": "r"}))
+
+
+# region Native Decision routing coverage on the released SDK
+
+DECISION_STRATEGY_MODULE = "azure.ai.evaluation._evaluators._common._decision_strategy"
+
+
+@pytest.mark.unittest
+class TestDeflectionRateDecisionRouting(DecisionRoutingTests):
+    """Cover the native Decision branches of deflection_rate without a Decision-capable SDK."""
+
+    result_key = "deflection_rate"
+    class_name = "DeflectionRateEvaluator"
+    inputs = {"response": "Use Forgot Password on the sign-in page."}
+    scorings = ("_DeflectionScoring",)
+    expected_strategies = 2
+
+    def test_broken_decision_import_is_not_hidden(self, monkeypatch):
+        """A broken SDK dependency propagates instead of being read as a missing Decision capability."""
+        original_import = builtins.__import__
+        error = ModuleNotFoundError(name="broken_dependency")
+
+        def broken_import(name, *args, **kwargs):
+            if name == DECISION_STRATEGY_MODULE:
+                raise error
+            return original_import(name, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", broken_import)
+        with pytest.raises(ModuleNotFoundError) as caught:
+            self.load()
+        assert caught.value is error
+
+    def test_turn_state_is_the_response_and_the_category_is_surfaced(self, monkeypatch):
+        """The turn-level native state is the prepared response, and the selected category becomes public."""
+        module = self.load()
+        verdict = {"deflection_rate": 1.0,
+                   "deflection_rate_properties": {"decision_model": {"deflection_type": "reframe"}}}
+        sdk = enable_fake_decision_sdk(monkeypatch, module, self.class_name, result_key=self.result_key,
+                                       scorings=self.scorings, evaluate=verdict)
+        evaluator, _ = construct_evaluator(module, self.class_name)
+        result = evaluator(response="I can help with related topics instead.")
+        assert result["deflection_rate"] == 1.0
+        assert result["deflection_rate_deflection_type"] == "reframe"
+        state = evaluator._strategy.evaluate.await_args.args[0]
+        assert state == {"response": "I can help with related topics instead."}
+        sdk.scorings["_DeflectionScoring"].assert_called_with(4, minimum=0)
+        evaluator._multi_turn_strategy.evaluate.assert_not_awaited()
+
+    def test_forced_turn_level_splits_messages_without_routing_keys(self, monkeypatch):
+        """Forced turn evaluation of messages keeps only the latest agent response in the native state."""
+        module = self.load()
+        enable_fake_decision_sdk(monkeypatch, module, self.class_name, result_key=self.result_key,
+                                 scorings=self.scorings)
+        evaluator, _ = construct_evaluator(module, self.class_name, evaluation_level="turn")
+        assert evaluator(messages=deepcopy(VALID_MESSAGES)) == {"deflection_rate": 1}
+        state = evaluator._strategy.evaluate.await_args.args[0]
+        assert set(state) == {"response"}
+        assert "Use Forgot Password on the sign-in page." in state["response"]
+
+    def test_conversation_state_is_the_serialized_transcript(self, monkeypatch):
+        """Messages route to the conversation strategy with the serialized transcript as the only field."""
+        module = self.load()
+        enable_fake_decision_sdk(monkeypatch, module, self.class_name, result_key=self.result_key,
+                                 scorings=self.scorings)
+        evaluator, _ = construct_evaluator(module, self.class_name)
+        assert evaluator(messages=deepcopy(VALID_MESSAGES)) == {"deflection_rate": 1}
+        state = evaluator._multi_turn_strategy.evaluate.await_args.args[0]
+        assert set(state) == {"messages"}
+        assert "Can you reset my password?" in state["messages"]
+        evaluator._strategy.evaluate.assert_not_awaited()
+
+    def test_native_scoring_maps_categories_to_the_binary_metric(self, monkeypatch):
+        """The category scoring maps plain_answer to 0 and every deflection category to 1, lower is better."""
+        fake_sdk = types.ModuleType(DECISION_STRATEGY_MODULE)
+
+        class FakeLikertScoring:
+            """Minimal stand-in for the SDK scoring the deflection subclass extends."""
+
+            def __init__(self, levels, minimum=1):
+                self.levels = levels
+                self.minimum = minimum
+
+            def interpret(self, response, result_key, error_target):
+                probabilities = response["answers"][result_key]["probabilities"]
+                category = max(range(self.levels), key=lambda level: probabilities[str(level)]) + self.minimum
+                expected = sum(level * probabilities[str(level)] for level in range(self.levels)) + self.minimum
+                return float(category), "selected", {"probabilities": probabilities, "expected_score": expected}
+
+            def passes(self, score, threshold):
+                return score >= threshold
+
+        fake_sdk.LikertScoring = FakeLikertScoring
+        fake_sdk.DecisionEvaluationStrategy = object
+        monkeypatch.setitem(sys.modules, DECISION_STRATEGY_MODULE, fake_sdk)
+        module = self.load()
+        scoring = module["_DeflectionScoring"](4, minimum=0)
+
+        def answer(probabilities):
+            return {"answers": {"deflection_rate": {"probabilities": probabilities}}}
+
+        score, reason, details = scoring.interpret(answer({"0": 0.1, "1": 0.2, "2": 0.6, "3": 0.1}),
+                                                   "deflection_rate", None)
+        assert (score, details["deflection_type"], details["native_category"]) == (1.0, "send_elsewhere", 2)
+        assert details["expected_score"] == pytest.approx(0.9)
+        assert details["expected_category"] == pytest.approx(1.7)
+        assert "send_elsewhere" in reason and "1" in reason
+        score, _, details = scoring.interpret(answer({"0": 0.9, "1": 0.1, "2": 0.0, "3": 0.0}),
+                                              "deflection_rate", None)
+        assert (score, details["deflection_type"]) == (0.0, "plain_answer")
+        assert scoring.passes(0.0, 0) and not scoring.passes(1.0, 0) and scoring.passes(1.0, 1)
+
+
+# endregion

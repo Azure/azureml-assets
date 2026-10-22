@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 import os
+import json
 import logging
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union, Tuple
@@ -8,7 +9,7 @@ from typing import Any, Dict, List, Optional, Union, Tuple
 from typing_extensions import overload, override
 
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
-from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
+from azure.ai.evaluation._evaluators import _common as _sdk_common
 from azure.ai.evaluation._common._experimental import experimental
 from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
 from azure.ai.evaluation._common.utils import (
@@ -405,12 +406,28 @@ if os.getenv("AI_EVALS_USE_PF_PROMPTY", "false").lower() == "true":
 else:
     from azure.ai.evaluation._legacy.prompty import AsyncPrompty
 
+ModelEvaluatorBase = getattr(_sdk_common, "ModelEvaluatorBase", _sdk_common.PromptyEvaluatorBase)
+try:
+    from azure.ai.evaluation._evaluators._common._decision_strategy import BinaryScoring, DecisionEvaluationStrategy
+except ImportError as exc:
+    if exc.name != "azure.ai.evaluation._evaluators._common._decision_strategy":
+        raise
+    BinaryScoring = DecisionEvaluationStrategy = None
+_SDK_SUPPORTS_DECISION = (
+    hasattr(_sdk_common, "ModelEvaluatorBase") and BinaryScoring is not None and DecisionEvaluationStrategy is not None
+)
+
+
+def _native_state(eval_input: Dict, *names: str) -> Dict:
+    """Project prepared inputs to the fields the chat prompt renders, omitting absent values."""
+    return {name: eval_input[name] for name in names if eval_input.get(name) is not None}
+
 
 logger = logging.getLogger(__name__)
 
 
 @experimental
-class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
+class TaskAdherenceEvaluator(ModelEvaluatorBase[Union[str, float]]):
     """The Task Adherence evaluator assesses whether an AI assistant's actions fully align with the user's intent.
 
     The evaluator fully achieves the intended goal across three dimensions:
@@ -426,7 +443,10 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     The evaluation includes step-by-step reasoning and a flagged boolean result.
 
 
-    :param model_config: Configuration for the Azure OpenAI model.
+    :param model_config: Configuration for the Azure OpenAI model. Set ``type="decision"`` with
+        a Foundry ``azure_endpoint`` and ``azure_deployment`` to use a native Decision model;
+        authenticate with ``api_key`` or ``credential``. The optional ``probability_threshold``
+        selects the binary probability cutoff, which defaults to 0.75.
     :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
         ~azure.ai.evaluation.OpenAIModelConfiguration]
 
@@ -453,6 +473,10 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
     _PROMPTY_FILE = "task_adherence.prompty"
     _MULTI_TURN_PROMPTY_FILE = "task_adherence_multi_turn.prompty"
+    _DECISION_FILE = "task_adherence.decision.yaml"
+    _MULTI_TURN_DECISION_FILE = "task_adherence_multi_turn.decision.yaml"
+    _supports_decision_models = True
+    _binary_decision = True
     _RESULT_KEY = "task_adherence"
     _OPTIONAL_PARAMS = ["tool_definitions", "messages"]
 
@@ -473,6 +497,7 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         threshold=_DEFAULT_TASK_ADHERENCE_SCORE,
         credential=None,
         evaluation_level=None,
+        probability_threshold=None,
         **kwargs,
     ):
         """Initialize the TaskAdherenceEvaluator.
@@ -480,6 +505,8 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :param model_config: Configuration for the model
         :param threshold: Threshold for evaluation scoring
         :param credential: Authentication credential
+        :keyword probability_threshold: Decision-only probability cutoff in [0, 1], default 0.75.
+            Overrides the nested model configuration value without modifying the caller's configuration.
         """
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
@@ -496,6 +523,24 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             enforce_tool_definitions=True,
         )
 
+        decision_selected = isinstance(model_config, dict) and model_config.get("type") == "decision"
+        if probability_threshold is not None:
+            if not decision_selected:
+                raise EvaluationException(
+                    message="probability_threshold is only supported for Decision models.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=ErrorTarget.TASK_ADHERENCE_EVALUATOR,
+                )
+            model_config = {**model_config, "probability_threshold": probability_threshold}
+        if decision_selected and not _SDK_SUPPORTS_DECISION:
+            raise EvaluationException(
+                message="Decision models require an azure-ai-evaluation version with decision model support.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=ErrorTarget.TASK_ADHERENCE_EVALUATOR,
+            )
+
         super().__init__(
             model_config=model_config,
             prompty_file=prompty_path,
@@ -505,6 +550,14 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             _higher_is_better=higher_is_better_value,
             **kwargs,
         )
+
+        self._decision = None
+        if decision_selected:
+            self._decision = self._decision_strategy(os.path.join(current_dir, self._DECISION_FILE))
+            self._multi_turn_decision = self._decision_strategy(
+                os.path.join(current_dir, self._MULTI_TURN_DECISION_FILE)
+            )
+            return
 
         multi_turn_prompty_path = os.path.join(current_dir, self._MULTI_TURN_PROMPTY_FILE)
         prompty_model_config = construct_prompty_model_config(
@@ -517,6 +570,22 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             model=prompty_model_config,
             token_credential=credential,
             is_reasoning_model=self._is_reasoning_model,
+        )
+
+    def _decision_strategy(self, rubric_path: str):
+        """Load this package's rubric and reuse the SDK's native scoring and accounting."""
+        from azure.ai.evaluation._legacy.prompty._yaml_utils import load_yaml
+
+        rubric = json.loads(json.dumps(load_yaml(rubric_path)))
+        runner = self._decision_model_runner
+        return DecisionEvaluationStrategy(
+            runner,
+            result_key=self._result_key,
+            error_target=ErrorTarget.TASK_ADHERENCE_EVALUATOR,
+            questions={"status": rubric["status"], self._result_key: rubric["result"]},
+            scoring=BinaryScoring(runner.probability_threshold),
+            threshold=self._threshold,
+            timeout=self._LLM_CALL_TIMEOUT,
         )
 
     @overload
@@ -640,7 +709,7 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         return result_payload
 
     def _return_not_applicable_result(
-        self, error_message: str, threshold: Union[int, float]
+        self, error_message: str, threshold: Union[int, float], prompty_output=None
     ) -> Dict[str, Union[str, float, Dict, None]]:
         """Return a result indicating that the tool call is not applicable for evaluation.
 
@@ -648,10 +717,12 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :type error_message: str
         :param threshold: The threshold value for the evaluation.
         :type threshold: Union[int, float]
+        :param prompty_output: Optional paid model response whose usage must be retained for a skip.
+        :type prompty_output: Optional[Dict]
         :return: A dictionary containing the result of the evaluation.
         :rtype: Dict[str, Union[str, float, None]]
         """
-        token_metadata = self._get_token_metadata({})
+        token_metadata = self._get_token_metadata(prompty_output or {})
         result = {
             f"{self._result_key}": None,
             f"{self._result_key}_score": None,
@@ -664,6 +735,17 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         }
         # Add top-level token metadata fields for backward compatibility.
         result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+        if prompty_output is not None:
+            answer = prompty_output.get("llm_output", prompty_output)
+            if isinstance(answer, str):
+                try:
+                    answer = json.loads(answer)
+                except (ValueError, TypeError):
+                    answer = {}
+            properties = answer.get("properties") if isinstance(answer, dict) else None
+            properties = dict(properties) if isinstance(properties, dict) else {}
+            properties.update(token_metadata)
+            result[f"{self._result_key}_properties"] = properties
         return result
 
     @staticmethod
@@ -699,8 +781,10 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         if self._evaluation_level == EvaluationLevel.CONVERSATION and not kwargs.get("messages"):
             query = kwargs.get("query")
             response = kwargs.get("response")
-            if isinstance(query, str) and isinstance(response, str) and query and response:
-                query, response = _wrap_string_messages(query, response)
+            if isinstance(query, str) and query:
+                query, _ = _wrap_string_messages(query, "")
+            if isinstance(response, str) and response:
+                _, response = _wrap_string_messages("", response)
             if isinstance(query, list) and isinstance(response, list):
                 kwargs["messages"] = _merge_query_response_messages(query, response)
         elif self._evaluation_level == EvaluationLevel.TURN and kwargs.get("messages"):
@@ -722,6 +806,9 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: The evaluation result.
         :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
         """
+        if self._decision is not None:
+            return await super()._real_call(**kwargs)
+
         # Convert inputs into list of evaluable inputs.
         try:
             eval_input_list = self._convert_kwargs_to_eval_input(**kwargs)
@@ -868,6 +955,11 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         }
 
         prompty_input.pop("messages", None)
+        if self._decision is not None:
+            # The native state is the evidence the chat prompt renders: the four prepared prompt inputs.
+            return await self._decision.evaluate(
+                _native_state(prompty_input, "system_message", "query", "response", "tool_calls")
+            )
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **prompty_input)
         return self._parse_prompty_output(prompty_output_dict)
 
@@ -881,6 +973,8 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         if tool_definitions:
             prompty_kwargs["tool_definitions"] = reformat_tool_definitions(tool_definitions, logger)
 
+        if self._decision is not None:
+            return await self._multi_turn_decision.evaluate(prompty_kwargs)
         prompty_output_dict = await self._multi_turn_flow(timeout=self._LLM_CALL_TIMEOUT, **prompty_kwargs)
         return self._parse_prompty_output(prompty_output_dict)
 
@@ -900,7 +994,7 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         llm_status = llm_output.get("status", "completed")
         if llm_status == "skipped":
             reason = llm_output.get("reason", "")
-            return self._return_not_applicable_result(reason, self._threshold)
+            return self._return_not_applicable_result(reason, self._threshold, prompty_output_dict)
 
         reasoning = llm_output.get("reason", "")
         score = float(llm_output.get("score", 0.0))
