@@ -3,7 +3,7 @@ name: Flint-NVFP4
 version: 1
 path: ./
 system_metadata:
-  publisher: Microsoft
+  publisher: Recursive
   githubCopilotLocal: true
   githubCopilotLocalRequirements:
     downloadBytes: 22863084704
