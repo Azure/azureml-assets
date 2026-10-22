@@ -35,19 +35,9 @@ Flint is designed for agentic software development tasks, including:
 
 ## Local inference
 
-Flint NVFP4 runs on llama.cpp built with CUDA, using a release with Flint support. It has been tested on NVIDIA B300, RTX PRO 6000 Blackwell, RTX Spark, and DGX Spark. At least 48 GB of GPU memory is recommended, or unified memory on Spark systems.
+Flint NVFP4 runs on llama.cpp built with CUDA, using a release with Flint support. It has been tested on NVIDIA B300, RTX PRO 6000 Blackwell, RTX Spark, and DGX Spark. At least 32 GB of GPU memory is required, or unified memory on Spark systems.
 
 The recommended generation settings are temperature 1.0, top-p 0.95, and top-k 20. Use the bundled chat template and preserve returned reasoning content when replaying conversation history. Reasoning counts toward the output budget, so allow at least 32,768 output tokens for hard problems.
-
-## Performance
-
-| Benchmark | Flint |
-| --- | ---: |
-| Terminal-Bench 2.1 | 54.9% |
-| SWE-bench Pro v2 | 89.7% |
-| SWE-bench Verified | 74.2% |
-
-Scores are from Recursive's release evaluations of Flint, using temperature 1.0, top-p 0.95, and top-k 20, and report average pass@1 over at least five attempts. Results can vary with checkpoint precision, inference runtime, and evaluation setup.
 
 For more details, see the [Flint NVFP4 GGUF model card](https://huggingface.co/RecursiveSI/flint-nvfp4-gguf) and the [Flint model card](https://huggingface.co/RecursiveSI/flint).
 
