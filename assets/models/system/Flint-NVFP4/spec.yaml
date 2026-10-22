@@ -8,7 +8,7 @@ system_metadata:
   githubCopilotLocalRequirements:
     downloadBytes: 22863084704
     peakDiskBytes: 22863084704
-    recommendedVramBytes: 34359738368
+    recommendedVramBytes: 33285996544
   displayName: Flint NVFP4
   license: apache-2.0
   licenseDescription: Apache License 2.0. https://www.apache.org/licenses/LICENSE-2.0
