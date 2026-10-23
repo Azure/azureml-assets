@@ -509,6 +509,7 @@ class TaskCompletionEvaluator(ModelEvaluatorBase[Union[str, int]]):
     _OPTIONAL_PARAMS = ["messages", "tool_definitions"]
 
     _supports_decision_models = True
+    _supported_decision_protocols = ("microsoft", "openai")
     _binary_decision = True
 
     _validator: ValidatorInterface

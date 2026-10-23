@@ -14,6 +14,7 @@ import xml.etree.ElementTree as ET
 
 
 MINIMUM_CASES = {
+    "test_openai_decisions": 76,
     "test_evaluators": 45, "test_composites": 274,
     "test_quality_expansion": 132, "test_tool_expansion": 92, "test_judge_expansion": 108,
     "test_expansion_compatibility": 60,

@@ -1,12 +1,13 @@
 type: "evaluator"
 name: "builtin.groundedness"
-version: 19
+version: 20
 displayName: "Groundedness-Evaluator"
 description: "Assesses whether the response stays true to the given context in a retrieval-augmented generation scenario. It’s best used for retrieval-augmented generation (RAG) scenarios, including question and answering and summarization. Use the groundedness metric when you need to verify that ai-generated responses align with and are validated by the provided context."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
 categories: ["quality", "agents"]
 tags:
+  decision_protocols: "microsoft,openai"
   provider: "Microsoft"
   is_continuous_scenario: "true"
 supportedEvaluationLevels: ["conversation", "turn"]

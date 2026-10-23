@@ -216,8 +216,8 @@ jobs:
     permissions:
       contents: read
     env:
-      SDK_CANDIDATE_COMMIT: 05962f00001044e22d54d34109d7b983c2a00d14
-      SDK_CANDIDATE_VERSION: 1.18.10
+      SDK_CANDIDATE_COMMIT: b42101307baa8b05f20789261a4235ab51b928d1
+      SDK_CANDIDATE_VERSION: 1.18.11
     steps:
       - name: Clone branch
         uses: Azure/azureml-assets/.github/actions/clone-repo@main
@@ -238,6 +238,7 @@ jobs:
           python scripts/test/check_native_sdk.py "$wheel" "$pytest_reports" --provenance-only
           python -m pytest assets/evaluators/tests/test_decision_models/test_evaluators.py \
             assets/evaluators/tests/test_decision_models/test_composites.py \
+            assets/evaluators/tests/test_decision_models/test_openai_decisions.py \
             assets/evaluators/tests/test_decision_models/test_quality_expansion.py \
             assets/evaluators/tests/test_decision_models/test_tool_expansion.py \
             assets/evaluators/tests/test_decision_models/test_judge_expansion.py \

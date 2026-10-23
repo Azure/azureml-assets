@@ -627,6 +627,7 @@ class GroundednessEvaluator(ModelEvaluatorBase[Union[str, float]]):
     _MULTI_TURN_DECISION_FILE = "groundedness_multi_turn.decision.yaml"
     _NO_QUERY_DECISION_FILE = "groundedness_without_query.decision.yaml"
     _supports_decision_models = True
+    _supported_decision_protocols = ("microsoft", "openai")
     _RESULT_KEY = "groundedness"
     _MIN_GROUNDEDNESS_SCORE = 1
     _MAX_GROUNDEDNESS_SCORE = 5

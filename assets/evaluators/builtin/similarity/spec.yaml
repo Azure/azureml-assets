@@ -1,12 +1,13 @@
 type: "evaluator"
 name: "builtin.similarity"
-version: 11
+version: 12
 displayName: "Similarity-Evaluator"
 description: "Measures how closely two pieces of text resemble each other in meaning. Higher scores indicate greater semantic similarity. It’s best used for NLP tasks with a user query. Use it when you want an objective evaluation of an AI model's performance, particularly in text generation tasks where you have access to ground truth responses."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
 categories: ["quality"]
 tags:
+  decision_protocols: "microsoft,openai"
   provider: "Microsoft"
 initParameterSchema:
   type: "object"

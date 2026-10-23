@@ -554,6 +554,7 @@ class ToolSelectionEvaluator(ModelEvaluatorBase[Union[str, float]]):
     """
 
     _supports_decision_models = True
+    _supported_decision_protocols = ("microsoft", "openai")
     _binary_decision = True
     _DECISION_FILE = "tool_selection.decision.yaml"
     _PROMPTY_FILE = "tool_selection.prompty"

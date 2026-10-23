@@ -288,6 +288,7 @@ class ToolCallAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
     _LLM_SCORE_KEY = "score"
 
     _supports_decision_models = True
+    _supported_decision_protocols = ("microsoft", "openai")
 
     _validator: ValidatorInterface
 

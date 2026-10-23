@@ -179,6 +179,7 @@ class SimilarityEvaluator(ModelEvaluatorBase):
     # Constants must be defined within eval's directory to be save/loadable
 
     _supports_decision_models = True
+    _supported_decision_protocols = ("microsoft", "openai")
     _DECISION_FILE = "similarity.decision.yaml"
     _PROMPTY_FILE = "similarity.prompty"
     _RESULT_KEY = "similarity"

@@ -142,6 +142,7 @@ class RetrievalEvaluator(ModelEvaluatorBase[Union[str, float]]):
     """
 
     _supports_decision_models = True
+    _supported_decision_protocols = ("microsoft", "openai")
     _DECISION_FILE = "retrieval.decision.yaml"
     _PROMPTY_FILE = "retrieval.prompty"
     _RESULT_KEY = "retrieval"

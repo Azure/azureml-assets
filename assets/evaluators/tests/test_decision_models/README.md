@@ -1,5 +1,21 @@
 # Native Decision evaluator coverage
 
+## OpenAI Decisions
+
+All 19 Decision-capable assets also support the Evaluation SDK's explicit `decision_protocol="openai"`
+configuration, using SDK 1.18.11 or a private build with that protocol adapter. Their published class and tag
+metadata advertise `microsoft,openai`; hosted selection remains a service-approved named deployment.
+Each affected asset version is incremented so a worker can require the tested protocol declaration.
+
+The existing PiLabs/Microsoft rubrics are shared. The SDK translates them centrally to predicates and ordered
+score levels; the asset's original score, applicability, threshold and composite contracts remain authoritative.
+OpenAI's probability-weighted score is diagnostic, while ordinal metrics continue to use argmax.
+Refusals produce explicit errors with known usage. They never become a fabricated score or skip.
+
+`test_openai_decisions.py` packages each asset independently and checks pass/fail, paid skip, partial refusal,
+actual request encoding, original answer provenance and once-only usage. Run it against the private adapter wheel
+alongside the existing Decision suites. Controlled provider responses verify integration contracts, not model accuracy.
+
 The native Decision path covers 19 model-judged built-ins. Each asset retains its
 standalone inputs, score range, thresholds and declared evaluation levels. The
 existing chat path remains available on supported released SDKs.

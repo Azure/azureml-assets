@@ -477,6 +477,7 @@ class CustomerSatisfactionEvaluator(ModelEvaluatorBase[Union[str, float]]):
     """
 
     _supports_decision_models = True
+    _supported_decision_protocols = ("microsoft", "openai")
     _DECISION_FILE = "customer_satisfaction.decision.yaml"
     _PROMPTY_FILE = "customer_satisfaction.prompty"
     _MULTI_TURN_PROMPTY_FILE = "customer_satisfaction_multi_turn.prompty"

@@ -160,6 +160,7 @@ class RelevanceEvaluator(ModelEvaluatorBase):
 
     # Constants must be defined within eval's directory to be save/loadable
     _supports_decision_models = True
+    _supported_decision_protocols = ("microsoft", "openai")
     _DECISION_FILE = "relevance.decision.yaml"
     _PROMPTY_FILE = "relevance.prompty"
     _RESULT_KEY = "relevance"
