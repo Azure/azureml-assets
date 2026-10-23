@@ -153,7 +153,7 @@ RUN find /opt /azureml-envs /root -path '*/pip/_vendor/vendor.txt' -type f -exec
 # Refresh packages for the latest Ubuntu security advisories.
 RUN set -eux; \
     apt-get update; \
-    security_packages="curl libcurl3-gnutls libcurl4 libssl3 openssl"; \
+    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libssl3 openssh-client openssh-server openssh-sftp-server openssl"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
