@@ -1,13 +1,16 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 import os
+import json
+import inspect as _inspect
 import logging
+from copy import deepcopy
 from enum import Enum
 from typing import Dict, List, Tuple, Union, TypeVar
 
 from typing_extensions import override
 
-from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
+from azure.ai.evaluation._evaluators import _common as _sdk_common
 from azure.ai.evaluation._exceptions import (
     ErrorBlame,
     ErrorCategory,
@@ -20,11 +23,27 @@ from azure.ai.evaluation._common.utils import (
     _extract_text_from_content,
     _format_value,
 )
+from azure.ai.evaluation._common.utils import (
+    reformat_conversation_history as _sdk_reformat_conversation_history,
+)
 # ConversationValidator is re-exported for the test suite / capability surface (unused here).
 from azure.ai.evaluation._evaluators._common._validators import (  # noqa: F401
     ValidatorInterface,
     ConversationValidator,
     ToolCallsValidator,
+)
+
+ModelEvaluatorBase = getattr(_sdk_common, "ModelEvaluatorBase", _sdk_common.PromptyEvaluatorBase)
+try:
+    from azure.ai.evaluation._evaluators._common._decision_strategy import BinaryScoring, DecisionEvaluationStrategy
+except ImportError as exc:
+    if exc.name != "azure.ai.evaluation._evaluators._common._decision_strategy":
+        raise
+    BinaryScoring = DecisionEvaluationStrategy = None
+_SDK_SUPPORTS_DECISION = (
+    hasattr(_sdk_common, "ModelEvaluatorBase")
+    and BinaryScoring is not None
+    and callable(getattr(DecisionEvaluationStrategy, "parse", None))
 )
 
 # ---------------------------------------------------------------------------
@@ -190,11 +209,6 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
 # we use the SDK helper when it is available and otherwise fall back to the
 # inlined 1.18.1 implementation for azure-ai-evaluation 1.17.x (backward compat;
 # remove the fallback once 1.17.x is no longer supported).
-import inspect as _inspect
-from azure.ai.evaluation._common.utils import (
-    reformat_conversation_history as _sdk_reformat_conversation_history,
-)
-
 if "include_tool_calls" in _inspect.signature(_sdk_reformat_conversation_history).parameters:
     reformat_conversation_history = _sdk_reformat_conversation_history
     # Re-exported so the module keeps exposing these helpers to the test suite.
@@ -491,8 +505,16 @@ def _extract_needed_tool_definitions(
     return needed_tool_definitions
 
 
+def _load_decision_questions(path: str, question_id: str) -> Dict:
+    """Load this independently packaged evaluator's applicability and scoring questions."""
+    from azure.ai.evaluation._legacy.prompty._yaml_utils import load_yaml
+
+    rubric = json.loads(json.dumps(load_yaml(path)))
+    return {"status": rubric["status"], question_id: rubric["result"]}
+
+
 @experimental
-class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
+class ToolSelectionEvaluator(ModelEvaluatorBase[Union[str, float]]):
     """The Tool Selection evaluator assesses the appropriateness and efficiency of tool choices made by an AI agent.
 
        The evaluator assesses the following:
@@ -529,14 +551,11 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             :dedent: 8
             :caption: Initialize and call ToolSelectionEvaluator using Azure AI Project URL in the following format
                 https://{resource_name}.services.ai.azure.com/api/projects/{project_name}
-
-    .. note::
-
-        To align with our support of a diverse set of models, an output key without the `gpt_` prefix has been added.
-        To maintain backwards compatibility, the old key with the `gpt_` prefix is still be present in the output;
-        however, it is recommended to use the new key moving forward as the old key will be deprecated in the future.
     """
 
+    _supports_decision_models = True
+    _binary_decision = True
+    _DECISION_FILE = "tool_selection.decision.yaml"
     _PROMPTY_FILE = "tool_selection.prompty"
     _RESULT_KEY = "tool_selection"
 
@@ -551,7 +570,7 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     """Evaluator identifier, experimental and to be used only with evaluation in cloud."""
 
     @override
-    def __init__(self, model_config, *, threshold=1, credential=None, **kwargs):
+    def __init__(self, model_config, *, threshold=1, credential=None, probability_threshold=None, **kwargs):
         """Initialize the Tool Selection evaluator.
 
         :param model_config: Configuration for the Azure OpenAI model.
@@ -563,6 +582,11 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :type credential: Optional[Any]
         :param kwargs: Additional keyword arguments.
         :type kwargs: Any
+
+        :keyword probability_threshold: Decision-only probability cutoff in [0, 1].
+            Overrides model_config["probability_threshold"] without mutating the configuration.
+            The default is 0.75; applicability uses a separate fixed cutoff of 0.5.
+        :paramtype probability_threshold: Optional[float]
         """
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
@@ -570,6 +594,24 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         # Initialize input validator
         self._validator = ToolCallsValidator(error_target=ExtendedErrorTarget.TOOL_SELECTION_EVALUATOR)
+
+        decision_selected = isinstance(model_config, dict) and model_config.get("type") == "decision"
+        if probability_threshold is not None:
+            if not decision_selected:
+                raise EvaluationException(
+                    message="probability_threshold is only supported for Decision models.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=ExtendedErrorTarget.TOOL_SELECTION_EVALUATOR,
+                )
+            model_config = {**model_config, "probability_threshold": probability_threshold}
+        if decision_selected and not _SDK_SUPPORTS_DECISION:
+            raise EvaluationException(
+                message="Decision models require an azure-ai-evaluation version with decision model support.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=ExtendedErrorTarget.TOOL_SELECTION_EVALUATOR,
+            )
 
         super().__init__(
             model_config=model_config,
@@ -579,6 +621,19 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             threshold=threshold,
             **kwargs,
         )
+
+        self._decision_strategy = None
+        if decision_selected:
+            runner = self._decision_model_runner
+            self._decision_strategy = DecisionEvaluationStrategy(
+                runner,
+                result_key=self._result_key,
+                error_target=ExtendedErrorTarget.TOOL_SELECTION_EVALUATOR,
+                questions=_load_decision_questions(os.path.join(current_dir, self._DECISION_FILE), self._result_key),
+                scoring=BinaryScoring(runner.probability_threshold),
+                threshold=self._threshold,
+                timeout=self._LLM_CALL_TIMEOUT,
+            )
 
     @override
     def __call__(  # pylint: disable=docstring-missing-param
@@ -694,6 +749,9 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         )
 
         # Call the LLM to evaluate
+        if self._decision_strategy is not None:
+            return await self._decision_strategy.evaluate(eval_input)
+
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
 
@@ -702,7 +760,13 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             llm_status = llm_output.get("status", "completed")
             if llm_status == "skipped":
                 reason = llm_output.get("reason", "")
-                return self._return_not_applicable_result(reason, self._threshold)
+                result = self._return_not_applicable_result(reason, self._threshold)
+                token_metadata = self._get_token_metadata(prompty_output_dict)
+                result[f"{self._result_key}_properties"] = {
+                    **(llm_output.get("properties", {}) or {}), **token_metadata,
+                }
+                result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+                return result
 
             score = llm_output.get("score", None)
             if score not in [0, 1]:
@@ -780,9 +844,9 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 self._threshold,
             )
         if "response" in kwargs:
-            kwargs["response"] = _preprocess_messages(kwargs["response"])
+            kwargs["response"] = _preprocess_messages(deepcopy(kwargs["response"]))
         if "query" in kwargs:
-            kwargs["query"] = _preprocess_messages(kwargs["query"])
+            kwargs["query"] = _preprocess_messages(deepcopy(kwargs["query"]))
         # Convert inputs into list of evaluable inputs.
         eval_input = self._convert_kwargs_to_eval_input(**kwargs)
         if isinstance(eval_input, dict) and eval_input.get("error_message"):

@@ -4,11 +4,13 @@
 """Behavioral tests for Groundedness Evaluator."""
 
 import asyncio
+import builtins
+import json
 import os
 import sys
 import pytest
 from typing import Any, Dict, List
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from azure.ai.evaluation import AzureOpenAIModelConfiguration
 from azure.ai.evaluation._exceptions import EvaluationException
@@ -20,6 +22,7 @@ from .base_evaluator_behavior_test import (
 )
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
+from . import base_decision_routing_test as routing
 from .base_validator_unit_test import (
     ConversationSerializationUnitTests,
     ConversationValidatorToolCheckUnitTests,
@@ -1151,3 +1154,142 @@ class TestGroundednessInternalBranches:
                     }
                 )
             )
+
+
+# region Decision routing (released SDK)
+
+
+ROUTING_MESSAGES = [
+    {"role": "user", "content": "When does the museum open?"},
+    {"role": "assistant", "content": [{"type": "text", "text": "The museum opens at noon."}]},
+]
+
+
+@pytest.mark.unittest
+class TestGroundednessDecisionRouting(routing.DecisionRoutingTests):
+    """Cover the native Decision branches on the released SDK the asset job installs."""
+
+    result_key = "groundedness"
+    class_name = "GroundednessEvaluator"
+    inputs = {
+        "query": "When does the museum open?",
+        "response": "The museum opens at noon.",
+        "context": "Museum opening time: noon.",
+    }
+    strategy_attribute = "_decision"
+    expected_strategies = 3
+
+    def _native(self, monkeypatch):
+        """Construct an evaluator that routes natively against mocked strategies and return it."""
+        module = self.load()
+        routing.enable_fake_decision_sdk(monkeypatch, module, self.class_name, result_key=self.result_key)
+        evaluator, _ = routing.construct_evaluator(module, self.class_name)
+        return evaluator
+
+    def _chat(self):
+        """Construct a chat evaluator with mocked prompt flows and the lazy query prompt reload disabled."""
+        evaluator = routing.construct_evaluator(self.load(), self.class_name, config=routing.CHAT_CONFIG)[0]
+        evaluator._ensure_query_prompty_loaded = MagicMock()
+        completed = {"llm_output": {"score": 5, "status": "completed", "reason": "Supported."}}
+        evaluator._flow = AsyncMock(return_value=completed)
+        evaluator._multi_turn_flow = AsyncMock(return_value=completed)
+        return evaluator
+
+    def test_public_call_with_query_uses_the_query_rubric(self, monkeypatch):
+        """A query call reaches the SDK loop and sends exactly the query, response and context."""
+        evaluator = self._native(monkeypatch)
+        assert evaluator(**self.inputs) == {"groundedness": 1}
+        evaluator._decision.evaluate.assert_awaited_once_with(dict(self.inputs))
+        evaluator._no_query_decision.evaluate.assert_not_awaited()
+        evaluator._multi_turn_decision.evaluate.assert_not_awaited()
+
+    def test_public_call_without_query_uses_the_no_query_rubric(self, monkeypatch):
+        """A response and context call sends exactly those two inputs to the no-query rubric."""
+        evaluator = self._native(monkeypatch)
+        inputs = {"response": "The museum opens at noon.", "context": "Museum opening time: noon."}
+        assert evaluator(**inputs) == {"groundedness": 1}
+        evaluator._no_query_decision.evaluate.assert_awaited_once_with(inputs)
+        evaluator._decision.evaluate.assert_not_awaited()
+
+    def test_messages_send_the_transcript_with_normalized_context_and_tools(self, monkeypatch):
+        """A conversation call sends the transcript plus context and tool definitions only when supplied."""
+        evaluator = self._native(monkeypatch)
+        context = ["Museum opening time: noon.", {"closed": "Monday"}]
+        tools = [{"name": "lookup_hours", "description": "Look up opening hours.",
+                  "parameters": {"type": "object", "properties": {}}}]
+        assert evaluator(messages=ROUTING_MESSAGES, context=context, tool_definitions=tools) == {"groundedness": 1}
+        state = evaluator._multi_turn_decision.evaluate.await_args.args[0]
+        assert set(state) == {"messages", "context", "tool_definitions"}
+        assert state["context"] == json.dumps(context, ensure_ascii=False)
+        assert "lookup_hours" in state["tool_definitions"]
+        assert "User turn 1:" in state["messages"]
+        evaluator._decision.evaluate.assert_not_awaited()
+
+    @pytest.mark.parametrize("context", ["", "<>", [" ", ""], None])
+    def test_messages_with_blank_context_send_only_the_transcript(self, monkeypatch, context):
+        """Blank or placeholder context is dropped so the multi-turn rubric sees only the transcript."""
+        evaluator = self._native(monkeypatch)
+        assert evaluator(messages=ROUTING_MESSAGES, context=context) == {"groundedness": 1}
+        state = evaluator._multi_turn_decision.evaluate.await_args.args[0]
+        assert set(state) == {"messages"}
+
+    def test_plain_text_response_without_context_skips_before_the_strategy(self, monkeypatch):
+        """A plain text response with no context is not applicable natively and never reaches a strategy."""
+        evaluator = self._native(monkeypatch)
+        result = evaluator(query="When does the museum open?", response="The museum opens at noon.")
+        assert result["groundedness"] is None
+        assert result["groundedness_result"] == "not_applicable"
+        assert "requires grounding context" in result["groundedness_reason"]
+        assert result["groundedness_total_tokens"] == 0
+        assert result["groundedness_properties"] is None
+        for strategy in (evaluator._decision, evaluator._no_query_decision, evaluator._multi_turn_decision):
+            strategy.evaluate.assert_not_awaited()
+
+    def test_chat_plain_text_response_without_context_keeps_the_response_as_context(self):
+        """The chat path keeps supplying the response text as its own context."""
+        evaluator = self._chat()
+        result = evaluator(query="When does the museum open?", response="The museum opens at noon.")
+        assert result["groundedness"] == 5.0
+        assert evaluator._flow.await_args.kwargs["context"] == "The museum opens at noon."
+
+    def test_chat_messages_context_is_validated_and_normalized(self):
+        """Explicit conversation context reaches the chat prompt as one string, or not at all when blank."""
+        evaluator = self._chat()
+        evaluator(messages=ROUTING_MESSAGES, context={"closed": "Monday"})
+        assert evaluator._multi_turn_flow.await_args.kwargs["context"] == '{"closed": "Monday"}'
+        evaluator(messages=ROUTING_MESSAGES, context=[" "])
+        assert "context" not in evaluator._multi_turn_flow.await_args.kwargs
+
+    def test_chat_skip_delivered_as_text_keeps_usage_and_properties(self):
+        """A skipped chat judgment delivered as JSON text keeps its properties and measured usage."""
+        evaluator = self._chat()
+        usage = {"input_token_count": 4, "output_token_count": 2, "total_token_count": 6, "model_id": "judge"}
+        skipped = json.dumps({"status": "skipped", "reason": "No evidence", "properties": {"custom": True}})
+        evaluator._flow = AsyncMock(return_value={"llm_output": skipped, **usage})
+        result = evaluator(**self.inputs)
+        assert result["groundedness"] is None
+        assert result["groundedness_result"] == "not_applicable"
+        assert result["groundedness_total_tokens"] == 6
+        assert result["groundedness_properties"]["custom"] is True
+        assert result["groundedness_properties"]["model"] == "judge"
+        fallback = evaluator._return_not_applicable_result("Empty", 3, {"llm_output": "not json", **usage})
+        assert fallback["groundedness_properties"]["total_tokens"] == 6
+        assert "custom" not in fallback["groundedness_properties"]
+
+    def test_broken_decision_import_is_not_hidden(self, monkeypatch):
+        """A dependency failure inside the strategy module propagates instead of reading as an older SDK."""
+        original_import = builtins.__import__
+        error = ModuleNotFoundError(name="broken_dependency")
+
+        def broken_import(name, *args, **kwargs):
+            if name == "azure.ai.evaluation._evaluators._common._decision_strategy":
+                raise error
+            return original_import(name, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", broken_import)
+        with pytest.raises(ModuleNotFoundError) as caught:
+            self.load()
+        assert caught.value is error
+
+
+# endregion

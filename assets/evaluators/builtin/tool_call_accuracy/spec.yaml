@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.tool_call_accuracy"
-version: 16
+version: 17
 displayName: "Tool-Call-Accuracy-Evaluator"
 description: "Measures whether the agent selects the correct tool calls, applies the correct parameters, and tracks inefficient or missing too calls, in order to resolve a user's request. This is an umbrella evaluators that assessing overall tool call quality. Use this metric in agent-based systems, and AI assistants that rely on tool integration."
 evaluatorType: "builtin"
@@ -12,6 +12,7 @@ tags:
 supportedEvaluationLevels: ["turn"]
 initParameterSchema:
   type: "object"
+  description: "Hosted initialization uses a named deployment resolved by the service."
   properties:
     deployment_name:
       type: "string"
@@ -22,6 +23,7 @@ initParameterSchema:
       multipleOf: 1
     evaluation_level:
       type: "string"
+      enum: ["turn"]
   required: ["deployment_name"]
 dataMappingSchema:
   type: "object"
@@ -39,6 +41,7 @@ dataMappingSchema:
           items:
             type: "object"
     tool_calls:
+      description: "Tool calls to evaluate. When provided and non-empty, they are used even if response is also passed, with matching execution results attached by tool_call_id. Assistant text from structured responses is excluded. When omitted or empty, calls are parsed from response."
       anyOf:
         - type: "object"
         - type: "array"
