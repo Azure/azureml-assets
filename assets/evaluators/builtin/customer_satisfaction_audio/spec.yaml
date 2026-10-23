@@ -1,0 +1,43 @@
+type: "evaluator"
+name: "builtin.customer_satisfaction_audio"
+version: 1
+displayName: "Customer-Satisfaction-Audio-Evaluator-(Preview)"
+description: "Evaluates overall user experience across a full audio conversation by assessing helpfulness, completeness, clarity, tone, resolution, and adaptability from the call recording, conversation history, and tool interactions, predicting customer satisfaction on a 1–5 Likert scale."
+evaluatorType: "builtin"
+evaluatorSubType: "code"
+categories: ["agents", "business"]
+tags:
+  is_continuous_scenario: "true"
+  is_audio_evaluator: "true"
+  provider: "Microsoft"
+supportedEvaluationLevels: ["conversation"]
+initParameterSchema:
+  type: "object"
+  properties:
+    deployment_name:
+      type: "string"
+    threshold:
+      type: "number"
+      minimum: 1
+      maximum: 5
+      multipleOf: 1
+    evaluation_level:
+      type: "string"
+  required: ["deployment_name"]
+dataMappingSchema:
+  type: "object"
+  properties:
+    messages:
+      type: "array"
+      items:
+        type: "object"
+    audio_path:
+      type: "string"
+  required: ["audio_path"]
+outputSchema:
+  customer_satisfaction:
+    type: "ordinal"
+    desirable_direction: "increase"
+    min_value: 1
+    max_value: 5
+path: ./evaluator
