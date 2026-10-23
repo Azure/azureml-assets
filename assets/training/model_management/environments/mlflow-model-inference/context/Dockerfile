@@ -1,5 +1,13 @@
 FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:{{latest-image-tag}}
 
+# Patch OpenSSH (USN-8928-1) and curl (USN-8932-1)
+RUN apt-get update && \
+    apt-get install -y --only-upgrade \
+        openssh-client openssh-server openssh-sftp-server \
+        curl libcurl4 libcurl3-gnutls && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 RUN mkdir -p /opt/miniconda/
 RUN mkdir -p etc/nginx/sites-available
 
@@ -89,6 +97,5 @@ RUN find / -path "*/pip/_vendor/bom.cdx.json" -delete 2>/dev/null || true
 RUN pip install pipdeptree
 
 USER dockeruser
-
-
+#
 CMD [ "runsvdir", "/var/runit" ]
