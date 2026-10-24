@@ -2,10 +2,11 @@
 
 ## OpenAI Decisions
 
-All 19 Decision-capable assets also support the Evaluation SDK's explicit `decision_protocol="openai"`
-configuration, using SDK 1.18.11 or a private build with that protocol adapter. Their published class and tag
-metadata advertise `microsoft,openai`; hosted selection remains a service-approved named deployment.
-Each affected asset version is incremented so a worker can require the tested protocol declaration.
+The same 19 PiLabs/Microsoft Decision-capable assets support the Evaluation SDK's explicit
+`decision_protocol="openai"` configuration, using SDK 1.18.11 or a private build with that protocol adapter.
+Their runtime code, rubrics, metadata and versions are unchanged. Protocol support belongs to the shared SDK;
+hosted selection remains a service-approved named deployment. OpenAI support requires no additional asset release
+once these Decision-capable asset versions are published. Older chat-only versions remain ineligible.
 
 The existing PiLabs/Microsoft rubrics are shared. The SDK translates them centrally to predicates and ordered
 score levels; the asset's original score, applicability, threshold and composite contracts remain authoritative.

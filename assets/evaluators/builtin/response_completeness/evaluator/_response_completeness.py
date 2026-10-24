@@ -159,7 +159,6 @@ class ResponseCompletenessEvaluator(ModelEvaluatorBase[Union[str, float]]):
     # Constants must be defined within eval's directory to be save/loadable
 
     _supports_decision_models = True
-    _supported_decision_protocols = ("microsoft", "openai")
     _DECISION_FILE = "response_completeness.decision.yaml"
     _PROMPTY_FILE = "response_completeness.prompty"
     _RESULT_KEY = "response_completeness"

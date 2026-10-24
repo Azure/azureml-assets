@@ -1,14 +1,13 @@
 type: "evaluator"
 id: "azureml://registries/azureml/evaluators/builtin.tool_use_quality/versions/1"
 name: "builtin.tool_use_quality"
-version: 8
+version: 7
 displayName: "Tool Use Quality Evaluator"
 description: "A composite evaluator that batches the tool_call_accuracy, tool_call_success, tool_input_accuracy, tool_output_utilization, and tool_selection evaluators into a single LLM call."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
 categories: ["agents"]
 tags:
-  decision_protocols: "microsoft,openai"
   provider: "Microsoft"
   recommended: "true"
   is_continuous_scenario: "true"

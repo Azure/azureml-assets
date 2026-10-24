@@ -131,7 +131,6 @@ class IntentResolutionEvaluator(ModelEvaluatorBase[Union[str, float]]):
     _PROMPTY_FILE = "intent_resolution.prompty"
     _DECISION_FILE = "intent_resolution.decision.yaml"
     _supports_decision_models = True
-    _supported_decision_protocols = ("microsoft", "openai")
     _RESULT_KEY = "intent_resolution"
     _OPTIONAL_PARAMS = ["tool_definitions"]
 

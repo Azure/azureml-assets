@@ -476,7 +476,6 @@ class TaskAdherenceEvaluator(ModelEvaluatorBase[Union[str, float]]):
     _DECISION_FILE = "task_adherence.decision.yaml"
     _MULTI_TURN_DECISION_FILE = "task_adherence_multi_turn.decision.yaml"
     _supports_decision_models = True
-    _supported_decision_protocols = ("microsoft", "openai")
     _binary_decision = True
     _RESULT_KEY = "task_adherence"
     _OPTIONAL_PARAMS = ["tool_definitions", "messages"]

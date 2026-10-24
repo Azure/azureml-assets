@@ -197,7 +197,6 @@ class FluencyEvaluator(ModelEvaluatorBase[Union[str, float]]):
     _PROMPTY_FILE = "fluency.prompty"
     _DECISION_FILE = "fluency.decision.yaml"
     _supports_decision_models = True
-    _supported_decision_protocols = ("microsoft", "openai")
     _RESULT_KEY = "fluency"
 
     _validator: ValidatorInterface

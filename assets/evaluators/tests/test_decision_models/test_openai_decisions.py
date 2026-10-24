@@ -52,7 +52,7 @@ def test_packaged_openai_decisions(tmp_path, name, scenario):
     """Preserve each asset's score/verdict, explicit refusals and request usage after packaging."""
     module = runpy.run_path(str(_package(tmp_path, name)))
     evaluator_type = _class(module, name)
-    assert "openai" in evaluator_type._supported_decision_protocols
+    assert evaluator_type._supports_decision_models
     with patch("azure.ai.evaluation._legacy.prompty.AsyncPrompty.load", side_effect=AssertionError("Chat loaded")):
         evaluator = evaluator_type(CONFIG)
     evaluator._decision_model_runner._post = AsyncMock(side_effect=reply(scenario))

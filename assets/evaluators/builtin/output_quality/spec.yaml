@@ -1,7 +1,7 @@
 type: "evaluator"
 id: "azureml://registries/azureml/evaluators/builtin.output_quality/versions/1"
 name: "builtin.output_quality"
-version: 7
+version: 6
 displayName: "Output Quality Evaluator"
 description: "A composite evaluator that batches fluency, coherence, intent_resolution, task_adherence, groundedness, and task_completion into a single LLM call."
 evaluatorType: "builtin"
@@ -9,7 +9,6 @@ evaluatorSubType: "code"
 categories: ["quality", "agents"]
 supportedEvaluationLevels: ["conversation", "turn"]
 tags:
-  decision_protocols: "microsoft,openai"
   provider: "Microsoft"
   recommended: "true"
   is_continuous_scenario: "true"

@@ -485,7 +485,6 @@ class CoherenceEvaluator(ModelEvaluatorBase[Union[str, float]]):
     _DECISION_FILE = "coherence.decision.yaml"
     _MULTI_TURN_DECISION_FILE = "coherence_multi_turn.decision.yaml"
     _supports_decision_models = True
-    _supported_decision_protocols = ("microsoft", "openai")
     _RESULT_KEY = "coherence"
     _OPTIONAL_PARAMS = ["messages"]
 

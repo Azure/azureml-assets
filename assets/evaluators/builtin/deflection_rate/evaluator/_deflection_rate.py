@@ -495,7 +495,6 @@ class DeflectionRateEvaluator(ModelEvaluatorBase[Union[str, int]]):
     """
 
     _supports_decision_models = True
-    _supported_decision_protocols = ("microsoft", "openai")
     _DECISION_FILE = "deflection_rate.decision.yaml"
     _PROMPTY_FILE = "deflection_rate.prompty"
     _MULTI_TURN_PROMPTY_FILE = "deflection_rate_multi_turn.prompty"
