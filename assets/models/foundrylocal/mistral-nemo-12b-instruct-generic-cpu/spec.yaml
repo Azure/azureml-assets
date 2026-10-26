@@ -6,12 +6,14 @@ tags:
   supportsReasoning: ''
   contextLength: 131072
 system_metadata:
-  previewType: hideUI
   alias: mistral-nemo-12b-instruct
   publisher: Microsoft
+  lifecycle: Generally available
   directoryPath: v1
   foundryLocal: ''
-  deploymentOptions: ['Foundry Local on Devices']
+  deploymentOptions:
+  - Foundry Local on Devices
+  - Foundry Local on Azure Local
   inputModalities:
   - text
   license: apache-2.0

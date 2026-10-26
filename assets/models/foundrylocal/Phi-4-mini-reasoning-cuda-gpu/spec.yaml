@@ -6,12 +6,47 @@ tags:
   supportsReasoning: 'true'
   contextLength: 131072
 system_metadata:
-  previewType: hideUI
   alias: phi-4-mini-reasoning
   publisher: Microsoft
+  lifecycle: Generally available
   directoryPath: v3
   foundryLocal: ''
-  deploymentOptions: ['Foundry Local on Devices']
+  deploymentOptions:
+  - Foundry Local on Devices
+  - Foundry Local on Azure Local
+  deploymentOptionDetails:
+    Foundry Local on Azure Local: |-
+      # Expected running times for phi-4-mini-reasoning
+
+      The results are for standard chat completion usages.
+
+      Mean metrics stand for the average performance, p99 metrics stand for the worst-performant percentile.
+
+      ## ONNX (cuda-gpu)
+
+      **Max model len**: 131072
+
+      ### Nvidia A10 GPU
+
+      | Maximal concurrency | Mean TTFT (ms) | P99 TTFT (ms) | Output throughput (tokens/s) |
+      |---|---|---|---|
+      | 1 request | 468.36 | 546.04 | 139.94 |
+      | 2 requests | 828.05 | 901.68 | 173.51 |
+      | 4 requests | 1499.32 | 1613.61 | 186.89 |
+      | 8 requests | 3348.60 | 8430.21 | 193.51 |
+
+      ### Nvidia RTX Pro 6000 vGPU
+
+      | Maximal concurrency | Mean TTFT (ms) | P99 TTFT (ms) | Output throughput (tokens/s) |
+      |---|---|---|---|
+      | 1 request | 281.69 | 883.70 | 311.76 |
+      | 2 requests | 495.75 | 729.26 | 306.56 |
+      | 4 requests | 854.26 | 1163.52 | 344.75 |
+      | 8 requests | 2415.32 | 3247.63 | 248.75 |
+
+      ---
+
+      Measured on build `0.260803.5`.
   inputModalities:
   - text
   license: MIT

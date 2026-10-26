@@ -6,12 +6,38 @@ tags:
   supportsReasoning: ''
   contextLength: 32768
 system_metadata:
-  previewType: hideUI
   alias: qwen2.5-coder-14b
   publisher: Microsoft
+  lifecycle: Generally available
   directoryPath: v4
   foundryLocal: ''
-  deploymentOptions: ['Foundry Local on Devices']
+  deploymentOptions:
+  - Foundry Local on Devices
+  - Foundry Local on Azure Local
+  deploymentOptionDetails:
+    Foundry Local on Azure Local: |-
+      # Expected running times for qwen2.5-coder-14b-instruct
+
+      The results are for standard chat completion usages.
+
+      Mean metrics stand for the average performance, p99 metrics stand for the worst-performant percentile.
+
+      ## ONNX (cuda-gpu)
+
+      **Max model len**: 32768
+
+      ### Nvidia RTX Pro 6000 vGPU
+
+      | Maximal concurrency | Mean TTFT (ms) | P99 TTFT (ms) | Output throughput (tokens/s) |
+      |---|---|---|---|
+      | 1 request | 605.90 | 1617.83 | 114.11 |
+      | 2 requests | 911.06 | 1162.72 | 150.91 |
+      | 4 requests | 1606.83 | 2128.13 | 165.96 |
+      | 8 requests | 3349.88 | 5147.37 | 166.22 |
+
+      ---
+
+      Measured on Foundry on Arc build `0.260803.5`.
   inputModalities:
   - text
   license: apache-2.0
