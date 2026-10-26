@@ -3,6 +3,10 @@
 
 """Behavioral tests for Customer Satisfaction Evaluator."""
 
+import asyncio
+import builtins
+from copy import deepcopy
+
 import pytest
 from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock
@@ -14,6 +18,7 @@ from .base_evaluator_behavior_test import (
     _TurnLevelUtilE2ETests,
     _MessagesUtilE2ETests,
 )
+from .base_decision_routing_test import DecisionRoutingTests, construct_evaluator, enable_fake_decision_sdk
 from .base_validator_unit_test import (
     AgentResponseReformatUnitTests,
     ConversationSerializationUnitTests,
@@ -681,3 +686,74 @@ class TestCustomerSatisfactionValidatorUnit(
     """Low-level unit tests for customer_satisfaction's repeated validators, utils and methods."""
 
     evaluator_class = CustomerSatisfactionEvaluator
+
+
+# region Native Decision routing coverage on the released SDK
+
+DECISION_STRATEGY_MODULE = "azure.ai.evaluation._evaluators._common._decision_strategy"
+
+
+@pytest.mark.unittest
+class TestCustomerSatisfactionDecisionRouting(DecisionRoutingTests):
+    """Cover the native Decision branches of customer_satisfaction without a Decision-capable SDK."""
+
+    result_key = "customer_satisfaction"
+    class_name = "CustomerSatisfactionEvaluator"
+    inputs = {"query": "I need to cancel my order.", "response": "I have cancelled it."}
+    expected_strategies = 2
+
+    def test_broken_decision_import_is_not_hidden(self, monkeypatch):
+        """A broken SDK dependency propagates instead of being read as a missing Decision capability."""
+        original_import = builtins.__import__
+        error = ModuleNotFoundError(name="broken_dependency")
+
+        def broken_import(name, *args, **kwargs):
+            if name == DECISION_STRATEGY_MODULE:
+                raise error
+            return original_import(name, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", broken_import)
+        with pytest.raises(ModuleNotFoundError) as caught:
+            self.load()
+        assert caught.value is error
+
+    def test_turn_state_is_the_rendered_query_and_response(self, monkeypatch):
+        """The turn-level native state carries only the prepared query and response, never routing keys."""
+        module = self.load()
+        enable_fake_decision_sdk(monkeypatch, module, self.class_name, result_key=self.result_key)
+        evaluator, _ = construct_evaluator(module, self.class_name)
+        result = evaluator(query="I need to cancel my order.", response="I have cancelled it.")
+        assert result == {"customer_satisfaction": 1}
+        state = evaluator._strategy.evaluate.await_args.args[0]
+        assert state == {"query": "I need to cancel my order.", "response": "I have cancelled it."}
+        evaluator._multi_turn_strategy.evaluate.assert_not_awaited()
+
+    def test_forced_turn_level_splits_messages_without_routing_keys(self, monkeypatch):
+        """Forced turn evaluation of messages builds a query and response state with no messages key."""
+        module = self.load()
+        enable_fake_decision_sdk(monkeypatch, module, self.class_name, result_key=self.result_key)
+        evaluator, _ = construct_evaluator(module, self.class_name, evaluation_level="turn")
+        assert evaluator(messages=deepcopy(VALID_MESSAGES)) == {"customer_satisfaction": 1}
+        state = evaluator._strategy.evaluate.await_args.args[0]
+        assert set(state) == {"query", "response"}
+        assert "Has my other order #12346 shipped?" in state["query"]
+        assert "shipped yesterday via FedEx" in state["response"]
+
+    def test_conversation_state_is_the_serialized_transcript(self, monkeypatch):
+        """Messages route to the conversation strategy with the serialized transcript as the only field."""
+        module = self.load()
+        enable_fake_decision_sdk(monkeypatch, module, self.class_name, result_key=self.result_key)
+        evaluator, _ = construct_evaluator(module, self.class_name)
+        assert evaluator(messages=deepcopy(VALID_MESSAGES)) == {"customer_satisfaction": 1}
+        state = evaluator._multi_turn_strategy.evaluate.await_args.args[0]
+        assert state == {"conversation": serialize_messages(VALID_MESSAGES)}
+        evaluator._strategy.evaluate.assert_not_awaited()
+
+    def test_turn_level_requires_query_and_response(self):
+        """A turn-level input missing the query or the response raises a missing-field error."""
+        evaluator = _create_mocked_evaluator()
+        with pytest.raises(EvaluationException):
+            asyncio.run(evaluator._do_eval({"query": "I need to cancel my order."}))
+
+
+# endregion

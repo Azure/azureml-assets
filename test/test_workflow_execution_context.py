@@ -4,8 +4,10 @@
 """Protect the shared CI policy against label-based fork approval."""
 
 from pathlib import Path
+import runpy
 import shlex
 import subprocess
+import xml.etree.ElementTree as ET
 
 import pytest
 import yaml
@@ -121,7 +123,32 @@ def test_assets_test_has_fixed_summary_check():
     assert jobs["test-summary"]["if"] == REPORT_GATE
     assert set(jobs["test-summary"]["needs"]) == {
         GATE_JOB, "check-directory-file-changes", "setup", "test",
+        "released-sdk-compatibility", "candidate-native-sdk",
     }
+    compatibility = jobs["released-sdk-compatibility"]
+    assert compatibility["permissions"] == {"contents": "read"}
+    assert compatibility["if"] == (
+        "contains(needs.check-directory-file-changes.outputs.files-changed, 'assets/evaluators/')"
+    )
+    assert set(compatibility["needs"]) == {GATE_JOB, "check-directory-file-changes"}
+    assert "released-sdk-compatibility" in jobs["report"]["needs"]
+    assert compatibility["env"]["AZUREML_COMPAT_SDK_ROOT"] == (
+        "${{ github.workspace }}/.released-sdk-compatibility"
+    )
+    native = jobs["candidate-native-sdk"]
+    assert native["permissions"] == {"contents": "read"}
+    assert native["if"] == compatibility["if"]
+    assert native["needs"] == compatibility["needs"]
+    assert "candidate-native-sdk" in jobs["report"]["needs"]
+    command = next(step["run"] for step in native["steps"] if "run" in step)
+    assert "python -m pip wheel --no-deps" in command
+    assert "python scripts/test/check_native_sdk.py" in command
+    compatibility_command = "\n".join(step.get("run", "") for step in compatibility["steps"])
+    for module in ("output_quality", "tool_use_quality"):
+        path = f"assets/evaluators/tests/test_evaluators_behavior/test_{module}_evaluator_behavior.py"
+        assert path in command
+        assert path not in compatibility_command
+    assert "environment" not in native
 
 
 @pytest.mark.parametrize(
@@ -157,13 +184,39 @@ def test_assets_test_has_fixed_summary_check():
           "TEST_COUNT": "", "TEST_RESULT": "skipped"}, 1),
         ({"CHANGES_RESULT": "cancelled", "CHANGED_FILES": "", "SETUP_RESULT": "skipped",
           "TEST_COUNT": "", "TEST_RESULT": "skipped"}, 1),
+        ({"CHANGES_RESULT": "success", "CHANGED_FILES": "assets/evaluators/builtin/output_quality/spec.yaml",
+          "SETUP_RESULT": "success", "TEST_COUNT": "1", "TEST_RESULT": "success",
+          "RELEASED_SDK_RESULT": "success", "NATIVE_SDK_RESULT": "success"}, 0),
+        ({"CHANGES_RESULT": "success", "CHANGED_FILES": "assets/evaluators/tests/test_decision_models/conftest.py",
+          "SETUP_RESULT": "success", "TEST_COUNT": "0", "TEST_RESULT": "skipped",
+          "RELEASED_SDK_RESULT": "success", "NATIVE_SDK_RESULT": "success"}, 0),
+        ({"CHANGES_RESULT": "success", "CHANGED_FILES": "assets/evaluators/builtin/output_quality/spec.yaml",
+          "SETUP_RESULT": "success", "TEST_COUNT": "1", "TEST_RESULT": "success",
+          "RELEASED_SDK_RESULT": "failure"}, 1),
+        ({"CHANGES_RESULT": "success", "CHANGED_FILES": "assets/evaluators/builtin/output_quality/spec.yaml",
+          "SETUP_RESULT": "success", "TEST_COUNT": "1", "TEST_RESULT": "success",
+          "RELEASED_SDK_RESULT": "cancelled"}, 1),
+        ({"CHANGES_RESULT": "success", "CHANGED_FILES": "assets/evaluators/builtin/output_quality/spec.yaml",
+          "SETUP_RESULT": "success", "TEST_COUNT": "1", "TEST_RESULT": "success",
+          "RELEASED_SDK_RESULT": "skipped"}, 1),
+        ({"CHANGES_RESULT": "success", "CHANGED_FILES": "assets/a", "SETUP_RESULT": "success",
+          "TEST_COUNT": "1", "TEST_RESULT": "success", "RELEASED_SDK_RESULT": "success"}, 1),
+        *[
+            ({"CHANGES_RESULT": "success", "CHANGED_FILES": "assets/evaluators/tests/test_decision_models/conftest.py",
+              "SETUP_RESULT": "success", "TEST_COUNT": "0", "TEST_RESULT": "skipped",
+              "RELEASED_SDK_RESULT": "success", "NATIVE_SDK_RESULT": result}, 1)
+            for result in ("failure", "cancelled", "skipped")
+        ],
+        ({"CHANGES_RESULT": "success", "CHANGED_FILES": "assets/a", "SETUP_RESULT": "success",
+          "TEST_COUNT": "0", "TEST_RESULT": "skipped", "NATIVE_SDK_RESULT": "success"}, 1),
     ],
 )
 def test_assets_test_summary_result(state, expected, tmp_path):
     """Exercise successful, failed, cancelled and legitimate skip outcomes."""
     step = load_workflow("assets-test.yaml")["jobs"]["test-summary"]["steps"][0]
     environment = "\n".join(
-        f"export {name}={shlex.quote(value)}" for name, value in state.items()
+        f"export {name}={shlex.quote(value)}"
+        for name, value in {"RELEASED_SDK_RESULT": "skipped", "NATIVE_SDK_RESULT": "skipped", **state}.items()
     )
     script = tmp_path / "test-summary.sh"
     script.write_text(f"{environment}\n{step['run']}", encoding="utf-8", newline="\n")
@@ -175,3 +228,64 @@ def test_assets_test_summary_result(state, expected, tmp_path):
         text=True,
     )
     assert result.returncode == expected, result.stdout + result.stderr
+
+
+@pytest.mark.parametrize("change", [
+    None, "additive", "nested_classes", "missing_module", "missing_cases", "missing_native_variant",
+    "missing_owned_native_case", "wrong_native_owner", "unknown_classname", "ambiguous_classname",
+    "skipped", "failure", "error",
+])
+def test_candidate_native_report_rejects_incomplete_or_skipped_coverage(tmp_path, change):
+    """Reject missing native modules, required cases or nonpassing results."""
+    runner = runpy.run_path(str(WORKFLOWS_DIR.parents[1] / "scripts" / "test" / "check_native_sdk.py"))
+
+    def owning_module(name):
+        if name.startswith("test_packaged_expansion_public_usage["):
+            return "test_expansion_compatibility"
+        return "test_composites" if "public_evaluate" in name else "test_evaluators"
+
+    tree = ET.Element("testsuite")
+    for module, minimum in runner["MINIMUM_CASES"].items():
+        required = sorted(
+            {name for name in runner["REQUIRED_CASES"] if owning_module(name) == module}
+            | runner["REQUIRED_MODULE_CASES"].get(module, set())
+        )
+        assert len(required) <= minimum
+        names = required + [f"test_additional[{index}]" for index in range(minimum - len(required))]
+        for name in names:
+            ET.SubElement(tree, "testcase", classname=f"assets.tests.{module}", name=name)
+    first = tree[0]
+    if change == "additive":
+        ET.SubElement(tree, "testcase", classname=first.get("classname"), name=first.get("name") + "[new]")
+    elif change == "nested_classes":
+        for case in tree:
+            case.set("classname", case.get("classname") + ".TestNativeBehavior")
+    elif change == "missing_module":
+        for case in list(tree):
+            if case.get("classname") == first.get("classname"):
+                tree.remove(case)
+    elif change == "missing_cases":
+        tree.remove(first)
+    elif change == "missing_native_variant":
+        first.set("name", "test_replacement")
+    elif change in ("missing_owned_native_case", "wrong_native_owner"):
+        module, required = next(iter(runner["REQUIRED_MODULE_CASES"].items()))
+        name = sorted(required)[0]
+        case = next(case for case in tree
+                    if case.get("classname") == f"assets.tests.{module}" and case.get("name") == name)
+        case.set("name", "test_replacement")
+        if change == "wrong_native_owner":
+            ET.SubElement(tree, "testcase", classname=first.get("classname"), name=name)
+    elif change == "unknown_classname":
+        first.set("classname", "assets.tests.unexpected_module.TestNativeBehavior")
+    elif change == "ambiguous_classname":
+        first.set("classname", first.get("classname") + ".test_composites")
+    elif change in ("skipped", "failure", "error"):
+        ET.SubElement(first, change)
+    report = tmp_path / "native.xml"
+    ET.ElementTree(tree).write(report)
+    if change in (None, "additive", "nested_classes"):
+        runner["verify_report"](report)
+    else:
+        with pytest.raises(AssertionError):
+            runner["verify_report"](report)

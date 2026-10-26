@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 import os
+import json
 import logging
 from enum import Enum
 from typing import Any, Dict, Union, List, Optional, Tuple
@@ -8,7 +9,6 @@ from typing import Any, Dict, Union, List, Optional, Tuple
 from typing_extensions import overload, override
 
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
-from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 from azure.ai.evaluation._model_configurations import Conversation
 from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
 from azure.ai.evaluation._common._experimental import experimental
@@ -22,6 +22,8 @@ from azure.ai.evaluation._evaluators._common._validators import (
     ConversationValidator,
     ToolDefinitionsValidator,
 )
+
+from azure.ai.evaluation._evaluators import _common as _sdk_common
 
 # ---------------------------------------------------------------------------
 # Imports target azure-ai-evaluation >= 1.18.1. Each ``except ImportError``
@@ -405,6 +407,31 @@ else:
     from azure.ai.evaluation._legacy.prompty import AsyncPrompty
 
 
+ModelEvaluatorBase = getattr(_sdk_common, "ModelEvaluatorBase", _sdk_common.PromptyEvaluatorBase)
+try:
+    from azure.ai.evaluation._evaluators._common._decision_strategy import DecisionEvaluationStrategy, LikertScoring
+except ImportError as exc:
+    if exc.name != "azure.ai.evaluation._evaluators._common._decision_strategy":
+        raise
+    DecisionEvaluationStrategy = LikertScoring = None
+_SDK_SUPPORTS_DECISION = (
+    hasattr(_sdk_common, "ModelEvaluatorBase") and DecisionEvaluationStrategy is not None and LikertScoring is not None
+)
+
+
+def _load_decision_questions(path: str, question_id: str) -> Dict:
+    """Load the packaged applicability and rating questions without initializing a chat flow."""
+    from azure.ai.evaluation._legacy.prompty._yaml_utils import load_yaml
+
+    rubric = json.loads(json.dumps(load_yaml(path)))
+    return {"status": rubric["status"], question_id: rubric["result"]}
+
+
+def _native_state(eval_input: Dict, *names: str) -> Dict:
+    """Project prepared inputs to the fields the chat prompt renders, omitting absent values."""
+    return {name: eval_input[name] for name in names if eval_input.get(name) is not None}
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -413,7 +440,7 @@ _ERROR_TARGET = getattr(ErrorTarget, "CUSTOMER_SATISFACTION_EVALUATOR", ErrorTar
 
 
 @experimental
-class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
+class CustomerSatisfactionEvaluator(ModelEvaluatorBase[Union[str, float]]):
     """The Customer Satisfaction evaluator predicts customer satisfaction on a 1-5 Likert scale.
 
     This evaluator assesses whether an AI agent's response would likely result in a satisfied
@@ -431,7 +458,9 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     - 2: Dissatisfied - Failed to adequately address needs
     - 1: Very Dissatisfied - Completely failed to help or made things worse
 
-    :param model_config: Configuration for the Azure OpenAI model.
+    :param model_config: Configuration for a chat model, or a mapping with ``type="decision"``,
+        ``azure_endpoint`` and ``azure_deployment`` for a native Decision model.
+        Authenticate with ``api_key`` or ``credential``.
     :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
         ~azure.ai.evaluation.OpenAIModelConfiguration]
     :param threshold: The threshold for the evaluator. Default is 3.
@@ -447,8 +476,11 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
     """
 
+    _supports_decision_models = True
+    _DECISION_FILE = "customer_satisfaction.decision.yaml"
     _PROMPTY_FILE = "customer_satisfaction.prompty"
     _MULTI_TURN_PROMPTY_FILE = "customer_satisfaction_multi_turn.prompty"
+    _MULTI_TURN_DECISION_FILE = "customer_satisfaction_multi_turn.decision.yaml"
     _RESULT_KEY = "customer_satisfaction"
     _OPTIONAL_PARAMS = ["messages"]
 
@@ -461,7 +493,9 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     def __init__(self, model_config, *, credential=None, threshold=3, evaluation_level=None, **kwargs):
         """Initialize the CustomerSatisfactionEvaluator.
 
-        :param model_config: Configuration for the Azure OpenAI model.
+        :param model_config: Configuration for a chat model, or a mapping with ``type="decision"``,
+        ``azure_endpoint`` and ``azure_deployment`` for a native Decision model.
+        Authenticate with ``api_key`` or ``credential``.
         :type model_config: Union[AzureOpenAIModelConfiguration, OpenAIModelConfiguration]
         :keyword credential: Credential for authentication.
         :type credential: Optional[TokenCredential]
@@ -490,6 +524,16 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             requires_query=True,
         )
 
+        self._decision_selected = isinstance(model_config, dict) and model_config.get("type") == "decision"
+        self._strategy = None
+        if self._decision_selected and not _SDK_SUPPORTS_DECISION:
+            raise EvaluationException(
+                message="Decision models require an azure-ai-evaluation version with decision model support.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=_ERROR_TARGET,
+            )
+
         super().__init__(
             model_config=model_config,
             prompty_file=prompty_path,
@@ -499,6 +543,13 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             _higher_is_better=self._higher_is_better,
             **kwargs,
         )
+
+        if self._decision_selected:
+            self._strategy = self._create_decision_strategy(os.path.join(current_dir, self._DECISION_FILE))
+            self._multi_turn_strategy = self._create_decision_strategy(
+                os.path.join(current_dir, self._MULTI_TURN_DECISION_FILE)
+            )
+            return
 
         # Load the multi-turn prompty flow for multi-turn evaluation
         multi_turn_prompty_path = os.path.join(current_dir, self._MULTI_TURN_PROMPTY_FILE)
@@ -512,6 +563,18 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             model=prompty_model_config,
             token_credential=credential,
             is_reasoning_model=self._is_reasoning_model,
+        )
+
+    def _create_decision_strategy(self, path: str):
+        """Use the SDK runner and scoring with this asset's packaged rubric."""
+        return DecisionEvaluationStrategy(
+            self._decision_model_runner,
+            result_key=self._result_key,
+            error_target=_ERROR_TARGET,
+            questions=_load_decision_questions(path, self._result_key),
+            scoring=LikertScoring(5, minimum=1),
+            threshold=self._threshold,
+            timeout=self._LLM_CALL_TIMEOUT,
         )
 
     @overload
@@ -638,8 +701,10 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         if self._evaluation_level == EvaluationLevel.CONVERSATION and not kwargs.get("messages"):
             query = kwargs.get("query")
             response = kwargs.get("response")
-            if isinstance(query, str) and isinstance(response, str) and query and response:
-                query, response = _wrap_string_messages(query, response)
+            if isinstance(query, str) and query:
+                query, _ = _wrap_string_messages(query, "")
+            if isinstance(response, str) and response:
+                _, response = _wrap_string_messages("", response)
             if isinstance(query, list) and isinstance(response, list):
                 kwargs["messages"] = _merge_query_response_messages(query, response)
         elif self._evaluation_level == EvaluationLevel.TURN and kwargs.get("messages"):
@@ -661,6 +726,9 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: The evaluation result.
         :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
         """
+        if self._decision_selected:
+            return await super()._real_call(**kwargs)
+
         # Convert inputs into list of evaluable inputs.
         try:
             eval_input_list = self._convert_kwargs_to_eval_input(**kwargs)
@@ -767,6 +835,10 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 eval_input["response"], logger, include_tool_messages=True
             )
 
+        if self._decision_selected:
+            # The native state is the evidence the chat prompt renders: the prepared query and response.
+            return await self._strategy.evaluate(_native_state(eval_input, "query", "response"))
+
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         return self._parse_prompty_output(prompty_output_dict)
 
@@ -784,6 +856,9 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         conversation_text = serialize_messages(messages)
 
         prompty_kwargs: Dict[str, Any] = {"conversation": conversation_text}
+
+        if self._decision_selected:
+            return await self._multi_turn_strategy.evaluate(prompty_kwargs)
 
         prompty_output_dict = await self._multi_turn_flow(timeout=self._LLM_CALL_TIMEOUT, **prompty_kwargs)
         return self._parse_prompty_output(prompty_output_dict)

@@ -4,6 +4,7 @@
 """Behavioral tests for Response Completeness Evaluator."""
 
 import asyncio
+import builtins
 import math
 from unittest.mock import MagicMock
 
@@ -16,6 +17,7 @@ from ..common.evaluator_mock_config import (
     run_none_score_not_applicable,
     run_intermediate_response_not_applicable,
 )
+from . import base_decision_routing_test as routing
 from .base_validator_unit_test import (
     CorePromptyValidatorUnitTests,
     MessagePreprocessUnitTests,
@@ -716,3 +718,58 @@ class TestResponseCompletenessDoEvalBranches:
         evaluator._flow = MagicMock(side_effect=str_flow)
         with pytest.raises(EvaluationException):
             asyncio.run(evaluator._do_eval({"ground_truth": "gt", "response": "r"}))
+
+
+# region Decision routing (released SDK)
+
+
+@pytest.mark.unittest
+class TestResponseCompletenessDecisionRouting(routing.DecisionRoutingTests):
+    """Cover the native Decision branches on the released SDK the asset job installs."""
+
+    result_key = "response_completeness"
+    class_name = "ResponseCompletenessEvaluator"
+    inputs = {"response": "The Amazon River is in South America.", "ground_truth": "Amazon River"}
+
+    def _native(self, monkeypatch):
+        """Construct an evaluator that routes natively against mocked strategies and return it."""
+        module = self.load()
+        routing.enable_fake_decision_sdk(monkeypatch, module, self.class_name, result_key=self.result_key)
+        evaluator, _ = routing.construct_evaluator(module, self.class_name)
+        return evaluator
+
+    def test_public_call_routes_through_the_shared_base_loop(self, monkeypatch):
+        """A public native call reaches the SDK loop and sends exactly the response and ground truth."""
+        evaluator = self._native(monkeypatch)
+        assert evaluator(**self.inputs) == {"response_completeness": 1}
+        evaluator._strategy.evaluate.assert_awaited_once_with(dict(self.inputs))
+
+    def test_messages_without_a_user_turn_are_reported_as_user_error(self, monkeypatch):
+        """A message split failure surfaces as an evaluation error on the chat path."""
+        module = self.load()
+
+        def fail(messages):
+            raise ValueError("messages must contain at least one message with role 'user'.")
+
+        monkeypatch.setitem(routing.module_namespace(module, self.class_name), "_split_messages_at_latest_user", fail)
+        evaluator, _ = routing.construct_evaluator(module, self.class_name, config=routing.CHAT_CONFIG)
+        with pytest.raises(EvaluationException, match="at least one message with role 'user'"):
+            evaluator(messages=[{"role": "assistant", "content": "Hello"}])
+
+    def test_broken_decision_import_is_not_hidden(self, monkeypatch):
+        """A dependency failure inside the strategy module propagates instead of reading as an older SDK."""
+        original_import = builtins.__import__
+        error = ModuleNotFoundError(name="broken_dependency")
+
+        def broken_import(name, *args, **kwargs):
+            if name == "azure.ai.evaluation._evaluators._common._decision_strategy":
+                raise error
+            return original_import(name, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", broken_import)
+        with pytest.raises(ModuleNotFoundError) as caught:
+            self.load()
+        assert caught.value is error
+
+
+# endregion
