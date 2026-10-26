@@ -51,7 +51,7 @@ def _make_evaluator(**kwargs) -> CoherenceAudioEvaluator:
 
 @pytest.mark.unittest
 class TestCoherenceAudioJudgeScores(AudioJudgeScoreHandlingTests):
-    """Exercise real Realtime validation as well as defensive parser guards."""
+    """Exercise score validation at the real Realtime client boundary."""
 
     evaluator_class = CoherenceAudioEvaluator
     evaluator_name = "coherence_audio"

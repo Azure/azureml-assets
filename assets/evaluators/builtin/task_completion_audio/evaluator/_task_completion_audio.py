@@ -878,15 +878,7 @@ class TaskCompletionAudioEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             reason = llm_output.get("reason", "")
             return self._return_not_applicable_result(reason, self._threshold)
 
-        score = llm_output.get("score", 0)
-        if score is None:
-            raise EvaluationException(
-                message="Evaluator returned a null score.",
-                blame=ErrorBlame.SYSTEM_ERROR,
-                category=ErrorCategory.FAILED_EXECUTION,
-                target=ExtendedErrorTarget.TASK_COMPLETION_AUDIO_EVALUATOR,
-            )
-        score = float(score)
+        score = float(llm_output.get("score", 0))
         success_result = "pass" if score >= float(self._threshold) else "fail"
         reason = llm_output.get("reason", "")
         llm_properties = llm_output.get("properties", {}) or {}

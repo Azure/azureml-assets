@@ -51,7 +51,7 @@ def _make_evaluator(**kwargs) -> CustomerSatisfactionAudioEvaluator:
 
 @pytest.mark.unittest
 class TestCustomerSatisfactionAudioJudgeScores(AudioJudgeScoreHandlingTests):
-    """Exercise real Realtime validation as well as defensive parser guards."""
+    """Exercise score validation at the real Realtime client boundary."""
 
     evaluator_class = CustomerSatisfactionAudioEvaluator
     evaluator_name = "customer_satisfaction_audio"

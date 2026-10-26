@@ -20,8 +20,19 @@ from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
 from .base_tool_calls_evaluator_behavior_test import BaseToolCallEvaluatorBehaviorTest
 
 
+def _make_evaluator(evaluator_class: Any) -> Any:
+    """Construct the asset's evaluator without relying on ambient credentials."""
+    return evaluator_class(
+        model_config=AzureOpenAIModelConfiguration(
+            azure_endpoint="https://example.openai.azure.com",
+            azure_deployment="offline-score-test",
+        ),
+        credential=Mock(),
+    )
+
+
 class JudgeScoreHandlingTests:
-    """Shared parser regressions inherited by each declared asset test class."""
+    """Exercise text score parsing through each declared asset test class."""
 
     evaluator_class: Any
     evaluator_name: str
@@ -33,22 +44,12 @@ class JudgeScoreHandlingTests:
             "socket.getaddrinfo",
             Mock(side_effect=AssertionError("Score tests must not access the network.")),
         )
-        evaluator = self._make_evaluator()
+        evaluator = _make_evaluator(self.evaluator_class)
         judge = AsyncMock()
         evaluator._flow = judge
         if hasattr(evaluator, "_multi_turn_flow"):
             evaluator._multi_turn_flow = judge
         return evaluator, judge, self._text_inputs(request.param)
-
-    def _make_evaluator(self) -> Any:
-        """Construct the asset's evaluator without relying on ambient credentials."""
-        return self.evaluator_class(
-            model_config=AzureOpenAIModelConfiguration(
-                azure_endpoint="https://example.openai.azure.com",
-                azure_deployment="offline-score-test",
-            ),
-            credential=Mock(),
-        )
 
     def _text_inputs(self, mode: str) -> Dict[str, Any]:
         """Use valid existing fixtures for turn and messages routing."""
@@ -76,21 +77,13 @@ class JudgeScoreHandlingTests:
     def _evaluate(score_case, llm_output: Dict[str, Any]) -> Dict[str, Any]:
         """Inject judge output through the public evaluator call."""
         evaluator, judge, inputs = score_case
-        if hasattr(evaluator, "_realtime_client"):
-            judge.return_value = SimpleNamespace(
-                evaluation=llm_output,
-                usage={"input_tokens": 7, "output_tokens": 3, "total_tokens": 10},
-                status="completed",
-                model="offline-judge",
-            )
-        else:
-            judge.return_value = {
-                "llm_output": llm_output,
-                "input_token_count": 7,
-                "output_token_count": 3,
-                "total_token_count": 10,
-                "model_id": "offline-judge",
-            }
+        judge.return_value = {
+            "llm_output": llm_output,
+            "input_token_count": 7,
+            "output_token_count": 3,
+            "total_token_count": 10,
+            "model_id": "offline-judge",
+        }
         return evaluator(**deepcopy(inputs))
 
     @pytest.mark.parametrize("status_fields", [
@@ -159,9 +152,10 @@ class JudgeScoreHandlingTests:
         judge.assert_awaited_once()
 
 
-class AudioJudgeScoreHandlingTests(JudgeScoreHandlingTests):
-    """Exercise both defensive parser guards and real Realtime response parsing."""
+class AudioJudgeScoreHandlingTests:
+    """Exercise score validation through the real Realtime client."""
 
+    evaluator_class: Any
     judge_properties: Dict[str, Any]
 
     @pytest.fixture
@@ -171,20 +165,12 @@ class AudioJudgeScoreHandlingTests(JudgeScoreHandlingTests):
             "socket.getaddrinfo",
             Mock(side_effect=AssertionError("Audio score tests must not access the network.")),
         )
-        evaluator = self._make_evaluator()
+        evaluator = _make_evaluator(self.evaluator_class)
         audio_path = tmp_path / "call.wav"
         with wave.open(str(audio_path), "wb") as audio:
             audio.setparams((1, 2, 24_000, 0, "NONE", "not compressed"))
             audio.writeframes(bytes(4_800))
         return evaluator, {"audio_path": str(audio_path)}
-
-    @pytest.fixture
-    def score_case(self, audio_case):
-        """Isolate the downstream parser independently of the transport contract."""
-        evaluator, inputs = audio_case
-        judge = AsyncMock()
-        evaluator._realtime_client.evaluate = judge
-        return evaluator, judge, inputs
 
     def _mock_websocket(self, monkeypatch, payload: Dict[str, Any]) -> Mock:
         """Mock only authentication and WebSocket I/O, not response validation."""
@@ -260,6 +246,8 @@ class AudioJudgeScoreHandlingTests(JudgeScoreHandlingTests):
         assert result[f"{key}_score"] == score
         assert result[f"{key}_result"] == ("not_applicable" if outcome == "skipped" else outcome)
         assert result[f"{key}_status"] == ("skipped" if outcome == "skipped" else "completed")
+        expected_passed = None if outcome == "skipped" else outcome == "pass"
+        assert result[f"{key}_passed"] is expected_passed
         if outcome != "skipped":
             assert result[f"{key}_total_tokens"] == 10
             assert result[f"{key}_model"] == "offline-judge"

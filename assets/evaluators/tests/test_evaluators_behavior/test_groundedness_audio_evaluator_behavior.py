@@ -51,7 +51,7 @@ def _make_evaluator(**kwargs) -> GroundednessAudioEvaluator:
 
 @pytest.mark.unittest
 class TestGroundednessAudioJudgeScores(AudioJudgeScoreHandlingTests):
-    """Exercise real Realtime validation as well as defensive parser guards."""
+    """Exercise score validation at the real Realtime client boundary."""
 
     evaluator_class = GroundednessAudioEvaluator
     evaluator_name = "groundedness_audio"
