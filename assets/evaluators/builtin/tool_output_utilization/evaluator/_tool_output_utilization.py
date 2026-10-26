@@ -436,6 +436,14 @@ class ToolOutputUtilizationEvaluator(ModelEvaluatorBase[Union[str, float]]):
         :return: The evaluation result.
         :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
         """
+        if "conversation" in kwargs:
+            raise EvaluationException(
+                message="conversation is not a supported input. Use messages, query, and response instead.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=ErrorTarget.TOOL_OUTPUT_UTILIZATION_EVALUATOR,
+            )
+
         messages = kwargs.pop("messages", None)
         if messages is not None:
             try:
@@ -450,17 +458,6 @@ class ToolOutputUtilizationEvaluator(ModelEvaluatorBase[Union[str, float]]):
 
         self._validator.validate_eval_input(kwargs)
         return await self._the_super_real_call(**kwargs)
-
-    def _convert_kwargs_to_eval_input(self, **kwargs):
-        """Reject conversation input, which this evaluator does not support."""
-        if kwargs.get("conversation") is not None:
-            raise EvaluationException(
-                message="Tool Output Utilization does not support conversation input.",
-                blame=ErrorBlame.USER_ERROR,
-                category=ErrorCategory.INVALID_VALUE,
-                target=ErrorTarget.TOOL_OUTPUT_UTILIZATION_EVALUATOR,
-            )
-        return super()._convert_kwargs_to_eval_input(**kwargs)
 
     async def _the_super_real_call(self, **kwargs):
         """Perform the asynchronous call where real end-to-end evaluation logic runs.

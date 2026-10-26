@@ -407,7 +407,7 @@ def test_success_public_split_turn_failure_preserves_prior_paid_usage(failure, a
 
 @pytest.mark.parametrize("with_definitions", [False, True])
 def test_utilization_public_conversation_rejection_does_not_invent_split_support(with_definitions):
-    """Keep the existing required-definition and conversation/singleton validation boundaries."""
+    """Reject the unsupported conversation wrapper independently of optional definitions."""
     evaluator = native_evaluator(ToolOutputUtilizationEvaluator)
     kwargs = {"conversation": _serialized_tool_conversation()}
     if with_definitions:
