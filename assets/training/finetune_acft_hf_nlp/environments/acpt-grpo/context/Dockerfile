@@ -109,9 +109,9 @@ RUN python3 /tmp/patch_log4j.py 2.25.5 && rm -f /tmp/patch_log4j.py
 # GHSA-wjgm-6hv5-3cvf. jackson-core is kept in lockstep with jackson-databind.
 COPY patch_ray_jackson_databind.py /tmp/patch_ray_jackson_databind.py
 RUN JACKSON_ARTIFACT=jackson-core \
-    JACKSON_VERSION=2.18.10 \
-    JACKSON_JAR_SHA1=1672b43237bf3ebb63aee2c3cfa316fa7665a316 \
-    JACKSON_POM_SHA1=326ab798972022e9f3d16dc0e98fc104b9435ff3 \
+    JACKSON_VERSION=2.18.11 \
+    JACKSON_JAR_SHA1=b5c602a7ffc5124c3d6b1f9a291e5014d5695025 \
+    JACKSON_POM_SHA1=6ddbd5aca839321631ea526d41e106750d78d67c \
     python3 /tmp/patch_ray_jackson_databind.py && \
     JACKSON_ARTIFACT=jackson-databind \
     JACKSON_VERSION=2.18.11 \
@@ -135,7 +135,7 @@ RUN find /opt/conda -type d \( -name 'setuptools-70.3.0.dist-info' -o -name 'msg
 # Refresh packages for the latest Ubuntu security advisories.
 RUN set -eux; \
     apt-get update; \
-    security_packages="curl libcurl3-gnutls libcurl4 libevent-core-2.1-7 libexpat1 libssl-dev libssl3 openssl"; \
+    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libevent-core-2.1-7 libexpat1 libssl-dev libssl3 libx11-6 libx11-data libx11-xcb1 libxml2 openssh-client openssh-server openssh-sftp-server openssl"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
