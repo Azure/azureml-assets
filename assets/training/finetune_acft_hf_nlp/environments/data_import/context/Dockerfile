@@ -101,7 +101,7 @@ COPY data_import_run.py /azureml/data_import/run.py
 # Refresh packages for the latest Ubuntu security advisories.
 RUN set -eux; \
     apt-get update; \
-    security_packages="libssl-dev libssl3t64 openssl"; \
+    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libssl-dev libssl3t64 libxml2 openssh-client openssh-server openssh-sftp-server openssl"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
