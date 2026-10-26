@@ -8,6 +8,7 @@ Tests various input scenarios: query, response, tool_definitions, and tool_calls
 """
 
 import asyncio
+from copy import deepcopy
 
 import pytest
 
@@ -15,6 +16,7 @@ from azure.ai.evaluation._exceptions import EvaluationException
 
 from .base_tool_calls_evaluator_behavior_test import BaseToolCallEvaluatorBehaviorTest
 from .base_tool_evaluation_test import BaseToolEvaluationTest
+from .base_model_types_test import ModelTypesTests
 from . import common_tool_test_data as data
 from .base_validator_unit_test import (
     ConversationValidatorToolCheckUnitTests,
@@ -100,6 +102,101 @@ class TestToolCallAccuracyEvaluatorBehavior(BaseToolCallEvaluatorBehaviorTest, B
     def test_intermediate_response_returns_not_applicable(self):
         """A response ending in an unresolved function_call is treated as not-applicable."""
         self.run_intermediate_response_not_applicable_test()
+
+    @pytest.mark.parametrize("intermediate", [True, False])
+    def test_function_call_response(self, intermediate):
+        """Preprocess response-only calls without relying on replacing explicit calls."""
+        evaluator = create_mocked_evaluator(ToolCallAccuracyEvaluator, "tool_call_accuracy")
+        response = self.FUNCTION_CALL_ONLY_RESPONSE if intermediate else self.FUNCTION_CALL_FULL_RESPONSE
+        result = evaluator(
+            query=self.VALID_QUERY, response=deepcopy(response),
+            tool_definitions=deepcopy(data.FUNCTION_CALL_RESPONSE_TOOL_DEFINITIONS),
+        )
+        assert result["tool_call_accuracy_status"] == ("skipped" if intermediate else "completed")
+
+    @pytest.mark.parametrize("intermediate", [True, False])
+    def test_mcp_approval_response(self, intermediate):
+        """Drop approval messages while extracting only response-selected calls."""
+        evaluator = create_mocked_evaluator(ToolCallAccuracyEvaluator, "tool_call_accuracy")
+        response = self.MCP_APPROVAL_ONLY_RESPONSE if intermediate else self.MCP_APPROVAL_FULL_RESPONSE
+        result = evaluator(
+            query=self.VALID_QUERY, response=deepcopy(response),
+            tool_definitions=deepcopy(data.MCP_APPROVAL_RESPONSE_TOOL_DEFINITIONS),
+        )
+        assert result["tool_call_accuracy_status"] == ("skipped" if intermediate else "completed")
+
+    def test_tool_calls_invalid_format_with_valid_response(self):
+        """Do not replace invalid explicitly selected calls with valid response calls."""
+        evaluator = create_mocked_evaluator(ToolCallAccuracyEvaluator, "tool_call_accuracy")
+        result = evaluator(
+            query=self.VALID_QUERY, response=deepcopy(self.VALID_RESPONSE),
+            tool_calls=deepcopy(self.INVALID_TOOL_CALLS), tool_definitions=self.VALID_TOOL_DEFINITIONS,
+        )
+        assert result["tool_call_accuracy_status"] == "skipped"
+        evaluator._flow.assert_not_called()
+
+    def test_tool_calls_wrong_type_with_valid_response(self):
+        """Do not conceal an invalid explicit selection using response calls."""
+        evaluator = create_mocked_evaluator(ToolCallAccuracyEvaluator, "tool_call_accuracy")
+        result = evaluator(
+            query=self.VALID_QUERY, response=deepcopy(self.VALID_RESPONSE),
+            tool_calls=self.WRONG_TYPE, tool_definitions=self.VALID_TOOL_DEFINITIONS,
+        )
+        assert result["tool_call_accuracy_status"] == "skipped"
+        evaluator._flow.assert_not_called()
+
+    def test_tool_calls_empty_list_with_valid_response(self):
+        """Parse calls from the response when tool_calls is an empty list."""
+        evaluator = create_mocked_evaluator(ToolCallAccuracyEvaluator, "tool_call_accuracy")
+        result = evaluator(
+            query=self.VALID_QUERY, response=deepcopy(self.VALID_RESPONSE),
+            tool_calls=[], tool_definitions=self.VALID_TOOL_DEFINITIONS,
+        )
+        assert result["tool_call_accuracy_status"] == "completed"
+        evaluator._flow.assert_called_once()
+
+    @pytest.mark.parametrize("as_dict", [False, True])
+    def test_explicit_calls_are_not_replaced_by_response_context(self, as_dict):
+        """Preserve selected calls and the legacy three-field Prompty request."""
+        evaluator = create_mocked_evaluator(ToolCallAccuracyEvaluator, "tool_call_accuracy")
+        selected = deepcopy(data.LOCAL_CALLS_EXPECTED_FLOW_TOOL_CALLS[0])
+        response = deepcopy(data.LOCAL_CALLS_RESPONSE)
+        response.insert(0, {
+            "role": "assistant",
+            "content": [{"type": "tool_call", "name": "unrelated", "tool_call_id": "context", "arguments": {}}],
+        })
+        result = evaluator(
+            query=deepcopy(data.LOCAL_CALLS_QUERY),
+            tool_calls=selected if as_dict else [selected],
+            response=response,
+            tool_definitions=deepcopy(data.LOCAL_CALLS_TOOL_DEFINITIONS),
+        )
+        assert result["tool_call_accuracy_status"] == "completed"
+        assert evaluator._flow.call_args.kwargs == {
+            "timeout": evaluator._LLM_CALL_TIMEOUT,
+            "query": data.LOCAL_CALLS_QUERY,
+            "tool_calls": [selected],
+            "tool_definitions": data.LOCAL_CALLS_TOOL_DEFINITIONS,
+        }
+
+    @pytest.mark.parametrize("empty", [None, []])
+    @pytest.mark.parametrize("response", [data.LOCAL_CALLS_RESPONSE, "context"])
+    def test_empty_selection_infers_response_calls(self, response, empty):
+        """None or an empty selection falls back to the calls in the response."""
+        evaluator = create_mocked_evaluator(ToolCallAccuracyEvaluator, "tool_call_accuracy")
+        result = evaluator(
+            query="q", tool_calls=empty, response=deepcopy(response),
+            tool_definitions=deepcopy(data.LOCAL_CALLS_TOOL_DEFINITIONS),
+        )
+        assert result["tool_call_accuracy_status"] == "completed"
+        evaluator._flow.assert_called_once()
+
+
+class TestToolCallAccuracyModelTypes(ModelTypesTests):
+    """Cover Decision routing and released-SDK chat fallback paths."""
+
+    result_key = "tool_call_accuracy"
+    class_name = "ToolCallAccuracyEvaluator"
 
 
 @pytest.mark.unittest

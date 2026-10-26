@@ -1,0 +1,15 @@
+update:
+  model:
+    model1:
+      - versions: ["1"]
+        system_metadata:
+          add:
+            modelCapabilities:
+              - agentsV2
+            deprecation:
+              deprecationDate: "2026-11-02"
+            summary: "Plain string value"
+    model2:
+      - versions: ["1"]
+        system_metadata:
+          delete: ["summary"]

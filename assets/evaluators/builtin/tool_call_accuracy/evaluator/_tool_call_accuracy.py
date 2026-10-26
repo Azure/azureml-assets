@@ -1,28 +1,48 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-import os
 import logging
+import json
+import os
+from copy import deepcopy
 from typing import Dict, List, Optional, Tuple, Union, TypeVar
 from typing_extensions import overload, override
-from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
+from azure.ai.evaluation._evaluators import _common as _sdk_common
 from azure.ai.evaluation._exceptions import (
     ErrorBlame,
     ErrorCategory,
     ErrorTarget,
     EvaluationException,
 )
-from azure.ai.evaluation._common.utils import check_score_is_valid
 from azure.ai.evaluation._common._experimental import experimental
+from azure.ai.evaluation._common.utils import check_score_is_valid
 from azure.ai.evaluation._converters._models import (
     _BUILT_IN_DESCRIPTIONS,
     _BUILT_IN_PARAMS,
 )
-# ConversationValidator is re-exported for the test suite / capability surface (unused here).
 from azure.ai.evaluation._evaluators._common._validators import (  # noqa: F401
     ValidatorInterface,
     ConversationValidator,
     ToolCallsValidator,
+)
+
+
+try:
+    from azure.ai.evaluation._evaluators._common._prompty_strategy import PromptyEvaluationStrategy
+except ImportError as exc:
+    if exc.name != "azure.ai.evaluation._evaluators._common._prompty_strategy":
+        raise
+    PromptyEvaluationStrategy = None
+
+ModelEvaluatorBase = getattr(_sdk_common, "ModelEvaluatorBase", _sdk_common.PromptyEvaluatorBase)
+try:
+    from azure.ai.evaluation._evaluators._common._decision_strategy import DecisionEvaluationStrategy, LikertScoring
+except ImportError as exc:
+    if exc.name != "azure.ai.evaluation._evaluators._common._decision_strategy":
+        raise
+    DecisionEvaluationStrategy = LikertScoring = None
+_SDK_SUPPORTS_DECISION = (
+    hasattr(_sdk_common, "ModelEvaluatorBase") and LikertScoring is not None and DecisionEvaluationStrategy is not None
 )
 
 # ---------------------------------------------------------------------------
@@ -180,8 +200,20 @@ def _get_needed_built_in_definitions(tool_calls: List[Dict]) -> List[Dict]:
     return needed_definitions
 
 
+def _is_decision_config(model_config) -> bool:
+    return isinstance(model_config, dict) and model_config.get("type") == "decision"
+
+
+def _load_decision_questions(path: str, question_id: str) -> Dict:
+    """Load the status and result questions from this evaluator's combined decision rubric."""
+    from azure.ai.evaluation._legacy.prompty._yaml_utils import load_yaml
+
+    rubric = json.loads(json.dumps(load_yaml(path)))
+    return {"status": rubric["status"], question_id: rubric["result"]}
+
+
 @experimental
-class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
+class ToolCallAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
     """The Tool Call Accuracy evaluator assesses how accurately an AI uses tools by examining the following criteria.
 
         - Relevance to the conversation.
@@ -201,7 +233,13 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     user needs while properly following tool definitions and using information present in the
     conversation history.
 
-    :param model_config: Configuration for the Azure OpenAI model.
+    :param model_config: Configuration for the Azure OpenAI model. A configuration with
+        ``type="decision"``, an ``azure_endpoint`` (the Foundry resource endpoint) and an ``azure_deployment``
+        (the Microsoft-Decision-1 deployment name) selects a decision model instead; authenticate with
+        ``api_key`` or ``credential``.
+        Both backends evaluate the same selected ``tool_calls`` with matching execution results attached
+        by ``tool_call_id``. Assistant text from structured responses is not passed to either judge.
+        When ``tool_calls`` is ``None`` or empty, calls are extracted from ``response``.
     :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
         ~azure.ai.evaluation.OpenAIModelConfiguration]
 
@@ -227,12 +265,15 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     .. note::
 
         The output field "details" has been renamed to "tool_call_accuracy_properties" for clarity.
+        Chat token counts and model metadata are also returned with the ``tool_call_accuracy_``
+        prefix so batch evaluation can attribute usage to the model.
 
         The `gpt_` prefix is deprecated. Use `_score` suffix instead.
 
     """
 
     _PROMPTY_FILE = "tool_call_accuracy.prompty"
+    _DECISION_FILE = "tool_call_accuracy.decision.yaml"
     _RESULT_KEY = "tool_call_accuracy"
 
     _MAX_TOOL_CALL_ACCURACY_SCORE = 5
@@ -245,6 +286,8 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     _INVALID_SCORE_MESSAGE = "Tool call accuracy score must be between 1 and 5."
 
     _LLM_SCORE_KEY = "score"
+
+    _supports_decision_models = True
 
     _validator: ValidatorInterface
 
@@ -267,8 +310,7 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
-        threshold_value = kwargs.pop("threshold", threshold)
-        self.threshold = threshold_value
+        self.threshold = threshold
 
         # Initialize input validator
         self._validator = ToolCallsValidator(
@@ -276,6 +318,16 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             optional_tool_definitions=True,
             check_for_unsupported_tools=False,
         )
+
+        decision_selected = _is_decision_config(model_config)
+        self._decision_selected = decision_selected
+        if decision_selected and not _SDK_SUPPORTS_DECISION:
+            raise EvaluationException(
+                message="Decision models require an azure-ai-evaluation version with decision model support.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=ErrorTarget.TOOL_CALL_ACCURACY_EVALUATOR,
+            )
 
         super().__init__(
             model_config=model_config,
@@ -285,6 +337,31 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             threshold=threshold,
             **kwargs,
         )
+
+        if decision_selected:
+            self._strategy = DecisionEvaluationStrategy(
+                self._decision_model_runner,
+                result_key=self._result_key,
+                error_target=ErrorTarget.TOOL_CALL_ACCURACY_EVALUATOR,
+                questions=_load_decision_questions(os.path.join(current_dir, self._DECISION_FILE), self._result_key),
+                scoring=LikertScoring(self._MAX_TOOL_CALL_ACCURACY_SCORE, minimum=self._MIN_TOOL_CALL_ACCURACY_SCORE),
+                threshold=self._threshold,
+                timeout=self._LLM_CALL_TIMEOUT,
+            )
+        elif PromptyEvaluationStrategy is not None:
+            runner = getattr(self, "_prompty_model_runner", None) or (lambda **inputs: self._flow(**inputs))
+            self._strategy = PromptyEvaluationStrategy(
+                runner,
+                result_key=self._result_key,
+                threshold=self._threshold,
+                timeout=self._LLM_CALL_TIMEOUT,
+                missing_score=None,
+                score_range=(self._MIN_TOOL_CALL_ACCURACY_SCORE, self._MAX_TOOL_CALL_ACCURACY_SCORE),
+                error_target=ErrorTarget.TOOL_CALL_ACCURACY_EVALUATOR,
+                top_level_usage=True,
+            )
+        else:
+            self._strategy = None
 
     @overload
     def __call__(
@@ -306,13 +383,10 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :keyword tool_calls: Optional List of tool calls to evaluate. If not provided response should be provided
             and should have tool call(s) in it.
         :paramtype tool_calls: Union[dict, List[dict]]
-        :keyword response: Optional response to be evaluated alongside the tool calls.
-            If provided all tool calls in response will be evaluated when tool_calls parameter is not provided.
-            If provided and tool_calls parameter is provided, only the tool calls in tool_calls parameter
-            will be evaluated.
-                If response has extra tool calls they will not be evaluated, response will be used to extract
-                any tool calls that are needed for evaluating a certain tool call.
-            Recommended to provide it when there are tool calls that depend on output of a previous tool call.
+        :keyword response: Optional response used to extract calls or match execution results.
+            When tool_calls is omitted or empty, calls are extracted from response.
+            Otherwise only the selected calls are evaluated, with matching results attached by tool_call_id.
+            For structured responses, assistant text and unselected calls/results are not passed to the judge.
         :paramtype response: Union[str, List[dict]]
         :return: The tool selection evaluation results.
         :rtype: Dict[str, Union[str, float]]
@@ -348,7 +422,7 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         query = kwargs.get("query")
         response = kwargs.get("response")
         # TODO : Support classes that represents tool calls, messages etc once client side definitions are available
-        if response:
+        if not tool_calls and response:
             parsed_tool_calls = self._parse_tools_from_response(response)
             if parsed_tool_calls:
                 tool_calls = parsed_tool_calls
@@ -380,6 +454,14 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         if not needed_tool_definitions:
             return {"error_message": self._NO_TOOL_DEFINITIONS_MESSAGE}
 
+        if (isinstance(tool_calls, list) and isinstance(response, list)
+                and all(isinstance(call, dict) and call.get("type") == "tool_call" for call in tool_calls)):
+            # Reuse call-ID result matching without admitting response-only calls into the selection.
+            tool_calls = self._parse_tools_from_response([
+                {"role": "assistant", "content": tool_calls},
+                *[message for message in response if isinstance(message, dict) and message.get("role") == "tool"],
+            ])
+
         return {
             "query": query,
             "tool_calls": tool_calls,
@@ -410,68 +492,55 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 target=ErrorTarget.TOOL_CALL_ACCURACY_EVALUATOR,
             )
 
-        # Single LLM call for all tool calls
-        prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
-        llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
+        if self._strategy is not None:
+            return await self._strategy.evaluate(eval_input)
+        return self._parse_chat_output(await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input))
 
-        if isinstance(llm_output, dict):
-            # Handle skipped status from LLM
-            llm_status = llm_output.get("status", "completed")
-            if llm_status == "skipped":
-                reason = llm_output.get("reason", "")
-                return self._return_not_applicable_result(reason, self._threshold)
-
-            score = llm_output.get(self._LLM_SCORE_KEY, None)
-            if not score or not check_score_is_valid(
-                score,
-                ToolCallAccuracyEvaluator._MIN_TOOL_CALL_ACCURACY_SCORE,
-                ToolCallAccuracyEvaluator._MAX_TOOL_CALL_ACCURACY_SCORE,
-            ):
-                raise EvaluationException(
-                    message=f"Invalid score value: {score}. Expected a number in range "
-                            f"[{ToolCallAccuracyEvaluator._MIN_TOOL_CALL_ACCURACY_SCORE}, "
-                            f"{ToolCallAccuracyEvaluator._MAX_TOOL_CALL_ACCURACY_SCORE}].",
-                    internal_message="Invalid score value.",
-                    category=ErrorCategory.FAILED_EXECUTION,
-                    blame=ErrorBlame.SYSTEM_ERROR,
-                    target=ErrorTarget.TOOL_CALL_ACCURACY_EVALUATOR,
-                )
-
-            # Format the output
-            reason = llm_output.get("reason", "")
-            score = float(score)
-            score_result = "pass" if score >= self._threshold else "fail"
-            llm_properties = llm_output.get("properties", {}) or {}
-            llm_properties.update(
-                {
-                    "prompt_tokens": prompty_output_dict.get("input_token_count", 0),
-                    "completion_tokens": prompty_output_dict.get("output_token_count", 0),
-                    "total_tokens": prompty_output_dict.get("total_token_count", 0),
-                    "finish_reason": prompty_output_dict.get("finish_reason", ""),
-                    "model": prompty_output_dict.get("model_id", ""),
-                    "sample_input": prompty_output_dict.get("sample_input", ""),
-                    "sample_output": prompty_output_dict.get("sample_output", ""),
-                }
-            )
-            response_dict = {
-                self._result_key: score,
-                f"{self._result_key}_score": score,
-                f"{self._result_key}_result": score_result,
-                f"{self._result_key}_passed": score_result == "pass",
-                f"{self._result_key}_reason": reason,
-                f"{self._result_key}_status": "completed",
-                f"{self._result_key}_threshold": self._threshold,
-                f"{self._result_key}_properties": llm_properties,
-            }
-            return response_dict
-
-        else:
+    def _parse_chat_output(self, model_output_dict: Dict) -> Dict:
+        if self._strategy is not None:
+            return self._strategy.parse(model_output_dict)
+        answer = (
+            model_output_dict.get("llm_output", model_output_dict) if isinstance(model_output_dict, dict) else None
+        )
+        if not isinstance(answer, dict):
             raise EvaluationException(
                 message="Evaluator returned invalid output.",
                 blame=ErrorBlame.SYSTEM_ERROR,
                 category=ErrorCategory.FAILED_EXECUTION,
                 target=ErrorTarget.TOOL_CALL_ACCURACY_EVALUATOR,
             )
+        if answer.get("status", "completed") == "skipped":
+            result = self._return_not_applicable_result(answer.get("reason", ""), self._threshold)
+            metadata = self._get_token_metadata(model_output_dict)
+            result[f"{self._result_key}_properties"] = {**(answer.get("properties", {}) or {}), **metadata}
+            result.update({f"{self._result_key}_{key}": value for key, value in metadata.items()})
+            return result
+        score = answer.get("score")
+        if not score or not check_score_is_valid(
+            score, self._MIN_TOOL_CALL_ACCURACY_SCORE, self._MAX_TOOL_CALL_ACCURACY_SCORE
+        ):
+            raise EvaluationException(
+                message=f"Invalid score value: {score}. Expected a number in range [1, 5].",
+                internal_message="Invalid score value.",
+                category=ErrorCategory.FAILED_EXECUTION,
+                target=ErrorTarget.TOOL_CALL_ACCURACY_EVALUATOR,
+                blame=ErrorBlame.SYSTEM_ERROR,
+            )
+        score = float(score)
+        metadata = self._get_token_metadata(model_output_dict)
+        properties = dict(answer.get("properties", {}) or {})
+        properties.update(metadata)
+        return {
+            self._result_key: score,
+            f"{self._result_key}_score": score,
+            f"{self._result_key}_passed": score >= self._threshold,
+            f"{self._result_key}_result": "pass" if score >= self._threshold else "fail",
+            f"{self._result_key}_reason": answer.get("reason", ""),
+            f"{self._result_key}_status": "completed",
+            f"{self._result_key}_threshold": self._threshold,
+            f"{self._result_key}_properties": properties,
+            **{f"{self._result_key}_{key}": value for key, value in metadata.items()},
+        }
 
     async def _real_call(self, **kwargs):
         """Perform the asynchronous call where real end-to-end evaluation logic is executed.
@@ -503,9 +572,9 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 self._threshold,
             )
         if "response" in kwargs:
-            kwargs["response"] = _preprocess_messages(kwargs["response"])
+            kwargs["response"] = _preprocess_messages(deepcopy(kwargs["response"]))
         if "query" in kwargs:
-            kwargs["query"] = _preprocess_messages(kwargs["query"])
+            kwargs["query"] = _preprocess_messages(deepcopy(kwargs["query"]))
         # Convert inputs into list of evaluable inputs.
         eval_input = self._convert_kwargs_to_eval_input(**kwargs)
         if isinstance(eval_input, dict) and eval_input.get("error_message"):
@@ -529,7 +598,7 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :rtype: Dict[str, Union[str, float, None]]
         """
         return {
-            f"{self._result_key}": None,
+            self._result_key: None,
             f"{self._result_key}_score": None,
             f"{self._result_key}_passed": None,
             f"{self._result_key}_result": "not_applicable",
@@ -615,13 +684,10 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :keyword tool_calls: Optional List of tool calls to evaluate. If not provided response should be provided
             and should have tool call(s) in it.
         :paramtype tool_calls: Union[dict, List[dict]]
-        :keyword response: Optional response to be evaluated alongside the tool calls.
-            If provided all tool calls in response will be evaluated when tool_calls parameter is not provided.
-            If provided and tool_calls parameter is provided, only the tool calls in tool_calls parameter
-            will be evaluated.
-                If response has extra tool calls they will not be evaluated, response will be used to extract
-                any tool calls that are needed for evaluating a certain tool call.
-            Recommended to provide it when there are tool calls that depend on output of a previous tool call.
+        :keyword response: Optional response used to extract calls or match execution results.
+            When tool_calls is omitted or empty, calls are extracted from response.
+            Otherwise only the selected calls are evaluated, with matching results attached by tool_call_id.
+            For structured responses, assistant text and unselected calls/results are not passed to the judge.
         :paramtype response: Union[str, List[dict]]
         :return: The tool selection evaluation results.
         :rtype: Dict[str, Union[str, float]]

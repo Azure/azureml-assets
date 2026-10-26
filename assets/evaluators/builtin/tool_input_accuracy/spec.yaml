@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.tool_input_accuracy"
-version: 17
+version: 18
 displayName: "Tool-Input-Accuracy-Evaluator"
 description: "A binary evaluator (0 or 1) that checks whether all parameters in an agent’s tool call are correct, validating grounding, type, format, completeness, and contextual appropriateness using LLM-based analysis. Use it to verify agent tool usage, API integration tests, or to ensure tool call parameters are fully correct in AI workflows."
 evaluatorType: "builtin"
@@ -17,6 +17,11 @@ initParameterSchema:
       type: "string"
     evaluation_level:
       type: "string"
+    probability_threshold:
+      type: "number"
+      minimum: 0
+      maximum: 1
+      description: "Decision-only score probability cutoff. Overrides the resolved configuration cutoff; defaults to 0.75 when neither is supplied. Applicability uses a separate fixed cutoff of 0.5."
   required: ["deployment_name"]
 dataMappingSchema:
   type: "object"

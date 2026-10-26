@@ -4,11 +4,14 @@
 """Behavioral tests for Intent Resolution Evaluator."""
 
 import asyncio
+import builtins
+from copy import deepcopy
 from unittest.mock import MagicMock
 
 import pytest
 from azure.ai.evaluation._exceptions import EvaluationException
 from .base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
+from .base_decision_routing_test import DecisionRoutingTests, construct_evaluator, enable_fake_decision_sdk
 from .base_evaluator_behavior_test import _TurnLevelUtilE2ETests
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
@@ -202,3 +205,89 @@ class TestIntentResolutionDoEvalBranches:
         evaluator._flow = MagicMock(side_effect=str_flow)
         with pytest.raises(EvaluationException):
             asyncio.run(evaluator._do_eval({"query": "q", "response": "r"}))
+
+
+# endregion
+
+
+# region Native Decision routing coverage on the released SDK
+
+DECISION_STRATEGY_MODULE = "azure.ai.evaluation._evaluators._common._decision_strategy"
+
+
+@pytest.mark.unittest
+class TestIntentResolutionDecisionRouting(DecisionRoutingTests):
+    """Cover the native Decision branches of intent_resolution without a Decision-capable SDK."""
+
+    result_key = "intent_resolution"
+    class_name = "IntentResolutionEvaluator"
+    inputs = {"query": "What is the capital of France?", "response": "Paris is the capital of France."}
+    strategy_attribute = "_decision"
+
+    def test_broken_decision_import_is_not_hidden(self, monkeypatch):
+        """A broken SDK dependency propagates instead of being read as a missing Decision capability."""
+        original_import = builtins.__import__
+        error = ModuleNotFoundError(name="broken_dependency")
+
+        def broken_import(name, *args, **kwargs):
+            if name == DECISION_STRATEGY_MODULE:
+                raise error
+            return original_import(name, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", broken_import)
+        with pytest.raises(ModuleNotFoundError) as caught:
+            self.load()
+        assert caught.value is error
+
+    def test_native_state_is_the_rendered_query_and_response(self, monkeypatch):
+        """The native state carries exactly the prepared query and response; the prompt never renders tools."""
+        module = self.load()
+        enable_fake_decision_sdk(monkeypatch, module, self.class_name, result_key=self.result_key)
+        evaluator, _ = construct_evaluator(module, self.class_name)
+        result = evaluator(
+            query=deepcopy(data.LOCAL_CALLS_QUERY),
+            response=deepcopy(data.LOCAL_CALLS_RESPONSE),
+            tool_definitions=deepcopy(data.LOCAL_CALLS_TOOL_DEFINITIONS),
+        )
+        assert result == {"intent_resolution": 1}
+        state = evaluator._decision.evaluate.await_args.args[0]
+        assert state == {
+            "query": data.LOCAL_CALLS_IR_EXPECTED_FLOW_QUERY,
+            "response": data.LOCAL_CALLS_IR_EXPECTED_FLOW_RESPONSE,
+        }
+
+    def test_messages_reach_the_native_state_as_the_split_turn(self, monkeypatch):
+        """Top-level messages are split at the latest user turn before the native state is built."""
+        module = self.load()
+        enable_fake_decision_sdk(monkeypatch, module, self.class_name, result_key=self.result_key)
+        evaluator, _ = construct_evaluator(module, self.class_name)
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "First question"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "First answer"}]},
+            {"role": "user", "content": [{"type": "text", "text": "Latest question"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "Latest answer"}]},
+        ]
+        assert evaluator(messages=deepcopy(messages)) == {"intent_resolution": 1}
+        state = evaluator._decision.evaluate.await_args.args[0]
+        assert set(state) == {"query", "response"}
+        assert "Latest question" in state["query"] and "First answer" in state["query"]
+        assert state["response"] == "Latest answer"
+
+    def test_chat_skip_with_string_model_output_keeps_usage(self):
+        """A skipped chat answer delivered as a JSON string keeps its properties and measured usage."""
+        evaluator = create_mocked_evaluator(IntentResolutionEvaluator, "intent_resolution")
+        usage = {"input_token_count": 4, "output_token_count": 2, "total_token_count": 6, "model_id": "chat"}
+        parsed = evaluator._return_not_applicable_result(
+            "No evidence", 3, {"llm_output": '{"properties": {"diagnostic": "empty"}}', **usage}
+        )
+        assert parsed["intent_resolution"] is None
+        assert parsed["intent_resolution_status"] == "skipped"
+        assert parsed["intent_resolution_properties"]["diagnostic"] == "empty"
+        assert parsed["intent_resolution_properties"]["total_tokens"] == 6
+        assert parsed["intent_resolution_total_tokens"] == 6
+        malformed = evaluator._return_not_applicable_result("No evidence", 3, {"llm_output": "not json", **usage})
+        assert "diagnostic" not in malformed["intent_resolution_properties"]
+        assert malformed["intent_resolution_properties"]["total_tokens"] == 6
+
+
+# endregion

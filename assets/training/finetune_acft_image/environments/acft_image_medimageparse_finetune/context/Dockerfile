@@ -152,3 +152,20 @@ RUN set -eu; \
         -path '*/conda-meta/msgpack-1.1.2-*.json' \
     \) -print -quit)"; \
     [ -z "$stale" ] || { echo "stale setuptools/msgpack scanner metadata remains: $stale" >&2; exit 1; }
+
+# Refresh packages for the latest Ubuntu security advisories.
+RUN set -eux; \
+    apt-get update; \
+    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libevent-core-2.1-7 libssl-dev libssl3 libx11-6 libx11-data libx11-xcb1 libxml2 openssh-client openssh-server openssh-sftp-server openssl"; \
+    installed_packages=""; \
+    for package in $security_packages; do \
+        if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
+            installed_packages="$installed_packages $package"; \
+        fi; \
+    done; \
+    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*
+
+# Reassert newly patched transitive dependencies after all package installs.
+RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'oauthlib>=4.0.0'

@@ -363,6 +363,7 @@ class _ValidatorUnitTestSupport:
         ``per_turn_results`` aggregation body and drive it directly. Otherwise
         fall back to the bound ``super()._<name>`` method (resolved from the
         evaluator's parent class) so the base behaviour is still exercised.
+        Abstract SDK methods are declarations, not callable base implementations.
         """
         inlined = getattr(evaluator, f"_the_super_{name}", None)
         if inlined is not None:
@@ -375,7 +376,8 @@ class _ValidatorUnitTestSupport:
                 is_super_copy = False
             if is_super_copy:
                 return getattr(evaluator, f"_{name}")
-        return getattr(super(type(evaluator), evaluator), f"_{name}", None)
+        inherited = getattr(super(type(evaluator), evaluator), f"_{name}", None)
+        return None if getattr(inherited, "__isabstractmethod__", False) else inherited
 
     def _actual_capabilities(self, evaluator):
         """Return the set of probed capabilities the evaluator currently exposes."""

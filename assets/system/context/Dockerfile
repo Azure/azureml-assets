@@ -1,8 +1,8 @@
-# Shared Go toolchain version used across builder stages; compiled from source so the
-# trivy and oras binaries link a patched Go stdlib. Bump to the latest patched Go.
-ARG GO_VERSION=1.26.8
-ARG TRIVY_VERSION=0.74.0
-ARG ORAS_VERSION=1.3.4
+# Build ORAS and Trivy with the latest patched Go release, including the
+# crypto/x509 security fixes in Go 1.27.3.
+ARG GO_VERSION=1.27.3
+ARG TRIVY_VERSION=0.76.0
+ARG ORAS_VERSION=1.3.5
 
 # Mode toggles: "build" (compile from source with patched Go + deps) or
 # "install" (download the upstream release binary). Both default to "build"
@@ -60,9 +60,8 @@ FROM oras-${ORAS_MODE} AS oras-final
 # =========================================
 # Builder: compile Trivy with patched Go + deps
 # =========================================
-# Build Trivy from source so it links a patched Go stdlib (GO_VERSION). Prefer bumping
-# TRIVY_VERSION to the latest release (its go.mod carries fixed modules) over hand-pinning
-# deps; add a `go get pkg@version` below only for a module the latest release still lags.
+# Build Trivy from source so it links a patched Go stdlib (GO_VERSION).
+# The selected release already carries the required module security fixes.
 FROM ubuntu:24.04 AS trivy-build
 ARG GO_VERSION
 ARG TRIVY_VERSION
@@ -75,19 +74,8 @@ RUN curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go
  && rm /tmp/go.tar.gz
 ENV PATH=/usr/local/go/bin:$PATH
 # Build env replicates trivy's magefile (CGO disabled, jsonv2 experiment, version ldflag).
-# Trivy v0.74.0 still needs these module fixes:
-# grpc 1.83.2: CVE-2026-84304, CVE-2026-84303, CVE-2026-84445.
-# x/crypto 0.56.0: CVE-2026-78662, CVE-2026-56855.
-# containerd/v2 2.3.6: CVE-2026-53495, CVE-2026-53493.
-# swag/jsonutils 0.27.1: GHSA-xh24-9qpg-8w28.
-# Drop each override once the Trivy release includes that fixed version or newer.
 RUN git clone --depth 1 --branch v${TRIVY_VERSION} https://github.com/aquasecurity/trivy.git /tmp/trivy \
  && cd /tmp/trivy \
- && go get google.golang.org/grpc@v1.83.2 \
-      golang.org/x/crypto@v0.56.0 \
-      github.com/containerd/containerd/v2@v2.3.6 \
-      github.com/go-openapi/swag/jsonutils@v0.27.1 \
- && go mod tidy \
  && CGO_ENABLED=0 GOEXPERIMENT=jsonv2 go build \
       -ldflags="-s -w -X=github.com/aquasecurity/trivy/pkg/version/app.ver=${TRIVY_VERSION}" \
       -o /out/trivy ./cmd/trivy \

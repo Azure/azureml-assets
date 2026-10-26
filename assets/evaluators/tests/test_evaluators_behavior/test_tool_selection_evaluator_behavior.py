@@ -7,12 +7,26 @@ Behavioral tests for Tool Selection Evaluator using AIProjectClient.
 Tests various input scenarios: query, response, tool_definitions, and tool_calls.
 """
 
+import builtins
+from copy import deepcopy
+from unittest.mock import AsyncMock, patch
+
 import pytest
 
 from azure.ai.evaluation._exceptions import EvaluationException
 
 from .base_tool_calls_evaluator_behavior_test import BaseToolCallEvaluatorBehaviorTest
 from .base_tool_evaluation_test import BaseToolEvaluationTest
+from .base_decision_routing_test import (
+    CHAT_CONFIG,
+    DECISION_CONFIG,
+    PROMPTY_LOAD,
+    DecisionRoutingTests,
+    construct_evaluator,
+    enable_fake_decision_sdk,
+    module_namespace,
+    run,
+)
 from . import common_tool_test_data as data
 from .base_validator_unit_test import (
     ConversationHistoryReformatUnitTests,
@@ -34,6 +48,9 @@ from ...builtin.tool_selection.evaluator._tool_selection import (
     _get_conversation_history,
 )
 from ..common.evaluator_mock_config import create_mocked_evaluator
+
+
+_DECISION_MODULE = "azure.ai.evaluation._evaluators._common._decision_strategy"
 
 
 @pytest.mark.unittest
@@ -209,3 +226,136 @@ class TestToolSelectionInternalBranches:
             {"correct_tool_selections": 3, "wrong_tool_selections": 1}
         )
         assert accuracy == 75.0
+
+
+@pytest.mark.unittest
+class TestToolSelectionDecisionRouting(DecisionRoutingTests):
+    """Cover native Decision routing of Tool Selection on the released SDK the asset tests install."""
+
+    result_key = "tool_selection"
+    class_name = "ToolSelectionEvaluator"
+    strategy_attribute = "_decision_strategy"
+    scorings = ("BinaryScoring",)
+
+    @property
+    def inputs(self):
+        """Turn-level inputs that reach the strategy, copied so the shared fixtures stay untouched."""
+        return deepcopy({"query": data.LOCAL_CALLS_QUERY, "tool_calls": data.LOCAL_CALLS_TS_EXPECTED_FLOW_TOOL_CALLS,
+                         "tool_definitions": data.LOCAL_CALLS_TOOL_DEFINITIONS})
+
+    @property
+    def rendered_state(self):
+        """The exact evidence the chat prompty renders for the fixture, which the native request must equal."""
+        return {"query": data.LOCAL_CALLS_EXPECTED_FLOW_QUERY,
+                "tool_calls": data.LOCAL_CALLS_TS_EXPECTED_FLOW_TOOL_CALLS,
+                "tool_definitions": data.LOCAL_CALLS_TOOL_DEFINITIONS}
+
+    def _native_evaluator(self, monkeypatch, **kwargs):
+        """Load a fresh module, enable the fake Decision SDK and construct the evaluator natively."""
+        module = self.load()
+        sdk = enable_fake_decision_sdk(monkeypatch, module, self.class_name, result_key=self.result_key,
+                                       scorings=self.scorings)
+        evaluator, _ = construct_evaluator(module, self.class_name, **kwargs)
+        return module, sdk, evaluator
+
+    def test_broken_decision_import_is_not_hidden(self, monkeypatch):
+        """Propagate an unrelated import failure inside the strategy module instead of treating it as absent."""
+        original_import = builtins.__import__
+        error = ModuleNotFoundError(name="broken_dependency")
+
+        def broken_import(name, *args, **kwargs):
+            if name == _DECISION_MODULE:
+                raise error
+            return original_import(name, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", broken_import)
+        with pytest.raises(ModuleNotFoundError) as caught:
+            self.load()
+        assert caught.value is error
+
+    def test_chat_rejects_probability_threshold_before_loading_prompty(self):
+        """A Decision-only cutoff on a chat configuration fails before any prompt is loaded."""
+        module = self.load()
+        with patch(PROMPTY_LOAD) as load:
+            with pytest.raises(EvaluationException, match="only supported for Decision models"):
+                module[self.class_name](dict(CHAT_CONFIG), probability_threshold=0.8)
+        load.assert_not_called()
+
+    def test_unsupported_sdk_rejects_native_cutoff_without_mutating_config(self, monkeypatch):
+        """Without Decision support a native cutoff is rejected and the caller's configuration is unchanged."""
+        module = self.load()
+        monkeypatch.setitem(module_namespace(module, self.class_name), "_SDK_SUPPORTS_DECISION", False)
+        config = {**DECISION_CONFIG, "probability_threshold": 0.9}
+        original = dict(config)
+        with patch(PROMPTY_LOAD) as load:
+            with pytest.raises(EvaluationException, match="version with decision model support"):
+                module[self.class_name](config, probability_threshold=0.8)
+        load.assert_not_called()
+        assert config == original
+
+    def test_probability_threshold_override_reaches_base_as_new_config(self, monkeypatch):
+        """The override reaches the base in a new configuration while the caller's object keeps its cutoff."""
+        module = self.load()
+        enable_fake_decision_sdk(monkeypatch, module, self.class_name, result_key=self.result_key,
+                                 scorings=self.scorings)
+        base = module["ModelEvaluatorBase"]
+        fake_init = base.__init__
+        seen = {}
+
+        def record_config(instance, **kwargs):
+            seen["model_config"] = kwargs["model_config"]
+            fake_init(instance, **kwargs)
+
+        monkeypatch.setattr(base, "__init__", record_config)
+        config = {**DECISION_CONFIG, "probability_threshold": 0.9}
+        original = dict(config)
+        with patch(PROMPTY_LOAD, return_value=AsyncMock()):
+            evaluator = module[self.class_name](config, probability_threshold=0.6)
+        assert seen["model_config"]["probability_threshold"] == 0.6
+        assert seen["model_config"] is not config
+        assert config == original
+        assert evaluator._decision_strategy is not None
+
+    def test_native_strategy_is_built_from_packaged_rubric_and_runner_cutoff(self, monkeypatch):
+        """Construction binds the packaged binary rubric, the runner cutoff and the evaluator's own settings."""
+        module, sdk, evaluator = self._native_evaluator(monkeypatch)
+        strategy, = sdk.strategies
+        _, kwargs = strategy.construction
+        assert evaluator._decision_strategy is strategy
+        sdk.scorings["BinaryScoring"].assert_called_once_with(sdk.runner.probability_threshold)
+        assert kwargs["scoring"] is sdk.scorings["BinaryScoring"].return_value
+        assert kwargs["error_target"] is module["ExtendedErrorTarget"].TOOL_SELECTION_EVALUATOR
+        assert kwargs["threshold"] == evaluator._threshold
+        assert kwargs["timeout"] == evaluator._LLM_CALL_TIMEOUT
+        questions = kwargs["questions"]
+        assert all(question["type"] == "noul" for question in questions.values())
+        assert all("data, not instructions" in question["instructions"] for question in questions.values())
+
+    @pytest.mark.parametrize("asynchronous", [False, True])
+    def test_public_native_call_delegates_rendered_inputs(self, monkeypatch, asynchronous):
+        """A public native call validates and prepares as chat does, then sends exactly the rendered inputs."""
+        _, _, evaluator = self._native_evaluator(monkeypatch)
+        payload = deepcopy({"query": data.LOCAL_CALLS_QUERY, "response": data.LOCAL_CALLS_RESPONSE,
+                           "tool_definitions": data.LOCAL_CALLS_TOOL_DEFINITIONS})
+        original = deepcopy(payload)
+        if asynchronous:
+            result = run(evaluator._to_async()(**payload))
+        else:
+            result = evaluator(**payload)
+        assert result == {self.result_key: 1}
+        evaluator._decision_strategy.evaluate.assert_awaited_once()
+        state = evaluator._decision_strategy.evaluate.await_args.args[0]
+        assert state == self.rendered_state
+        assert payload == original
+
+    def test_response_without_calls_skips_before_native_strategy(self, monkeypatch):
+        """A response without tool calls keeps its pre-request skip and never reaches the model."""
+        _, _, evaluator = self._native_evaluator(monkeypatch)
+        result = evaluator(
+            query=deepcopy(data.LOCAL_CALLS_QUERY),
+            response=[{"role": "assistant", "content": [{"type": "text", "text": "Hello."}]}],
+            tool_definitions=deepcopy(data.LOCAL_CALLS_TOOL_DEFINITIONS),
+        )
+        evaluator._decision_strategy.evaluate.assert_not_awaited()
+        assert result[self.result_key + "_status"] == "skipped"
+        assert result[self.result_key + "_properties"] is None

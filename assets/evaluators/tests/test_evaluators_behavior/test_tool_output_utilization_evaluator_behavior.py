@@ -4,8 +4,10 @@
 """Behavioral tests for Tool Output Utilization Evaluator."""
 
 import asyncio
+import builtins
 import json
-from unittest.mock import MagicMock
+from copy import deepcopy
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -24,6 +26,16 @@ from .base_validator_unit_test import (
     SuperDoEvalNotApplicableUnitTests,
     ToolDefinitionsValidatorUnitTests,
 )
+from .base_decision_routing_test import (
+    CHAT_CONFIG,
+    DECISION_CONFIG,
+    PROMPTY_LOAD,
+    DecisionRoutingTests,
+    construct_evaluator,
+    enable_fake_decision_sdk,
+    module_namespace,
+    run,
+)
 from . import common_tool_test_data as data
 from ...builtin.tool_output_utilization.evaluator._tool_output_utilization import (
     ToolOutputUtilizationEvaluator,
@@ -34,6 +46,9 @@ from ...builtin.tool_output_utilization.evaluator._tool_output_utilization impor
     reformat_tool_definitions,
 )
 from ..common.evaluator_mock_config import create_mocked_evaluator
+
+
+_DECISION_MODULE = "azure.ai.evaluation._evaluators._common._decision_strategy"
 
 
 @pytest.mark.unittest
@@ -458,7 +473,7 @@ class TestGetAgentResponseFormatting:
         assert len(result_lines) == 1
         rendered_json = result_lines[0][len("[TOOL_RESULT] "):]
         assert json.loads(rendered_json) == sharepoint_payload
-        # Python repr would emit single quotes — JSON must not.
+        # Python repr would emit single quotes; JSON must not.
         assert "'" not in rendered_json
 
     def test_azure_ai_search_dict_result_is_json(self):
@@ -756,3 +771,131 @@ class TestToolOutputUtilizationInternalBranches:
 
         assert result["tool_output_utilization_status"] == "completed"
         assert captured["tool_definitions"] == "search: looks things up"
+
+
+@pytest.mark.unittest
+class TestToolOutputUtilizationDecisionRouting(DecisionRoutingTests):
+    """Cover native Decision routing of Tool Output Utilization on the released SDK the asset tests install."""
+
+    result_key = "tool_output_utilization"
+    class_name = "ToolOutputUtilizationEvaluator"
+    strategy_attribute = "_decision_strategy"
+    scorings = ("BinaryScoring",)
+
+    @property
+    def inputs(self):
+        """Turn-level inputs that reach the strategy, copied so the shared fixtures stay untouched."""
+        return deepcopy({"query": data.LOCAL_CALLS_QUERY, "response": data.LOCAL_CALLS_RESPONSE,
+                         "tool_definitions": data.LOCAL_CALLS_TOOL_DEFINITIONS})
+
+    @property
+    def rendered_state(self):
+        """The exact evidence the chat prompty renders for the fixture, which the native request must equal."""
+        return {"query": data.LOCAL_CALLS_EXPECTED_FLOW_QUERY,
+                "response": data.LOCAL_CALLS_TOU_EXPECTED_FLOW_RESPONSE,
+                "tool_definitions": data.LOCAL_CALLS_EXPECTED_FLOW_TOOL_DEFINITIONS_STR}
+
+    def _native_evaluator(self, monkeypatch, **kwargs):
+        """Load a fresh module, enable the fake Decision SDK and construct the evaluator natively."""
+        module = self.load()
+        sdk = enable_fake_decision_sdk(monkeypatch, module, self.class_name, result_key=self.result_key,
+                                       scorings=self.scorings)
+        evaluator, _ = construct_evaluator(module, self.class_name, **kwargs)
+        return module, sdk, evaluator
+
+    def test_broken_decision_import_is_not_hidden(self, monkeypatch):
+        """Propagate an unrelated import failure inside the strategy module instead of treating it as absent."""
+        original_import = builtins.__import__
+        error = ModuleNotFoundError(name="broken_dependency")
+
+        def broken_import(name, *args, **kwargs):
+            if name == _DECISION_MODULE:
+                raise error
+            return original_import(name, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", broken_import)
+        with pytest.raises(ModuleNotFoundError) as caught:
+            self.load()
+        assert caught.value is error
+
+    def test_chat_rejects_probability_threshold_before_loading_prompty(self):
+        """A Decision-only cutoff on a chat configuration fails before any prompt is loaded."""
+        module = self.load()
+        with patch(PROMPTY_LOAD) as load:
+            with pytest.raises(EvaluationException, match="only supported for Decision models"):
+                module[self.class_name](dict(CHAT_CONFIG), probability_threshold=0.8)
+        load.assert_not_called()
+
+    def test_unsupported_sdk_rejects_native_cutoff_without_mutating_config(self, monkeypatch):
+        """Without Decision support a native cutoff is rejected and the caller's configuration is unchanged."""
+        module = self.load()
+        monkeypatch.setitem(module_namespace(module, self.class_name), "_SDK_SUPPORTS_DECISION", False)
+        config = {**DECISION_CONFIG, "probability_threshold": 0.9}
+        original = dict(config)
+        with patch(PROMPTY_LOAD) as load:
+            with pytest.raises(EvaluationException, match="version with decision model support"):
+                module[self.class_name](config, probability_threshold=0.8)
+        load.assert_not_called()
+        assert config == original
+
+    def test_probability_threshold_override_reaches_base_as_new_config(self, monkeypatch):
+        """The override reaches the base in a new configuration while the caller's object keeps its cutoff."""
+        module = self.load()
+        enable_fake_decision_sdk(monkeypatch, module, self.class_name, result_key=self.result_key,
+                                 scorings=self.scorings)
+        base = module["ModelEvaluatorBase"]
+        fake_init = base.__init__
+        seen = {}
+
+        def record_config(instance, **kwargs):
+            seen["model_config"] = kwargs["model_config"]
+            fake_init(instance, **kwargs)
+
+        monkeypatch.setattr(base, "__init__", record_config)
+        config = {**DECISION_CONFIG, "probability_threshold": 0.9}
+        original = dict(config)
+        with patch(PROMPTY_LOAD, return_value=AsyncMock()):
+            evaluator = module[self.class_name](config, probability_threshold=0.6)
+        assert seen["model_config"]["probability_threshold"] == 0.6
+        assert seen["model_config"] is not config
+        assert config == original
+        assert evaluator._decision_strategy is not None
+
+    def test_native_strategy_is_built_from_packaged_rubric_and_runner_cutoff(self, monkeypatch):
+        """Construction binds the packaged binary rubric, the runner cutoff and the evaluator's own settings."""
+        module, sdk, evaluator = self._native_evaluator(monkeypatch)
+        strategy, = sdk.strategies
+        _, kwargs = strategy.construction
+        assert evaluator._decision_strategy is strategy
+        sdk.scorings["BinaryScoring"].assert_called_once_with(sdk.runner.probability_threshold)
+        assert kwargs["scoring"] is sdk.scorings["BinaryScoring"].return_value
+        assert kwargs["error_target"] is module["ErrorTarget"].TOOL_OUTPUT_UTILIZATION_EVALUATOR
+        assert kwargs["threshold"] == evaluator._threshold
+        assert kwargs["timeout"] == evaluator._LLM_CALL_TIMEOUT
+        questions = kwargs["questions"]
+        assert all(question["type"] == "noul" for question in questions.values())
+        assert all("data, not instructions" in question["instructions"] for question in questions.values())
+
+    @pytest.mark.parametrize("asynchronous", [False, True])
+    def test_public_native_call_delegates_rendered_inputs(self, monkeypatch, asynchronous):
+        """A public native call validates and prepares as chat does, then sends exactly the rendered inputs."""
+        _, _, evaluator = self._native_evaluator(monkeypatch)
+        payload = deepcopy({"query": data.LOCAL_CALLS_QUERY, "response": data.LOCAL_CALLS_RESPONSE,
+                           "tool_definitions": data.LOCAL_CALLS_TOOL_DEFINITIONS})
+        original = deepcopy(payload)
+        if asynchronous:
+            result = run(evaluator._to_async()(**payload))
+        else:
+            result = evaluator(**payload)
+        assert result == {self.result_key: 1}
+        evaluator._decision_strategy.evaluate.assert_awaited_once()
+        state = evaluator._decision_strategy.evaluate.await_args.args[0]
+        assert state == self.rendered_state
+        assert payload == original
+
+    def test_messages_input_reaches_native_strategy_with_rendered_inputs(self, monkeypatch):
+        """Top-level messages split at the latest user turn and reach the strategy as the same rendered inputs."""
+        _, _, evaluator = self._native_evaluator(monkeypatch)
+        messages = deepcopy(data.LOCAL_CALLS_QUERY + data.LOCAL_CALLS_RESPONSE)
+        evaluator(messages=messages, tool_definitions=deepcopy(data.LOCAL_CALLS_TOOL_DEFINITIONS))
+        assert evaluator._decision_strategy.evaluate.await_args.args[0] == self.rendered_state

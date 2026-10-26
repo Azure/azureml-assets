@@ -10,5 +10,6 @@ dependencies:
       - -r requirements.txt
       - promptflow
       - pytest
+      - pytest-asyncio
       - pytest-rerunfailures
       - pytest-cov

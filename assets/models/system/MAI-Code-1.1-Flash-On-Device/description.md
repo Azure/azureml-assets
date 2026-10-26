@@ -1,0 +1,66 @@
+# MAI Code 1.1 Flash, optimized for on-device inference
+
+## Overview
+
+MAI Code 1.1 Flash is a coding-optimized mixture-of-experts model from Microsoft AI, designed for agentic software development workflows.
+
+The model is optimized for efficient local inference while supporting long-context coding tasks such as code generation, codebase exploration, debugging, testing, and tool use.
+
+## Model details
+
+| Property | Details |
+| --- | --- |
+| Model | MAI Code 1.1 Flash |
+| Provider | Microsoft |
+| Model type | Mixture of experts |
+| Total parameters | 137.9B |
+| Active parameters | 6.8B |
+| Primary use | Coding and agentic software development |
+| Deployment | Local inference |
+| Context length | Up to 256K tokens |
+| Model size | 53 GB |
+| Inference optimizations | Quantization and speculative decoding |
+
+## Capabilities
+
+MAI Code 1.1 Flash is optimized for coding and agentic software development tasks, including:
+
+- Code generation and modification
+- Codebase exploration and understanding
+- Bug fixing
+- Test generation and iteration
+- Tool use in agentic workflows
+- Development documentation
+
+## On-device inference
+
+MAI Code 1.1 Flash is optimized for on-device inference, enabling the model to execute locally on supported hardware while retaining the long-context capabilities needed for coding and agentic workloads.
+
+The model supports context lengths of up to 256K tokens and has an on-device model size of 53 GB. Memory requirements increase with context length due in part to the key-value cache used during inference. In published testing, peak memory usage reached 75.5 GB at 256K context.
+
+The on-device implementation uses inference optimizations including quantization and speculative decoding to improve memory efficiency and runtime performance.
+
+## Quantization
+
+The on-device version of MAI Code 1.1 Flash uses mixed-precision weight quantization to reduce the memory required to run the model locally while preserving strong coding capability. Rather than representing the model uniformly at higher precision, mixed-precision quantization uses reduced numerical precision to achieve a better balance between model footprint and quality. The resulting on-device model averages approximately 3.3 bits per weight and reduces the model footprint to 53 GB, while retaining support for the full 256K-token context window.
+
+Maintaining quality under quantization is particularly important for coding and agentic workloads. Small changes in model output can affect code correctness, identifiers, tool calls, or patches, so reducing model size must be evaluated against successful completion of real coding tasks, not memory savings alone. The quantized model therefore undergoes end-to-end coding evaluation to validate that its reduced footprint preserves the capabilities needed for local agentic development.
+
+## Speculative decoding
+
+The on-device implementation of MAI Code 1.1 Flash uses DFlash2 sliding-window speculative decoding to improve inference performance while maintaining model quality. Speculative decoding uses a lightweight (700M parameter sized) semi-autoregressive drafter to predict candidate tokens that are verified by the target model. When multiple candidate tokens are accepted, the model can advance through generation more efficiently than producing every token independently. Depending on the workload and inference configuration, DFlash2 can deliver up to 2× faster generation.
+
+For on-device agentic coding, this optimization complements quantization: quantization reduces the model footprint, while speculative decoding targets generation performance. Together, these techniques help make a large coding model practical for interactive local inference.
+
+## Performance
+
+MAI Code 1.1 Flash maintains comparable coding quality following optimization for local inference.
+
+| Benchmark | Dataset size | MAI Code 1.1 Flash | MAI Code 1.1 Flash On-device |
+| --- | ---: | ---: | ---: |
+| SWE-Bench Verified | 500 | 72.6% | 70.80% |
+| Terminal-Bench 2.1 | 89 | 62.9% | 66.29% |
+
+Benchmark results may vary based on inference configuration and evaluation methodology.
+
+For additional performance measurements, including throughput across different context lengths and details on speculative decoding, see [Bringing local models and sandboxed tools to Windows and GitHub Copilot](https://commandline.microsoft.com/local-models-sandboxed-tools-github-windows/).

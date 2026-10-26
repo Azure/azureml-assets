@@ -4,7 +4,8 @@ azureml-acft-common-components[image]~={{latest-pypi-version}}
 azureml-acft-image-components=={{latest-pypi-version}}
 azureml-core=={{latest-pypi-version}}
 requests>=2.33.0
-datasets==2.19.0
+datasets==5.0.1
+fsspec>=2026.6.0
 transformers>=5.3.0
 accelerate>=0.29.3
 optimum==1.24.0
