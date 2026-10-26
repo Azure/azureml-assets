@@ -164,12 +164,12 @@ RUN set -eu; \
     \) -print -quit)"; \
     [ -z "$stale" ] || { echo "stale setuptools/msgpack scanner metadata remains: $stale" >&2; exit 1; }
 
-RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
+RUN conda clean -a -y && rm -rf /opt/conda/pkgs/ /opt/miniconda/pkgs/
 
 # Refresh packages for the latest Ubuntu security advisories.
 RUN set -eux; \
     apt-get update; \
-    security_packages="libevent-core-2.1-7 libssl-dev libssl3 openssl"; \
+    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libevent-core-2.1-7 libssl-dev libssl3 libx11-6 libx11-data libx11-xcb1 libxml2 openssh-client openssh-server openssh-sftp-server openssl"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
