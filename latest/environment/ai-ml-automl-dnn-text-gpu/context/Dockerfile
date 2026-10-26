@@ -201,7 +201,7 @@ RUN set -eu; \
 # Refresh packages for the latest Ubuntu security advisories.
 RUN set -eux; \
     apt-get update; \
-    security_packages="libssl-dev libssl3 openssl"; \
+    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libssl-dev libssl3 libx11-6 libx11-data libx11-xcb1 openssh-client openssh-server openssh-sftp-server openssl"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
@@ -213,5 +213,6 @@ RUN set -eux; \
     rm -rf /var/lib/apt/lists/*
 
 # Reassert newly patched transitive dependencies after all package installs.
-RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/python -m pip install --no-cache-dir --upgrade 'urllib3>=2.8.0' && \
+RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/python -m pip install --no-cache-dir --upgrade \
+        'datasets>=5.0.1' 'fsspec>=2026.6.0' 'urllib3>=2.8.0' && \
     /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0' 'urllib3>=2.8.0'
