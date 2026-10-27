@@ -27,14 +27,14 @@ defaults:
 
 jobs:
   check-execution-context:
-    uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
+    uses: $/.github/workflows/check-execution-context.yaml
   run-batch-score-tests:
     name: Run Batch Score Component Tests
     runs-on: ubuntu-latest
     needs: check-execution-context
     steps:
       - name: Clone branch
-        uses: Azure/azureml-assets/.github/actions/clone-repo@main
+        uses: $/.github/actions/clone-repo
         with:
           forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
       - name: Use Python 3.10
