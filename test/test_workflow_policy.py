@@ -18,6 +18,10 @@ SPEC = importlib.util.spec_from_file_location(
 )
 policy_check = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(policy_check)
+GATE_REFERENCES = [
+    policy_check.GATE_USES,
+    f"$/.github/workflows/{policy_check.GATE_FILE}",
+]
 
 
 @pytest.fixture
@@ -59,9 +63,12 @@ def test_repository_policy(repository):
 
 
 @pytest.mark.parametrize("suffix", [".yml", ".yaml"])
-def test_new_gated_workflow_is_automatically_discovered(repository, suffix):
+@pytest.mark.parametrize("gate_uses", GATE_REFERENCES)
+def test_new_gated_workflow_is_automatically_discovered(repository, suffix, gate_uses):
     """Accept new workflows that use the shared gate without editing an inventory."""
-    assert validate_new(repository, new_workflow(), f"brand-new{suffix}") == []
+    document = new_workflow()
+    document["jobs"][policy_check.GATE_JOB]["uses"] = gate_uses
+    assert validate_new(repository, document, f"brand-new{suffix}") == []
 
 
 @pytest.mark.parametrize("event", [
@@ -76,17 +83,25 @@ def test_new_ungated_workflow_fails(repository, event):
 @pytest.mark.parametrize("override", [
     {"uses": "attacker/repo/.github/workflows/check-execution-context.yaml@main"},
     {"uses": "./.github/workflows/check-execution-context.yaml"},
+    {"uses": "$/.github/workflows/other.yaml"},
+    {"uses": "$/.github/workflows/check-execution-context.yaml@main"},
+    {"uses": "$/.github/workflows/../workflows/check-execution-context.yaml"},
+    {"uses": ["$/.github/workflows/check-execution-context.yaml"]},
+    {"uses": {"path": "$/.github/workflows/check-execution-context.yaml"}},
     {"if": "false"},
     {"continue-on-error": "true"},
     {"strategy": {"matrix": {"skip": ["true"]}}},
     {"needs": "build"},
     {"secrets": "inherit"},
 ])
-def test_gate_cannot_be_replaced_or_overridden(repository, override):
+@pytest.mark.parametrize("gate_uses", GATE_REFERENCES)
+def test_gate_cannot_be_replaced_or_overridden(repository, override, gate_uses):
     """Require the exact trusted gate call without optional execution."""
     document = new_workflow()
+    document["jobs"][policy_check.GATE_JOB]["uses"] = gate_uses
     document["jobs"][policy_check.GATE_JOB].update(override)
-    assert validate_new(repository, document)
+    errors = validate_new(repository, document)
+    assert any(error.startswith("'new-workflow.yaml': ") for error in errors)
 
 
 @pytest.mark.parametrize("kind", ["ungated-root", "unknown-dependency", "cycle"])
@@ -144,9 +159,13 @@ def test_required_policy_workflows_cannot_be_deleted(repository, name):
 
 
 @pytest.mark.parametrize("change", ["label", "exit-zero", "shell", "output", "continue-on-error"])
-def test_shared_gate_cannot_be_weakened(repository, change):
+@pytest.mark.parametrize("gate_uses", GATE_REFERENCES)
+def test_shared_gate_cannot_be_weakened(repository, change, gate_uses):
     """Reject restoration of label exceptions and failure/output overrides."""
     workflows, policy = repository
+    caller = new_workflow()
+    caller["jobs"][policy_check.GATE_JOB]["uses"] = gate_uses
+    workflows["new-workflow.yaml"] = workflow_bytes(caller)
     document = policy_check.parse_workflow(workflows[policy_check.GATE_FILE])
     job = document["jobs"][policy_check.GATE_JOB]
     if change == "label":
@@ -160,7 +179,8 @@ def test_shared_gate_cannot_be_weakened(repository, change):
     else:
         job["continue-on-error"] = "true"
     workflows[policy_check.GATE_FILE] = workflow_bytes(document)
-    assert policy_check.validate_workflows(workflows, policy)
+    errors = policy_check.validate_workflows(workflows, policy)
+    assert any(error.startswith(f"{policy_check.GATE_FILE!r}: ") for error in errors)
 
 
 @pytest.mark.parametrize("name,event", [
