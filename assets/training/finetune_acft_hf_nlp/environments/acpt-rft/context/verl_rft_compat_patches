@@ -249,8 +249,10 @@ _VERL_ACTOR_ATTN_NEW = '''        attn_implementation = override_model_config.ge
         )'''
 
 _VLLM_LORA_BASE_WEIGHT_OLD = '''            else:
-                can_skip_module = self._can_skip(prefix + ".")
-                can_skip_param = self._can_skip(prefix)'''
+                if self._can_skip(prefix):
+                    logger.debug("Skipping missing %s", prefix)
+
+                    continue'''
 _VLLM_LORA_BASE_WEIGHT_NEW = '''            elif child_prefix == "weight" and "base_layer" in child_modules:
                 # ACFT-RFT-COMPAT: live LoRA synchronization sends the base
                 # embedding as embed_tokens.weight, while vLLM wraps it under
@@ -264,8 +266,10 @@ _VLLM_LORA_BASE_WEIGHT_NEW = '''            elif child_prefix == "weight" and "b
                     child_weights,
                 )
             else:
-                can_skip_module = self._can_skip(prefix + ".")
-                can_skip_param = self._can_skip(prefix)'''
+                if self._can_skip(prefix):
+                    logger.debug("Skipping missing %s", prefix)
+
+                    continue'''
 
 _VERL_DISPATCH_OLD = '''        else:
             return self.inference_engine.execute_method(method, *args, **kwargs)'''
