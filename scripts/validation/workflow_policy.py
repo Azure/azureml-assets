@@ -25,6 +25,7 @@ ROOT = Path(__file__).resolve().parents[2]
 GATE_FILE = "check-execution-context.yaml"
 GATE_JOB = "check-execution-context"
 GATE_USES = "Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main"
+SELF_GATE_USES = f"$/.github/workflows/{GATE_FILE}"
 POLICY_FILE = "workflow-policy.yaml"
 POLICY_REUSABLE = "check-workflow-policy.yaml"
 POLICY_USES = f"./.github/workflows/{POLICY_REUSABLE}"
@@ -123,7 +124,9 @@ def validate_gated_workflow(document):
     require(isinstance(jobs, dict) and all(isinstance(job, dict) for job in jobs.values()),
             "Workflow jobs must be mappings")
     gate = jobs.get(GATE_JOB, {})
-    require(gate.get("uses") == GATE_USES, f"Missing trusted {GATE_JOB} reusable workflow")
+    # Keep legacy callers compatible; validate_gate still enforces the candidate gate's full contract.
+    require(gate.get("uses") in (GATE_USES, SELF_GATE_USES),
+            f"Missing trusted {GATE_JOB} reusable workflow")
     require(set(gate) <= {"name", "uses", "permissions"}, "The execution gate cannot be conditional or overridden")
     graph = {name: dependencies(job) for name, job in jobs.items()}
     require(all(needs <= jobs.keys() for needs in graph.values()), "Unknown job dependency")
