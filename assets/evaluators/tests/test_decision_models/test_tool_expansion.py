@@ -292,13 +292,13 @@ def test_old_sdk_capability_and_invalid_config_fail_before_chat_load(evaluator_t
 
 
 @pytest.mark.parametrize("evaluator_type", [ToolInputAccuracyEvaluator, ToolOutputUtilizationEvaluator])
-def test_required_definitions_remain_required(evaluator_type):
-    """Standalone input and output judges still require tool definitions."""
+def test_optional_definitions_skip_before_native_request(evaluator_type):
+    """Missing optional tool definitions skip the judgment without a native request."""
     evaluator = native_evaluator(evaluator_type)
     payload = inputs()
     payload.pop("tool_definitions")
-    with pytest.raises(EvaluationException):
-        evaluator(**payload)
+    result = evaluator(**payload)
+    assert result[evaluator._RESULT_KEY + "_status"] == "skipped"
     evaluator._model_runner._post.assert_not_called()
 
 
@@ -407,7 +407,7 @@ def test_success_public_split_turn_failure_preserves_prior_paid_usage(failure, a
 
 @pytest.mark.parametrize("with_definitions", [False, True])
 def test_utilization_public_conversation_rejection_does_not_invent_split_support(with_definitions):
-    """Keep the existing required-definition and conversation/singleton validation boundaries."""
+    """Reject the unsupported conversation wrapper independently of optional definitions."""
     evaluator = native_evaluator(ToolOutputUtilizationEvaluator)
     kwargs = {"conversation": _serialized_tool_conversation()}
     if with_definitions:

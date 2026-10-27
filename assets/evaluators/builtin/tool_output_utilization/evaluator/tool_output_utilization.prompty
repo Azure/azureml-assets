@@ -19,6 +19,8 @@ inputs:
     type: string
   tool_definitions:
     type: string
+    optional: true
+    default: ""
 ---
 system:
 You are **Tool Output Utilization Judge**, an expert evaluator whose only task is to decide whether the AGENT correctly interpreted and *used* TOOL OUTPUTS whenproducing the RESPONSE.
@@ -232,7 +234,9 @@ FINAL NOTES:
 - Output must be exactly one JSON object and must follow the key order: `properties`, `reason`, `score`, `status`.
 
 # Data
+{% if tool_definitions %}
 TOOL_DEFINITIONS: {{tool_definitions}}
+{% endif %}
 CONVERSATION_HISTORY: {{query}}
 AGENT_RESPONSE: {{response}}
 
