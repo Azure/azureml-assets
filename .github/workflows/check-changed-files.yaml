@@ -32,7 +32,7 @@ jobs:
 
     steps:
       - name: Clone branch
-        uses: Azure/azureml-assets/.github/actions/clone-repo@main
+        uses: $/.github/actions/clone-repo
         with:
           forked-pr: ${{ inputs.forked_pr_input }}
           fetch-depth: 2
