@@ -6,4 +6,6 @@ dependencies:
 - pip>=26.2
 - setuptools>=83
 - pip:
+  - PyJWT>=2.15.0
+  - urllib3>=2.8.0
   - mldesigner==0.1.0b23
