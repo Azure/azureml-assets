@@ -771,7 +771,15 @@ class ToolOutputUtilizationEvaluator(ModelEvaluatorBase[Union[str, float]]):
                 result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
                 return result
 
-            score = float(llm_output.get("score", 0))
+            score = llm_output.get("score", 0)
+            if score is None:
+                raise EvaluationException(
+                    message="Evaluator returned a null score.",
+                    blame=ErrorBlame.SYSTEM_ERROR,
+                    category=ErrorCategory.FAILED_EXECUTION,
+                    target=ErrorTarget.TOOL_OUTPUT_UTILIZATION_EVALUATOR,
+                )
+            score = float(score)
             score_result = "pass" if score >= 1.0 else "fail"
             reason = llm_output.get("reason", "")
             llm_properties = llm_output.get("properties", {}) or {}

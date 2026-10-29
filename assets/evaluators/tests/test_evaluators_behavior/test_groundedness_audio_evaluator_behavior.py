@@ -12,6 +12,7 @@ from unittest.mock import AsyncMock, Mock
 
 import aiohttp
 import pytest
+from .base_judge_score_handling_test import AudioJudgeScoreHandlingTests
 from azure.ai.evaluation import AzureOpenAIModelConfiguration
 from azure.ai.evaluation._exceptions import EvaluationException
 
@@ -46,6 +47,19 @@ def _make_evaluator(**kwargs) -> GroundednessAudioEvaluator:
         azure_deployment="gpt-realtime-2",
     )
     return GroundednessAudioEvaluator(model_config=model_config, credential=Mock(), **kwargs)
+
+
+@pytest.mark.unittest
+class TestGroundednessAudioJudgeScores(AudioJudgeScoreHandlingTests):
+    """Exercise score validation at the real Realtime client boundary."""
+
+    evaluator_class = GroundednessAudioEvaluator
+    evaluator_name = "groundedness_audio"
+    judge_properties = {
+        "grounding_sources": ["Tool result."],
+        "grounded_claims": "Claims match.",
+        "ungrounded_claims": "None",
+    }
 
 
 @pytest.mark.unittest

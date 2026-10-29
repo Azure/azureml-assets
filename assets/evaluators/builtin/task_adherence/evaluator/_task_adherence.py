@@ -997,7 +997,15 @@ class TaskAdherenceEvaluator(ModelEvaluatorBase[Union[str, float]]):
             return self._return_not_applicable_result(reason, self._threshold, prompty_output_dict)
 
         reasoning = llm_output.get("reason", "")
-        score = float(llm_output.get("score", 0.0))
+        score = llm_output.get("score", 0.0)
+        if score is None:
+            raise EvaluationException(
+                message="Evaluator returned a null score.",
+                blame=ErrorBlame.SYSTEM_ERROR,
+                category=ErrorCategory.FAILED_EXECUTION,
+                target=ErrorTarget.TASK_ADHERENCE_EVALUATOR,
+            )
+        score = float(score)
         score_result = "pass" if score >= 1.0 else "fail"
         llm_properties = llm_output.get("properties", {}) or {}
         token_metadata = self._get_token_metadata(prompty_output_dict)

@@ -68,7 +68,7 @@ define `_parse_prompty_output` are shown). A cell value is the returned
 | --- | --- | --- | --- |
 | `coherence` | `error` | `error` | `error` |
 | `groundedness` | `completed` | `error` | `error` |
-| `customer_satisfaction` | `completed` | `raise TypeError` | `error` |
+| `customer_satisfaction` | `error` | `error` | `error` |
 | `task_adherence` | `completed` | `raise ValueError` | `raise EvaluationException` |
 | `task_completion` | `completed` | `raise ValueError` | `raise EvaluationException` |
 

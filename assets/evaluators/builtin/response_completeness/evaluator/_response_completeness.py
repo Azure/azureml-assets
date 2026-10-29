@@ -383,7 +383,15 @@ class ResponseCompletenessEvaluator(ModelEvaluatorBase[Union[str, float]]):
                 skipped.update({f"{self._result_key}_{key}": value for key, value in metadata.items()})
                 return skipped
 
-            score = float(llm_output.get("score", math.nan))
+            score = llm_output.get("score", math.nan)
+            if score is None:
+                raise EvaluationException(
+                    message="Evaluator returned a null score.",
+                    blame=ErrorBlame.SYSTEM_ERROR,
+                    category=ErrorCategory.FAILED_EXECUTION,
+                    target=ErrorTarget.COMPLETENESS_EVALUATOR,
+                )
+            score = float(score)
             reason = llm_output.get("reason", "")
             llm_properties = llm_output.get("properties", {}) or {}
             score_result = self._get_binary_result(score)

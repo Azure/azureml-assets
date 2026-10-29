@@ -9,6 +9,7 @@ import math
 from unittest.mock import MagicMock
 
 import pytest
+from .base_judge_score_handling_test import JudgeScoreHandlingTests
 from azure.ai.evaluation._exceptions import EvaluationException
 from ..common.base_prompty_evaluator_runner import BasePromptyEvaluatorRunner
 from ..common.evaluator_mock_config import (
@@ -39,6 +40,14 @@ INTERMEDIATE_RESPONSE = [
         ],
     }
 ]
+
+
+@pytest.mark.unittest
+class TestResponseCompletenessJudgeScores(JudgeScoreHandlingTests):
+    """Collect shared null-score regressions through this asset's CI selector."""
+
+    evaluator_class = ResponseCompletenessEvaluator
+    evaluator_name = "response_completeness"
 
 
 @pytest.mark.unittest

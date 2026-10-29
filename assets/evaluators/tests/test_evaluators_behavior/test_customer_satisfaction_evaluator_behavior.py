@@ -9,7 +9,7 @@ from copy import deepcopy
 
 import pytest
 from typing import Any, Dict, List
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from azure.ai.evaluation._exceptions import EvaluationException
 
@@ -32,6 +32,9 @@ from ...builtin.customer_satisfaction.evaluator._customer_satisfaction import (
     CustomerSatisfactionEvaluator,
     serialize_messages,
 )
+from ...builtin.coherence.evaluator._coherence import CoherenceEvaluator
+from ...builtin.groundedness.evaluator._groundedness import GroundednessEvaluator
+from ...builtin.task_completion.evaluator._task_completion import TaskCompletionEvaluator
 from ..common.evaluator_mock_config import (
     create_mocked_evaluator,
     create_none_score_flow_side_effect,
@@ -520,8 +523,8 @@ class TestCustomerSatisfactionSerializeMessages:
 class TestCustomerSatisfactionNoneScoreHandling:
     """Regression tests for None-score handling in _parse_prompty_output.
 
-    When the flow returns a skipped/None score, _parse_prompty_output must short-circuit
-    on the skipped status and return score=None instead of crashing on ``None >= threshold``.
+    Null scores must not crash or become passing scores, regardless of whether
+    the judge explicitly skipped the evaluation.
     """
 
     def test_turn_level_none_score_does_not_crash(self):
@@ -541,6 +544,130 @@ class TestCustomerSatisfactionNoneScoreHandling:
         result = evaluator(messages=VALID_MESSAGES)
         assert result["customer_satisfaction"] is None
         assert result["customer_satisfaction_result"] == "skipped"
+
+    @pytest.mark.parametrize("inputs", [
+        pytest.param({"query": "Question", "response": "Answer"}, id="turn"),
+        pytest.param({"messages": VALID_MESSAGES}, id="conversation"),
+    ])
+    @pytest.mark.parametrize("score_fields", [
+        pytest.param({"score": None}, id="null"),
+        pytest.param({}, id="missing"),
+        pytest.param({"score": "invalid"}, id="nonnumeric"),
+        pytest.param({"score": True}, id="boolean"),
+        pytest.param({"score": float("nan")}, id="nan"),
+        pytest.param({"score": float("inf")}, id="infinity"),
+        pytest.param({"score": 0}, id="below-range"),
+        pytest.param({"score": 6}, id="above-range"),
+    ])
+    def test_invalid_score_returns_error(self, inputs, score_fields):
+        """Non-skipped null scores reproduce the observed threshold-comparison failure."""
+        evaluator = _create_mocked_evaluator()
+        reason = "The judge could not assign a score."
+        output = {
+            "llm_output": {
+                "status": "completed",
+                "reason": reason,
+                "properties": {"judgeConfidence": "low"},
+                **score_fields,
+            },
+            "input_token_count": 7,
+            "output_token_count": 3,
+            "total_token_count": 10,
+        }
+        flow = AsyncMock(return_value=output)
+        evaluator._flow = flow
+        evaluator._multi_turn_flow = flow
+
+        result = evaluator(**inputs)
+
+        assert result["customer_satisfaction"] is None
+        assert result["customer_satisfaction_score"] is None
+        assert result["customer_satisfaction_passed"] is None
+        assert result["customer_satisfaction_result"] == "error"
+        assert result["customer_satisfaction_status"] == "error"
+        assert "invalid score" in result["customer_satisfaction_reason"].lower()
+        assert reason in result["customer_satisfaction_reason"]
+        assert result["customer_satisfaction_properties"]["judgeConfidence"] == "low"
+        assert result["customer_satisfaction_total_tokens"] == 10
+        flow.assert_awaited_once()
+
+    @pytest.mark.parametrize("inputs", [
+        pytest.param({"query": "Question", "response": "Answer"}, id="turn"),
+        pytest.param({"messages": VALID_MESSAGES}, id="conversation"),
+    ])
+    def test_reported_error_is_not_scored(self, inputs):
+        """An explicit judge error cannot produce a passing score."""
+        evaluator = _create_mocked_evaluator()
+        reason = "The judge could not evaluate the interaction."
+        flow = AsyncMock(return_value={
+            "llm_output": {"score": 5, "status": "error", "reason": reason},
+        })
+        evaluator._flow = flow
+        evaluator._multi_turn_flow = flow
+
+        result = evaluator(**inputs)
+
+        assert result["customer_satisfaction"] is None
+        assert result["customer_satisfaction_score"] is None
+        assert result["customer_satisfaction_passed"] is None
+        assert result["customer_satisfaction_result"] == "error"
+        assert result["customer_satisfaction_status"] == "error"
+        assert result["customer_satisfaction_reason"] == reason
+        flow.assert_awaited_once()
+
+    @pytest.mark.parametrize("inputs", [
+        pytest.param({"query": "Question", "response": "Answer"}, id="turn"),
+        pytest.param({"messages": VALID_MESSAGES}, id="conversation"),
+    ])
+    @pytest.mark.parametrize(("score", "label"), [
+        (1, "fail"), (2.5, "fail"), (3, "pass"), (5, "pass"),
+    ])
+    def test_valid_scores_keep_quality_outcomes(self, inputs, score, label):
+        """Valid scores retain their value and threshold-based pass/fail meaning."""
+        evaluator = _create_mocked_evaluator()
+        flow = AsyncMock(return_value={
+            "llm_output": {"score": score, "status": "completed", "reason": "Evaluated."},
+        })
+        evaluator._flow = flow
+        evaluator._multi_turn_flow = flow
+
+        result = evaluator(**inputs)
+
+        assert result["customer_satisfaction"] == score
+        assert result["customer_satisfaction_score"] == score
+        assert result["customer_satisfaction_result"] == label
+        assert result["customer_satisfaction_passed"] is (label == "pass")
+        assert result["customer_satisfaction_status"] == "completed"
+        flow.assert_awaited_once()
+
+    def test_null_score_keeps_other_conversation_results_available(self):
+        """A CSAT judge-output error does not interrupt the affected evaluator group."""
+        csat = _create_mocked_evaluator()
+        csat._multi_turn_flow = AsyncMock(return_value={
+            "llm_output": {
+                "score": None,
+                "status": "completed",
+                "reason": "The judge could not assign a score.",
+            },
+        })
+        evaluators = {
+            "customer_satisfaction": csat,
+            "task_completion": create_mocked_evaluator(TaskCompletionEvaluator, "task_completion"),
+            "groundedness": create_mocked_evaluator(GroundednessEvaluator, "groundedness"),
+            "coherence": create_mocked_evaluator(CoherenceEvaluator, "coherence"),
+        }
+
+        results = {
+            name: evaluator(messages=VALID_MESSAGES)
+            for name, evaluator in evaluators.items()
+        }
+
+        assert results["customer_satisfaction"]["customer_satisfaction_status"] == "error"
+        assert results["customer_satisfaction"]["customer_satisfaction_score"] is None
+        for name in ("task_completion", "groundedness", "coherence"):
+            assert results[name][f"{name}_status"] == "completed"
+            assert results[name][f"{name}_result"] == "pass"
+            assert results[name][f"{name}_score"] is not None
 
 
 # endregion

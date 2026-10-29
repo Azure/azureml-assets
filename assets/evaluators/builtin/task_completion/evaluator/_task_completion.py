@@ -1032,7 +1032,15 @@ class TaskCompletionEvaluator(ModelEvaluatorBase[Union[str, int]]):
                 None, "not_applicable", f"Not applicable: {answer.get('reason', '')}", "skipped",
                 answer.get("properties", {}) or {}, model_output_dict,
             )
-        score = float(answer.get("score", 0))
+        score = answer.get("score", 0)
+        if score is None:
+            raise EvaluationException(
+                message="Evaluator returned a null score.",
+                blame=ErrorBlame.SYSTEM_ERROR,
+                category=ErrorCategory.FAILED_EXECUTION,
+                target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
+            )
+        score = float(score)
         return self._build_result(
             score, "pass" if score >= 1.0 else "fail", answer.get("reason", ""), "completed",
             answer.get("properties", {}) or {}, model_output_dict,

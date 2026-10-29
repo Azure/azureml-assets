@@ -12,6 +12,7 @@ from unittest.mock import AsyncMock, Mock
 
 import aiohttp
 import pytest
+from .base_judge_score_handling_test import AudioJudgeScoreHandlingTests
 from azure.ai.evaluation import AzureOpenAIModelConfiguration
 from azure.ai.evaluation._exceptions import EvaluationException
 
@@ -46,6 +47,19 @@ def _make_evaluator(**kwargs) -> TaskCompletionAudioEvaluator:
         azure_deployment="gpt-realtime-2",
     )
     return TaskCompletionAudioEvaluator(model_config=model_config, credential=Mock(), **kwargs)
+
+
+@pytest.mark.unittest
+class TestTaskCompletionAudioJudgeScores(AudioJudgeScoreHandlingTests):
+    """Exercise score validation at the real Realtime client boundary."""
+
+    evaluator_class = TaskCompletionAudioEvaluator
+    evaluator_name = "task_completion_audio"
+    judge_properties = {
+        "user_requests": ["Complete task."],
+        "delivered_outcome": "Done.",
+        "completion_gaps": "None",
+    }
 
 
 @pytest.mark.unittest
