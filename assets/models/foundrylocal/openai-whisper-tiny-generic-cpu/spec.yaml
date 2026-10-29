@@ -6,12 +6,14 @@ tags:
   capabilities: ''
   supportsReasoning: ''
 system_metadata:
-  previewType: hideUI
   alias: whisper-tiny
   publisher: Microsoft
+  lifecycle: Generally available
   directoryPath: v4
   foundryLocal: ''
-  deploymentOptions: ['Foundry Local on Devices']
+  deploymentOptions:
+  - Foundry Local on Devices
+  - Foundry Local on Azure Local
   inputModalities:
   - audio
   license: apache-2.0

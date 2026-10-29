@@ -6,12 +6,14 @@ tags:
   supportsReasoning: ''
   contextLength: 0
 system_metadata:
-  previewType: hideUI
   alias: parakeet-tdt-0.6b-v2
   publisher: Microsoft
+  lifecycle: Generally available
   directoryPath: v1
   foundryLocal: ''
-  deploymentOptions: ['Foundry Local on Devices']
+  deploymentOptions:
+  - Foundry Local on Devices
+  - Foundry Local on Azure Local
   inputModalities:
   - audio
   license: MIT

@@ -6,12 +6,47 @@ tags:
   supportsReasoning: 'true'
   contextLength: 65536
 system_metadata:
-  previewType: hideUI
   alias: smollm3-3b
   publisher: Microsoft
+  lifecycle: Generally available
   directoryPath: v1
   foundryLocal: ''
-  deploymentOptions: ['Foundry Local on Devices']
+  deploymentOptions:
+  - Foundry Local on Devices
+  - Foundry Local on Azure Local
+  deploymentOptionDetails:
+    Foundry Local on Azure Local: |-
+      # Expected running times for smollm3-3b
+
+      The results are for standard chat completion usages.
+
+      Mean metrics stand for the average performance, p99 metrics stand for the worst-performant percentile.
+
+      ## ONNX (cuda-gpu)
+
+      **Max model len**: 65536
+
+      ### Nvidia A10 GPU
+
+      | Maximal concurrency | Mean TTFT (ms) | P99 TTFT (ms) | Output throughput (tokens/s) |
+      |---|---|---|---|
+      | 1 request | 618.99 | 647.25 | 118.91 |
+      | 2 requests | n/a | n/a | n/a |
+      | 4 requests | n/a | n/a | n/a |
+      | 8 requests | n/a | n/a | n/a |
+
+      ### Nvidia RTX Pro 6000 vGPU
+
+      | Maximal concurrency | Mean TTFT (ms) | P99 TTFT (ms) | Output throughput (tokens/s) |
+      |---|---|---|---|
+      | 1 request | 467.93 | 3707.49 | 235.06 |
+      | 2 requests | 640.82 | 962.73 | 252.95 |
+      | 4 requests | 1260.46 | 1638.01 | 233.47 |
+      | 8 requests | 2907.67 | 4040.42 | 210.43 |
+
+      ---
+
+      Measured on Foundry on Arc build `0.260803.5`.
   inputModalities:
   - text
   license: apache-2.0
