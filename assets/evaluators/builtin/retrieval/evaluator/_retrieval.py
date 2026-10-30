@@ -523,6 +523,9 @@ class RetrievalEvaluator(ModelEvaluatorBase[Union[str, float]]):
                 parsed_output = json.loads(llm_output)
             except (json.JSONDecodeError, TypeError):
                 parsed_output = None
+            else:
+                if not isinstance(parsed_output, dict):
+                    raise self._invalid_output("UnexpectedResponseShape", prompty_output_dict)
         elif isinstance(llm_output, str):
             raise self._invalid_output("EmptyResponse", prompty_output_dict)
         else:
@@ -562,7 +565,11 @@ class RetrievalEvaluator(ModelEvaluatorBase[Union[str, float]]):
             except (TypeError, ValueError):
                 legacy_score_is_valid = False
             if not legacy_score_is_valid:
-                match = re.search(r"\bscore\s*(?:is|[:=])?\s*([1-5])\b", llm_output, re.IGNORECASE)
+                match = re.search(
+                    r"\bscore\s*(?:is\b|[:=])\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)(?![\w.])",
+                    llm_output,
+                    re.IGNORECASE,
+                )
                 if not match:
                     raise self._invalid_output("MalformedJson", prompty_output_dict)
                 score = match.group(1)
@@ -574,7 +581,7 @@ class RetrievalEvaluator(ModelEvaluatorBase[Union[str, float]]):
             # floats while enforcing the same semantic integer score contract.
             score = float(score)
         except (TypeError, ValueError):
-            raise self._invalid_output("InvalidScoreType", prompty_output_dict)
+            raise self._invalid_output("InvalidScoreType", prompty_output_dict) from None
 
         # Enforce the published Retrieval contract before calculating pass/fail:
         # the score must be finite, integral, and within the inclusive 1-5 range.
@@ -621,7 +628,9 @@ class RetrievalEvaluator(ModelEvaluatorBase[Union[str, float]]):
             llm_output = prompty_output.get("llm_output", prompty_output)
             output_type = type(llm_output).__name__
             raw_finish_reason = prompty_output.get("finish_reason", "")
-            if isinstance(raw_finish_reason, str):
+            if isinstance(raw_finish_reason, str) and raw_finish_reason in (
+                "stop", "length", "content_filter", "tool_calls", "function_call",
+            ):
                 finish_reason = raw_finish_reason
         logger.warning(
             "Retrieval judge output validation failed. category=%s output_type=%s finish_reason=%s",
@@ -669,7 +678,17 @@ class RetrievalEvaluator(ModelEvaluatorBase[Union[str, float]]):
         if isinstance(eval_input.get("query"), list):
             eval_input["query"] = _preprocess_messages(eval_input["query"])
 
-        return await self._the_super_do_eval(eval_input)
+        result = await self._the_super_do_eval(eval_input)
+        # Decision strategies bypass the chat-output validation above.
+        score = result.get(self._result_key, 0)
+        if score is not None and math.isnan(score):
+            raise EvaluationException(
+                message="Evaluator returned invalid output.",
+                blame=ErrorBlame.SYSTEM_ERROR,
+                category=ErrorCategory.FAILED_EXECUTION,
+                target=ErrorTarget.RETRIEVAL_EVALUATOR,
+            )
+        return result
 
     @override
     async def _real_call(self, **kwargs):
