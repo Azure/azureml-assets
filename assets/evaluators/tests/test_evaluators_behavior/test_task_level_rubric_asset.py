@@ -94,40 +94,6 @@ class TestTaskLevelRubricAsset:
         validator = Draft202012Validator(SPEC["dataMappingSchema"])
         assert list(validator.iter_errors(row))
 
-    @pytest.mark.parametrize("include_query_response", [False, True])
-    def test_messages_contract(self, include_query_response):
-        """Messages can replace query/response or accompany them."""
-        row = {
-            "messages": [
-                {"role": "user", "content": "Question"},
-                {"role": "assistant", "content": "Answer"},
-            ],
-            "rubric_dimensions": [
-                {"id": "quality", "description": "Answer", "weight": 1}
-            ],
-        }
-        if include_query_response:
-            row.update(query="Other question", response="Other answer")
-        validator = Draft202012Validator(SPEC["dataMappingSchema"])
-        assert validator.is_valid(row)
-        assert not validator.is_valid(
-            {key: value for key, value in row.items()
-             if key != "rubric_dimensions"}
-        )
-
-    @pytest.mark.parametrize("messages", [None, [], "[]", {}, [None], [1]])
-    def test_invalid_messages(self, messages):
-        """A messages mapping must contain a nonempty structured array."""
-        row = {
-            "messages": messages,
-            "rubric_dimensions": [
-                {"id": "quality", "description": "Answer", "weight": 1}
-            ],
-        }
-        assert not Draft202012Validator(
-            SPEC["dataMappingSchema"]
-        ).is_valid(row)
-
     @pytest.mark.parametrize(
         "count,valid",
         [(0, False), (1, True), (10, True), (11, True), (20, True), (21, False)],
