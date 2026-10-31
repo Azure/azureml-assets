@@ -1,0 +1,8 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: qwen3.8-27b
+path: ./
+system_metadata:
+  previewType: hideUI
+  foundryLocal: ''
+  deploymentOptions: ['Foundry Local on Devices']
+version: 1
