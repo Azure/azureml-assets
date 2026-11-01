@@ -245,7 +245,8 @@ def _exercise_chat(module, name, class_name):
             evaluator(**_inputs(name))
     else:
         replacement.return_value = {"llm_output": {}}
-        assert evaluator(**_inputs(name))["task_completion_score"] == 0
+        with pytest.raises(EvaluationException, match="score"):
+            evaluator(**_inputs(name))
         replacement.return_value = {"llm_output": {"score": 1}}
         replacement.reset_mock()
         multi = AsyncMock(return_value={

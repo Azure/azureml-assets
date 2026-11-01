@@ -552,6 +552,7 @@ class TaskCompletionEvaluator(ModelEvaluatorBase[Union[str, int]]):
         )
 
         decision_selected = _is_decision_config(model_config)
+        self._decision_selected = decision_selected
         if probability_threshold is not None:
             if not decision_selected:
                 raise EvaluationException(
@@ -986,7 +987,7 @@ class TaskCompletionEvaluator(ModelEvaluatorBase[Union[str, int]]):
         # Remove keys not consumed by the single-turn prompty to avoid leaking extra kwargs
         eval_input.pop("messages", None)
 
-        if self._strategy is not None:
+        if self._decision_selected:
             return await self._strategy.evaluate(eval_input)
         return self._parse_prompty_output(await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input))
 
@@ -1008,14 +1009,14 @@ class TaskCompletionEvaluator(ModelEvaluatorBase[Union[str, int]]):
         if tool_definitions:
             prompty_kwargs["tool_definitions"] = reformat_tool_definitions(tool_definitions, logger)
 
-        if self._multi_turn_strategy is not None:
+        if self._decision_selected:
             return await self._multi_turn_strategy.evaluate(prompty_kwargs)
         return self._parse_prompty_output(
             await self._multi_turn_flow(timeout=self._LLM_CALL_TIMEOUT, **prompty_kwargs)
         )
 
     def _parse_prompty_output(self, model_output_dict: Dict) -> Dict[str, Union[int, str]]:
-        if self._strategy is not None:
+        if self._decision_selected:
             return self._strategy.parse(model_output_dict)
         answer = (
             model_output_dict.get("llm_output", model_output_dict) if isinstance(model_output_dict, dict) else None
@@ -1032,14 +1033,21 @@ class TaskCompletionEvaluator(ModelEvaluatorBase[Union[str, int]]):
                 None, "not_applicable", f"Not applicable: {answer.get('reason', '')}", "skipped",
                 answer.get("properties", {}) or {}, model_output_dict,
             )
-        score = answer.get("score", 0)
+        if answer.get("status") == "error":
+            return self._build_result(
+                None, "error", answer.get("reason") or "Evaluator reported an error.", "error",
+                answer.get("properties", {}) or {}, model_output_dict,
+            )
+        score = answer.get("score")
         if score is None:
             raise EvaluationException(
-                message="Evaluator returned a null score.",
+                message="Evaluator returned a missing or null score.",
                 blame=ErrorBlame.SYSTEM_ERROR,
                 category=ErrorCategory.FAILED_EXECUTION,
                 target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
             )
+        if self._strategy is not None:
+            return self._strategy.parse(model_output_dict)
         score = float(score)
         return self._build_result(
             score, "pass" if score >= 1.0 else "fail", answer.get("reason", ""), "completed",

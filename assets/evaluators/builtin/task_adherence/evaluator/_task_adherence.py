@@ -997,16 +997,21 @@ class TaskAdherenceEvaluator(ModelEvaluatorBase[Union[str, float]]):
             return self._return_not_applicable_result(reason, self._threshold, prompty_output_dict)
 
         reasoning = llm_output.get("reason", "")
-        score = llm_output.get("score", 0.0)
-        if score is None:
-            raise EvaluationException(
-                message="Evaluator returned a null score.",
-                blame=ErrorBlame.SYSTEM_ERROR,
-                category=ErrorCategory.FAILED_EXECUTION,
-                target=ErrorTarget.TASK_ADHERENCE_EVALUATOR,
-            )
-        score = float(score)
-        score_result = "pass" if score >= 1.0 else "fail"
+        is_error = llm_status == "error"
+        if is_error:
+            score = None
+            score_result = "error"
+        else:
+            score = llm_output.get("score")
+            if score is None:
+                raise EvaluationException(
+                    message="Evaluator returned a missing or null score.",
+                    blame=ErrorBlame.SYSTEM_ERROR,
+                    category=ErrorCategory.FAILED_EXECUTION,
+                    target=ErrorTarget.TASK_ADHERENCE_EVALUATOR,
+                )
+            score = float(score)
+            score_result = "pass" if score >= 1.0 else "fail"
         llm_properties = llm_output.get("properties", {}) or {}
         token_metadata = self._get_token_metadata(prompty_output_dict)
         llm_properties.update(token_metadata)
@@ -1014,10 +1019,10 @@ class TaskAdherenceEvaluator(ModelEvaluatorBase[Union[str, float]]):
         result = {
             self._result_key: score,
             f"{self._result_key}_score": score,
-            f"{self._result_key}_passed": score_result == "pass",
+            f"{self._result_key}_passed": None if is_error else score_result == "pass",
             f"{self._result_key}_result": score_result,
             f"{self._result_key}_reason": reasoning,
-            f"{self._result_key}_status": "completed",
+            f"{self._result_key}_status": "error" if is_error else "completed",
             f"{self._result_key}_threshold": self._threshold,
             f"{self._result_key}_properties": llm_properties,
         }

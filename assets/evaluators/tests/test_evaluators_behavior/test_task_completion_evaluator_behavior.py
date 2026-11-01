@@ -7,6 +7,7 @@ import asyncio
 import pytest
 from .base_judge_score_handling_test import JudgeScoreHandlingTests
 from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock
 
 from azure.ai.evaluation._exceptions import EvaluationException
 
@@ -43,6 +44,37 @@ class TestTaskCompletionJudgeScores(JudgeScoreHandlingTests):
 
     evaluator_class = TaskCompletionEvaluator
     evaluator_name = "task_completion"
+
+    @pytest.mark.parametrize("outcome", ["missing", "error", "valid"])
+    def test_chat_strategy_keeps_asset_score_validation(self, score_case, outcome):
+        """Validate chat outcomes before delegating to the SDK strategy parser."""
+        evaluator, judge, _ = score_case
+        strategy = Mock()
+        strategy.evaluate = AsyncMock(side_effect=AssertionError("Chat validation must run first."))
+        strategy.parse.return_value = {"task_completion": 1}
+        strategy.format_result.return_value = {"task_completion": None, "task_completion_status": "error"}
+        evaluator._strategy = evaluator._multi_turn_strategy = strategy
+        output = {
+            "missing": {"status": "completed"},
+            "error": {"status": "error", "score": 1, "reason": "Judge error."},
+            "valid": {"status": "completed", "score": 1},
+        }[outcome]
+
+        if outcome == "missing":
+            with pytest.raises(EvaluationException, match="missing or null score"):
+                self._evaluate(score_case, output)
+            strategy.parse.assert_not_called()
+            strategy.format_result.assert_not_called()
+        elif outcome == "error":
+            assert self._evaluate(score_case, output)["task_completion_status"] == "error"
+            strategy.parse.assert_not_called()
+            assert strategy.format_result.call_args.args[:4] == (None, "error", "Judge error.", "error")
+        else:
+            assert self._evaluate(score_case, output) == {"task_completion": 1}
+            strategy.parse.assert_called_once()
+            strategy.format_result.assert_not_called()
+        strategy.evaluate.assert_not_awaited()
+        judge.assert_awaited_once()
 
 
 @pytest.mark.unittest
