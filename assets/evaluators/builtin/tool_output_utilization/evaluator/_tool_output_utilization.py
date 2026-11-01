@@ -6,7 +6,7 @@ import json
 import logging
 from copy import deepcopy
 from enum import Enum
-from typing import Dict, Union, List, Tuple
+from typing import Dict, Union, List, Optional, Tuple
 
 from typing_extensions import overload, override
 
@@ -334,6 +334,8 @@ class ToolOutputUtilizationEvaluator(ModelEvaluatorBase[Union[str, float]]):
     _DECISION_FILE = "tool_output_utilization.decision.yaml"
     _PROMPTY_FILE = "tool_output_utilization.prompty"
     _RESULT_KEY = "tool_output_utilization"
+    _OPTIONAL_PARAMS = ["tool_definitions"]
+    _NO_TOOL_DEFINITIONS_MESSAGE = "Tool definitions must be provided."
 
     _validator: ValidatorInterface
 
@@ -364,7 +366,7 @@ class ToolOutputUtilizationEvaluator(ModelEvaluatorBase[Union[str, float]]):
         # Initialize input validator
         self._validator = ToolDefinitionsValidator(
             error_target=ErrorTarget.TOOL_OUTPUT_UTILIZATION_EVALUATOR,
-            optional_tool_definitions=False,
+            optional_tool_definitions=True,
             check_for_unsupported_tools=True,
         )
         # These tools are supported by this evaluator. Some remain in the SDK's
@@ -434,6 +436,14 @@ class ToolOutputUtilizationEvaluator(ModelEvaluatorBase[Union[str, float]]):
         :return: The evaluation result.
         :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
         """
+        if "conversation" in kwargs:
+            raise EvaluationException(
+                message="conversation is not a supported input. Use messages, query, and response instead.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=ErrorTarget.TOOL_OUTPUT_UTILIZATION_EVALUATOR,
+            )
+
         messages = kwargs.pop("messages", None)
         if messages is not None:
             try:
@@ -527,7 +537,7 @@ class ToolOutputUtilizationEvaluator(ModelEvaluatorBase[Union[str, float]]):
         *,
         query: Union[str, List[dict]],
         response: Union[str, List[dict]],
-        tool_definitions: Union[dict, List[dict]],
+        tool_definitions: Optional[Union[dict, List[dict]]] = None,
     ) -> Dict[str, Union[str, float]]:
         """Evaluate tool output utilization for a given query, response, and optional tool defintions.
 
@@ -626,7 +636,8 @@ class ToolOutputUtilizationEvaluator(ModelEvaluatorBase[Union[str, float]]):
         (full agent response potentially including tool calls)
         :paramtype response: Union[str, List[dict]]
         :keyword tool_definitions: An optional list of messages containing the tool definitions the agent is aware of.
-        :paramtype tool_definitions: Union[dict, List[dict]]
+            When not provided, the evaluation is skipped and reported as not applicable.
+        :paramtype tool_definitions: Optional[Union[dict, List[dict]]]
         :return: A dictionary with the tool output utilization evaluation results.
         :rtype: Dict[str, Union[str, float]]
         """
@@ -695,16 +706,10 @@ class ToolOutputUtilizationEvaluator(ModelEvaluatorBase[Union[str, float]]):
         """
         # we override the _do_eval method as we want the output to be a dictionary,
         # which is a different schema than _base_prompty_eval.py
-        if ("query" not in eval_input) and ("response" not in eval_input) and ("tool_definitions" not in eval_input):
+        if ("query" not in eval_input) and ("response" not in eval_input):
             raise EvaluationException(
-                message=(
-                    "Query, response, and tool_definitions are required inputs to "
-                    "the Tool Output Utilization evaluator."
-                ),
-                internal_message=(
-                    "Query, response, and tool_definitions are required inputs "
-                    "to the Tool Output Utilization evaluator."
-                ),
+                message="Query and response are required inputs to the Tool Output Utilization evaluator.",
+                internal_message="Query and response are required inputs to the Tool Output Utilization evaluator.",
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.MISSING_FIELD,
                 target=ErrorTarget.TOOL_OUTPUT_UTILIZATION_EVALUATOR,
@@ -715,6 +720,8 @@ class ToolOutputUtilizationEvaluator(ModelEvaluatorBase[Union[str, float]]):
                 "Intermediate response. Please provide the agent's final response for evaluation.",
                 self._threshold,
             )
+        if not eval_input.get("tool_definitions"):
+            return self._return_not_applicable_result(self._NO_TOOL_DEFINITIONS_MESSAGE, self._threshold)
         if isinstance(eval_input.get("response"), list):
             eval_input["response"] = _preprocess_messages(deepcopy(eval_input["response"]))
         if isinstance(eval_input.get("query"), list):

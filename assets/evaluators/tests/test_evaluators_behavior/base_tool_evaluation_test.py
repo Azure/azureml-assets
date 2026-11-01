@@ -34,8 +34,6 @@ class BaseToolEvaluationTest(BasePromptyEvaluatorRunner):
 
     check_for_unsupported_tools: bool = False
 
-    is_tool_definition_required: bool = False
-
     #  region Expected flow inputs for each test
     test_function_tool_local_calls_expected_flow_inputs = {}
 
@@ -290,7 +288,7 @@ class BaseToolEvaluationTest(BasePromptyEvaluatorRunner):
     # --- Computer Use ---
 
     def test_computer_use(self):
-        """Computer use tool with empty tool_definitions - missing field error."""
+        """Computer use tool with empty tool_definitions - the non-dict tool call arguments are rejected."""
         self._run_tool_type_test(
             test_label="Computer Use",
             evaluation_inputs={
@@ -298,9 +296,7 @@ class BaseToolEvaluationTest(BasePromptyEvaluatorRunner):
                 "response": data.COMPUTER_USE_RESPONSE,
                 "tool_definitions": data.COMPUTER_USE_TOOL_DEFINITIONS,
             },
-            assert_type=(
-                self.AssertType.MISSING_FIELD if self.is_tool_definition_required else self.AssertType.INVALID_VALUE
-            ),
+            assert_type=self.AssertType.INVALID_VALUE,
             expected_flow_inputs=self.test_computer_use_expected_flow_inputs,
         )
 

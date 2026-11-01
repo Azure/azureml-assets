@@ -89,7 +89,10 @@ def test_callers_have_no_privileged_or_label_trigger(name):
     workflow = load_workflow(name)
     assert set(workflow["on"]) <= {"pull_request", "workflow_dispatch"}
     assert "labeled" not in workflow["on"]["pull_request"].get("types", [])
-    assert workflow["jobs"][GATE_JOB]["uses"].endswith(f"/{GATE_WORKFLOW}@main")
+    assert workflow["jobs"][GATE_JOB]["uses"] in (
+        f"Azure/azureml-assets/.github/workflows/{GATE_WORKFLOW}@main",
+        f"$/.github/workflows/{GATE_WORKFLOW}",
+    )
 
 
 @pytest.mark.parametrize("name", CALLERS)
