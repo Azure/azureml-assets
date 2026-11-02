@@ -287,7 +287,9 @@ RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/python -m pip install --no-c
 # pmdarima 1.8.5 imports pkg_resources, removed by the setuptools security upgrade.
 # Backport its upstream packaging.version replacement without changing AutoML's pmdarima pin.
 RUN sed -i 's/^from pkg_resources import parse_version$/from packaging.version import Version as parse_version/' \
-    "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pmdarima/compat/sklearn.py"
+    "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pmdarima/compat/sklearn.py" \
+    "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pmdarima/compat/statsmodels.py" \
+    "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pmdarima/utils/wrapped.py"
 
 RUN python -c "import azureml.automl.dnn.vision.object_detection.runner; \
     import torch; \
