@@ -5,7 +5,7 @@ import logging
 import json
 import os
 from copy import deepcopy
-from typing import Dict, List, Tuple, Union, TypeVar
+from typing import Dict, List, Optional, Tuple, Union, TypeVar
 from typing_extensions import overload, override
 from azure.ai.evaluation._evaluators import _common as _sdk_common
 from azure.ai.evaluation._exceptions import (
@@ -315,6 +315,7 @@ class ToolCallAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
         # Initialize input validator
         self._validator = ToolCallsValidator(
             error_target=ErrorTarget.TOOL_CALL_ACCURACY_EVALUATOR,
+            optional_tool_definitions=True,
             check_for_unsupported_tools=False,
         )
 
@@ -367,7 +368,7 @@ class ToolCallAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
         self,
         *,
         query: Union[str, List[dict]],
-        tool_definitions: Union[dict, List[dict]],
+        tool_definitions: Optional[Union[dict, List[dict]]] = None,
         tool_calls: Union[dict, List[dict]] = None,
         response: Union[str, List[dict]] = None,
     ) -> Dict[str, Union[str, float]]:
@@ -376,8 +377,9 @@ class ToolCallAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
 
         :keyword query: Query or Chat history up to the message that has the tool call being evaluated.
         :paramtype query: Union[str, List[dict]]
-        :keyword tool_definitions: List of tool definitions whose calls are being evaluated.
-        :paramtype tool_definitions: Union[dict, List[dict]]
+        :keyword tool_definitions: Optional list of tool definitions whose calls are being evaluated.
+            When not provided, the evaluation is skipped and reported as not applicable.
+        :paramtype tool_definitions: Optional[Union[dict, List[dict]]]
         :keyword tool_calls: Optional List of tool calls to evaluate. If not provided response should be provided
             and should have tool call(s) in it.
         :paramtype tool_calls: Union[dict, List[dict]]
@@ -676,8 +678,9 @@ class ToolCallAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
 
         :keyword query: Query or Chat history up to the message that has the tool call being evaluated.
         :paramtype query: Union[str, List[dict]]
-        :keyword tool_definitions: List of tool definitions whose calls are being evaluated.
-        :paramtype tool_definitions: Union[dict, List[dict]]
+        :keyword tool_definitions: Optional list of tool definitions whose calls are being evaluated.
+            When not provided, the evaluation is skipped and reported as not applicable.
+        :paramtype tool_definitions: Optional[Union[dict, List[dict]]]
         :keyword tool_calls: Optional List of tool calls to evaluate. If not provided response should be provided
             and should have tool call(s) in it.
         :paramtype tool_calls: Union[dict, List[dict]]
