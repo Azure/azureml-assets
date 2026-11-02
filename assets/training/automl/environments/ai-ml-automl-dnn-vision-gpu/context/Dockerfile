@@ -142,6 +142,7 @@ RUN pip install --no-cache-dir --use-deprecated=legacy-resolver \
 #       resolve pip silently upgrades numpy to 2.x, leaving the prebuilt pandas wheel
 #       binary-incompatible so the image fails on import pandas with
 #       "ValueError: numpy.dtype size changed".
+# Upgrade the converter family with ONNX, which no longer exports onnx.mapping.
 RUN pip install --no-cache-dir --upgrade \
                 'numpy~=1.23.5' \
                 'cryptography>=48.0.1' \
@@ -152,6 +153,9 @@ RUN pip install --no-cache-dir --upgrade \
                 'msgpack>=1.2.1' \
                 'pillow==12.3.0' \
                 'onnx>=1.21.0' \
+                'skl2onnx==1.20.0' \
+                'onnxmltools==1.16.0' \
+                'onnxconverter-common==1.16.0' \
                 'requests>=2.33.0' \
                 'idna>=3.15' \
                 'pyOpenSSL>=26.0.0' \
@@ -286,10 +290,15 @@ RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/python -m pip install --no-c
 
 # pmdarima 1.8.5 imports pkg_resources, removed by the setuptools security upgrade.
 # Backport its upstream packaging.version replacement without changing AutoML's pmdarima pin.
+# Migrate AutoML's verifier JSON lookup to importlib.resources for the same removal.
 RUN sed -i 's/^from pkg_resources import parse_version$/from packaging.version import Version as parse_version/' \
     "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pmdarima/compat/sklearn.py" \
     "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pmdarima/compat/statsmodels.py" \
-    "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pmdarima/utils/wrapped.py"
+    "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pmdarima/utils/wrapped.py" && \
+    sed -i \
+        -e 's/^import pkg_resources$/from importlib.resources import files/' \
+        -e "s/pkg_resources.resource_filename(PACKAGE_NAME, 'faults_verifier_message.json')/str(files(PACKAGE_NAME).joinpath('faults_verifier_message.json'))/" \
+        "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/azureml/automl/runtime/faults_verifier.py"
 
 RUN python -c "import azureml.automl.dnn.vision.object_detection.runner; \
     import torch; \
