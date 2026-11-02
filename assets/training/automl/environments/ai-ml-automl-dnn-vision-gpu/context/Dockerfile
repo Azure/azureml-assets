@@ -296,7 +296,7 @@ RUN sed -i 's/^from pkg_resources import parse_version$/from packaging.version i
     "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pmdarima/compat/statsmodels.py" \
     "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pmdarima/utils/wrapped.py" && \
     sed -i \
-        -e 's/^import pkg_resources$/from importlib.resources import files/' \
+        -e 's/^import pkg_resources/from importlib.resources import files/' \
         -e "s/pkg_resources.resource_filename(PACKAGE_NAME, 'faults_verifier_message.json')/str(files(PACKAGE_NAME).joinpath('faults_verifier_message.json'))/" \
         "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/azureml/automl/runtime/faults_verifier.py"
 
