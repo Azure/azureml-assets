@@ -6,12 +6,38 @@ tags:
   supportsReasoning: 'true'
   contextLength: 262144
 system_metadata:
-  previewType: hideUI
   alias: qwen3.5-2b-text
   publisher: Microsoft
+  lifecycle: Generally available
   directoryPath: v1
   foundryLocal: ''
-  deploymentOptions: ['Foundry Local on Devices']
+  deploymentOptions:
+  - Foundry Local on Devices
+  - Foundry Local on Azure Local
+  deploymentOptionDetails:
+    Foundry Local on Azure Local: |-
+      # Expected running times for qwen3.5-2b
+
+      The results are for standard chat completion usages.
+
+      Mean metrics stand for the average performance, p99 metrics stand for the worst-performant percentile.
+
+      ## ONNX (cuda-gpu)
+
+      **Max model len**: 262144
+
+      ### Nvidia RTX Pro 6000 vGPU
+
+      | Maximal concurrency | Mean TTFT (ms) | P99 TTFT (ms) | Output throughput (tokens/s) |
+      |---|---|---|---|
+      | 1 request | 286.96 | 669.94 | 305.39 |
+      | 2 requests | 271.27 | 485.53 | 146.56 |
+      | 4 requests | 506.30 | 1084.03 | 146.85 |
+      | 8 requests | 926.86 | 1889.51 | 152.33 |
+
+      ---
+
+      Measured on Foundry on Arc build `0.260803.5`.
   inputModalities:
   - text
   license: apache-2.0
