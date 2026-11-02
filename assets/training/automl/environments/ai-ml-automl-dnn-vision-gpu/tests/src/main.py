@@ -1,7 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-"""Simple Sklearn Test."""
+"""Smoke tests for vision dependencies and sklearn training."""
 # imports
+import importlib
 import mlflow
 import argparse
 import pandas as pd
@@ -13,6 +14,7 @@ from sklearn.model_selection import train_test_split
 # define functions
 def main(args):
     """Run and evaluate model."""
+    validate_vision_dependencies()
     # enable auto logging
     mlflow.autolog()
     # setup parameters
@@ -30,6 +32,24 @@ def main(args):
     model = train_model(params, X_train, X_test, y_train, y_test)
 
     print(model)
+
+
+def validate_vision_dependencies():
+    """Check the AutoML import chain and compiled torchvision operators."""
+    import torch
+    from torchvision.ops import nms
+
+    importlib.import_module("azureml.automl.dnn.vision.object_detection.runner")
+    assert torch.cuda.is_available(), "CUDA is not available in the GPU test environment"
+    for device in ("cpu", "cuda"):
+        boxes = torch.tensor(
+            [[0, 0, 2, 2], [0, 0, 2, 2], [4, 4, 6, 6]],
+            dtype=torch.float32,
+            device=device,
+        )
+        scores = torch.tensor([0.9, 0.8, 0.7], device=device)
+        assert nms(boxes, scores, 0.5).tolist() == [0, 2]
+        print(f"torchvision NMS passed on {device}")
 
 
 def process_data(df, random_state):

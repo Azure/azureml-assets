@@ -158,8 +158,7 @@ RUN pip install --no-cache-dir --upgrade \
                 'wheel>=0.46.2' \
                 'starlette>=1.0.1' \
                 'pyarrow>=23.0.1' \
-                'sqlparse>=0.6.0' \
-                'torch>=2.10.0'
+                'sqlparse>=0.6.0'
 
 # Vulnerability patches for ptca environment
 # pip>=26.1 (CVE-2026-6357 / GHSA-jp4c-xjxw-mgf9): pip < 26.1 deferred imports of
@@ -177,8 +176,19 @@ RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
                 'pip>=26.1' \
                 'aiohttp>=3.14.0' \
                 'msgpack>=1.2.1' \
-                'pillow==12.3.0' \
-                'torch>=2.10.0'
+                'pillow==12.3.0'
+
+# Upgrade Torch and torchvision together so their compiled NMS operators remain compatible.
+# CUDA 12.6 has no matching torchaudio build for this stack; remove the inherited copy.
+RUN pip uninstall -y torchaudio && \
+    pip install --no-cache-dir --upgrade \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.13.0' 'torchvision==0.28.0' && \
+    /opt/conda/envs/ptca/bin/pip uninstall -y torchaudio && \
+    /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.13.0' 'torchvision==0.28.0'
+
 # setuptools>=83.0.0 fixes GHSA-h35f-9h28-mq5c in the inherited PTCA environment.
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==83.0.0'
 
@@ -273,3 +283,15 @@ RUN set -eux; \
 
 # Reassert newly patched transitive dependencies after all package installs.
 RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/python -m pip install --no-cache-dir --upgrade 'urllib3>=2.8.0'
+
+# pmdarima 1.8.5 imports pkg_resources, removed by the setuptools security upgrade.
+# Backport its upstream packaging.version replacement without changing AutoML's pmdarima pin.
+RUN sed -i 's/^from pkg_resources import parse_version$/from packaging.version import Version as parse_version/' \
+    "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pmdarima/compat/sklearn.py"
+
+RUN python -c "import azureml.automl.dnn.vision.object_detection.runner; \
+    import torch; \
+    import torchvision; \
+    boxes = torch.tensor([[0., 0., 2., 2.], [0., 0., 2., 2.]]); \
+    scores = torch.tensor([0.9, 0.8]); \
+    assert torchvision.ops.nms(boxes, scores, 0.5).tolist() == [0]"
