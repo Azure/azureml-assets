@@ -11,6 +11,7 @@ evaluatorSubType: "service"
 categories: ["agents", "quality"]
 tags:
   provider: "Microsoft"
+  preview: "true"
 supportedEvaluationLevels: ["conversation"]
 initParameterSchema:
   type: "object"
