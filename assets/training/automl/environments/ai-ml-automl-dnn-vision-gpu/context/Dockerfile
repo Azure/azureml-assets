@@ -300,6 +300,22 @@ RUN sed -i 's/^from pkg_resources import parse_version$/from packaging.version i
         -e "s/pkg_resources.resource_filename(PACKAGE_NAME, 'faults_verifier_message.json')/str(files(PACKAGE_NAME).joinpath('faults_verifier_message.json'))/" \
         "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/azureml/automl/runtime/faults_verifier.py"
 
+# Torch 2.9 changed the ONNX exporter default. Preserve AutoML's legacy export contract.
+# Backport the explicit choice in each vision wrapper until the SDK supplies it.
+RUN set -eux; \
+    for wrapper in classification/models/base_model_wrapper.py \
+                   object_detection/models/base_model_wrapper.py \
+                   object_detection_yolo/models/yolo_wrapper.py; do \
+        path="$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/azureml/automl/dnn/vision/$wrapper"; \
+        sed -i '/torch\.onnx\.export(new_model,/,/dynamic_axes=/s/file_path,/file_path, dynamo=False,/' "$path"; \
+        python -c "import ast, pathlib, sys; \
+            path = pathlib.Path(sys.argv[1]); \
+            tree = ast.parse(path.read_text()); \
+            compile(tree, str(path), 'exec'); \
+            calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call) and ast.unparse(node.func) == 'torch.onnx.export']; \
+            assert len(calls) == 1 and any(keyword.arg == 'dynamo' and isinstance(keyword.value, ast.Constant) and keyword.value.value is False for keyword in calls[0].keywords), path" "$path"; \
+    done
+
 RUN python -c "import azureml.automl.dnn.vision.object_detection.runner; \
     import torch; \
     import torchvision; \
