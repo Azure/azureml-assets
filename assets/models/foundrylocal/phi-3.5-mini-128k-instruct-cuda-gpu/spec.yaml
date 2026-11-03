@@ -6,12 +6,47 @@ tags:
   capabilities: ''
   supportsReasoning: ''
 system_metadata:
-  previewType: hideUI
   alias: phi-3.5-mini
   publisher: Microsoft
+  lifecycle: Generally available
   directoryPath: v2
   foundryLocal: ''
-  deploymentOptions: ['Foundry Local on Devices']
+  deploymentOptions:
+  - Foundry Local on Devices
+  - Foundry Local on Azure Local
+  deploymentOptionDetails:
+    Foundry Local on Azure Local: |-
+      # Expected running times for phi-3.5-mini-instruct
+
+      The results are for standard chat completion usages.
+
+      Mean metrics stand for the average performance, p99 metrics stand for the worst-performant percentile.
+
+      ## ONNX (cuda-gpu)
+
+      **Max model len**: 131072
+
+      ### Nvidia A10 GPU
+
+      | Maximal concurrency | Mean TTFT (ms) | P99 TTFT (ms) | Output throughput (tokens/s) |
+      |---|---|---|---|
+      | 1 request | 449.34 | 565.85 | 135.20 |
+      | 2 requests | 787.23 | 913.90 | 169.60 |
+      | 4 requests | 1424.60 | 1668.06 | 186.67 |
+      | 8 requests | 3443.79 | 7397.60 | 184.26 |
+
+      ### Nvidia RTX Pro 6000 vGPU
+
+      | Maximal concurrency | Mean TTFT (ms) | P99 TTFT (ms) | Output throughput (tokens/s) |
+      |---|---|---|---|
+      | 1 request | 277.00 | 775.04 | 270.27 |
+      | 2 requests | 438.22 | 617.82 | 338.61 |
+      | 4 requests | 926.03 | 1240.85 | 300.58 |
+      | 8 requests | 2603.43 | 3951.58 | 222.16 |
+
+      ---
+
+      Measured on Foundry on Arc build `0.260803.5`.
   inputModalities:
   - text
   license: MIT

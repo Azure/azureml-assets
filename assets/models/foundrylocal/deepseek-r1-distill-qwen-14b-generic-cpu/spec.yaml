@@ -6,12 +6,14 @@ tags:
   supportsReasoning: 'true'
   contextLength: 131072
 system_metadata:
-  previewType: hideUI
   alias: deepseek-r1-14b
   publisher: Microsoft
+  lifecycle: Generally available
   directoryPath: v4
   foundryLocal: ''
-  deploymentOptions: ['Foundry Local on Devices']
+  deploymentOptions:
+  - Foundry Local on Devices
+  - Foundry Local on Azure Local
   inputModalities:
   - text
   license: MIT
