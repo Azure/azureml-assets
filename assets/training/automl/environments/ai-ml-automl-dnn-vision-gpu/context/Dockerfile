@@ -142,6 +142,7 @@ RUN pip install --no-cache-dir --use-deprecated=legacy-resolver \
 #       resolve pip silently upgrades numpy to 2.x, leaving the prebuilt pandas wheel
 #       binary-incompatible so the image fails on import pandas with
 #       "ValueError: numpy.dtype size changed".
+# Upgrade the converter family with ONNX, which no longer exports onnx.mapping.
 RUN pip install --no-cache-dir --upgrade \
                 'numpy~=1.23.5' \
                 'cryptography>=48.0.1' \
@@ -152,14 +153,16 @@ RUN pip install --no-cache-dir --upgrade \
                 'msgpack>=1.2.1' \
                 'pillow==12.3.0' \
                 'onnx>=1.21.0' \
+                'skl2onnx==1.20.0' \
+                'onnxmltools==1.16.0' \
+                'onnxconverter-common==1.16.0' \
                 'requests>=2.33.0' \
                 'idna>=3.15' \
                 'pyOpenSSL>=26.0.0' \
                 'wheel>=0.46.2' \
                 'starlette>=1.0.1' \
                 'pyarrow>=23.0.1' \
-                'sqlparse>=0.6.0' \
-                'torch>=2.10.0'
+                'sqlparse>=0.6.0'
 
 # Vulnerability patches for ptca environment
 # pip>=26.1 (CVE-2026-6357 / GHSA-jp4c-xjxw-mgf9): pip < 26.1 deferred imports of
@@ -177,8 +180,19 @@ RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
                 'pip>=26.1' \
                 'aiohttp>=3.14.0' \
                 'msgpack>=1.2.1' \
-                'pillow==12.3.0' \
-                'torch>=2.10.0'
+                'pillow==12.3.0'
+
+# Upgrade Torch and torchvision together so their compiled NMS operators remain compatible.
+# CUDA 12.6 has no matching torchaudio build for this stack; remove the inherited copy.
+RUN pip uninstall -y torchaudio && \
+    pip install --no-cache-dir --upgrade \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.13.0' 'torchvision==0.28.0' && \
+    /opt/conda/envs/ptca/bin/pip uninstall -y torchaudio && \
+    /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.13.0' 'torchvision==0.28.0'
+
 # setuptools>=83.0.0 fixes GHSA-h35f-9h28-mq5c in the inherited PTCA environment.
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==83.0.0'
 
@@ -273,3 +287,38 @@ RUN set -eux; \
 
 # Reassert newly patched transitive dependencies after all package installs.
 RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/python -m pip install --no-cache-dir --upgrade 'urllib3>=2.8.0'
+
+# pmdarima 1.8.5 imports pkg_resources, removed by the setuptools security upgrade.
+# Backport its upstream packaging.version replacement without changing AutoML's pmdarima pin.
+# Migrate AutoML's verifier JSON lookup to importlib.resources for the same removal.
+RUN sed -i 's/^from pkg_resources import parse_version$/from packaging.version import Version as parse_version/' \
+    "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pmdarima/compat/sklearn.py" \
+    "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pmdarima/compat/statsmodels.py" \
+    "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pmdarima/utils/wrapped.py" && \
+    sed -i \
+        -e 's/^import pkg_resources/from importlib.resources import files/' \
+        -e "s/pkg_resources.resource_filename(PACKAGE_NAME, 'faults_verifier_message.json')/str(files(PACKAGE_NAME).joinpath('faults_verifier_message.json'))/" \
+        "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/azureml/automl/runtime/faults_verifier.py"
+
+# Torch 2.9 changed the ONNX exporter default. Preserve AutoML's legacy export contract.
+# Backport the explicit choice in each vision wrapper until the SDK supplies it.
+RUN set -eux; \
+    for wrapper in classification/models/base_model_wrapper.py \
+                   object_detection/models/base_model_wrapper.py \
+                   object_detection_yolo/models/yolo_wrapper.py; do \
+        path="$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/azureml/automl/dnn/vision/$wrapper"; \
+        sed -i '/torch\.onnx\.export(new_model,/,/dynamic_axes=/s/file_path,/file_path, dynamo=False,/' "$path"; \
+        python -c "import ast, pathlib, sys; \
+            path = pathlib.Path(sys.argv[1]); \
+            tree = ast.parse(path.read_text()); \
+            compile(tree, str(path), 'exec'); \
+            calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call) and ast.unparse(node.func) == 'torch.onnx.export']; \
+            assert len(calls) == 1 and any(keyword.arg == 'dynamo' and isinstance(keyword.value, ast.Constant) and keyword.value.value is False for keyword in calls[0].keywords), path" "$path"; \
+    done
+
+RUN python -c "import azureml.automl.dnn.vision.object_detection.runner; \
+    import torch; \
+    import torchvision; \
+    boxes = torch.tensor([[0., 0., 2., 2.], [0., 0., 2., 2.]]); \
+    scores = torch.tensor([0.9, 0.8]); \
+    assert torchvision.ops.nms(boxes, scores, 0.5).tolist() == [0]"
