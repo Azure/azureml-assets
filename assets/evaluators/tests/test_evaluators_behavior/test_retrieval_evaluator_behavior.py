@@ -13,6 +13,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 from azure.ai.evaluation._exceptions import EvaluationException
+from azure.ai.evaluation._legacy.prompty._utils import format_llm_response
 
 from .base_validator_unit_test import (
     CorePromptyValidatorUnitTests,
@@ -103,6 +104,61 @@ class TestRetrievalDoEvalBranches:
 class TestRetrievalJudgeOutputValidation:
     """Covers normalization and safe invalid-output diagnostics."""
 
+    @pytest.mark.parametrize(
+        ("content", "finish_reason"),
+        [
+            ('{"reason": "SENSITIVE_RETRIEVAL_CONTENT_7f3d", "score":', "length"),
+            ("", "content_filter"),
+            (None, "content_filter"),
+        ],
+    )
+    def test_sdk_flow_decode_errors_return_safe_diagnostic(self, caplog, content, finish_reason):
+        """SDK JSON decoding failures are categorized without leaking chained errors."""
+        canary = "SENSITIVE_RETRIEVAL_CONTENT_7f3d"
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        response = SimpleNamespace(
+            usage=None,
+            model="judge",
+            choices=[
+                SimpleNamespace(
+                    finish_reason=finish_reason,
+                    message=SimpleNamespace(role="assistant", content=content),
+                )
+            ],
+        )
+
+        async def flow(timeout, **kwargs):
+            return await format_llm_response(
+                response=response,
+                is_first_choice=True,
+                response_format={"type": "json_object"},
+                inputs=kwargs,
+            )
+
+        evaluator._flow = AsyncMock(side_effect=flow)
+
+        with caplog.at_level(logging.WARNING):
+            with pytest.raises(EvaluationException, match="MalformedJson") as error:
+                asyncio.run(evaluator._do_eval({"query": canary, "context": canary}))
+
+        assert evaluator._flow.await_count == 1
+        assert "category=MalformedJson" in caplog.text
+        assert "category=MalformedJson" in error.value.internal_message
+        assert canary not in caplog.text
+        assert canary not in error.value.internal_message
+        assert canary not in "".join(traceback.format_exception(error.value))
+
+    @pytest.mark.parametrize("flow_error", [TypeError("flow bug"), ValueError("flow bug"), TimeoutError("timeout")])
+    def test_unrelated_flow_errors_are_not_reclassified(self, flow_error):
+        """Non-decoding failures retain their original exception."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        evaluator._flow = AsyncMock(side_effect=flow_error)
+
+        with pytest.raises(type(flow_error)) as error:
+            asyncio.run(evaluator._do_eval({"query": "question", "context": "context"}))
+
+        assert error.value is flow_error
+
     @pytest.mark.parametrize("score", [1, 5, "4", 4.0])
     def test_valid_scores_are_normalized(self, score):
         """Integer-equivalent numeric values produce valid results."""
@@ -123,6 +179,71 @@ class TestRetrievalJudgeOutputValidation:
         assert result["retrieval_score"] == float(score)
 
     @pytest.mark.parametrize(
+        "status_fields",
+        [{}, {"status": None}, {"status": "Completed"}, {"status": "COMPLETED"}, {"status": " completed "}],
+    )
+    def test_completed_status_is_normalized(self, status_fields):
+        """Missing, null, and differently cased statuses retain completed scoring."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        evaluator._flow = AsyncMock(return_value={"llm_output": {"score": 4, **status_fields}})
+
+        result = asyncio.run(evaluator._do_eval({"query": "question", "context": "context"}))
+
+        assert result["retrieval_score"] == 4
+        assert result["retrieval_status"] == "completed"
+        assert result["retrieval_passed"] is True
+
+    @pytest.mark.parametrize("status", ["Skipped", "SKIPPED", " skipped "])
+    @pytest.mark.parametrize(
+        "properties_fields",
+        [
+            {},
+            {"properties": None},
+            {"properties": {}},
+            {"properties": {"thought_chain": "No evidence.", "total_tokens": 999}},
+        ],
+    )
+    def test_skipped_status_is_normalized(self, status, properties_fields):
+        """Normalized skipped responses retain their reason and token metadata."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        evaluator._flow = AsyncMock(
+            return_value={
+                "llm_output": {"status": status, "reason": "No relevant context.", **properties_fields},
+                "total_token_count": 10,
+            }
+        )
+
+        result = asyncio.run(evaluator._do_eval({"query": "question", "context": "context"}))
+
+        assert result["retrieval_score"] is None
+        assert result["retrieval_status"] == "skipped"
+        assert result["retrieval_result"] == "not_applicable"
+        assert result["retrieval_reason"] == "Not applicable: No relevant context."
+        assert result["retrieval_total_tokens"] == 10
+        assert result["retrieval_properties"]["total_tokens"] == 10
+        assert result["retrieval_properties"].get("thought_chain") == (
+            properties_fields.get("properties") or {}
+        ).get("thought_chain")
+
+    @pytest.mark.parametrize("properties", ["SENSITIVE_RETRIEVAL_CONTENT_7f3d", ["private"], "", [], False])
+    def test_skipped_invalid_properties_return_safe_diagnostic(self, caplog, properties):
+        """Invalid skipped properties produce a categorized error rather than a raw TypeError."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        evaluator._flow = AsyncMock(
+            return_value={"llm_output": {"status": "skipped", "properties": properties}}
+        )
+
+        with caplog.at_level(logging.WARNING):
+            with pytest.raises(EvaluationException, match="InvalidPropertiesType") as error:
+                asyncio.run(evaluator._do_eval({"query": "question", "context": "context"}))
+
+        assert "category=InvalidPropertiesType" in caplog.text
+        assert "category=InvalidPropertiesType" in error.value.internal_message
+        canary = "SENSITIVE_RETRIEVAL_CONTENT_7f3d"
+        assert canary not in caplog.text
+        assert canary not in "".join(traceback.format_exception(error.value))
+
+    @pytest.mark.parametrize(
         ("llm_output", "expected_error"),
         [
             ({"reason": "No score", "status": "completed"}, "MissingScore"),
@@ -133,6 +254,12 @@ class TestRetrievalJudgeOutputValidation:
             ({"score": float("nan"), "status": "completed"}, "NonFiniteScore"),
             ({"score": 6, "status": "completed"}, "ScoreOutOfRange"),
             ({"score": 4, "status": "unknown"}, "UnexpectedStatus"),
+            ({"score": 4, "status": ""}, "UnexpectedStatus"),
+            ({"score": 4, "status": False}, "UnexpectedStatus"),
+            ({"score": 4, "status": ["completed"]}, "UnexpectedStatus"),
+            ({"status": None}, "MissingScore"),
+            ({"score": None, "status": "Completed"}, "MissingScore"),
+            ({"score": 3.5, "status": None}, "InvalidScoreType"),
         ],
     )
     def test_invalid_scores_return_safe_diagnostic(self, llm_output, expected_error):
@@ -149,6 +276,10 @@ class TestRetrievalJudgeOutputValidation:
         ("prompty_output", "expected_error"),
         [
             ({}, "EmptyResponse"),
+            (None, "EmptyResponse"),
+            ([], "EmptyResponse"),
+            ([{"score": 4}], "UnexpectedResponseShape"),
+            ("nonempty response", "UnexpectedResponseShape"),
             ({"llm_output": ""}, "EmptyResponse"),
             ({"llm_output": "{}"}, "MissingScore"),
             ({"llm_output": "not-json"}, "MalformedJson"),
@@ -168,6 +299,32 @@ class TestRetrievalJudgeOutputValidation:
             asyncio.run(evaluator._do_eval({"query": "question", "context": "context"}))
 
         assert evaluator._flow.await_count == 1
+
+    @pytest.mark.parametrize(
+        "output",
+        [
+            '{"properties": {"thought_chain": "A score: 5 requires all relevant chunks."',
+            ' \n {"reason": "A score: 5 requires all relevant chunks.", "score": }',
+            '[{"reason": "A score: 5 requires all relevant chunks."',
+            '"A score: 5 requires all relevant chunks.',
+            '{"reason": "<S1>Relevant context.</S1><S2>5</S2>"',
+        ],
+    )
+    def test_malformed_json_does_not_fall_back_to_legacy_scoring(self, caplog, output):
+        """Numbers and XML embedded in broken JSON must not become successful scores."""
+        canary = "SENSITIVE_RETRIEVAL_CONTENT_7f3d"
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        evaluator._flow = AsyncMock(return_value={"llm_output": output + canary})
+
+        with caplog.at_level(logging.WARNING):
+            with pytest.raises(EvaluationException, match="MalformedJson") as error:
+                asyncio.run(evaluator._do_eval({"query": "question", "context": "context"}))
+
+        assert evaluator._flow.await_count == 1
+        assert "category=MalformedJson" in caplog.text
+        assert canary not in caplog.text
+        assert canary not in error.value.internal_message
+        assert canary not in "".join(traceback.format_exception(error.value))
 
     @pytest.mark.parametrize("output", ["score: 4", "score: 4.0", "score is 4", "<S0>Reason</S0><S2>4</S2>"])
     def test_explicit_legacy_text_score_is_supported(self, output):
@@ -211,6 +368,15 @@ class TestRetrievalJudgeOutputValidation:
         with pytest.raises(EvaluationException, match="MalformedJson"):
             asyncio.run(evaluator._do_eval({"query": "question", "context": "context"}))
 
+    def test_creating_invalid_output_exception_does_not_log(self, caplog):
+        """Constructing an exception must not emit a warning before it is raised."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+
+        with caplog.at_level(logging.WARNING):
+            evaluator._invalid_output("MissingScore", {"llm_output": {}})
+
+        assert not caplog.records
+
     @pytest.mark.parametrize(("wrapped", "invalid_score"), [(False, True), (True, False), (True, True)])
     @pytest.mark.parametrize("known_finish_reason", [False, True])
     def test_invalid_output_diagnostics_do_not_expose_raw_content(
@@ -224,10 +390,18 @@ class TestRetrievalJudgeOutputValidation:
             output = {"llm_output": output if invalid_score else canary, "finish_reason": output["finish_reason"]}
         evaluator._flow = AsyncMock(return_value=output)
 
+        expected_category = "InvalidScoreType" if invalid_score else "MalformedJson"
         with caplog.at_level(logging.WARNING):
-            with pytest.raises(EvaluationException, match="InvalidScoreType|MalformedJson") as error:
+            with pytest.raises(EvaluationException, match=expected_category) as error:
                 asyncio.run(evaluator._do_eval({"query": canary, "context": canary}))
 
+        warnings = [record for record in caplog.records if record.levelno == logging.WARNING]
+        assert len(warnings) == 1
+        assert f"category={expected_category}" in warnings[0].getMessage()
+        assert f"category={expected_category}" in error.value.internal_message
+        expected_finish_reason = "stop" if known_finish_reason else ""
+        assert warnings[0].getMessage().endswith(f"finish_reason={expected_finish_reason}")
+        assert error.value.internal_message.endswith(f"finish_reason={expected_finish_reason}")
         assert canary not in caplog.text
         assert canary not in str(error.value)
         assert canary not in error.value.internal_message

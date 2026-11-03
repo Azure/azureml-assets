@@ -6,7 +6,8 @@ import logging
 import math
 import os
 import re
-from typing import Any, Dict, List, Union
+import traceback
+from typing import Any, Dict, List, NoReturn, Tuple, Union
 from typing_extensions import overload, override
 
 from azure.ai.evaluation._model_configurations import Conversation
@@ -507,90 +508,53 @@ class RetrievalEvaluator(ModelEvaluatorBase[Union[str, float]]):
             # The native state is the evidence the chat prompt renders: the query and the retrieved context.
             return await self._strategy.evaluate(_native_state(eval_input, "query", "context"))
 
-        prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
+        try:
+            prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
+        except (json.JSONDecodeError, TypeError) as error:
+            # The SDK decodes JSON before returning output. Only classify TypeError
+            # when it originates in that decoder, not from unrelated flow failures.
+            if isinstance(error, TypeError) and not any(
+                frame.f_code is json.loads.__code__ for frame, _ in traceback.walk_tb(error.__traceback__)
+            ):
+                raise
+            self._raise_invalid_output("MalformedJson", None)
 
-        # Validate the outer flow response before reading token metadata or the
-        # nested LLM output so malformed service responses remain typed evaluator errors.
-        if not isinstance(prompty_output_dict, dict) or not prompty_output_dict:
-            raise self._invalid_output("EmptyResponse", prompty_output_dict)
-
-        llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
-        parsed_output = None
-        if isinstance(llm_output, dict):
-            parsed_output = llm_output
-        elif isinstance(llm_output, str) and llm_output.strip():
-            try:
-                parsed_output = json.loads(llm_output)
-            except (json.JSONDecodeError, TypeError):
-                parsed_output = None
-            else:
-                if not isinstance(parsed_output, dict):
-                    raise self._invalid_output("UnexpectedResponseShape", prompty_output_dict)
-        elif isinstance(llm_output, str):
-            raise self._invalid_output("EmptyResponse", prompty_output_dict)
-        else:
-            raise self._invalid_output("UnexpectedResponseShape", prompty_output_dict)
-
-        score = math.nan
-        reason = ""
+        parsed_output = self._parse_judge_output(prompty_output_dict)
         llm_properties = {}
         if isinstance(parsed_output, dict):
             # Skipped responses intentionally omit the score, while completed
             # responses must include one to avoid silently producing a NaN result.
-            llm_status = parsed_output.get("status", "completed")
+            llm_status = parsed_output.get("status")
+            if llm_status is None:
+                llm_status = "completed"
+            elif isinstance(llm_status, str):
+                llm_status = llm_status.strip().lower()
             if llm_status == "skipped":
+                llm_properties = parsed_output.get("properties")
+                if llm_properties is None:
+                    llm_properties = {}
+                elif not isinstance(llm_properties, dict):
+                    self._raise_invalid_output("InvalidPropertiesType", prompty_output_dict)
                 skip_reason = parsed_output.get("reason", "")
                 skipped = self._return_not_applicable_result(
                     skip_reason if isinstance(skip_reason, str) else "",
                     self._threshold,
                 )
                 metadata = self._get_token_metadata(prompty_output_dict)
-                skipped[f"{self._result_key}_properties"] = {**(parsed_output.get("properties") or {}), **metadata}
+                skipped[f"{self._result_key}_properties"] = {**llm_properties, **metadata}
                 skipped.update({f"{self._result_key}_{key}": value for key, value in metadata.items()})
                 return skipped
             if llm_status != "completed":
-                raise self._invalid_output("UnexpectedStatus", prompty_output_dict)
+                self._raise_invalid_output("UnexpectedStatus", prompty_output_dict)
             if "score" not in parsed_output or parsed_output["score"] is None:
-                raise self._invalid_output("MissingScore", prompty_output_dict)
+                self._raise_invalid_output("MissingScore", prompty_output_dict)
             score = parsed_output["score"]
             reason = parsed_output.get("reason", "")
             llm_properties = parsed_output.get("properties", {}) or {}
-        elif isinstance(llm_output, str):
-            # Preserve legacy text responses, but only accept an explicitly labeled
-            # score so unrelated digits such as dates cannot become evaluator scores.
-            if self._result_key in PROMPT_BASED_REASON_EVALUATORS:
-                score, reason = parse_quality_evaluator_reason_score(llm_output)
-            try:
-                legacy_score_is_valid = score is not None and math.isfinite(float(score))
-            except (TypeError, ValueError):
-                legacy_score_is_valid = False
-            if not legacy_score_is_valid:
-                match = re.search(
-                    r"\bscore\s*(?:is\b|[:=])\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)(?![\w.])",
-                    llm_output,
-                    re.IGNORECASE,
-                )
-                if not match:
-                    raise self._invalid_output("MalformedJson", prompty_output_dict)
-                score = match.group(1)
+        else:
+            score, reason = self._parse_legacy_score(parsed_output, prompty_output_dict)
 
-        if isinstance(score, bool):
-            raise self._invalid_output("InvalidScoreType", prompty_output_dict)
-        try:
-            # Preserve backward compatibility with integral numeric strings and
-            # floats while enforcing the same semantic integer score contract.
-            score = float(score)
-        except (TypeError, ValueError):
-            raise self._invalid_output("InvalidScoreType", prompty_output_dict) from None
-
-        # Enforce the published Retrieval contract before calculating pass/fail:
-        # the score must be finite, integral, and within the inclusive 1-5 range.
-        if not math.isfinite(score):
-            raise self._invalid_output("NonFiniteScore", prompty_output_dict)
-        if not score.is_integer():
-            raise self._invalid_output("InvalidScoreType", prompty_output_dict)
-        if not 1 <= score <= 5:
-            raise self._invalid_output("ScoreOutOfRange", prompty_output_dict)
+        score = self._validate_chat_score(score, prompty_output_dict)
         if not isinstance(reason, str):
             reason = ""
         if not isinstance(llm_properties, dict):
@@ -617,6 +581,75 @@ class RetrievalEvaluator(ModelEvaluatorBase[Union[str, float]]):
         )
         return result
 
+    def _parse_judge_output(self, prompty_output: Any) -> Union[Dict, str]:
+        """Validate response shapes and separate structured output from legacy text."""
+        if not prompty_output:
+            self._raise_invalid_output("EmptyResponse", prompty_output)
+        if not isinstance(prompty_output, dict):
+            self._raise_invalid_output("UnexpectedResponseShape", prompty_output)
+
+        llm_output = prompty_output.get("llm_output", prompty_output)
+        if isinstance(llm_output, dict):
+            return llm_output
+        if not isinstance(llm_output, str):
+            self._raise_invalid_output("UnexpectedResponseShape", prompty_output)
+        if not llm_output.strip():
+            self._raise_invalid_output("EmptyResponse", prompty_output)
+        try:
+            parsed_output = json.loads(llm_output)
+        except (json.JSONDecodeError, TypeError):
+            # Broken JSON must not become a legacy score extracted from its reasoning.
+            if llm_output.lstrip().startswith(("{", "[", '"')):
+                self._raise_invalid_output("MalformedJson", prompty_output)
+            return llm_output
+        if not isinstance(parsed_output, dict):
+            self._raise_invalid_output("UnexpectedResponseShape", prompty_output)
+        return parsed_output
+
+    def _parse_legacy_score(self, llm_output: str, prompty_output: Dict) -> Tuple[Union[float, str], str]:
+        """Retain SDK XML parsing and explicitly labeled legacy text scores."""
+        score: Union[float, str] = math.nan
+        reason = ""
+        if self._result_key in PROMPT_BASED_REASON_EVALUATORS:
+            score, reason = parse_quality_evaluator_reason_score(llm_output)
+        try:
+            legacy_score_is_valid = score is not None and math.isfinite(float(score))
+        except (TypeError, ValueError):
+            legacy_score_is_valid = False
+        if not legacy_score_is_valid:
+            match = re.search(
+                r"\bscore\s*(?:is\b|[:=])\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)(?![\w.])",
+                llm_output,
+                re.IGNORECASE,
+            )
+            if not match:
+                self._raise_invalid_output("MalformedJson", prompty_output)
+            score = match.group(1)
+        return score, reason
+
+    def _validate_chat_score(self, score: Any, prompty_output: Dict) -> float:
+        """Require finite integer chat scores in 1-5; native Decision scores bypass this path."""
+        if isinstance(score, bool):
+            self._raise_invalid_output("InvalidScoreType", prompty_output)
+        try:
+            # Preserve backward compatibility with integral numeric strings and floats.
+            score = float(score)
+        except (TypeError, ValueError):
+            self._raise_invalid_output("InvalidScoreType", prompty_output)
+        if not math.isfinite(score):
+            self._raise_invalid_output("NonFiniteScore", prompty_output)
+        if not score.is_integer():
+            self._raise_invalid_output("InvalidScoreType", prompty_output)
+        if not 1 <= score <= 5:
+            self._raise_invalid_output("ScoreOutOfRange", prompty_output)
+        return score
+
+    def _raise_invalid_output(self, code: str, prompty_output: Any) -> NoReturn:
+        """Log sanitized validation metadata once at the raise site."""
+        error = self._invalid_output(code, prompty_output)
+        logger.warning("Retrieval judge output validation failed. %s", error.internal_message)
+        raise error from None
+
     @staticmethod
     def _invalid_output(code: str, prompty_output: Any) -> EvaluationException:
         """Create a safe output-validation exception containing metadata only."""
@@ -632,12 +665,6 @@ class RetrievalEvaluator(ModelEvaluatorBase[Union[str, float]]):
                 "stop", "length", "content_filter", "tool_calls", "function_call",
             ):
                 finish_reason = raw_finish_reason
-        logger.warning(
-            "Retrieval judge output validation failed. category=%s output_type=%s finish_reason=%s",
-            code,
-            output_type,
-            finish_reason,
-        )
         return EvaluationException(
             message=f"Evaluator returned invalid output ({code}).",
             internal_message=f"category={code}; output_type={output_type}; finish_reason={finish_reason}",
