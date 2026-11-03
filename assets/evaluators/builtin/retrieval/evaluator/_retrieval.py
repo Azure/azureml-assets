@@ -170,6 +170,7 @@ class RetrievalEvaluator(ModelEvaluatorBase[Union[str, float]]):
         self._higher_is_better = True
         self._decision_selected = isinstance(model_config, dict) and model_config.get("type") == "decision"
         self._strategy = None
+        self._allow_legacy_text = False
         if self._decision_selected and not _SDK_SUPPORTS_DECISION:
             raise EvaluationException(
                 message="Decision models require an azure-ai-evaluation version with decision model support.",
@@ -190,6 +191,13 @@ class RetrievalEvaluator(ModelEvaluatorBase[Union[str, float]]):
 
         if self._decision_selected:
             self._strategy = self._create_decision_strategy(os.path.join(current_dir, self._DECISION_FILE))
+        else:
+            parameters = self._flow._model.parameters
+            if isinstance(parameters, dict):
+                response_format = parameters.get("response_format")
+                self._allow_legacy_text = response_format is None or (
+                    isinstance(response_format, dict) and response_format.get("type") == "text"
+                )
 
     def _create_decision_strategy(self, path: str):
         """Use the SDK runner and scoring with this asset's packaged rubric."""
@@ -591,6 +599,10 @@ class RetrievalEvaluator(ModelEvaluatorBase[Union[str, float]]):
         llm_output = prompty_output.get("llm_output", prompty_output)
         if isinstance(llm_output, dict):
             return llm_output
+        # JSON-mode output is already decoded by the SDK; strings are invalid
+        # JSON scalars, not evidence that the flow returned legacy text.
+        if not self._allow_legacy_text:
+            self._raise_invalid_output("UnexpectedResponseShape", prompty_output)
         if not isinstance(llm_output, str):
             self._raise_invalid_output("UnexpectedResponseShape", prompty_output)
         if not llm_output.strip():
@@ -616,7 +628,11 @@ class RetrievalEvaluator(ModelEvaluatorBase[Union[str, float]]):
             legacy_score_is_valid = score is not None and math.isfinite(float(score))
         except (TypeError, ValueError):
             legacy_score_is_valid = False
-        if not legacy_score_is_valid:
+        # Do not rescue failed SDK XML parsing with a score mentioned in its reasoning.
+        is_xml_output = llm_output.lstrip().startswith("<") or re.search(
+            r"</?S[012]\b", llm_output, re.IGNORECASE,
+        ) is not None
+        if not legacy_score_is_valid and not is_xml_output:
             match = re.search(
                 r"\bscore\s*(?:is\b|[:=])\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)(?![\w.])",
                 llm_output,

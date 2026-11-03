@@ -8,6 +8,7 @@ import builtins
 import json
 import logging
 import traceback
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -27,6 +28,42 @@ from ..common.evaluator_mock_config import (
     create_mocked_evaluator,
     run_none_score_not_applicable,
 )
+
+
+@pytest.fixture
+def retrieval_text_mode(tmp_path, monkeypatch):
+    """Configure a real text-mode prompt before replacing its model call with a mock."""
+    source = Path(__file__).parents[2] / "builtin" / "retrieval" / "evaluator" / "retrieval.prompty"
+    prompt = tmp_path / "retrieval-text.prompty"
+    prompt.write_text(
+        source.read_text(encoding="utf-8").replace("type: json_object", "type: text"),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(RetrievalEvaluator, "_PROMPTY_FILE", str(prompt))
+
+
+def _sdk_formatted_flow(content, response_format, finish_reason="stop"):
+    """Exercise the SDK's real decoding and metadata behavior without a model call."""
+    response = SimpleNamespace(
+        usage=None,
+        model="judge",
+        choices=[
+            SimpleNamespace(
+                finish_reason=finish_reason,
+                message=SimpleNamespace(role="assistant", content=content),
+            )
+        ],
+    )
+
+    async def flow(timeout, **kwargs):
+        return await format_llm_response(
+            response=response,
+            is_first_choice=True,
+            response_format=response_format,
+            inputs=kwargs,
+        )
+
+    return AsyncMock(side_effect=flow)
 
 
 # region None score handling tests
@@ -53,6 +90,7 @@ class TestRetrievalNoneScoreHandling:
 
 
 @pytest.mark.unittest
+@pytest.mark.usefixtures("retrieval_text_mode")
 class TestRetrievalValidatorUnit(
     CorePromptyValidatorUnitTests,
     SuperDoEvalNotApplicableUnitTests,
@@ -116,26 +154,7 @@ class TestRetrievalJudgeOutputValidation:
         """SDK JSON decoding failures are categorized without leaking chained errors."""
         canary = "SENSITIVE_RETRIEVAL_CONTENT_7f3d"
         evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
-        response = SimpleNamespace(
-            usage=None,
-            model="judge",
-            choices=[
-                SimpleNamespace(
-                    finish_reason=finish_reason,
-                    message=SimpleNamespace(role="assistant", content=content),
-                )
-            ],
-        )
-
-        async def flow(timeout, **kwargs):
-            return await format_llm_response(
-                response=response,
-                is_first_choice=True,
-                response_format={"type": "json_object"},
-                inputs=kwargs,
-            )
-
-        evaluator._flow = AsyncMock(side_effect=flow)
+        evaluator._flow = _sdk_formatted_flow(content, {"type": "json_object"}, finish_reason)
 
         with caplog.at_level(logging.WARNING):
             with pytest.raises(EvaluationException, match="MalformedJson") as error:
@@ -147,6 +166,62 @@ class TestRetrievalJudgeOutputValidation:
         assert canary not in caplog.text
         assert canary not in error.value.internal_message
         assert canary not in "".join(traceback.format_exception(error.value))
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            "score: 4",
+            '{"score": 4}',
+            "<S1>Relevant context.</S1><S2>4</S2>",
+        ],
+    )
+    def test_sdk_json_strings_are_not_legacy_output(self, caplog, value):
+        """SDK-decoded JSON strings must not be reinterpreted as text, JSON objects, or XML."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        evaluator._flow = _sdk_formatted_flow(json.dumps(value), {"type": "json_object"})
+
+        with caplog.at_level(logging.WARNING):
+            with pytest.raises(EvaluationException, match="UnexpectedResponseShape") as error:
+                asyncio.run(evaluator._do_eval({"query": "question", "context": "context"}))
+
+        assert evaluator._flow.await_count == 1
+        assert "category=UnexpectedResponseShape" in caplog.text
+        assert "category=UnexpectedResponseShape" in error.value.internal_message
+
+    def test_sdk_json_object_retains_score_and_metadata(self):
+        """Valid SDK-decoded JSON objects remain unaffected by the output-mode guard."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        evaluator._flow = _sdk_formatted_flow(
+            json.dumps({"score": 4, "reason": "Relevant context."}), {"type": "json_object"},
+        )
+
+        result = asyncio.run(evaluator._do_eval({"query": "question", "context": "context"}))
+
+        assert result["retrieval_score"] == 4
+        assert result["retrieval_passed"] is True
+        assert result["retrieval_reason"] == "Relevant context."
+        assert result["retrieval_model"] == "judge"
+        assert result["retrieval_finish_reason"] == "stop"
+
+    @pytest.mark.parametrize(
+        "output",
+        [
+            "<S0>A score: 5 requires all relevant chunks</S0><S1>Irrelevant</S1><S2>N/A</S2>",
+            "Preface <S0>A score: 5 requires all relevant chunks</S0><S1>Irrelevant</S1><S2>N/A</S2>",
+            "<S0>A score: 5 requires all relevant chunks</S0><S1>Irrelevant</S1><S2>",
+        ],
+    )
+    def test_failed_sdk_xml_parsing_does_not_use_reasoning_score(self, retrieval_text_mode, caplog, output):
+        """Failed text-mode XML parsing must not fall through to incidental labeled scores."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+        evaluator._flow = _sdk_formatted_flow(output, {"type": "text"})
+
+        with caplog.at_level(logging.WARNING):
+            with pytest.raises(EvaluationException, match="NonFiniteScore"):
+                asyncio.run(evaluator._do_eval({"query": "question", "context": "context"}))
+
+        assert evaluator._flow.await_count == 1
+        assert "category=NonFiniteScore" in caplog.text
 
     @pytest.mark.parametrize("flow_error", [TypeError("flow bug"), ValueError("flow bug"), TimeoutError("timeout")])
     def test_unrelated_flow_errors_are_not_reclassified(self, flow_error):
@@ -290,7 +365,9 @@ class TestRetrievalJudgeOutputValidation:
             ({"llm_output": "null"}, "UnexpectedResponseShape"),
         ],
     )
-    def test_invalid_response_shapes_return_safe_diagnostic(self, prompty_output, expected_error):
+    def test_invalid_response_shapes_return_safe_diagnostic(
+        self, retrieval_text_mode, prompty_output, expected_error,
+    ):
         """Malformed response shapes produce a categorized system error."""
         evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
         evaluator._flow = AsyncMock(return_value=prompty_output)
@@ -310,7 +387,7 @@ class TestRetrievalJudgeOutputValidation:
             '{"reason": "<S1>Relevant context.</S1><S2>5</S2>"',
         ],
     )
-    def test_malformed_json_does_not_fall_back_to_legacy_scoring(self, caplog, output):
+    def test_malformed_json_does_not_fall_back_to_legacy_scoring(self, retrieval_text_mode, caplog, output):
         """Numbers and XML embedded in broken JSON must not become successful scores."""
         canary = "SENSITIVE_RETRIEVAL_CONTENT_7f3d"
         evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
@@ -327,10 +404,10 @@ class TestRetrievalJudgeOutputValidation:
         assert canary not in "".join(traceback.format_exception(error.value))
 
     @pytest.mark.parametrize("output", ["score: 4", "score: 4.0", "score is 4", "<S0>Reason</S0><S2>4</S2>"])
-    def test_explicit_legacy_text_score_is_supported(self, output):
-        """A clearly labeled legacy text score remains backward compatible."""
+    def test_explicit_legacy_text_score_is_supported(self, retrieval_text_mode, output):
+        """A text-mode flow retains valid labeled and SDK-parsed XML scores."""
         evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
-        evaluator._flow = AsyncMock(return_value={"llm_output": output})
+        evaluator._flow = _sdk_formatted_flow(output, {"type": "text"})
 
         result = asyncio.run(evaluator._do_eval({"query": "question", "context": "context"}))
 
@@ -345,7 +422,7 @@ class TestRetrievalJudgeOutputValidation:
             ("score: 4e2", "ScoreOutOfRange"),
         ],
     )
-    def test_invalid_legacy_numeric_scores_are_not_truncated(self, output, expected_error):
+    def test_invalid_legacy_numeric_scores_are_not_truncated(self, retrieval_text_mode, output, expected_error):
         """Validate the entire legacy score rather than a valid numeric prefix."""
         evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
         evaluator._flow = AsyncMock(return_value={"llm_output": output})
@@ -360,7 +437,7 @@ class TestRetrievalJudgeOutputValidation:
             "score 1 through 5",
         ],
     )
-    def test_unrelated_digits_are_not_treated_as_legacy_score(self, output):
+    def test_unrelated_digits_are_not_treated_as_legacy_score(self, retrieval_text_mode, output):
         """Dates and other incidental digits must not become evaluator scores."""
         evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
         evaluator._flow = AsyncMock(return_value={"llm_output": output})
@@ -380,7 +457,7 @@ class TestRetrievalJudgeOutputValidation:
     @pytest.mark.parametrize(("wrapped", "invalid_score"), [(False, True), (True, False), (True, True)])
     @pytest.mark.parametrize("known_finish_reason", [False, True])
     def test_invalid_output_diagnostics_do_not_expose_raw_content(
-        self, caplog, invalid_score, wrapped, known_finish_reason,
+        self, retrieval_text_mode, caplog, invalid_score, wrapped, known_finish_reason,
     ):
         """Malformed-output diagnostics contain categories but not customer content."""
         canary = "SENSITIVE_RETRIEVAL_CONTENT_7f3d"
