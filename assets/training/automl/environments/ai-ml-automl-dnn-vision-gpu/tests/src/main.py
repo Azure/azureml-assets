@@ -83,6 +83,8 @@ def validate_yolo_onnx_export():
                 YoloV5Wrapper.export_onnx_model(
                     wrapper, file_path=str(path), device="cpu", enable_norm=enable_norm
                 )
+                # Normalized export restores its wrapper's training mode.
+                model.eval()
                 graph = onnx.load(str(path))
                 onnx.checker.check_model(graph)
                 assert next(op.version for op in graph.opset_import if not op.domain) == 11
