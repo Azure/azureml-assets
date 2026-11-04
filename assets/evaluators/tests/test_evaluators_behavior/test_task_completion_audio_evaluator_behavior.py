@@ -54,7 +54,6 @@ class TestTaskCompletionAudioJudgeScores(AudioJudgeScoreHandlingTests):
     """Exercise score validation at the real Realtime client boundary."""
 
     evaluator_class = TaskCompletionAudioEvaluator
-    evaluator_name = "task_completion_audio"
     judge_properties = {
         "user_requests": ["Complete task."],
         "delivered_outcome": "Done.",

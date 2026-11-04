@@ -6,6 +6,7 @@
 import asyncio
 import builtins
 from copy import deepcopy
+import json
 
 import pytest
 from typing import Any, Dict, List
@@ -527,16 +528,16 @@ class TestCustomerSatisfactionNoneScoreHandling:
     the judge explicitly skipped the evaluation.
     """
 
-    def test_turn_level_none_score_does_not_crash(self):
-        """Turn-level eval with score=None from _flow returns a skipped result."""
+    def test_turn_explicit_skip_with_none_score_is_preserved(self):
+        """A declared turn-level skip retains its unscored result."""
         evaluator = _create_mocked_evaluator()
         evaluator._flow = MagicMock(side_effect=create_none_score_flow_side_effect())
         result = evaluator(query="How do I return an item?", response="You can return within 30 days.")
         assert result["customer_satisfaction"] is None
         assert result["customer_satisfaction_result"] == "skipped"
 
-    def test_conversation_level_none_score_does_not_crash(self):
-        """Conversation-level eval with score=None from _multi_turn_flow returns a skipped result."""
+    def test_conversation_explicit_skip_with_none_score_is_preserved(self):
+        """A declared conversation-level skip retains its unscored result."""
         evaluator = _create_mocked_evaluator()
         evaluator._multi_turn_flow = MagicMock(
             side_effect=create_none_score_flow_side_effect(reason="No agent responses to evaluate.")
@@ -595,6 +596,44 @@ class TestCustomerSatisfactionNoneScoreHandling:
         pytest.param({"query": "Question", "response": "Answer"}, id="turn"),
         pytest.param({"messages": VALID_MESSAGES}, id="conversation"),
     ])
+    @pytest.mark.parametrize(("status", "score", "properties"), [
+        pytest.param("completed", None, "invalid", id="null-score-string-properties"),
+        pytest.param("completed", None, ["invalid"], id="null-score-list-properties"),
+        pytest.param("completed", None, [], id="null-score-empty-list-properties"),
+        pytest.param("completed", None, False, id="null-score-boolean-properties"),
+        pytest.param("completed", 5, "invalid", id="valid-score-invalid-properties"),
+        pytest.param("error", 5, "invalid", id="reported-error-invalid-properties"),
+        pytest.param("skipped", None, "invalid", id="skip-invalid-properties"),
+    ])
+    def test_invalid_properties_returns_error_without_losing_usage(self, inputs, status, score, properties):
+        """Error reporting must not expand malformed judge metadata as a mapping."""
+        evaluator = _create_mocked_evaluator()
+        reason = "The judge returned malformed metadata."
+        flow = AsyncMock(return_value={
+            "llm_output": {"score": score, "status": status, "reason": reason, "properties": properties},
+            "input_token_count": 7, "output_token_count": 3, "total_token_count": 10,
+            "model_id": "offline-properties-judge",
+        })
+        evaluator._flow = evaluator._multi_turn_flow = flow
+
+        result = evaluator(**inputs)
+
+        assert result["customer_satisfaction"] is None
+        assert result["customer_satisfaction_score"] is None
+        assert result["customer_satisfaction_passed"] is None
+        assert result["customer_satisfaction_result"] == "error"
+        assert result["customer_satisfaction_status"] == "error"
+        assert "invalid properties" in result["customer_satisfaction_reason"].lower()
+        assert reason in result["customer_satisfaction_reason"]
+        assert result["customer_satisfaction_total_tokens"] == 10
+        assert result["customer_satisfaction_properties"]["total_tokens"] == 10
+        assert result["customer_satisfaction_model"] == "offline-properties-judge"
+        flow.assert_awaited_once()
+
+    @pytest.mark.parametrize("inputs", [
+        pytest.param({"query": "Question", "response": "Answer"}, id="turn"),
+        pytest.param({"messages": VALID_MESSAGES}, id="conversation"),
+    ])
     def test_reported_error_is_not_scored(self, inputs):
         """An explicit judge error cannot produce a passing score."""
         evaluator = _create_mocked_evaluator()
@@ -640,8 +679,8 @@ class TestCustomerSatisfactionNoneScoreHandling:
         assert result["customer_satisfaction_status"] == "completed"
         flow.assert_awaited_once()
 
-    def test_null_score_keeps_other_conversation_results_available(self):
-        """A CSAT judge-output error does not interrupt the affected evaluator group."""
+    def test_null_score_result_allows_direct_calls_to_companion_evaluators(self):
+        """Check direct calls only, not a trace-service or SDK evaluation group."""
         csat = _create_mocked_evaluator()
         csat._multi_turn_flow = AsyncMock(return_value={
             "llm_output": {
@@ -668,6 +707,48 @@ class TestCustomerSatisfactionNoneScoreHandling:
             assert results[name][f"{name}_status"] == "completed"
             assert results[name][f"{name}_result"] == "pass"
             assert results[name][f"{name}_score"] is not None
+
+    def test_null_score_reaches_sdk_group_as_unscored_error(self, tmp_path, monkeypatch):
+        """Check the real SDK batch/conversion boundary with companion evaluators."""
+        import socket
+        from unittest.mock import Mock
+        from azure.ai.evaluation import evaluate
+
+        monkeypatch.setattr(socket, "getaddrinfo", Mock(side_effect=AssertionError("No network permitted.")))
+        csat = _create_mocked_evaluator()
+        csat._multi_turn_flow = AsyncMock(return_value={
+            "llm_output": {"score": None, "status": "completed", "reason": "No grade available."},
+            "input_token_count": 7, "output_token_count": 3, "total_token_count": 10,
+            "model_id": "offline-csat-judge",
+        })
+        evaluators = {
+            "customer_satisfaction": csat,
+            "task_completion": create_mocked_evaluator(TaskCompletionEvaluator, "task_completion"),
+            "groundedness": create_mocked_evaluator(GroundednessEvaluator, "groundedness"),
+            "coherence": create_mocked_evaluator(CoherenceEvaluator, "coherence"),
+        }
+        data = tmp_path / "conversation.jsonl"
+        data.write_text(json.dumps({"messages": VALID_MESSAGES}) + "\n", encoding="utf-8")
+
+        result = evaluate(
+            data=str(data), evaluators=evaluators, _convert_to_aoai_evaluation_result=True,
+        )
+
+        row, = result["_evaluation_results_list"]
+        metrics = {entry["metric"]: entry for entry in row["results"]}
+        assert len(row["results"]) == len(metrics) == 4
+        failed = metrics["customer_satisfaction"]
+        assert failed["score"] is None
+        assert failed["passed"] is not True
+        assert failed["status"] == "error"
+        assert "invalid score" in failed["reason"].lower()
+        assert failed["properties"]["total_tokens"] == 10
+        assert failed["sample"]["model"] == "offline-csat-judge"
+        for name in ("task_completion", "groundedness", "coherence"):
+            assert metrics[name]["status"] == "completed"
+            assert metrics[name]["score"] is not None
+            assert metrics[name]["passed"] is True
+        csat._multi_turn_flow.assert_awaited_once()
 
 
 # endregion

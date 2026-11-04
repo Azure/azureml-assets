@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import logging
-import math
 import os
 import json
 from typing import Dict, Union, List, Tuple
@@ -464,8 +463,6 @@ class RelevanceEvaluator(ModelEvaluatorBase):
 
         result = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         llm_output = result.get("llm_output", result)
-        score = math.nan
-
         if isinstance(llm_output, dict):
             # Handle skipped status from LLM
             llm_status = llm_output.get("status", "completed")

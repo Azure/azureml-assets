@@ -54,7 +54,6 @@ class TestCustomerSatisfactionAudioJudgeScores(AudioJudgeScoreHandlingTests):
     """Exercise score validation at the real Realtime client boundary."""
 
     evaluator_class = CustomerSatisfactionAudioEvaluator
-    evaluator_name = "customer_satisfaction_audio"
     judge_properties = {
         "helpfulness": "Helpful.",
         "completeness": "Complete.",

@@ -54,7 +54,6 @@ class TestGroundednessAudioJudgeScores(AudioJudgeScoreHandlingTests):
     """Exercise score validation at the real Realtime client boundary."""
 
     evaluator_class = GroundednessAudioEvaluator
-    evaluator_name = "groundedness_audio"
     judge_properties = {
         "grounding_sources": ["Tool result."],
         "grounded_claims": "Claims match.",

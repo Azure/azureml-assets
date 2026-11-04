@@ -4,7 +4,6 @@
 import os
 import json
 import logging
-import math
 from typing import Dict, List, Union, Optional, Tuple
 
 from typing_extensions import overload, override
@@ -371,7 +370,6 @@ class ResponseCompletenessEvaluator(ModelEvaluatorBase[Union[str, float]]):
         result = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         llm_output = result.get("llm_output", result) if isinstance(result, dict) else result
 
-        score = math.nan
         if isinstance(llm_output, dict):
             # Handle skipped status from LLM
             llm_status = llm_output.get("status", "completed")

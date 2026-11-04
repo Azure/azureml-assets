@@ -928,9 +928,18 @@ class CustomerSatisfactionEvaluator(ModelEvaluatorBase[Union[str, float]]):
         else:
             status = llm_output.get("status", "completed")
             reason = llm_output.get("reason", "")
-            properties = llm_output.get("properties") or {}
+            properties = llm_output.get("properties")
+            if properties is None:
+                properties = {}
 
-            if status == "skipped":
+            if not isinstance(properties, dict):
+                score = None
+                result = "error"
+                status = "error"
+                properties = {}
+                message = "Evaluator returned invalid properties; expected an object."
+                reason = f"{message} {reason}" if reason else message
+            elif status == "skipped":
                 score = None
                 result = "skipped"
             elif status == "error":

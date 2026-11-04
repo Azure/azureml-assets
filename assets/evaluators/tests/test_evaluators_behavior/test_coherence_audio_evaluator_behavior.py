@@ -54,7 +54,6 @@ class TestCoherenceAudioJudgeScores(AudioJudgeScoreHandlingTests):
     """Exercise score validation at the real Realtime client boundary."""
 
     evaluator_class = CoherenceAudioEvaluator
-    evaluator_name = "coherence_audio"
     judge_properties = {
         "gating_summary": "Coherent user flow.",
         "conversation_flow_summary": "Smooth flow.",
