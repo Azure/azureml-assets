@@ -130,10 +130,10 @@ class TestTaskLevelRubricAsset:
 
     @pytest.mark.parametrize(
         "count,valid",
-        [(0, False), (1, True), (10, True), (11, True), (20, True), (21, False)],
+        [(0, True), (1, True), (10, True), (11, True), (20, True), (21, False)],
     )
     def test_dimension_count(self, count, valid):
-        """The public schema accepts 1-20 dimensions, matching ACA."""
+        """The public schema accepts 0-20 dimensions, matching ACA."""
         schema = SPEC["dataMappingSchema"]
         assert schema["properties"]["rubric_dimensions"]["maxItems"] == 20
         row = {

@@ -25,12 +25,12 @@ defaults:
 
 jobs:
   check-execution-context:
-    uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
+    uses: $/.github/workflows/check-execution-context.yaml
 
   check-directory-file-changes:
     needs: check-execution-context
     if: fromJSON(needs.check-execution-context.outputs.continue)
-    uses: Azure/azureml-assets/.github/workflows/check-changed-files.yaml@main
+    uses: $/.github/workflows/check-changed-files.yaml
     with:
       folder_path: "assets/**"
       forked_pr_input: ${{ needs.check-execution-context.outputs.forked_pr }}
@@ -53,7 +53,7 @@ jobs:
 
     steps:
       - name: Clone branch
-        uses: Azure/azureml-assets/.github/actions/clone-repo@main
+        uses: $/.github/actions/clone-repo
         with:
           forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
           fetch-depth: 2
@@ -72,7 +72,7 @@ jobs:
 
       - name: Login to Azure and create resources
         if: steps.create-test-matrix.outputs.test_count > 0
-        uses: ./.github/actions/create-azure-resources
+        uses: $/.github/actions/create-azure-resources
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -103,7 +103,7 @@ jobs:
     
     steps:
       - name: Clone branch
-        uses: Azure/azureml-assets/.github/actions/clone-repo@main
+        uses: $/.github/actions/clone-repo
         with:
           forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
       
@@ -120,7 +120,7 @@ jobs:
         run: source $scripts_dir/install_azcopy.sh
 
       - name: Log in to Azure and create resources
-        uses: ./.github/actions/create-azure-resources
+        uses: $/.github/actions/create-azure-resources
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -169,7 +169,7 @@ jobs:
 
     steps:
       - name: Clone branch
-        uses: Azure/azureml-assets/.github/actions/clone-repo@main
+        uses: $/.github/actions/clone-repo
         with:
           forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
 
@@ -220,7 +220,7 @@ jobs:
       SDK_CANDIDATE_VERSION: 1.18.10
     steps:
       - name: Clone branch
-        uses: Azure/azureml-assets/.github/actions/clone-repo@main
+        uses: $/.github/actions/clone-repo
         with:
           forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
 

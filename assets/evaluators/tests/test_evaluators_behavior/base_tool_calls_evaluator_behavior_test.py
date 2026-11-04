@@ -19,13 +19,14 @@ class BaseToolCallEvaluatorBehaviorTest(BaseToolsEvaluatorBehaviorTest):
     Subclasses should implement:
     - evaluator_type: type[PromptyEvaluatorBase] - type of the evaluator (e.g., "ToolSelection")
     Subclasses may override:
-    - requires_tool_definitions: bool - whether tool definitions are required
+    - absent_tool_definitions_assert_type: AssertType - expected outcome when tool definitions are absent
+      (SKIPPED by default, since these evaluators skip rows they cannot ground)
     - requires_query: bool - whether query is required
     - MINIMAL_RESPONSE: list - minimal valid response format for the evaluator
     """
 
     # Test Configs
-    requires_tool_definitions = True
+    absent_tool_definitions_assert_type = BaseToolsEvaluatorBehaviorTest.AssertType.SKIPPED
 
     # region Test Data
     # Minimal valid response format for tool call evaluators

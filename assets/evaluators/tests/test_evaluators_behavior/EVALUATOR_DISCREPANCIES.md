@@ -84,8 +84,8 @@ With a turn-level flow returning `{"status": "completed", "reason": "no score fi
 
 | Outcome | Evaluators |
 | --- | --- |
-| `raise KeyError` (require extra input before scoring) | `groundedness` (`'context'`), `tool_output_utilization` (`'tool_definitions'`) |
-| return a result dict (degrade, no raise) | `relevance`, `customer_satisfaction`, `task_adherence`, `task_completion`, `deflection_rate`, `quality_grader`, `tool_call_success` |
+| `raise KeyError` (require extra input before scoring) | `groundedness` (`'context'`) |
+| return a result dict (degrade, no raise) | `relevance`, `customer_satisfaction`, `task_adherence`, `task_completion`, `deflection_rate`, `quality_grader`, `tool_call_success`, `tool_output_utilization` |
 | `raise EvaluationException` | `coherence`, `fluency`, `retrieval`, `similarity`, `response_completeness`, `intent_resolution`, `tool_call_accuracy`, `tool_input_accuracy`, `tool_selection` |
 
 The invariant that must always hold (and does today) is that a missing score is
@@ -93,8 +93,11 @@ never an unhandled `TypeError` from `math.isnan(None)`.
 
 **Recommended convergence:** a missing/`NaN` score should consistently raise
 `EvaluationException` with a clear message across all evaluators. The `KeyError`
-cases (`groundedness`, `tool_output_utilization`) should validate their required
-inputs and raise a typed `EvaluationException` instead of a bare `KeyError`.
+case (`groundedness`) should validate its required inputs and raise a typed
+`EvaluationException` instead of a bare `KeyError`. `tool_output_utilization` used
+to raise `KeyError('tool_definitions')` here; tool definitions are now optional (the
+row is skipped as `not_applicable` without them), so with definitions supplied it
+reaches the scoring path and coerces a missing score to `0` (`fail`, `completed`).
 
 ## 6. `deflection_rate` ignores `status="skipped"`
 
