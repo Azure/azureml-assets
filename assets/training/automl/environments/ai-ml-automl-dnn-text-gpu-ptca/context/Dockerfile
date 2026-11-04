@@ -39,7 +39,6 @@ RUN pip uninstall -y onnxruntime
 RUN pip uninstall -y onnxruntime-training
 RUN pip install \
     --index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/ \
-    --extra-index-url https://pypi.org/simple \
     onnxruntime-training==1.18.0
 
 # torch-ort installation
