@@ -4,12 +4,12 @@ description: >-
   Environment for LLM post-training and reinforcement learning workloads using
   the slime framework with Megatron and SGLang.
 
-name: "slime-pytorch-2.9-cuda12.8"
-version: "15"
+name: "{{asset.name}}"
+version: "{{asset.version}}"
 
 build:
-  path: "context"
-  dockerfile_path: "Dockerfile"
+  path: "{{image.context.path}}"
+  dockerfile_path: "{{image.dockerfile.path}}"
 
 os_type: linux
 
