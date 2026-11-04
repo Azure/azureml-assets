@@ -942,10 +942,6 @@ class CustomerSatisfactionEvaluator(ModelEvaluatorBase[Union[str, float]]):
             elif status == "skipped":
                 score = None
                 result = "skipped"
-            elif status == "error":
-                score = None
-                result = "error"
-                reason = reason or "Evaluator reported an error."
             else:
                 score = llm_output.get("score")
                 if (

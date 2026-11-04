@@ -381,21 +381,16 @@ class ResponseCompletenessEvaluator(ModelEvaluatorBase[Union[str, float]]):
                 skipped.update({f"{self._result_key}_{key}": value for key, value in metadata.items()})
                 return skipped
 
-            is_error = llm_status == "error"
-            if is_error:
-                score = None
-                score_result = "error"
-            else:
-                score = llm_output.get("score")
-                if score is None:
-                    raise EvaluationException(
-                        message="Evaluator returned a missing or null score.",
-                        blame=ErrorBlame.SYSTEM_ERROR,
-                        category=ErrorCategory.FAILED_EXECUTION,
-                        target=ErrorTarget.COMPLETENESS_EVALUATOR,
-                    )
-                score = float(score)
-                score_result = self._get_binary_result(score)
+            score = llm_output.get("score")
+            if score is None:
+                raise EvaluationException(
+                    message="Evaluator returned a missing or null score.",
+                    blame=ErrorBlame.SYSTEM_ERROR,
+                    category=ErrorCategory.FAILED_EXECUTION,
+                    target=ErrorTarget.COMPLETENESS_EVALUATOR,
+                )
+            score = float(score)
+            score_result = self._get_binary_result(score)
             reason = llm_output.get("reason", "")
             llm_properties = llm_output.get("properties", {}) or {}
 
@@ -405,10 +400,10 @@ class ResponseCompletenessEvaluator(ModelEvaluatorBase[Union[str, float]]):
             response_dict = {
                 self._result_key: score,
                 f"{self._result_key}_score": score,
-                f"{self._result_key}_passed": None if is_error else score_result == "pass",
+                f"{self._result_key}_passed": score_result == "pass",
                 f"{self._result_key}_result": score_result,
                 f"{self._result_key}_reason": reason,
-                f"{self._result_key}_status": "error" if is_error else "completed",
+                f"{self._result_key}_status": "completed",
                 f"{self._result_key}_threshold": self._threshold,
                 f"{self._result_key}_properties": llm_properties,
             }

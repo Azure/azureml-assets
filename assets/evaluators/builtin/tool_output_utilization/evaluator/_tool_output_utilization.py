@@ -771,21 +771,16 @@ class ToolOutputUtilizationEvaluator(ModelEvaluatorBase[Union[str, float]]):
                 result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
                 return result
 
-            is_error = llm_status == "error"
-            if is_error:
-                score = None
-                score_result = "error"
-            else:
-                score = llm_output.get("score")
-                if score is None:
-                    raise EvaluationException(
-                        message="Evaluator returned a missing or null score.",
-                        blame=ErrorBlame.SYSTEM_ERROR,
-                        category=ErrorCategory.FAILED_EXECUTION,
-                        target=ErrorTarget.TOOL_OUTPUT_UTILIZATION_EVALUATOR,
-                    )
-                score = float(score)
-                score_result = "pass" if score >= 1.0 else "fail"
+            score = llm_output.get("score")
+            if score is None:
+                raise EvaluationException(
+                    message="Evaluator returned a missing or null score.",
+                    blame=ErrorBlame.SYSTEM_ERROR,
+                    category=ErrorCategory.FAILED_EXECUTION,
+                    target=ErrorTarget.TOOL_OUTPUT_UTILIZATION_EVALUATOR,
+                )
+            score = float(score)
+            score_result = "pass" if score >= 1.0 else "fail"
             reason = llm_output.get("reason", "")
             llm_properties = llm_output.get("properties", {}) or {}
             token_metadata = self._get_token_metadata(prompty_output_dict)
@@ -794,10 +789,10 @@ class ToolOutputUtilizationEvaluator(ModelEvaluatorBase[Union[str, float]]):
             result = {
                 self._result_key: score,
                 f"{self._result_key}_score": score,
-                f"{self._result_key}_passed": None if is_error else score_result == "pass",
+                f"{self._result_key}_passed": score_result == "pass",
                 f"{self._result_key}_result": score_result,
                 f"{self._result_key}_reason": reason,
-                f"{self._result_key}_status": "error" if is_error else "completed",
+                f"{self._result_key}_status": "completed",
                 f"{self._result_key}_threshold": self._threshold,
                 f"{self._result_key}_properties": llm_properties,
             }

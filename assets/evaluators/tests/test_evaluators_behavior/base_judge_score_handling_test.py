@@ -88,6 +88,7 @@ class JudgeScoreHandlingTests:
 
     @pytest.mark.parametrize("status_fields", [
         pytest.param({"status": "completed"}, id="completed"),
+        pytest.param({"status": "error"}, id="reported-error"),
         pytest.param({}, id="default-status"),
     ])
     def test_null_score_is_a_classified_execution_error(self, score_case, status_fields):
@@ -101,6 +102,7 @@ class JudgeScoreHandlingTests:
 
     @pytest.mark.parametrize("status_fields", [
         pytest.param({"status": "completed"}, id="completed"),
+        pytest.param({"status": "error"}, id="reported-error"),
         pytest.param({}, id="default-status"),
     ])
     def test_missing_score_is_a_classified_execution_error(self, score_case, status_fields):
@@ -112,39 +114,9 @@ class JudgeScoreHandlingTests:
         assert exc_info.value.category == ErrorCategory.FAILED_EXECUTION
         score_case[1].assert_awaited_once()
 
-    @pytest.mark.parametrize("score_kind", ["passing", "missing", "null", "invalid"])
-    def test_reported_error_is_not_scored(self, score_case, score_kind):
-        """An explicit judge error wins over any grade while retaining metadata."""
-        evaluator, judge, _ = score_case
-        binary = EVALUATOR_CONFIGS[evaluator._result_key].category == EvaluatorCategory.BINARY
-        score_fields = {} if score_kind == "missing" else {
-            "score": {
-                "passing": 1 if binary else 5,
-                "null": None,
-                "invalid": "not-a-score",
-            }[score_kind],
-        }
-        result = self._evaluate(score_case, {
-            **score_fields,
-            "status": "error",
-            "reason": "The judge could not grade this response.",
-            "properties": {"judgeConfidence": "low"},
-        })
-
-        key = evaluator._result_key
-        assert result[key] is None
-        assert result[f"{key}_score"] is None
-        assert result[f"{key}_passed"] is None
-        assert result[f"{key}_result"] == "error"
-        assert result[f"{key}_status"] == "error"
-        assert result[f"{key}_reason"] == "The judge could not grade this response."
-        assert result[f"{key}_properties"]["judgeConfidence"] == "low"
-        assert result[f"{key}_total_tokens"] == 10
-        assert result[f"{key}_model"] == "offline-judge"
-        judge.assert_awaited_once()
-
+    @pytest.mark.parametrize("status", ["completed", "error"])
     @pytest.mark.parametrize("outcome", ["fail", "pass", "fractional", "numeric-string"])
-    def test_valid_scores_keep_quality_and_metadata(self, score_case, outcome):
+    def test_valid_scores_keep_quality_and_metadata(self, score_case, outcome, status):
         """Explicit outcomes ensure the fail and fractional controls really fail."""
         evaluator, judge, _ = score_case
         binary = EVALUATOR_CONFIGS[evaluator._result_key].category == EvaluatorCategory.BINARY
@@ -157,7 +129,7 @@ class JudgeScoreHandlingTests:
         score = scores[outcome]
         result = self._evaluate(score_case, {
             "score": score,
-            "status": "completed",
+            "status": status,
             "reason": "Evaluated.",
             "properties": {"judgeConfidence": "high"},
         })
