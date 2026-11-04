@@ -22,6 +22,9 @@ matplotlib
 pillow>=13.0.0
 tqdm
 py-cpuinfo
+# The base image installs DeepSpeed only in its Python 3.10 environment.
+# Preserve that version after migrating the ptca environment to Python 3.11.
+deepspeed==0.15.1
 torch-tb-profiler
 # pydantic-settings: transitive dep of azureml-defaults -> azureml-inference-server-http;
 #   fixes GHSA-4xgf-cpjx-pc3j.

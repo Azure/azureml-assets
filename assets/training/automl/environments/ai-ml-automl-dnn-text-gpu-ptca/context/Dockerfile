@@ -38,8 +38,10 @@ RUN pip install --no-cache-dir --use-deprecated=legacy-resolver \
 RUN pip uninstall -y onnxruntime
 RUN pip uninstall -y onnxruntime-training
 RUN pip install \
-    --index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/ \
-    onnxruntime-training==1.18.0
+        cerberus flatbuffers h5py 'numpy>=1.16.6' onnx packaging protobuf sympy 'setuptools>=61.0.0' && \
+    pip install --no-deps \
+        --index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/ \
+        onnxruntime-training==1.18.0
 
 # torch-ort installation
 RUN TORCH_CUDA_ARCH_LIST="5.2;6.0;7.0;8.0;8.6;9.0" python -m onnxruntime.training.ortmodule.torch_cpp_extensions.install
