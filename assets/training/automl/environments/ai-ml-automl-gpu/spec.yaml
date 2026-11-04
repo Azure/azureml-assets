@@ -3,12 +3,12 @@ $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 description: >-
   An environment used by Azure ML AutoML for training models.
 
-name: "ai-ml-automl-gpu"
-version: "54"
+name: "{{asset.name}}"
+version: "{{asset.version}}"
 
 build:
-  path: "context"
-  dockerfile_path: "Dockerfile"
+  path: "{{image.context.path}}"
+  dockerfile_path: "{{image.dockerfile.path}}"
 
 os_type: linux
 

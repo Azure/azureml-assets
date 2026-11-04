@@ -1,15 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 
 description: >-
-  An environment for tasks such as regression, clustering, and classification with
-  LightGBM. Contains the Azure ML SDK and additional python packages.
+  An environment for tasks such as regression, clustering, and classification with LightGBM. Contains the Azure ML SDK and additional python packages.
 
-name: "lightgbm-3.3"
-version: "91"
+name: "{{asset.name}}"
+version: "{{asset.version}}"
 
 build:
-  path: "context"
-  dockerfile_path: "Dockerfile"
+  path: "{{image.context.path}}"
+  dockerfile_path: "{{image.dockerfile.path}}"
 
 os_type: linux
 

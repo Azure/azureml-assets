@@ -1,15 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 
 description: >-
-  An environment for deep learning with Tensorflow containing the Azure ML SDK and
-  additional python packages.
+  An environment for deep learning with Tensorflow containing the Azure ML SDK and additional python packages.
 
-name: "tensorflow-2.16-cuda12"
-version: "37"
+name: "{{asset.name}}"
+version: "{{asset.version}}"
 
 build:
-  path: "context"
-  dockerfile_path: "Dockerfile"
+  path: "{{image.context.path}}"
+  dockerfile_path: "{{image.dockerfile.path}}"
 
 os_type: linux
 
