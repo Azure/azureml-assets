@@ -6,12 +6,77 @@ tags:
   capabilities: reasoning
   supportsReasoning: ''
 system_metadata:
-  previewType: hideUI
   alias: gpt-oss-20b
   publisher: Microsoft
+  lifecycle: Generally available
   directoryPath: v1
   foundryLocal: ''
-  deploymentOptions: ['Foundry Local on Devices']
+  deploymentOptions:
+  - Foundry Local on Devices
+  - Foundry Local on Azure Local
+  deploymentOptionDetails:
+    Foundry Local on Azure Local: |-
+      # Expected running times for gpt-oss-20b
+
+      The results are for standard chat completion usages.
+
+      Mean metrics stand for the average performance, p99 metrics stand for the worst-performant percentile.
+
+      ## ONNX (cuda-gpu)
+
+      **Max model len**: 131072
+
+      ### Nvidia A10 GPU
+
+      | Maximal concurrency | Mean TTFT (ms) | P99 TTFT (ms) | Output throughput (tokens/s) |
+      |---|---|---|---|
+      | 1 request | 814.98 | 1242.99 | 112.30 |
+      | 2 requests | 1000.26 | 1125.94 | 142.40 |
+      | 4 requests | 1789.11 | 2062.88 | 158.33 |
+      | 8 requests | 4181.25 | 10722.19 | 164.10 |
+
+      ### Nvidia RTX Pro 6000 vGPU
+
+      | Maximal concurrency | Mean TTFT (ms) | P99 TTFT (ms) | Output throughput (tokens/s) |
+      |---|---|---|---|
+      | 1 request | 319.23 | 377.78 | 236.40 |
+      | 2 requests | 734.94 | 3452.53 | 278.12 |
+      | 4 requests | 958.25 | 1482.17 | 320.74 |
+      | 8 requests | 2136.59 | 3217.17 | 270.13 |
+
+      ## vLLM
+
+      **Max model len**: 131072
+
+      Natively-accelerated GPU generation (**recommended**): `Blackwell (SM 10.0)` or higher
+
+      Minimal supported GPU generation: `Volta (SM 7.0)`
+
+      ### Nvidia A10 GPU
+
+      **GPU memory utilization:** 0.81
+
+      **Required memory (GB):** 15.00
+
+      | Maximal concurrency | Mean TTFT (ms) | P99 TTFT (ms) | Output throughput (tokens/s) |
+      |---|---|---|---|
+      | 1 request | 694.77 | 764.99 | 58.73 |
+      | 2 requests | 920.39 | 983.62 | 85.76 |
+      | 4 requests | 1177.23 | 1318.42 | 134.44 |
+      | 8 requests | 1472.75 | 1646.53 | 209.59 |
+
+      ### Nvidia RTX Pro 6000 vGPU
+
+      **GPU memory utilization:** 0.85
+
+      **Required memory (GB):** 17.45
+
+      | Maximal concurrency | Mean TTFT (ms) | P99 TTFT (ms) | Output throughput (tokens/s) |
+      |---|---|---|---|
+      | 1 request | 275.39 | 315.99 | 149.73 |
+      | 2 requests | 366.72 | 389.44 | 227.90 |
+      | 4 requests | 447.97 | 480.57 | 359.71 |
+      | 8 requests | 549.29 | 587.67 | 572.19 |
   inputModalities:
   - text
   license: MIT
