@@ -641,7 +641,7 @@ def test_output_quality_native_request_changes_only_with_supplied_context(conver
         if key == "groundedness":
             assert "groundedness_context" in question["instructions"]
             assert "groundedness_context" not in original["instructions"]
-        elif key in ("task_adherence", "task_completion"):
+        elif key in ("intent_resolution", "task_adherence", "task_completion"):
             assert question["instructions"].startswith(original["instructions"] + " Ignore groundedness_context")
         else:
             assert question == original

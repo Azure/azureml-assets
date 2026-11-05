@@ -71,7 +71,7 @@ _RUBRICS = {
     for name in _RUBRIC_FILES
 }
 _ISOLATION = _RUBRICS["output_quality.decision.yaml"]["task_adherence"]["context_note"]
-_ISOLATED = {"task_adherence", "task_completion"}
+_ISOLATED = {"intent_resolution", "task_adherence", "task_completion"}
 _CYCLIC = ["doc"]
 _CYCLIC.append(_CYCLIC)
 
@@ -200,9 +200,9 @@ class TestOutputQualityDecisionBehavior:
         """Set up member strategies and return before loading multi-turn chat."""
         evaluator = _make_decision_evaluator(threshold={"fluency": 4})
         mocks = decision_mocks
-        assert mocks.factory.call_count == 18
+        assert mocks.factory.call_count == 20
         assert mocks.binary.call_count == 8
-        assert mocks.likert.call_count == 10
+        assert mocks.likert.call_count == 12
         for call in mocks.binary.call_args_list:
             assert call.args == (0.8,)
         for call in mocks.likert.call_args_list:

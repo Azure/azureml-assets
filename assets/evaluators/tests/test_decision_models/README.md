@@ -49,14 +49,14 @@ model call. Output Quality treats an empty optional text query as absent rather
 than dropping its response. Output Quality also accepts optional text context
 as the primary grounding source for its Groundedness member, on chat and native
 paths for turn and conversation inputs. When context is supplied, the chat
-prompts tell the judge to use it only for Groundedness, and the native Task
-adherence and Task completion questions tell it to ignore the context; the other
-native questions stay as they are. One judge call scores all six members, so
-supplied context can still shift other members on chat judges. A mapping is not
-grounding text and counts as no context, including the summary the hosted
-service maps to context for stored agent responses. Without context, its prompts
-and native requests are unchanged. These input and direct-cancellation regression
-matrices are required by their owning modules in the candidate CI gate.
+prompts tell the judge to use it only for Groundedness, and the native Intent
+resolution, Task adherence and Task completion questions tell it to ignore the
+context; the native Fluency and Coherence questions stay as they are. One judge
+call scores all six members, so supplied context can still shift other members.
+A mapping is not grounding text and counts as no context, including the summary
+the hosted service maps to context for stored agent responses. Without context,
+its prompts and native requests are unchanged. These input and direct-cancellation
+regression matrices are required by their owning modules in the candidate CI gate.
 
 For column-mapped hosted requests, every explicitly referenced dataset column
 must exist, even for optional evaluator inputs. Response-only Groundedness can
