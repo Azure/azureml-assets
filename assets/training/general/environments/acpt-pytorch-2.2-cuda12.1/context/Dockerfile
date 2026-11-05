@@ -2,40 +2,49 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 
 ENV PIP_PROGRESS_BAR=off
 
+# IMPORTANT (2026-10-26): Python was upgraded from 3.10 to 3.11 for Pillow 13 security fixes.
+# Downstream users must update interpreter-specific paths, wheels, and compiled dependencies for Python 3.11.
+RUN conda install -n ptca -c conda-forge -y python=3.11 pip && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.10 && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.8.0+cu126' 'torchvision==0.23.0+cu126' 'torchaudio==2.8.0+cu126' && \
+    conda clean -a -y
+
 # Conda env security floors.
-# setuptools>=82.0.1: fixes GHSA-h35f-9h28-mq5c.
+# setuptools>=84.1.0: fixes GHSA-h35f-9h28-mq5c.
 # PyJWT>=2.13.0: pinned transitive dep brought in by the base image; fixes GHSA-jq35-7prp-9v3f and GHSA-993g-76c3-p5m4.
 # py-rattler>=0.24.0: pinned transitive dep of base conda tooling; brought in by base image, fixes GHSA-q53q-5r4j-5729.
 # cryptography>=50.0.0: pinned transitive dep present in the base image; fixes GHSA-537c-gmf6-5ccf.
 # pydantic-settings>=2.14.2: pinned transitive dep present in the base image; fixes GHSA-4xgf-cpjx-pc3j.
-# msgpack>=1.2.1: pinned transitive dep present in the base image; fixes GHSA-6v7p-g79w-8964.
-# aiohttp>=3.14.3: pinned transitive dep present in the base image; fixes GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, and GHSA-mfx4-hv73-q22v.
+# msgpack>=1.2.3: pinned transitive dep present in the base image; fixes GHSA-6v7p-g79w-8964.
+# aiohttp>=3.14.4: pinned transitive dep present in the base image; fixes GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, and GHSA-mfx4-hv73-q22v.
 # anyio>=4.14.2: pinned transitive dep in the base prefix; fixes GHSA-5p39-cfhj-2xmp and GHSA-82r6-8w77-94w6.
-RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' 'setuptools>=82.0.1' && \
-    conda install -n base -c conda-forge -y 'pip>=26.1' 'setuptools>=82.0.1' && \
+RUN conda install -n ptca -c conda-forge -y 'pip>=26.1' 'setuptools>=84.1.0' && \
+    conda install -n base -c conda-forge -y 'pip>=26.1' 'setuptools>=84.1.0' && \
     conda run -n base python -m pip install --upgrade --no-cache-dir \
-        'setuptools>=82.0.1' \
+        'setuptools>=84.1.0' \
         'python-dotenv>=1.2.2' \
         'urllib3>=2.7.0' \
         'idna>=3.15' \
         'click>=8.3.3' \
-        'aiohttp>=3.14.3' \
+        'aiohttp>=3.14.4' \
         'anyio>=4.14.2' \
         'PyJWT>=2.13.0' \
         'py-rattler>=0.24.0' \
         'cryptography>=50.0.0' \
         'pydantic-settings>=2.14.2' \
-        'msgpack>=1.2.1' && \
+        'msgpack>=1.2.3' && \
     conda run -n ptca python -m pip install --upgrade --no-cache-dir \
         'urllib3>=2.7.0' \
         'idna>=3.15' \
-        'setuptools>=82.0.1' \
-        'aiohttp>=3.14.3' \
-        'msgpack>=1.2.1' && \
+        'setuptools>=84.1.0' \
+        'aiohttp>=3.14.4' \
+        'msgpack>=1.2.3' && \
     site_packages="$(find /opt/conda/lib -mindepth 2 -maxdepth 2 -type d \
         -path '/opt/conda/lib/python*/site-packages' -print; \
-        if [ -d /opt/conda/envs/ptca/lib/python3.10/site-packages ]; then \
-            printf '%s\n' /opt/conda/envs/ptca/lib/python3.10/site-packages; \
+        if [ -d /opt/conda/envs/ptca/lib/python3.11/site-packages ]; then \
+            printf '%s\n' /opt/conda/envs/ptca/lib/python3.11/site-packages; \
         fi)" && \
     for site_packages_dir in $site_packages; do \
         rm -f \
@@ -88,8 +97,8 @@ RUN pip install -r requirements.txt --no-cache-dir && \
         'ml-dtypes<0.6' \
         'pyarrow>=23.0.1,<24' \
         'cryptography>=50.0.0' \
-        'setuptools>=83.0.0' && \
-    conda run -n base python -m pip install --upgrade --no-cache-dir 'setuptools>=83.0.0'
+        'setuptools>=84.1.0' && \
+    conda run -n base python -m pip install --upgrade --no-cache-dir 'setuptools>=84.1.0'
 
 # Temporary override for the Torch stack inherited from the ACPT torch280 base.
 # The CUDA 12.6 index has no torchaudio build compatible with torch>=2.12, so
@@ -101,7 +110,7 @@ RUN /opt/conda/envs/ptca/bin/pip uninstall -y torchaudio && \
         --index-url https://download.pytorch.org/whl/cu126 \
         'torch==2.13.0' 'torchvision==0.28.0' && \
     /opt/conda/envs/ptca/bin/python -m pip install --upgrade --no-cache-dir \
-        'datasets>=4.8.4' 'setuptools>=83.0.0'
+        'datasets>=4.8.4' 'setuptools>=84.1.0'
 
 # Inference requirements.
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
@@ -177,16 +186,24 @@ RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends openssh-server && \
     rm -rf /var/lib/apt/lists/*
 
-# Refresh packages for the latest Ubuntu security advisories.
+# Reassert November 2026 vulnerability-report floors in the scanned Python prefixes.
+RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'certifi>=2026.10.19' 'brotlicffi>=1.2.1.0' 'opentelemetry-api>=1.45.1' && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/certifi-2024.7.4.dist-info && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/opentelemetry__api-1.43.0.dist-info
+RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'opentelemetry-api>=1.45.1'
+
+# Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libssl-dev libssl3 libx11-6 libx11-data libx11-xcb1 openssh-client openssh-server openssh-sftp-server openssl sudo"; \
+    security_packages="libbrotli1 libnginx-mod-http-echo dotnet-hostfxr-8.0"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
             installed_packages="$installed_packages $package"; \
         fi; \
     done; \
-    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    if [ -n "$installed_packages" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade $installed_packages; \
+    fi; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
