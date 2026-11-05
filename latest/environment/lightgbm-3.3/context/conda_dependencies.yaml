@@ -3,13 +3,13 @@ channels:
 - conda-forge
 - anaconda
 dependencies:
-- python=3.10
+- python=3.11
 - pip=26.2.1
 - setuptools=84.0.0  # pinned transitive dep seeded by conda/pip; fixes CVE-2025-47273 and CVE-2026-59890
 - msgpack-python=1.2.2  # pinned transitive dep of distributed/dask; fixes GHSA-6v7p-g79w-8964
-- pandas~=1.5.3
-- scipy~=1.10.0
-- numpy~=1.22.0
+- pandas>=2.2,<2.3
+- scipy>=1.11,<1.12
+- numpy==1.26.4
 - pip:
   - azureml-core==1.61.0.post4
   - azureml-defaults==1.62.0
@@ -26,7 +26,7 @@ dependencies:
   - ipykernel~=6.0
   - tensorboard
   - psutil~=5.8.0
-  - matplotlib~=3.5.0
+  - matplotlib>=3.10.8,<3.11
   - tqdm~=4.66.3
   - py-cpuinfo==5.0.0
   - torch-tb-profiler~=0.4.0

@@ -1,5 +1,8 @@
 FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04:20261026.v1
 
+# IMPORTANT (2026-10-26): Python was upgraded from 3.10 to 3.11 for Pillow 13 security fixes.
+# Downstream users must update interpreter-specific paths, wheels, and compiled dependencies for Python 3.11.
+
 USER root
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl-dnn-gpu
@@ -35,9 +38,9 @@ RUN apt-get update && \
 # These are inherited in the base Miniconda environment; fix current VCM GHSA findings.
 RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade \
         'cryptography>=50.0.0' \
-        'msgpack>=1.2.1' \
+        'msgpack>=1.2.3' \
         'pydantic-settings>=2.14.2' \
-        'setuptools>=83.0.0' && \
+        'setuptools>=84.1.0' && \
     find /opt/miniconda -type d -name 'msgpack-1.1.2.dist-info' -prune -exec rm -rf {} + && \
     /opt/miniconda/bin/python -c "import msgpack, setuptools, cryptography, pydantic_settings; assert msgpack.version >= (1, 2, 1), msgpack.version"
 
@@ -54,9 +57,9 @@ RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade \
 # unattended jump to a future major release that could break the rest of the
 # image. opt/miniconda's pip is already 26.1.1 in the latest parent base image,
 # so no secondary upgrade for that prefix is required here.
-RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 pip=26.0 -y && \
+RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.11 pip=26.0 -y && \
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH python -m pip install --no-cache-dir --upgrade 'pip>=26.1,<27' && \
-    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH python -m pip install --no-cache-dir --upgrade 'setuptools>=83.0.0' && \
+    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH python -m pip install --no-cache-dir --upgrade 'setuptools>=84.1.0' && \
     conda clean -a -y
 
 RUN pip install --upgrade lightgbm==4.6.0
@@ -73,12 +76,29 @@ RUN pip install --no-cache-dir \
     'scipy==1.10.1' \
     'joblib==1.2.0'
 
+# Build the legacy pmdarima pin before AzureML installs it transitively.
+RUN pip install --no-cache-dir --upgrade \
+        'setuptools==59.8.0' 'Cython<3' 'numpy>=1.23.5,<1.24' wheel && \
+    pip wheel --no-cache-dir --no-deps --no-build-isolation \
+        --wheel-dir /opt/pmdarima-wheel 'pmdarima==1.8.5' && \
+    pip install --no-cache-dir --no-index --find-links /opt/pmdarima-wheel \
+        --no-deps 'pmdarima==1.8.5' && \
+    pip install --no-cache-dir --upgrade 'setuptools>=84.1.0'
+
+ENV PIP_FIND_LINKS=/opt/pmdarima-wheel
+
+# pmdarima 1.8.5 imports pkg_resources, which patched setuptools no longer ships.
+RUN find $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/pmdarima -type f -name '*.py' \
+        -exec sed -i 's/from pkg_resources import parse_version/from packaging.version import parse as parse_version/' {} + && \
+    ! grep -R 'from pkg_resources import parse_version' \
+        $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/pmdarima
+
 # Ensure future conda and pip calls are tied to this conda environment,
 # and we don't just get lucky from the implicit PATH ordering.
 SHELL ["conda", "run", "-p", "$AZUREML_CONDA_ENVIRONMENT_PATH", "/bin/bash", "-c"]
 
 # Install pip dependencies
-RUN pip install \
+RUN pip install --use-deprecated=legacy-resolver \
                 azureml-core==1.61.0.post4 \
                 azureml-pipeline-core==1.62.0 \
                 azureml-telemetry==1.62.0 \
@@ -92,7 +112,7 @@ RUN pip install \
                 'azureml-model-management-sdk==1.0.1b6.post1' \
                 'mlflow-skinny==2.15.1' --no-cache-dir
 
-RUN pip install --no-cache-dir \
+RUN pip install --no-cache-dir --use-deprecated=legacy-resolver \
                 azureml-train-automl-client==1.62.0 \
                 azureml-train-automl-runtime==1.62.0
 
@@ -116,13 +136,13 @@ RUN pip install \
 # distributed>=2026.1.0: CVE-2026-23528 (via azureml-train-automl-runtime -> dask[complete] -> distributed)
 # mlflow-skinny>=2.16.0: security fixes (via azureml-mlflow -> mlflow-skinny, also installed directly)
 # protobuf>=5.29.6: CVE-2026-0994 DoS recursion (via mlflow-skinny -> protobuf, azureml-automl-runtime -> onnx/onnxruntime)
-# pillow>=12.3.0: current Pillow GHSA fixes (via torchvision -> pillow, prophet -> matplotlib -> pillow)
+# pillow>=13.0.0: current Pillow GHSA fixes (via torchvision -> pillow, prophet -> matplotlib -> pillow)
 # pyasn1>=0.6.4: current pyasn1 GHSA fixes (via AzureML/MLflow dependencies)
 # cryptography>=50.0.0: GHSA-537c-gmf6-5ccf (via AzureML/MLflow dependencies)
 # GitPython>=3.1.57: current GitPython GHSA fixes (via azureml-mlflow)
-# msgpack>=1.2.1: GHSA-6v7p-g79w-8964 (via AzureML AutoML Dask stack)
+# msgpack>=1.2.3: GHSA-6v7p-g79w-8964 (via AzureML AutoML Dask stack)
 # pydantic-settings>=2.14.2: GHSA-4xgf-cpjx-pc3j (via AzureML/MLflow dependencies)
-# setuptools>=83.0.0: GHSA-h35f-9h28-mq5c (keeps this Python prefix patched)
+# setuptools>=84.1.0: GHSA-h35f-9h28-mq5c (keeps this Python prefix patched)
 # bokeh>=3.8.2: GHSA-793v-589g-574v CSWSH (overrides azureml-train-automl-runtime's bokeh<3.0.0 cap)
 # onnx>=1.21.0: GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6, GHSA-538c-55jv-c5g9,
 #   GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m (overrides azureml-automl-runtime's onnx<=1.17.0 cap)
@@ -140,13 +160,13 @@ RUN pip install --upgrade --no-cache-dir \
                           'torch==2.13.0'  # pinned transitive dep of pytorch-transformers/horovod; fixes GHSA-rrmf-rvhw-rf47, GHSA-qfhq-4f3w-5fph, GHSA-vgrw-7cvw-pwgx
 RUN pip install --upgrade 'numpy>=1.23.5,<1.24' \
                           'distributed>=2026.1.0' 'mlflow-skinny>=2.16.0' \
-                          'protobuf>=5.29.6' 'pillow>=12.3.0' \
+                          'protobuf>=5.29.6' 'pillow>=13.0.0' \
                           'pyasn1>=0.6.4' \
                           'cryptography>=50.0.0' \
                           'GitPython>=3.1.57' \
-                          'msgpack>=1.2.1' \
+                          'msgpack>=1.2.3' \
                           'pydantic-settings>=2.14.2' \
-                          'setuptools>=83.0.0' \
+                          'setuptools>=84.1.0' \
                           'bokeh>=3.8.2' \
                           'onnx>=1.21.0' \
                           'starlette>=1.0.1' \
@@ -165,27 +185,41 @@ RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
 RUN set -eux; \
    find /azureml-envs /opt /root /tmp -path '*/pip/_vendor/bom.cdx.json' -type f -delete; \
    find /azureml-envs /opt /root /tmp -path '*/_vendor/vendor.txt' -type f -exec \
-       sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +; \
+       sed -i -E 's/setuptools==70\.3\.0/setuptools==84.1.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +; \
    grep -RIlE 'setuptools|msgpack|70\.3\.0|1\.1\.2' /azureml-envs /opt 2>/dev/null | \
-       xargs -r sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g; s/pkg:pypi\/setuptools@70\.3\.0/pkg:pypi\/setuptools@83.0.0/g; s/pkg:pypi\/msgpack@1\.1\.2/pkg:pypi\/msgpack@1.2.1/g; s/msgpack<=1\.1\.2/msgpack>=1.2.1/g; s/setuptools \(70\.3\.0\)/setuptools (83.0.0)/g'; \
+       xargs -r sed -i -E 's/setuptools==70\.3\.0/setuptools==84.1.0/g; s/msgpack==1\.1\.2/msgpack==1.2.3/g; s/pkg:pypi\/setuptools@70\.3\.0/pkg:pypi\/setuptools@84.1.0/g; s/pkg:pypi\/msgpack@1\.1\.2/pkg:pypi\/msgpack@1.2.3/g; s/msgpack<=1\.1\.2/msgpack>=1.2.3/g; s/setuptools \(70\.3\.0\)/setuptools (84.1.0)/g'; \
    test -z "$(grep -RIlE 'setuptools.*70\.3\.0|msgpack.*1\.1\.2|pkg:pypi/(setuptools@70\.3\.0|msgpack@1\.1\.2)' /azureml-envs /opt 2>/dev/null | head -n 1)"; \
    rm -rf /opt/miniconda/pkgs/
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
 
-# Refresh packages for the latest Ubuntu security advisories.
+# XGBoost 1.5.2 uses pkg_resources only to detect optional Dask support.
+RUN sed -i \
+        -e 's/import pkg_resources/from importlib import metadata as importlib_metadata/' \
+        -e 's/pkg_resources\.get_distribution/importlib_metadata.distribution/g' \
+        -e 's/pkg_resources\.DistributionNotFound/importlib_metadata.PackageNotFoundError/g' \
+        $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/xgboost/compat.py && \
+    ! grep -q 'pkg_resources' \
+        $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/xgboost/compat.py
+
+# Reassert newly patched transitive dependencies after all package installs.
+RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0'
+
+# Reassert November 2026 vulnerability-report floors in the scanned Python prefixes.
+RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'certifi>=2026.10.19'
+
+# Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libssl3 openssh-client openssh-server openssh-sftp-server openssl"; \
+    security_packages="libbrotli1 libnginx-mod-http-echo"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
             installed_packages="$installed_packages $package"; \
         fi; \
     done; \
-    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    if [ -n "$installed_packages" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade $installed_packages; \
+    fi; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
-
-# Reassert newly patched transitive dependencies after all package installs.
-RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0'

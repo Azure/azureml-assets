@@ -2,10 +2,19 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly
 
 ENV PIP_PROGRESS_BAR=off
 
+# IMPORTANT (2026-10-26): Python was upgraded from 3.10 to 3.11 for Pillow 13 security fixes.
+# Downstream users must update interpreter-specific paths, wheels, and compiled dependencies for Python 3.11.
+RUN conda install -n ptca -c conda-forge -y python=3.11 pip && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.10 && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.8.0+cu126' 'torchvision==0.23.0+cu126' 'torchaudio==2.8.0+cu126' && \
+    conda clean -a -y
+
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir && \
     pip install --upgrade --no-cache-dir \
-        'setuptools>=83.0.0' 'msgpack>=1.2.1'
+        'setuptools>=84.1.0' 'msgpack>=1.2.3'
 
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
@@ -87,17 +96,17 @@ RUN apt-get update && \
     apt-get install -y openssh-server openssh-client && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Fix ptca conda env vulnerabilities (python 3.10, active).
-# setuptools>=83.0.0: GHSA-58pv-8j8x-9vj2, GHSA-8rrh-rw8j-w5fx,
+# Fix ptca conda env vulnerabilities (python 3.11, active).
+# setuptools>=84.1.0: GHSA-58pv-8j8x-9vj2, GHSA-8rrh-rw8j-w5fx,
 # GHSA-h35f-9h28-mq5c.
-# msgpack>=1.2.1: transitive dep of azureml-mlflow -> mlflow-skinny; fixes
+# msgpack>=1.2.3: transitive dep of azureml-mlflow -> mlflow-skinny; fixes
 # GHSA-6v7p-g79w-8964.
 # sqlparse>=0.6.0: transitive dep of azureml-mlflow -> mlflow-skinny; fixes
 # GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr, GHSA-3496-9g83-7v6x, and
 # GHSA-pwgv-4x5q-6m9f.
 # urllib3>=2.7.0: GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j.
 # idna>=3.15: GHSA-65pc-fj4g-8rjx.
-# aiohttp>=3.14.3: GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8,
+# aiohttp>=3.14.4: GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8,
 # GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, GHSA-mfx4-hv73-q22v.
 # cryptography>=50.0.0: pinned transitive dep of azureml-core; brought in by
 #   base image and AzureML SDK dependencies, fixes GHSA-537c-gmf6-5ccf and
@@ -106,7 +115,7 @@ RUN apt-get update && \
 #   azureml-dataset-runtime 1.62.0 caps pyarrow<21, so this post-install
 #   security override fixes GHSA-rgxp-2hwp-jwgg.
 RUN conda run -n ptca python -m pip install --upgrade --no-cache-dir \
-        'setuptools>=83.0.0' 'msgpack>=1.2.1' 'sqlparse>=0.6.0' && \
+        'setuptools>=84.1.0' 'msgpack>=1.2.3' 'sqlparse>=0.6.0' && \
     find /opt/conda/envs/ptca -type d \( \
         -name 'setuptools-70.3.0.dist-info' -o \
         -name 'setuptools-70.3.0-py*.egg-info' -o \
@@ -115,31 +124,31 @@ RUN conda run -n ptca python -m pip install --upgrade --no-cache-dir \
         -name 'msgpack-1.1.2.dist-info' \
     \) -prune -exec rm -rf {} + && \
     conda run -n ptca python -m pip install --upgrade --no-cache-dir \
-        'urllib3>=2.7.0' 'idna>=3.15' 'aiohttp>=3.14.3' \
+        'urllib3>=2.7.0' 'idna>=3.15' 'aiohttp>=3.14.4' \
         'cryptography>=50.0.0' 'pyarrow>=23.0.1' && \
     conda clean -a -y && rm -rf /opt/conda/pkgs/
 
 # Fix base conda env vulnerabilities (python 3.13). Parent packages still expose
 # loose vulnerable floors, so these direct floors are required:
-# setuptools>=83.0.0: conda requires setuptools>=60.0.0 only.
+# setuptools>=84.1.0: conda requires setuptools>=60.0.0 only.
 # python-dotenv>=1.2.2: pydantic-settings 2.14.1 requires >=0.21.0.
 # urllib3>=2.7.0: requests 2.34.2 requires <3,>=1.26.
 # idna>=3.15: requests 2.34.2 requires <4,>=2.5.
 # click>=8.3.3: typer 0.25.1 requires >=8.2.1; mlflow-skinny 3.12.0 requires
 #   <9,>=7.0.
-# aiohttp>=3.14.3: GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8,
+# aiohttp>=3.14.4: GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8,
 # GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, GHSA-mfx4-hv73-q22v.
 # cryptography>=50.0.0: pinned transitive dep of the base image, fixes
 #   GHSA-537c-gmf6-5ccf and GHSA-g6cj-pr64-35w5.
-# msgpack>=1.2.1: transitive dep of azureml-mlflow -> mlflow-skinny; fixes
+# msgpack>=1.2.3: transitive dep of azureml-mlflow -> mlflow-skinny; fixes
 #   GHSA-6v7p-g79w-8964.
 # PyJWT>=2.13.0: transitive dep from the base image; fixes GHSA-jq35-7prp-9v3f
 #   and GHSA-993g-76c3-p5m4.
 # anyio>=4.14.2: transitive dep in the base prefix; fixes
 #   GHSA-5p39-cfhj-2xmp and GHSA-82r6-8w77-94w6.
 RUN conda run -n base python -m pip install --upgrade \
-    'pip>=26.2.0' 'setuptools>=83.0.0' 'msgpack>=1.2.1' 'python-dotenv>=1.2.2' \
-    'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.3' \
+    'pip>=26.2.0' 'setuptools>=84.1.0' 'msgpack>=1.2.3' 'python-dotenv>=1.2.2' \
+    'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.4' \
     'anyio>=4.14.2' 'cryptography>=50.0.0' 'PyJWT>=2.13.0' && \
     conda clean -a -y && rm -rf /opt/conda/pkgs/
 
@@ -155,13 +164,13 @@ RUN /opt/conda/envs/ptca/bin/pip uninstall -y torchaudio && \
     /opt/conda/envs/ptca/bin/pip install --no-cache-dir 'numpy==1.26.4'
 
 RUN conda run -n base python -m pip install --upgrade --no-cache-dir \
-        'setuptools>=83.0.0' 'msgpack>=1.2.1' && \
+        'setuptools>=84.1.0' 'msgpack>=1.2.3' && \
     conda run -n ptca python -m pip install --upgrade --no-cache-dir \
-        'pip>=26.2.0' 'datasets>=4.8.4' 'setuptools>=83.0.0' 'msgpack>=1.2.1' && \
+        'pip>=26.2.0' 'datasets>=4.8.4' 'setuptools>=84.1.0' 'msgpack>=1.2.3' && \
     site_packages="$(find /opt/conda/lib -mindepth 2 -maxdepth 2 -type d \
         -path '/opt/conda/lib/python*/site-packages' -print; \
-        if [ -d /opt/conda/envs/ptca/lib/python3.10/site-packages ]; then \
-            printf '%s\n' /opt/conda/envs/ptca/lib/python3.10/site-packages; \
+        if [ -d /opt/conda/envs/ptca/lib/python3.11/site-packages ]; then \
+            printf '%s\n' /opt/conda/envs/ptca/lib/python3.11/site-packages; \
         fi)" && \
     for site_packages_dir in $site_packages; do \
         rm -f \
@@ -207,16 +216,24 @@ RUN conda run -n base python -m pip install --upgrade --no-cache-dir \
 
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
 
-# Refresh packages for the latest Ubuntu security advisories.
+# Reassert November 2026 vulnerability-report floors in the scanned Python prefixes.
+RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'certifi>=2026.10.19' 'brotlicffi>=1.2.1.0' 'opentelemetry-api>=1.45.1' && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/certifi-2024.7.4.dist-info && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/opentelemetry__api-1.43.0.dist-info
+RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'opentelemetry-api>=1.45.1'
+
+# Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libevent-core-2.1-7 libssl-dev libssl3 libx11-6 libx11-data libx11-xcb1 openssh-client openssh-server openssh-sftp-server openssl sudo"; \
+    security_packages="dotnet-hostfxr-8.0 libbrotli1 libnginx-mod-http-echo"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
             installed_packages="$installed_packages $package"; \
         fi; \
     done; \
-    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    if [ -n "$installed_packages" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade $installed_packages; \
+    fi; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*

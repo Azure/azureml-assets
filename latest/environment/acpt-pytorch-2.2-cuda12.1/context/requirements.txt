@@ -18,10 +18,10 @@ inference-schema
 MarkupSafe==2.1.2
 regex
 pybind11
-pillow>=12.2.0
+pillow>=13.0.0
 # GHSA-69w3-r845-3855 requires transformers>=5.0.0rc3; upgrading to stable 5.x
 transformers>=5.0.0
-aiohttp>=3.14.3
+aiohttp>=3.14.4
 # onnx: transitive dep of onnxruntime in base image; parent uses loose floor (>=1.16.0);
 # override needed for GHSA-p433-9wv8-28xj, GHSA-538c-55jv-c5g9, GHSA-cmw6-hcpp-c6jp, GHSA-q56x-g2fj-4rj6, GHSA-hqmj-h5c6-369m
 onnx>=1.21.0
@@ -36,8 +36,11 @@ psutil~=5.8.0
 matplotlib~=3.5.0
 tqdm~=4.66.3
 py-cpuinfo==5.0.0
+# The base image installs DeepSpeed only in its Python 3.10 environment.
+# Preserve that version after migrating the ptca environment to Python 3.11.
+deepspeed==0.15.1
 torch-tb-profiler~=0.4.0
 starlette>=1.0.1
-filelock>=3.20.1
+filelock>=4.2.1
 jaraco.context>=6.1.0
 protobuf>=6.33.5
