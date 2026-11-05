@@ -480,6 +480,38 @@ _EVALUATORS: Tuple[Dict[str, Union[str, int]], ...] = (
     {"name": "task_completion", "min": 0, "max": 1, "default_threshold": 1},
 )
 
+# Placeholder some dataset pipelines write for an empty context; standalone Groundedness ignores it too.
+_NO_CONTEXT_MARKER = "<>"
+
+
+def _normalize_context(context: Any) -> Optional[str]:
+    """Return supplied grounding context as text, or None when it carries no evidence.
+
+    As in standalone Groundedness, None, blank text, the ``<>`` placeholder, empty values and lists of
+    blank entries count as no context. So do missing table cells (NaN, NaT and pandas.NA). Text is kept
+    unchanged; any other value becomes one JSON string so both judges receive the same text.
+
+    :param context: The supplied context.
+    :type context: Any
+    :return: The context text, or None.
+    :rtype: Optional[str]
+    """
+    if hasattr(context, "tolist"):  # numpy values read from table cells
+        context = context.tolist()
+    if isinstance(context, str):
+        return context if context.strip() and context != _NO_CONTEXT_MARKER else None
+    try:
+        if not context or context != context:  # empty values, NaN and NaT
+            return None
+    except (TypeError, ValueError):  # pandas.NA has no truth value
+        return None
+    if isinstance(context, (list, tuple)) and not any(str(item).strip() for item in context):
+        return None
+    try:
+        return json.dumps(context, ensure_ascii=False, default=str)
+    except (TypeError, ValueError):  # keys JSON can't encode, or a circular reference
+        return str(context)
+
 
 @experimental
 class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
@@ -492,6 +524,8 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
     With a user turn and a nonempty response containing no factual claims, turn-level
     groundedness scores a neutral 3 (passing by default); conversation-level groundedness
     is skipped and does not affect the aggregate.
+    Optional ``context`` is grounding evidence for the groundedness member only. Without it,
+    the prompts and Decision requests are the ones sent before context was supported.
     """
 
     _PROMPTY_FILE = "output_quality.prompty"
@@ -499,7 +533,7 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
     _DECISION_FILE = "output_quality.decision.yaml"
     _MULTI_TURN_DECISION_FILE = "output_quality_multi_turn.decision.yaml"
     _RESULT_KEY = "output_quality"
-    _OPTIONAL_PARAMS = ["messages", "tool_definitions"]
+    _OPTIONAL_PARAMS = ["messages", "tool_definitions", "context"]
     _EVALUATORS = _EVALUATORS
     _supports_decision_models = True
     _binary_decision = True
@@ -597,12 +631,12 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
 
         self._decision_strategies = None
         if decision_selected:
-            self._decision_strategies = self._load_decision_strategies(
+            self._decision_strategies, self._context_decision_strategies = self._load_decision_strategies(
                 os.path.join(current_dir, self._DECISION_FILE)
             )
-            self._multi_turn_decision_strategies = self._load_decision_strategies(
-                os.path.join(current_dir, self._MULTI_TURN_DECISION_FILE)
-            )
+            (
+                self._multi_turn_decision_strategies, self._multi_turn_context_decision_strategies
+            ) = self._load_decision_strategies(os.path.join(current_dir, self._MULTI_TURN_DECISION_FILE))
             return
 
         multi_turn_prompty_path = os.path.join(current_dir, self._MULTI_TURN_PROMPTY_FILE)
@@ -618,26 +652,56 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
             is_reasoning_model=self._is_reasoning_model,
         )
 
-    def _load_decision_strategies(self, rubric_path: str) -> Dict:
-        """Load independent member strategies from this evaluator's rubric file."""
+    def _load_decision_strategies(self, rubric_path: str) -> Tuple[Dict, Dict]:
+        """Load independent member strategies from this evaluator's rubric file.
+
+        The second mapping is used only when a request carries supplied context. Groundedness gets its
+        context-aware question, and the members listed under ``context_isolation`` are told to ignore the
+        context. Every other question stays the same, as it does for requests without context.
+        """
         from azure.ai.evaluation._legacy.prompty._yaml_utils import load_yaml
 
         rubric = json.loads(json.dumps(load_yaml(rubric_path)))
         runner = self._decision_model_runner
-        return {
-            member["name"]: DecisionEvaluationStrategy(
+        isolation = rubric["context_isolation"]
+
+        def strategy(member: Dict, status: Dict, result: Dict):
+            name = member["name"]
+            return DecisionEvaluationStrategy(
                 runner,
-                result_key=member["name"],
+                result_key=name,
                 error_target=ExtendedErrorTarget.OUTPUT_QUALITY_EVALUATOR,
-                questions={"status": rubric[member["name"]]["status"],
-                           member["name"]: rubric[member["name"]]["result"]},
+                questions={"status": status, name: result},
                 scoring=(BinaryScoring(runner.probability_threshold) if member["max"] == 1
                          else LikertScoring(5, minimum=1)),
-                threshold=self._threshold_for(member["name"]),
+                threshold=self._threshold_for(name),
                 timeout=self._LLM_CALL_TIMEOUT,
             )
-            for member in self._EVALUATORS
-        }
+
+        strategies, with_context = {}, {}
+        for member in self._EVALUATORS:
+            name = member["name"]
+            status, result = rubric[name]["status"], rubric[name]["result"]
+            strategies[name] = strategy(member, status, result)
+            if name == "groundedness":
+                with_context[name] = strategy(member, status, rubric[name]["result_with_context"])
+            elif name in isolation["members"]:
+                isolated = {**result, "instructions": f"{result['instructions']} {isolation['note']}"}
+                with_context[name] = strategy(member, status, isolated)
+            else:
+                with_context[name] = strategies[name]
+        return strategies, with_context
+
+    def _decision_request(self, state: Dict, context: Optional[str], conversation: bool) -> Tuple[Dict, Dict]:
+        """Return the native state and member strategies, adding supplied context only when present."""
+        if conversation:
+            strategies = self._multi_turn_decision_strategies
+            context_strategies = self._multi_turn_context_decision_strategies
+        else:
+            strategies, context_strategies = self._decision_strategies, self._context_decision_strategies
+        if context is None:
+            return state, strategies
+        return {**state, "groundedness_context": context}, context_strategies
 
     async def _evaluate_decision(self, eval_input: Dict, strategies: Dict) -> Dict:
         """Execute all twelve questions once and parse each member independently."""
@@ -681,8 +745,9 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         query: Union[str, List[dict]],
         response: Union[str, List[dict]],
         tool_definitions: Optional[Union[dict, List[dict]]] = None,
+        context: Optional[str] = None,
     ) -> Dict[str, Union[str, int, float, Dict, None]]:
-        """Evaluate a single query and response."""
+        """Evaluate a single query and response, with optional grounding context for groundedness."""
 
     @overload
     def __call__(
@@ -690,8 +755,9 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         *,
         messages: List[dict],
         tool_definitions: Optional[Union[dict, List[dict]]] = None,
+        context: Optional[str] = None,
     ) -> Dict[str, Union[str, int, float, Dict, None]]:
-        """Evaluate a full multi-turn conversation."""
+        """Evaluate a full multi-turn conversation, with optional grounding context for groundedness."""
 
     @override
     def __call__(self, *args, **kwargs):
@@ -875,6 +941,20 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         self._validator.validate_eval_input(validation_input)
         return await self._the_super_real_call(**kwargs)
 
+    def _convert_kwargs_to_eval_input(self, **kwargs):
+        """Attach only explicitly supplied context to every evaluation input.
+
+        For a ``conversation`` input the base converter would write ``str({})`` as each turn's context.
+        Context fields inside a conversation are not read, as before; a supplied context applies to every turn.
+        """
+        context = _normalize_context(kwargs.pop("context", None))
+        eval_inputs = super()._convert_kwargs_to_eval_input(**kwargs)
+        for eval_input in eval_inputs:
+            eval_input.pop("context", None)
+            if context is not None:
+                eval_input["context"] = context
+        return eval_inputs
+
     async def _the_super_real_call(self, **kwargs):
         """Execute one or more evaluation inputs."""
         try:
@@ -932,7 +1012,11 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         eval_input.pop("messages", None)
 
         if self._decision_strategies is not None:
-            return await self._evaluate_decision(eval_input, self._decision_strategies)
+            # A fixed key order sends identical inputs as identical requests on every SDK version.
+            state = {key: eval_input[key] for key in ("query", "response", "tool_definitions") if key in eval_input}
+            return await self._evaluate_decision(
+                *self._decision_request(state, eval_input.get("context"), conversation=False)
+            )
         if eval_input.get("tool_definitions") is None:
             eval_input["tool_definitions"] = []
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
@@ -946,9 +1030,13 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         tool_definitions = eval_input.get("tool_definitions")
         if tool_definitions:
             prompty_kwargs["tool_definitions"] = reformat_tool_definitions(tool_definitions, logger)
+        context = eval_input.get("context")
 
         if self._decision_strategies is not None:
-            return await self._evaluate_decision(prompty_kwargs, self._multi_turn_decision_strategies)
+            return await self._evaluate_decision(*self._decision_request(prompty_kwargs, context, conversation=True))
+        if context is not None:
+            # output_quality_multi_turn.prompty renders the context block only when it is supplied.
+            prompty_kwargs["context"] = context
         prompty_output_dict = await self._multi_turn_flow(timeout=self._LLM_CALL_TIMEOUT, **prompty_kwargs)
         return self._parse_prompty_output(prompty_output_dict, is_multi_turn=True)
 

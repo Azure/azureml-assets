@@ -82,6 +82,8 @@ dataMappingSchema:
         - type: "array"
           items:
             type: "object"
+    context:
+      type: "string"
     messages:
       type: "array"
       minItems: 1
