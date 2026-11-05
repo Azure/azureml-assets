@@ -8,6 +8,7 @@ import json
 import logging
 import os
 from asyncio import CancelledError
+from collections.abc import Mapping
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -489,7 +490,10 @@ def _normalize_context(context: Any) -> Optional[str]:
 
     As in standalone Groundedness, None, blank text, the ``<>`` placeholder, empty values and lists of
     blank entries count as no context. So do missing table cells (NaN, NaT and pandas.NA). Text is kept
-    unchanged; any other value becomes one JSON string so both judges receive the same text.
+    unchanged; a list or another non-mapping value becomes one JSON string so both judges receive the same
+    text. A mapping is not grounding text and counts as no context: the hosted service maps its own summary
+    of a stored agent response (tool calls, conversation history and tool definitions) to ``context``, and
+    this evaluator already reads that conversation from the response.
 
     :param context: The supplied context.
     :type context: Any
@@ -500,6 +504,8 @@ def _normalize_context(context: Any) -> Optional[str]:
         context = context.tolist()
     if isinstance(context, str):
         return context if context.strip() and context != _NO_CONTEXT_MARKER else None
+    if isinstance(context, Mapping):
+        return None
     try:
         if not context or context != context:  # empty values, NaN and NaT
             return None
@@ -524,8 +530,8 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
     With a user turn and a nonempty response containing no factual claims, turn-level
     groundedness scores a neutral 3 (passing by default); conversation-level groundedness
     is skipped and does not affect the aggregate.
-    Optional ``context`` is grounding evidence for the groundedness member only. Without it,
-    the prompts and Decision requests are the ones sent before context was supported.
+    Optional text ``context`` is grounding evidence meant for the groundedness member; a mapping is ignored.
+    Without it, the prompts and Decision requests are the ones sent before context was supported.
     """
 
     _PROMPTY_FILE = "output_quality.prompty"
@@ -655,15 +661,14 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
     def _load_decision_strategies(self, rubric_path: str) -> Tuple[Dict, Dict]:
         """Load independent member strategies from this evaluator's rubric file.
 
-        The second mapping is used only when a request carries supplied context. Groundedness gets its
-        context-aware question, and the members listed under ``context_isolation`` are told to ignore the
-        context. Every other question stays the same, as it does for requests without context.
+        The second mapping is used only when a request carries supplied context. A member's
+        ``result_with_context`` question replaces its result question, and a member's ``context_note`` is
+        appended to it. Every other question stays the same, as it does for requests without context.
         """
         from azure.ai.evaluation._legacy.prompty._yaml_utils import load_yaml
 
         rubric = json.loads(json.dumps(load_yaml(rubric_path)))
         runner = self._decision_model_runner
-        isolation = rubric["context_isolation"]
 
         def strategy(member: Dict, status: Dict, result: Dict):
             name = member["name"]
@@ -681,13 +686,14 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         strategies, with_context = {}, {}
         for member in self._EVALUATORS:
             name = member["name"]
-            status, result = rubric[name]["status"], rubric[name]["result"]
+            definition = rubric[name]
+            status, result = definition["status"], definition["result"]
             strategies[name] = strategy(member, status, result)
-            if name == "groundedness":
-                with_context[name] = strategy(member, status, rubric[name]["result_with_context"])
-            elif name in isolation["members"]:
-                isolated = {**result, "instructions": f"{result['instructions']} {isolation['note']}"}
-                with_context[name] = strategy(member, status, isolated)
+            if "result_with_context" in definition:
+                with_context[name] = strategy(member, status, definition["result_with_context"])
+            elif "context_note" in definition:
+                noted = {**result, "instructions": f"{result['instructions']} {definition['context_note']}"}
+                with_context[name] = strategy(member, status, noted)
             else:
                 with_context[name] = strategies[name]
         return strategies, with_context

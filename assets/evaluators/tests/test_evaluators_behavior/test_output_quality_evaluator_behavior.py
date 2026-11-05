@@ -43,11 +43,20 @@ VALID_MESSAGES = [
 _EVALUATOR_NAMES = [evaluator["name"] for evaluator in _EVALUATORS]
 _CONTEXT = "France's capital city is Paris."
 _OMITTED = object()
-# Context values that carry no evidence, including missing table cells.
+# The hosted service maps its own summary of a stored agent response to context; it is not grounding text.
+_SERVICE_SUMMARY = {
+    "ToolCallsAndResults": [{"role": "assistant", "content": [
+        {"type": "tool_call", "tool_call_id": "call_1", "name": "lookup_account", "arguments": {"account_id": "7"}},
+    ]}],
+    "ConversationHistory": [{"role": "user", "content": [{"type": "text", "text": VALID_QUERY}]}],
+    "ToolDefinitions": VALID_TOOL_DEFINITIONS,
+}
+# Context values that carry no grounding text, including missing table cells and mappings.
 _ABSENT_CONTEXTS = {
     "omitted": _OMITTED, "none": None, "empty": "", "blank": " \n ", "marker": "<>", "empty_list": [],
     "blank_list": ["", " "], "empty_dict": {}, "nan": float("nan"), "numpy_nan": np.float64("nan"),
-    "pandas_na": pd.NA, "pandas_nat": pd.NaT,
+    "pandas_na": pd.NA, "pandas_nat": pd.NaT, "mapping": {"title": "Doc", "text": "Body"},
+    "service_summary": _SERVICE_SUMMARY,
 }
 
 
@@ -56,10 +65,12 @@ def _with_context(inputs, context):
     return dict(inputs) if context is _OMITTED else {**inputs, "context": context}
 
 
-_ISOLATION_RULE = yaml.safe_load(
-    (Path(output_quality_module.__file__).parent / "output_quality.decision.yaml").read_text(encoding="utf-8")
-)["context_isolation"]
-_ISOLATION = _ISOLATION_RULE["note"]
+_RUBRIC_FILES = ("output_quality.decision.yaml", "output_quality_multi_turn.decision.yaml")
+_RUBRICS = {
+    name: yaml.safe_load((Path(output_quality_module.__file__).parent / name).read_text(encoding="utf-8"))
+    for name in _RUBRIC_FILES
+}
+_ISOLATION = _RUBRICS["output_quality.decision.yaml"]["task_adherence"]["context_note"]
 _ISOLATED = {"task_adherence", "task_completion"}
 _CYCLIC = ["doc"]
 _CYCLIC.append(_CYCLIC)
@@ -239,10 +250,29 @@ class TestOutputQualityDecisionBehavior:
                     assert "groundedness_context" not in original[name]["instructions"]
                 else:
                     assert with_context[name]["instructions"] == f"{original[name]['instructions']} {_ISOLATION}"
-        assert set(_ISOLATION_RULE["members"]) == _ISOLATED
         mocks.runner.assert_not_awaited()
         mocks.chat_load.assert_called_once()
         assert not hasattr(evaluator, "_multi_turn_flow")
+
+    @pytest.mark.parametrize("file_name", _RUBRIC_FILES)
+    def test_rubric_top_level_keys_are_only_members(self, file_name):
+        """Keep each rubric's top-level keys to the six members, each with its own context variant at most.
+
+        Tools outside this asset read every top-level key as a member with status and result questions.
+        """
+        rubric = _RUBRICS[file_name]
+        allowed = {"status", "result", "result_with_context", "context_note"}
+        assert set(rubric) == set(_EVALUATOR_NAMES)
+        for name, definition in rubric.items():
+            assert {"status", "result"} <= set(definition) <= allowed
+            assert not {"result_with_context", "context_note"} <= set(definition)
+            if "context_note" in definition:
+                assert definition["context_note"] == _ISOLATION
+            if "result_with_context" in definition:
+                assert set(definition["result_with_context"]) == set(definition["result"])
+                assert definition["result_with_context"]["type"] == definition["result"]["type"]
+        assert {name for name, definition in rubric.items() if "context_note" in definition} == _ISOLATED
+        assert {name for name, definition in rubric.items() if "result_with_context" in definition} == {"groundedness"}
 
     @pytest.mark.parametrize("inputs,level,conversation", [
         ({"query": VALID_QUERY, "response": VALID_RESPONSE}, None, False),
@@ -916,20 +946,19 @@ class TestOutputQualityEvaluatorBehavior:
         ("Café ☕", "Café ☕"),
         (["doc one", "doc two"], '["doc one", "doc two"]'),
         (("Café",), '["Café"]'),
-        ({"title": "Doc", "text": "Body"}, '{"title": "Doc", "text": "Body"}'),
         (np.array(["a", "b"]), '["a", "b"]'),
         (np.str_("numpy text"), "numpy text"),
         (True, "true"),
         (5, "5"),
         (datetime.date(2026, 11, 5), '"2026-11-05"'),
-        ({(1, 2): "doc"}, "{(1, 2): 'doc'}"),
+        ([{"title": "Doc"}], '[{"title": "Doc"}]'),
         (_CYCLIC, "['doc', [...]]"),
         (0, None),
         (False, None),
         *((value, None) for name, value in _ABSENT_CONTEXTS.items() if name != "omitted"),
     ])
     def test_context_normalization_matches_standalone_groundedness(self, value, expected):
-        """Keep text, encode other values as JSON, and treat blank or missing values as no context."""
+        """Keep text, encode lists and other non-mapping values as JSON, and treat the rest as no context."""
         assert output_quality_module._normalize_context(value) == expected
 
     @pytest.mark.parametrize("inputs,level,conversation", [

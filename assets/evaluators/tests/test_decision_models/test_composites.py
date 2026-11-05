@@ -659,12 +659,20 @@ def test_output_quality_native_request_changes_only_with_supplied_context(conver
 
 @pytest.mark.parametrize("backend", ["native", "chat"])
 def test_output_quality_mapped_context_column_reaches_only_rows_with_context(backend):
-    """Carry a mapped context column through a batch run; blank and missing cells add no context."""
+    """Carry a mapped context column through a batch run; blank, missing and mapping cells add no context.
+
+    Q4 is shaped like a stored agent response row, where the hosted service maps its own summary of the
+    response to context.
+    """
     rows = pd.DataFrame([
         {**CONTEXT_ROW, "query": "Q0", "context": CONTEXT},
         {**CONTEXT_ROW, "query": "Q1", "context": ""},
         {**CONTEXT_ROW, "query": "Q2", "context": None},
         {**CONTEXT_ROW, "query": "Q3"},
+        {**CONTEXT_ROW, "query": "Q4", "context": {
+            "ToolCallsAndResults": [], "ConversationHistory": [{"role": "user", "content": "Q4"}],
+            "ToolDefinitions": [],
+        }},
     ])
     flow = _chat_flow()
     with patch("azure.ai.evaluation._legacy.prompty.AsyncPrompty.load", return_value=flow):
@@ -685,9 +693,9 @@ def test_output_quality_mapped_context_column_reaches_only_rows_with_context(bac
     else:
         sent, key = [call.kwargs for call in flow.await_args_list], "context"
     by_query = {inputs["query"]: inputs for inputs in sent}
-    assert sorted(by_query) == ["Q0", "Q1", "Q2", "Q3"]
+    assert sorted(by_query) == ["Q0", "Q1", "Q2", "Q3", "Q4"]
     assert by_query["Q0"][key] == CONTEXT
-    assert all(key not in by_query[query] for query in ("Q1", "Q2", "Q3"))
+    assert all(key not in by_query[query] for query in ("Q1", "Q2", "Q3", "Q4"))
 
 
 def test_output_quality_conversation_turns_keep_their_native_state():
