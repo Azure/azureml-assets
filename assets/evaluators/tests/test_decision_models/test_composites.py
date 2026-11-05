@@ -602,7 +602,8 @@ def _chat_flow():
 def test_output_quality_schema_accepts_text_context_like_groundedness():
     """Expose optional text context in the hosted data schema, as standalone Groundedness does."""
     builtin = Path(__file__).parents[2] / "builtin"
-    schema = yaml.safe_load((builtin / "output_quality" / "spec.yaml").read_text(encoding="utf-8"))["dataMappingSchema"]
+    schema = yaml.safe_load(
+        (builtin / "output_quality" / "spec.yaml").read_text(encoding="utf-8"))["dataMappingSchema"]
     groundedness = yaml.safe_load(
         (builtin / "groundedness" / "spec.yaml").read_text(encoding="utf-8"))["dataMappingSchema"]
     assert schema["properties"]["context"] == groundedness["properties"]["context"] == {"type": "string"}

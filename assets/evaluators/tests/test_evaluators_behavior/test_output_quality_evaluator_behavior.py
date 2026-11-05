@@ -330,7 +330,8 @@ class TestOutputQualityDecisionBehavior:
             assert questions[f"{name}_status"] == strategies[name].questions["status"]
             context_strategies[name].parse.assert_called_once()
             if name in _ISOLATED:
-                assert questions[name]["instructions"] == f"{strategies[name].questions[name]['instructions']} {_ISOLATION}"
+                original = strategies[name].questions[name]["instructions"]
+                assert questions[name]["instructions"] == f"{original} {_ISOLATION}"
             elif name != "groundedness":
                 assert questions[name] == strategies[name].questions[name]
             if context_strategies[name] is not strategies[name]:
