@@ -11,7 +11,7 @@ import json
 import logging
 from pathlib import Path
 from typing import get_args, get_type_hints
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 import jsonschema
 import pandas as pd
@@ -586,6 +586,129 @@ def test_output_quality_queryless_conversation_keeps_response(backend, query_sha
     state = json.loads(post.call_args.args[0])["state"] if post is not None else flow.await_args.kwargs
     assert response in state["messages"]
     assert "User turn" not in state["messages"]
+
+
+CONTEXT = "France's capital city is Paris."
+CONTEXT_ROW = {"query": "What is the capital of France?", "response": "Paris is the capital of France."}
+
+
+def _chat_flow():
+    return AsyncMock(return_value={"llm_output": {
+        member["name"]: {"score": member["max"], "status": "completed", "reason": "ok"}
+        for member in OutputQualityEvaluator._EVALUATORS
+    }})
+
+
+def test_output_quality_schema_accepts_text_context_like_groundedness():
+    """Expose optional text context in the hosted data schema, as standalone Groundedness does."""
+    builtin = Path(__file__).parents[2] / "builtin"
+    schema = yaml.safe_load(
+        (builtin / "output_quality" / "spec.yaml").read_text(encoding="utf-8"))["dataMappingSchema"]
+    groundedness = yaml.safe_load(
+        (builtin / "groundedness" / "spec.yaml").read_text(encoding="utf-8"))["dataMappingSchema"]
+    assert schema["properties"]["context"] == groundedness["properties"]["context"] == {"type": "string"}
+    for inputs in ({**CONTEXT_ROW, "context": CONTEXT}, {"response": "Paris.", "context": ""},
+                   {"messages": [{"role": "user", "content": "Hi"}], "context": CONTEXT}):
+        jsonschema.validate(inputs, schema)
+    for context in (12, None, [CONTEXT], {"text": CONTEXT}):
+        with pytest.raises(jsonschema.ValidationError):
+            jsonschema.validate({**CONTEXT_ROW, "context": context}, schema)
+
+
+@pytest.mark.parametrize("conversation", [False, True])
+def test_output_quality_native_request_changes_only_with_supplied_context(conversation):
+    """Send context, with the context-aware question set, only when context carries evidence."""
+    inputs = {"messages": [{"role": "user", "content": CONTEXT_ROW["query"]},
+                           {"role": "assistant", "content": CONTEXT_ROW["response"]}]} if conversation else CONTEXT_ROW
+    bodies, results = {}, {}
+    for label, extra in (("omitted", {}), ("none", {"context": None}), ("blank", {"context": " "}),
+                         ("placeholder", {"context": "<>"}), ("supplied", {"context": CONTEXT})):
+        evaluator = OutputQualityEvaluator(CONFIG)
+        post = AsyncMock(return_value=_native(OutputQualityEvaluator))
+        evaluator._decision_model_runner._post = post
+        results[label] = evaluator(**deepcopy(inputs), **extra)
+        post.assert_awaited_once()
+        bodies[label] = post.call_args.args[0]
+    assert len({bodies[label] for label in ("omitted", "none", "blank", "placeholder")}) == 1
+    plain, supplied = json.loads(bodies["omitted"]), json.loads(bodies["supplied"])
+    assert "groundedness_context" not in plain["state"]
+    assert supplied["state"] == {**plain["state"], "groundedness_context": CONTEXT}
+    assert list(supplied["state"]) == [*plain["state"], "groundedness_context"]
+    assert list(supplied["questions"]) == list(plain["questions"])
+    for key, question in supplied["questions"].items():
+        original = plain["questions"][key]
+        assert question["criteria"] == original["criteria"]
+        if key == "groundedness":
+            assert "groundedness_context" in question["instructions"]
+            assert "groundedness_context" not in original["instructions"]
+        elif key in ("task_adherence", "task_completion"):
+            assert question["instructions"].startswith(original["instructions"] + " Ignore groundedness_context")
+        else:
+            assert question == original
+
+    def digest(question):
+        return hashlib.sha256(json.dumps(question, sort_keys=True).encode()).hexdigest()
+
+    for label, body in (("omitted", plain), ("supplied", supplied)):
+        for member in OutputQualityEvaluator._EVALUATORS:
+            name = member["name"]
+            provenance = results[label]["output_quality_evaluators"][name]["properties"]["decision_model"]
+            assert provenance["rubric_hash"] == digest(body["questions"][name])
+            assert provenance["status_rubric_hash"] == digest(body["questions"][f"{name}_status"])
+
+
+@pytest.mark.parametrize("backend", ["native", "chat"])
+def test_output_quality_mapped_context_column_reaches_only_rows_with_context(backend):
+    """Carry a mapped context column through a batch run; blank, missing and mapping cells add no context.
+
+    Q4 is shaped like a stored agent response row, where the hosted service maps its own summary of the
+    response to context.
+    """
+    rows = pd.DataFrame([
+        {**CONTEXT_ROW, "query": "Q0", "context": CONTEXT},
+        {**CONTEXT_ROW, "query": "Q1", "context": ""},
+        {**CONTEXT_ROW, "query": "Q2", "context": None},
+        {**CONTEXT_ROW, "query": "Q3"},
+        {**CONTEXT_ROW, "query": "Q4", "context": {
+            "ToolCallsAndResults": [], "ConversationHistory": [{"role": "user", "content": "Q4"}],
+            "ToolDefinitions": [],
+        }},
+    ])
+    flow = _chat_flow()
+    with patch("azure.ai.evaluation._legacy.prompty.AsyncPrompty.load", return_value=flow):
+        evaluator = OutputQualityEvaluator(CONFIG if backend == "native" else CHAT_CONFIG)
+    post = AsyncMock(return_value=_native(OutputQualityEvaluator)) if backend == "native" else None
+    if post is not None:
+        evaluator._decision_model_runner._post = post
+    client = RunSubmitterClient()
+    try:
+        run = client.run(evaluator, rows, evaluator_name="output_quality",
+                         column_mapping={key: f"${{data.{key}}}" for key in ("query", "response", "context")})
+        summary = client.get_run_summary(run)
+    finally:
+        client._thread_pool.shutdown(wait=True)
+    assert summary["failed_lines"] == 0
+    if post is not None:
+        sent, key = [json.loads(call.args[0])["state"] for call in post.await_args_list], "groundedness_context"
+    else:
+        sent, key = [call.kwargs for call in flow.await_args_list], "context"
+    by_query = {inputs["query"]: inputs for inputs in sent}
+    assert sorted(by_query) == ["Q0", "Q1", "Q2", "Q3", "Q4"]
+    assert by_query["Q0"][key] == CONTEXT
+    assert all(key not in by_query[query] for query in ("Q1", "Q2", "Q3", "Q4"))
+
+
+def test_output_quality_conversation_turns_keep_their_native_state():
+    """Keep each converted turn's request: no invented context and no added keys."""
+    evaluator = OutputQualityEvaluator(CONFIG)
+    post = AsyncMock(side_effect=[_native(OutputQualityEvaluator), _native(OutputQualityEvaluator)])
+    evaluator._decision_model_runner._post = post
+    evaluator(conversation={"context": "Conversation context is not read.", "messages": [
+        {"role": role, "content": f"{role}-{turn}"} for turn in range(2) for role in ("user", "assistant")
+    ]})
+    assert [json.loads(call.args[0])["state"] for call in post.await_args_list] == [
+        {"query": "user-0", "response": "assistant-0"}, {"query": "user-1", "response": "assistant-1"},
+    ]
 
 
 def test_binary_public_member_threshold_is_independent_of_probability_cutoff():
