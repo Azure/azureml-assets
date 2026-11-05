@@ -1,5 +1,8 @@
 FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
 
+# IMPORTANT (2026-10-26): Python was upgraded from 3.10 to 3.11 for Pillow 13 security fixes.
+# Downstream users must update interpreter-specific paths, wheels, and compiled dependencies for Python 3.11.
+
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl-dnn
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 ENV PIP_PROGRESS_BAR=off
@@ -9,25 +12,9 @@ COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:2025
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 ENV ENABLE_METADATA=true
 
-# Upgrade vulnerable Ubuntu packages inherited from the base image when installed.
-RUN set -eux; \
-    apt-get update; \
-    os_security_packages="coreutils curl diffutils gir1.2-glib-2.0 libattr1 libc-bin libc-dev-bin libc6 libc6-dev libcurl3t64-gnutls libcurl4t64 libexpat1 libgcrypt20 libglib2.0-0t64 libglib2.0-data libgssapi-krb5-2 libk5crypto3 libkrb5-3 libkrb5support0 libp11-kit0 libperl5.38t64 libpython3.12-minimal libpython3.12-stdlib libsqlite3-0 libssh-4 libssl3t64 libxml2 nginx nginx-common nginx-light openssh-client openssh-server openssh-sftp-server openssl perl perl-base perl-modules-5.38 python3.12 python3.12-minimal rsyslog tar wget zlib1g"; \
-    installed_os_packages=""; \
-    for package in $os_security_packages; do \
-        if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
-            installed_os_packages="$installed_os_packages $package"; \
-        fi; \
-    done; \
-    if [ -n "$installed_os_packages" ]; then \
-        apt-get install -y --only-upgrade $installed_os_packages; \
-    fi; \
-    apt-get clean; \
-    rm -rf /var/lib/apt/lists/*
-
 # Create conda environment (minimal; packages installed via pip to avoid solver OOM)
 RUN conda create -y -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    python=3.10 \
+    python=3.11 \
     -c conda-forge && \
     conda clean -a -y
 
@@ -54,6 +41,23 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
     'psutil>5.0.0,<6.0.0' \
     'pip>=26.1'
 
+# Build the legacy pmdarima pin before AzureML installs it transitively.
+RUN pip install --no-cache-dir --upgrade \
+        'setuptools==59.8.0' 'Cython<3' 'numpy>=1.23.5,<1.24' wheel && \
+    pip wheel --no-cache-dir --no-deps --no-build-isolation \
+        --wheel-dir /opt/pmdarima-wheel 'pmdarima==1.8.5' && \
+    pip install --no-cache-dir --no-index --find-links /opt/pmdarima-wheel \
+        --no-deps 'pmdarima==1.8.5' && \
+    pip install --no-cache-dir --upgrade 'setuptools>=84.1.0'
+
+ENV PIP_FIND_LINKS=/opt/pmdarima-wheel
+
+# pmdarima 1.8.5 imports pkg_resources, which patched setuptools no longer ships.
+RUN find $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/pmdarima -type f -name '*.py' \
+        -exec sed -i 's/from pkg_resources import parse_version/from packaging.version import parse as parse_version/' {} + && \
+    ! grep -R 'from pkg_resources import parse_version' \
+        $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/pmdarima
+
 # Install pip dependencies. Keep these split across multiple RUN statements so
 # no individual Docker layer exceeds the registry validation limit.
 # GitPython>=3.1.57 overrides the transitive copy pulled in by mlflow-skinny ->
@@ -70,9 +74,9 @@ RUN pip install \
                 'inference-schema' \
                 'mlflow-skinny>=2.16.0' \
                 'GitPython>=3.1.57' \
-                'pillow>=12.1.1'
+                'pillow>=13.0.0'
 
-RUN pip install \
+RUN pip install --use-deprecated=legacy-resolver \
                 azureml-automl-core=={{latest-pypi-version}} \
                 azureml-automl-runtime=={{latest-pypi-version}} \
                 azureml-train-automl-client=={{latest-pypi-version}} \
@@ -105,7 +109,7 @@ RUN pip install azureml-dataset-runtime=={{latest-pypi-version}}
 # urllib3>=2.7.0         GHSA-mf9v-mfxr-j63j, GHSA-qccp-gfcp-xxvc; requests only declares urllib3<3
 # ujson>=5.12.1          GHSA-c38f-wx89-p2xg decode buffer overflow
 # pyarrow>=23.0.1        GHSA-rgxp-2hwp-jwgg / CVE-2026-25087; azureml-dataset-runtime -> pyarrow
-# setuptools>=83.0.0     GHSA-5rjg-fvgr-3xxf, GHSA-h35f-9h28-mq5c
+# setuptools>=84.1.0     GHSA-5rjg-fvgr-3xxf, GHSA-h35f-9h28-mq5c
 # torch==2.13.0          GHSA-rrmf-rvhw-rf47; azureml-train-automl-runtime resolves 2.8.0, so the
 #                        pin must be re-applied after the AzureML packages are installed
 #
@@ -122,7 +126,7 @@ RUN pip install --no-cache-dir --upgrade 'numpy>=1.23.5,<1.24' \
     'urllib3>=2.7.0' \
     'ujson>=5.12.1' \
     'pyarrow>=23.0.1' \
-    'setuptools>=83.0.0' \
+    'setuptools>=84.1.0' \
     'torch==2.13.0'
 
 # The base Miniconda prefix carries its own copy of cryptography, which the
@@ -143,19 +147,34 @@ RUN rm -rf /opt/miniconda/pkgs/ && \
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
 
-# Refresh packages for the latest Ubuntu security advisories.
+# XGBoost 1.5.2 uses pkg_resources only to detect optional Dask support.
+RUN sed -i \
+        -e 's/import pkg_resources/from importlib import metadata as importlib_metadata/' \
+        -e 's/pkg_resources\.get_distribution/importlib_metadata.distribution/g' \
+        -e 's/pkg_resources\.DistributionNotFound/importlib_metadata.PackageNotFoundError/g' \
+        $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/xgboost/compat.py && \
+    ! grep -q 'pkg_resources' \
+        $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/xgboost/compat.py
+
+# Reassert newly patched transitive dependencies after all package installs.
+RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0'
+
+# Reassert November 2026 vulnerability-report floors in the scanned Python prefixes.
+RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'certifi>=2026.10.19'
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/python -m pip install --no-cache-dir --upgrade 'opentelemetry-api>=1.45.1'
+
+# Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libssl3t64 openssh-client openssh-server openssh-sftp-server openssl"; \
+    security_packages="libbrotli1 nginx"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
             installed_packages="$installed_packages $package"; \
         fi; \
     done; \
-    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    if [ -n "$installed_packages" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade $installed_packages; \
+    fi; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
-
-# Reassert newly patched transitive dependencies after all package installs.
-RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0'
