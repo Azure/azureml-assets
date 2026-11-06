@@ -3,8 +3,9 @@
 ## OpenAI Decisions
 
 The same 19 Decision-capable assets run unchanged on Azure OpenAI Decisions (for example `gpt-6-luna`) when the
-SDK model configuration selects `decision_protocol="openai"`, using SDK 1.18.11 or a private build with that
-protocol adapter. Their runtime code, rubrics, metadata and versions are unchanged: protocol support belongs to the
+SDK model configuration selects `decision_protocol="openai"`. No released SDK supports that protocol yet; released
+1.18.11 rejects the field. These tests use the unreleased SDK build pinned in `assets-test.yaml`. The assets' runtime
+code, rubrics, metadata and versions are unchanged: protocol support belongs to the
 shared SDK, and hosted selection remains a service-approved named deployment. Older chat-only versions remain
 ineligible.
 
