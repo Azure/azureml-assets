@@ -708,8 +708,11 @@ def test_output_quality_context_request_failure_keeps_answered_usage(failing, fa
     assert "execution" not in properties["decision_model"]
 
 
-def _failing_context_post(failures, models=None):
-    """Answer each context-evaluation request, failing it with a timeout or an invalid status answer as asked."""
+def _failing_context_post(failures, models=None, usage=None):
+    """Answer each context-evaluation request, failing it with a timeout or an invalid answer type as asked.
+
+    An invalid answer type makes the SDK runner raise inside the request, with that request's usage.
+    """
     async def post(content, **_):
         kind = _context_request_kind(content)
         if failures.get(kind) == "timeout":
@@ -717,16 +720,16 @@ def _failing_context_post(failures, models=None):
         payload = _native(OutputQualityEvaluator)
         asked = json.loads(content)["questions"]
         payload["answers"] = {key: answer for key, answer in payload["answers"].items() if key in asked}
-        payload["usage"] = dict(_CONTEXT_REQUEST_USAGE[kind])
+        payload["usage"] = dict((usage or {}).get(kind, _CONTEXT_REQUEST_USAGE[kind]))
         payload["model"] = (models or {}).get(kind, payload["model"])
-        if failures.get(kind) == "semantic":
-            payload["answers"]["groundedness_status" if kind == "groundedness" else "fluency_status"]["noul"] = 2
+        if failures.get(kind) == "invalid":
+            payload["answers"][next(iter(payload["answers"]))] = {"type": "unsupported"}
         return payload
     return AsyncMock(side_effect=post)
 
 
 @pytest.mark.parametrize(
-    "members,groundedness", [("timeout", "semantic"), ("semantic", "semantic"), ("semantic", "timeout")]
+    "members,groundedness", [("timeout", "invalid"), ("invalid", "invalid"), ("invalid", "timeout")]
 )
 def test_output_quality_context_requests_that_both_fail_keep_every_paid_usage(members, groundedness):
     """Raise the first of two failed context requests with the usage of each one that was paid for."""
@@ -735,12 +738,27 @@ def test_output_quality_context_requests_that_both_fail_keep_every_paid_usage(me
     evaluator._decision_model_runner._post = _failing_context_post(failures)
     with pytest.raises(EvaluationException) as raised:
         evaluator(**CONTEXT_ROW, context=CONTEXT)
-    paid = [_CONTEXT_REQUEST_USAGE[kind] for kind, failure in failures.items() if failure == "semantic"]
+    paid = [_CONTEXT_REQUEST_USAGE[kind] for kind, failure in failures.items() if failure == "invalid"]
     prompt, completion = sum(u["input_tokens"] for u in paid), sum(u["output_tokens"] for u in paid)
     properties = raised.value.properties
     assert {field: properties[field] for field in ("prompt_tokens", "completion_tokens", "total_tokens")} == {
         "prompt_tokens": prompt, "completion_tokens": completion, "total_tokens": prompt + completion}
     assert properties["model"] == "actual-model"
+
+
+def test_output_quality_failed_context_request_keeps_a_partial_usage_count():
+    """Keep the valid count of another failed request's usage without inventing a total."""
+    evaluator = OutputQualityEvaluator(CONFIG)
+    evaluator._decision_model_runner._post = _failing_context_post(
+        {"members": "timeout", "groundedness": "invalid"},
+        usage={"groundedness": {"input_tokens": 34, "output_tokens": True}},
+    )
+    with pytest.raises(EvaluationException) as raised:
+        evaluator(**CONTEXT_ROW, context=CONTEXT)
+    properties = raised.value.properties
+    assert properties["prompt_tokens"] == 34
+    assert "completion_tokens" not in properties
+    assert "total_tokens" not in properties
 
 
 def test_output_quality_context_requests_answered_by_different_models_report_no_model():

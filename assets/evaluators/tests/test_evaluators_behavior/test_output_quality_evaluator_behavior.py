@@ -479,15 +479,18 @@ class TestOutputQualityDecisionBehavior:
         assert usage == [{"output_quality_prompt_tokens": 30, "output_quality_completion_tokens": 4,
                           "output_quality_total_tokens": 34, "output_quality_model": "decision-model"}]
 
-    def test_usage_is_kept_only_for_evaluation_errors_with_complete_usage(self, decision_mocks, monkeypatch):
-        """Leave other errors alone, and skip responses whose usage is missing or incomplete."""
+    def test_usage_is_kept_only_for_evaluation_errors_with_known_counts(self, decision_mocks, monkeypatch):
+        """Leave other errors alone, skip responses without a valid count, and keep each valid count of the rest."""
         recorded = self._record_usage_errors(monkeypatch)
         evaluator = _make_decision_evaluator()
         complete = {"model": "decision-model", "usage": {"input_tokens": 1, "output_tokens": 2}}
         evaluator._keep_usage(ValueError("not an evaluation error"), [complete])
-        evaluator._keep_usage(EvaluationException(message="failed"),
-                              ["not a response", {"model": "m"}, {"usage": {"input_tokens": 1}}])
+        invalid = {"usage": {"input_tokens": True, "output_tokens": -1}}
+        evaluator._keep_usage(EvaluationException(message="failed"), ["not a response", {"model": "m"}, invalid])
         recorded.assert_not_called()
+        failure = EvaluationException(message="failed")
+        evaluator._keep_usage(failure, [{"usage": {"input_tokens": 1}}])
+        recorded.assert_called_once_with(failure, [{"output_quality_prompt_tokens": 1, "output_quality_model": None}])
 
     @pytest.mark.parametrize("outcome", ["fail", "mixed", "skipped"])
     @pytest.mark.parametrize("conversation", [False, True])

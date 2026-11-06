@@ -807,8 +807,8 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
     ) -> None:
         """Add the usage of answered requests and of other failed requests to ``error``.
 
-        The usage of completed turns is kept the same way when an evaluation fails. Counts that are not
-        non-negative integers are left out.
+        The usage of completed turns is kept the same way when an evaluation fails. Each token count that is a
+        non-negative integer is kept, and a total only when both counts are.
         """
         if not isinstance(error, (EvaluationException, CancelledError)):
             return
@@ -823,18 +823,19 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
                 counts.append(
                     (properties.get("prompt_tokens"), properties.get("completion_tokens"), properties.get("model"))
                 )
-        answered = [
-            {
-                f"{self._result_key}_prompt_tokens": prompt,
-                f"{self._result_key}_completion_tokens": completion,
-                f"{self._result_key}_total_tokens": prompt + completion,
-                f"{self._result_key}_model": model,
+        answered = []
+        for prompt, completion, model in counts:
+            entry = {
+                f"{self._result_key}_{field}": count
+                for field, count in (("prompt_tokens", prompt), ("completion_tokens", completion))
+                if isinstance(count, int) and not isinstance(count, bool) and count >= 0
             }
-            for prompt, completion, model in counts
-            if all(
-                isinstance(count, int) and not isinstance(count, bool) and count >= 0 for count in (prompt, completion)
-            )
-        ]
+            if not entry:
+                continue
+            if len(entry) == 2:
+                entry[f"{self._result_key}_total_tokens"] = prompt + completion
+            entry[f"{self._result_key}_model"] = model
+            answered.append(entry)
         if answered:
             self._on_evaluation_error(error, answered)
 
