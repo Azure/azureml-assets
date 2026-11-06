@@ -11,7 +11,7 @@ import os
 from asyncio import CancelledError
 from collections.abc import Mapping
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 from typing_extensions import overload, override
 
@@ -522,7 +522,7 @@ def _normalize_context(context: Any) -> Optional[str]:
 
 @experimental
 class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
-    """Batch six quality evaluators into one LLM call.
+    """Batch six quality evaluators into one LLM call, or two with a Decision judge and supplied context.
 
     Raw member evaluator objects are preserved under ``output_quality_evaluators``.
     Converter-compatible member fields are also emitted as flat, member-prefixed keys.
@@ -533,7 +533,8 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
     is skipped and does not affect the aggregate.
     Optional text ``context`` is grounding evidence meant for the groundedness member; a mapping is ignored.
     Without it, the prompts and Decision requests are the ones sent before context was supported. With it, a
-    Decision judge scores the other members from that same request and groundedness from a second one.
+    Decision judge still scores the other members from that request, which has no context, and asks groundedness
+    about the context in a second, concurrent request.
     """
 
     _PROMPTY_FILE = "output_quality.prompty"
@@ -758,15 +759,18 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
             "prompt_tokens": input_tokens,
             "completion_tokens": output_tokens,
             "total_tokens": input_tokens + output_tokens,
-            "model": responses[0]["model"],
         }
+        models = [response["model"] for response in responses]
+        if all(model == models[0] for model in models):
+            token_metadata["model"] = models[0]
         return self._build_aggregate_result(evaluators, token_metadata)
 
     async def _ask_concurrently(self, requests: List[Tuple[Dict, Dict]]) -> List[Dict]:
         """Send the requests concurrently and return their responses in request order.
 
         A failure or cancellation is raised once every request has finished, and the raised error keeps the
-        usage of each answered request, as a failed evaluation keeps the usage of its completed turns.
+        usage of each answered request and of each other failed request that reports one, as a failed evaluation
+        keeps the usage of its completed turns.
         """
         tasks = [asyncio.ensure_future(self._ask_decision_model(*request)) for request in requests]
         try:
@@ -775,12 +779,14 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
             for task in tasks:
                 task.cancel()
             await asyncio.wait(tasks)
-            self._keep_usage(error, self._answered(tasks))
+            self._keep_usage(error, self._answered(tasks), self._failures(tasks))
             raise
         errors = [CancelledError() if task.cancelled() else task.exception() for task in tasks]
         for error in errors:
             if error is not None:
-                self._keep_usage(error, self._answered(tasks))
+                self._keep_usage(
+                    error, self._answered(tasks), [other for other in self._failures(tasks) if other is not error]
+                )
                 raise error
         return [task.result() for task in tasks]
 
@@ -789,20 +795,46 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         """Return the responses of the finished requests that were answered."""
         return [task.result() for task in tasks if task.done() and not task.cancelled() and task.exception() is None]
 
-    def _keep_usage(self, error: BaseException, responses: List[Dict]) -> None:
-        """Add the usage of answered requests to ``error``, as the usage of completed turns is kept."""
+    @staticmethod
+    def _failures(tasks: List["asyncio.Future"]) -> List[BaseException]:
+        """Return the errors of the finished requests that failed."""
+        return [
+            task.exception() for task in tasks if task.done() and not task.cancelled() and task.exception() is not None
+        ]
+
+    def _keep_usage(
+        self, error: BaseException, responses: List[Dict], failures: Sequence[BaseException] = ()
+    ) -> None:
+        """Add the usage of answered requests and of other failed requests to ``error``.
+
+        The usage of completed turns is kept the same way when an evaluation fails. Counts that are not
+        non-negative integers are left out.
+        """
         if not isinstance(error, (EvaluationException, CancelledError)):
             return
-        answered = []
+        counts = []
         for response in responses:
             usage = response.get("usage") if isinstance(response, dict) else None
-            if isinstance(usage, dict) and "input_tokens" in usage and "output_tokens" in usage:
-                answered.append({
-                    f"{self._result_key}_prompt_tokens": usage["input_tokens"],
-                    f"{self._result_key}_completion_tokens": usage["output_tokens"],
-                    f"{self._result_key}_total_tokens": usage["input_tokens"] + usage["output_tokens"],
-                    f"{self._result_key}_model": response.get("model"),
-                })
+            if isinstance(usage, dict):
+                counts.append((usage.get("input_tokens"), usage.get("output_tokens"), response.get("model")))
+        for failure in failures:
+            properties = getattr(failure, "properties", None)
+            if isinstance(properties, dict):
+                counts.append(
+                    (properties.get("prompt_tokens"), properties.get("completion_tokens"), properties.get("model"))
+                )
+        answered = [
+            {
+                f"{self._result_key}_prompt_tokens": prompt,
+                f"{self._result_key}_completion_tokens": completion,
+                f"{self._result_key}_total_tokens": prompt + completion,
+                f"{self._result_key}_model": model,
+            }
+            for prompt, completion, model in counts
+            if all(
+                isinstance(count, int) and not isinstance(count, bool) and count >= 0 for count in (prompt, completion)
+            )
+        ]
         if answered:
             self._on_evaluation_error(error, answered)
 
