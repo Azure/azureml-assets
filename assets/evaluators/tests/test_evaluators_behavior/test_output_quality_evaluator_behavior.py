@@ -385,6 +385,110 @@ class TestOutputQualityDecisionBehavior:
             strategies[name].parse.assert_called_once()
         assert "groundedness_context" not in json.dumps(questions)
 
+    @staticmethod
+    def _answer_each_request(decision_mocks, failure=None, failing=None):
+        """Answer the members and groundedness requests with their own usage; optionally fail one of them."""
+        usage = {"members": (30, 4), "groundedness": (7, 1)}
+
+        def answer(*, state, questions, timeout):
+            kind = "groundedness" if "groundedness_context" in state else "members"
+            if kind == failing:
+                raise failure
+            return {**decision_mocks.runner.return_value,
+                    "usage": {"input_tokens": usage[kind][0], "output_tokens": usage[kind][1]}}
+
+        decision_mocks.runner.side_effect = answer
+        return {kind: {"output_quality_prompt_tokens": prompt, "output_quality_completion_tokens": completion,
+                       "output_quality_total_tokens": prompt + completion, "output_quality_model": "decision-model"}
+                for kind, (prompt, completion) in usage.items()}
+
+    @staticmethod
+    def _record_usage_errors(monkeypatch):
+        """Record what reaches the SDK's usage hook; released SDKs before Decision support lack it."""
+        recorded = Mock()
+        base = output_quality_module.ModelEvaluatorBase
+        monkeypatch.setattr(base, "_on_evaluation_error", recorded, raising=False)
+        monkeypatch.setattr(base, "_uses_decision_model", True, raising=False)
+        return recorded
+
+    @pytest.mark.parametrize("failing", ["members", "groundedness"])
+    def test_failed_context_request_keeps_the_answered_requests_usage(self, decision_mocks, monkeypatch, failing):
+        """Wait for both requests, then raise the failure with the usage of the request that was answered."""
+        recorded = self._record_usage_errors(monkeypatch)
+        failure = EvaluationException(message="Decision request failed.")
+        usage = self._answer_each_request(decision_mocks, failure, failing)
+        evaluator = _make_decision_evaluator()
+        with pytest.raises(EvaluationException) as raised:
+            evaluator(query=VALID_QUERY, response=VALID_RESPONSE, context=_CONTEXT)
+        assert raised.value is failure
+        assert decision_mocks.runner.await_count == 2
+        answered = "groundedness" if failing == "members" else "members"
+        assert recorded.call_args_list[0].args == (failure, [usage[answered]])
+
+    @pytest.mark.parametrize("member", ["fluency", "groundedness"])
+    def test_unparsable_context_answer_keeps_the_other_requests_usage(self, decision_mocks, monkeypatch, member):
+        """Keep the usage of the other request when one member's answer cannot be parsed."""
+        recorded = self._record_usage_errors(monkeypatch)
+        usage = self._answer_each_request(decision_mocks)
+        evaluator = _make_decision_evaluator()
+        failure = EvaluationException(message="The Decision answer is invalid.")
+        grounded = member == "groundedness"
+        strategies = evaluator._context_decision_strategies if grounded else evaluator._decision_strategies
+        strategies[member].parse.side_effect = failure
+        with pytest.raises(EvaluationException) as raised:
+            evaluator(query=VALID_QUERY, response=VALID_RESPONSE, context=_CONTEXT)
+        assert raised.value is failure
+        other = "members" if grounded else "groundedness"
+        assert recorded.call_args_list[0].args == (failure, [usage[other]])
+
+    def test_cancelled_context_evaluation_cancels_pending_requests_and_keeps_usage(self, decision_mocks, monkeypatch):
+        """Cancel the pending groundedness request and keep the usage of the members request that finished."""
+        recorded = self._record_usage_errors(monkeypatch)
+        evaluator = _make_decision_evaluator()
+        answered = {"answers": {}, "model": "decision-model", "usage": {"input_tokens": 30, "output_tokens": 4}}
+        cancelled = []
+
+        async def scenario():
+            asked = asyncio.Event()
+
+            async def ask(state, strategies):
+                if "groundedness_context" in state:
+                    asked.set()
+                    try:
+                        await asyncio.Event().wait()
+                    except asyncio.CancelledError:
+                        cancelled.append("groundedness")
+                        raise
+                return answered
+
+            monkeypatch.setattr(evaluator, "_ask_decision_model", ask)
+            # The members request is scheduled first and answers without waiting, so it has finished once the
+            # groundedness request starts waiting.
+            requests = [({"query": VALID_QUERY}, {}), ({"query": VALID_QUERY, "groundedness_context": _CONTEXT}, {})]
+            pending = asyncio.ensure_future(evaluator._ask_concurrently(requests))
+            await asyncio.wait_for(asked.wait(), timeout=60)
+            pending.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await pending
+
+        asyncio.run(scenario())
+        assert cancelled == ["groundedness"]
+        recorded.assert_called_once()
+        error, usage = recorded.call_args.args
+        assert isinstance(error, asyncio.CancelledError)
+        assert usage == [{"output_quality_prompt_tokens": 30, "output_quality_completion_tokens": 4,
+                          "output_quality_total_tokens": 34, "output_quality_model": "decision-model"}]
+
+    def test_usage_is_kept_only_for_evaluation_errors_with_complete_usage(self, decision_mocks, monkeypatch):
+        """Leave other errors alone, and skip responses whose usage is missing or incomplete."""
+        recorded = self._record_usage_errors(monkeypatch)
+        evaluator = _make_decision_evaluator()
+        complete = {"model": "decision-model", "usage": {"input_tokens": 1, "output_tokens": 2}}
+        evaluator._keep_usage(ValueError("not an evaluation error"), [complete])
+        evaluator._keep_usage(EvaluationException(message="failed"),
+                              ["not a response", {"model": "m"}, {"usage": {"input_tokens": 1}}])
+        recorded.assert_not_called()
+
     @pytest.mark.parametrize("outcome", ["fail", "mixed", "skipped"])
     @pytest.mark.parametrize("conversation", [False, True])
     def test_decision_aggregation(self, decision_mocks, outcome, conversation):
