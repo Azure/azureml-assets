@@ -4,15 +4,18 @@
 # imports
 import mlflow
 import argparse
+import sys
 import pandas as pd
+import sklearn
 
-from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 
 
 # define functions
 def main(args):
     """Run and evaluate model."""
+    assert sys.version_info[:2] == (3, 11), sys.version
+    assert sklearn.__version__.startswith("1.5."), sklearn.__version__
     # enable auto logging
     mlflow.autolog()
     # setup parameters
@@ -28,6 +31,8 @@ def main(args):
 
     # train model
     model = train_model(params, X_train, X_test, y_train, y_test)
+    if args.intel_extension:
+        assert type(model).__module__.startswith("sklearnex."), type(model)
 
     print(model)
 
@@ -49,6 +54,8 @@ def process_data(df, random_state):
 
 def train_model(params, X_train, X_test, y_train, y_test):
     """Train the model."""
+    from sklearn.linear_model import LinearRegression
+
     # train model
     model = LinearRegression(**params)
     model = model.fit(X_train, y_train)
