@@ -70,8 +70,6 @@ _RUBRICS = {
     name: yaml.safe_load((Path(output_quality_module.__file__).parent / name).read_text(encoding="utf-8"))
     for name in _RUBRIC_FILES
 }
-_ISOLATION = _RUBRICS["output_quality.decision.yaml"]["task_adherence"]["context_note"]
-_ISOLATED = {"task_adherence", "task_completion"}
 _CYCLIC = ["doc"]
 _CYCLIC.append(_CYCLIC)
 
@@ -200,8 +198,8 @@ class TestOutputQualityDecisionBehavior:
         """Set up member strategies and return before loading multi-turn chat."""
         evaluator = _make_decision_evaluator(threshold={"fluency": 4})
         mocks = decision_mocks
-        assert mocks.factory.call_count == 18
-        assert mocks.binary.call_count == 8
+        assert mocks.factory.call_count == 14
+        assert mocks.binary.call_count == 4
         assert mocks.likert.call_count == 10
         for call in mocks.binary.call_args_list:
             assert call.args == (0.8,)
@@ -234,44 +232,32 @@ class TestOutputQualityDecisionBehavior:
             (evaluator._decision_strategies, evaluator._context_decision_strategies),
             (evaluator._multi_turn_decision_strategies, evaluator._multi_turn_context_decision_strategies),
         ):
-            assert list(context_strategies) == _EVALUATOR_NAMES
+            assert list(context_strategies) == ["groundedness"]
+            original, with_context = strategies["groundedness"].questions, context_strategies["groundedness"].questions
+            assert set(with_context) == set(original) == {"status", "groundedness"}
+            assert with_context["status"] == original["status"]
+            assert with_context["groundedness"]["type"] == original["groundedness"]["type"]
+            assert with_context["groundedness"]["criteria"] == original["groundedness"]["criteria"]
+            assert "groundedness_context" in with_context["groundedness"]["instructions"]
             for name in _EVALUATOR_NAMES:
-                if name not in _ISOLATED | {"groundedness"}:
-                    assert context_strategies[name] is strategies[name]
-                    continue
-                original, with_context = strategies[name].questions, context_strategies[name].questions
-                assert set(with_context) == set(original) == {"status", name}
-                assert with_context["status"] == original["status"]
-                assert with_context[name]["type"] == original[name]["type"]
-                assert with_context[name]["criteria"] == original[name]["criteria"]
-                assert _ISOLATION not in original[name]["instructions"]
-                if name == "groundedness":
-                    assert "groundedness_context" in with_context[name]["instructions"]
-                    assert "groundedness_context" not in original[name]["instructions"]
-                else:
-                    assert with_context[name]["instructions"] == f"{original[name]['instructions']} {_ISOLATION}"
+                assert "groundedness_context" not in json.dumps(strategies[name].questions)
         mocks.runner.assert_not_awaited()
         mocks.chat_load.assert_called_once()
         assert not hasattr(evaluator, "_multi_turn_flow")
 
     @pytest.mark.parametrize("file_name", _RUBRIC_FILES)
     def test_rubric_top_level_keys_are_only_members(self, file_name):
-        """Keep each rubric's top-level keys to the six members, each with its own context variant at most.
+        """Keep each rubric's top-level keys to the six members; only groundedness has a context question.
 
         Tools outside this asset read every top-level key as a member with status and result questions.
         """
         rubric = _RUBRICS[file_name]
-        allowed = {"status", "result", "result_with_context", "context_note"}
         assert set(rubric) == set(_EVALUATOR_NAMES)
         for name, definition in rubric.items():
-            assert {"status", "result"} <= set(definition) <= allowed
-            assert not {"result_with_context", "context_note"} <= set(definition)
-            if "context_note" in definition:
-                assert definition["context_note"] == _ISOLATION
+            assert {"status", "result"} <= set(definition) <= {"status", "result", "result_with_context"}
             if "result_with_context" in definition:
                 assert set(definition["result_with_context"]) == set(definition["result"])
                 assert definition["result_with_context"]["type"] == definition["result"]["type"]
-        assert {name for name, definition in rubric.items() if "context_note" in definition} == _ISOLATED
         assert {name for name, definition in rubric.items() if "result_with_context" in definition} == {"groundedness"}
 
     @pytest.mark.parametrize("inputs,level,conversation", [
@@ -338,35 +324,48 @@ class TestOutputQualityDecisionBehavior:
         ({"query": VALID_QUERY, "response": VALID_RESPONSE}, "conversation", True),
         ({"messages": VALID_MESSAGES}, "turn", False),
     ])
-    def test_supplied_context_uses_the_context_question_set(self, decision_mocks, inputs, level, conversation):
-        """Send supplied context with the context-aware question set on either route."""
+    def test_supplied_context_is_asked_only_of_groundedness(self, decision_mocks, inputs, level, conversation):
+        """Score members from the request sent without context, and ask groundedness again with the context."""
         evaluator = _make_decision_evaluator(evaluation_level=level)
-        evaluator(**deepcopy(inputs), tool_definitions=deepcopy(VALID_TOOL_DEFINITIONS), context=_CONTEXT)
+        result = evaluator(**deepcopy(inputs), tool_definitions=deepcopy(VALID_TOOL_DEFINITIONS), context=_CONTEXT)
         runner = decision_mocks.runner
-        runner.assert_awaited_once()
-        state = runner.await_args.kwargs["state"]
-        questions = runner.await_args.kwargs["questions"]
-        assert list(state) == (
-            ["messages", "tool_definitions", "groundedness_context"] if conversation
-            else ["query", "response", "tool_definitions", "groundedness_context"]
+        assert runner.await_count == 2
+        members_call, groundedness_call = runner.await_args_list
+        plain = members_call.kwargs["state"]
+        assert list(plain) == (
+            ["messages", "tool_definitions"] if conversation else ["query", "response", "tool_definitions"]
         )
-        assert state["groundedness_context"] == _CONTEXT
+        assert groundedness_call.kwargs["state"] == {**plain, "groundedness_context": _CONTEXT}
+        assert list(groundedness_call.kwargs["state"]) == [*plain, "groundedness_context"]
+        for call in runner.await_args_list:
+            assert call.kwargs["timeout"] == evaluator._LLM_CALL_TIMEOUT
         strategies, context_strategies = (
             (evaluator._multi_turn_decision_strategies, evaluator._multi_turn_context_decision_strategies)
             if conversation else (evaluator._decision_strategies, evaluator._context_decision_strategies)
         )
+        assert members_call.kwargs["questions"] == {
+            key: question for name, strategy in strategies.items()
+            for key, question in ((f"{name}_status", strategy.questions["status"]), (name, strategy.questions[name]))
+        }
+        grounded = context_strategies["groundedness"]
+        assert groundedness_call.kwargs["questions"] == {
+            "groundedness_status": grounded.questions["status"], "groundedness": grounded.questions["groundedness"],
+        }
+        answers = runner.return_value["answers"]
         for name in _EVALUATOR_NAMES:
-            assert questions[name] == context_strategies[name].questions[name]
-            assert questions[f"{name}_status"] == strategies[name].questions["status"]
-            context_strategies[name].parse.assert_called_once()
-            if name in _ISOLATED:
-                original = strategies[name].questions[name]["instructions"]
-                assert questions[name]["instructions"] == f"{original} {_ISOLATION}"
-            elif name != "groundedness":
-                assert questions[name] == strategies[name].questions[name]
-            if context_strategies[name] is not strategies[name]:
+            member_response = {**runner.return_value,
+                               "answers": {"status": answers[f"{name}_status"], name: answers[name]}}
+            if name == "groundedness":
                 strategies[name].parse.assert_not_called()
-        assert questions["groundedness"] != strategies["groundedness"].questions["groundedness"]
+                grounded.parse.assert_called_once_with(member_response, groundedness_call.kwargs["state"])
+                expected = grounded.parse.return_value
+            else:
+                strategies[name].parse.assert_called_once_with(member_response, plain)
+                expected = strategies[name].parse.return_value
+            assert result["output_quality_evaluators"][name]["score"] == expected[f"{name}_score"]
+        for field, value in {"prompt_tokens": 60, "completion_tokens": 8, "total_tokens": 68,
+                             "model": "decision-model"}.items():
+            assert result[f"output_quality_{field}"] == value
 
     @pytest.mark.parametrize("context", _ABSENT_CONTEXTS.values(), ids=_ABSENT_CONTEXTS.keys())
     @pytest.mark.parametrize("conversation", [False, True])
@@ -385,6 +384,113 @@ class TestOutputQualityDecisionBehavior:
             assert questions[f"{name}_status"] == strategies[name].questions["status"]
             strategies[name].parse.assert_called_once()
         assert "groundedness_context" not in json.dumps(questions)
+
+    @staticmethod
+    def _answer_each_request(decision_mocks, failure=None, failing=None):
+        """Answer the members and groundedness requests with their own usage; optionally fail one of them."""
+        usage = {"members": (30, 4), "groundedness": (7, 1)}
+
+        def answer(*, state, questions, timeout):
+            kind = "groundedness" if "groundedness_context" in state else "members"
+            if kind == failing:
+                raise failure
+            return {**decision_mocks.runner.return_value,
+                    "usage": {"input_tokens": usage[kind][0], "output_tokens": usage[kind][1]}}
+
+        decision_mocks.runner.side_effect = answer
+        return {kind: {"output_quality_prompt_tokens": prompt, "output_quality_completion_tokens": completion,
+                       "output_quality_total_tokens": prompt + completion, "output_quality_model": "decision-model"}
+                for kind, (prompt, completion) in usage.items()}
+
+    @staticmethod
+    def _record_usage_errors(monkeypatch):
+        """Record what reaches the SDK's usage hook; released SDKs before Decision support lack it."""
+        recorded = Mock()
+        base = output_quality_module.ModelEvaluatorBase
+        monkeypatch.setattr(base, "_on_evaluation_error", recorded, raising=False)
+        monkeypatch.setattr(base, "_uses_decision_model", True, raising=False)
+        return recorded
+
+    @pytest.mark.parametrize("failing", ["members", "groundedness"])
+    def test_failed_context_request_keeps_the_answered_requests_usage(self, decision_mocks, monkeypatch, failing):
+        """Wait for both requests, then raise the failure with the usage of the request that was answered."""
+        recorded = self._record_usage_errors(monkeypatch)
+        failure = EvaluationException(message="Decision request failed.")
+        usage = self._answer_each_request(decision_mocks, failure, failing)
+        evaluator = _make_decision_evaluator()
+        with pytest.raises(EvaluationException) as raised:
+            evaluator(query=VALID_QUERY, response=VALID_RESPONSE, context=_CONTEXT)
+        assert raised.value is failure
+        assert decision_mocks.runner.await_count == 2
+        answered = "groundedness" if failing == "members" else "members"
+        assert recorded.call_args_list[0].args == (failure, [usage[answered]])
+
+    @pytest.mark.parametrize("member", ["fluency", "groundedness"])
+    def test_unparsable_context_answer_keeps_the_other_requests_usage(self, decision_mocks, monkeypatch, member):
+        """Keep the usage of the other request when one member's answer cannot be parsed."""
+        recorded = self._record_usage_errors(monkeypatch)
+        usage = self._answer_each_request(decision_mocks)
+        evaluator = _make_decision_evaluator()
+        failure = EvaluationException(message="The Decision answer is invalid.")
+        grounded = member == "groundedness"
+        strategies = evaluator._context_decision_strategies if grounded else evaluator._decision_strategies
+        strategies[member].parse.side_effect = failure
+        with pytest.raises(EvaluationException) as raised:
+            evaluator(query=VALID_QUERY, response=VALID_RESPONSE, context=_CONTEXT)
+        assert raised.value is failure
+        other = "members" if grounded else "groundedness"
+        assert recorded.call_args_list[0].args == (failure, [usage[other]])
+
+    def test_cancelled_context_evaluation_cancels_pending_requests_and_keeps_usage(self, decision_mocks, monkeypatch):
+        """Cancel the pending groundedness request and keep the usage of the members request that finished."""
+        recorded = self._record_usage_errors(monkeypatch)
+        evaluator = _make_decision_evaluator()
+        answered = {"answers": {}, "model": "decision-model", "usage": {"input_tokens": 30, "output_tokens": 4}}
+        cancelled = []
+
+        async def scenario():
+            asked = asyncio.Event()
+
+            async def ask(state, strategies):
+                if "groundedness_context" in state:
+                    asked.set()
+                    try:
+                        await asyncio.Event().wait()
+                    except asyncio.CancelledError:
+                        cancelled.append("groundedness")
+                        raise
+                return answered
+
+            monkeypatch.setattr(evaluator, "_ask_decision_model", ask)
+            # The members request is scheduled first and answers without waiting, so it has finished once the
+            # groundedness request starts waiting.
+            requests = [({"query": VALID_QUERY}, {}), ({"query": VALID_QUERY, "groundedness_context": _CONTEXT}, {})]
+            pending = asyncio.ensure_future(evaluator._ask_concurrently(requests))
+            await asyncio.wait_for(asked.wait(), timeout=60)
+            pending.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await pending
+
+        asyncio.run(scenario())
+        assert cancelled == ["groundedness"]
+        recorded.assert_called_once()
+        error, usage = recorded.call_args.args
+        assert isinstance(error, asyncio.CancelledError)
+        assert usage == [{"output_quality_prompt_tokens": 30, "output_quality_completion_tokens": 4,
+                          "output_quality_total_tokens": 34, "output_quality_model": "decision-model"}]
+
+    def test_usage_is_kept_only_for_evaluation_errors_with_known_counts(self, decision_mocks, monkeypatch):
+        """Leave other errors alone, skip responses without a valid count, and keep each valid count of the rest."""
+        recorded = self._record_usage_errors(monkeypatch)
+        evaluator = _make_decision_evaluator()
+        complete = {"model": "decision-model", "usage": {"input_tokens": 1, "output_tokens": 2}}
+        evaluator._keep_usage(ValueError("not an evaluation error"), [complete])
+        invalid = {"usage": {"input_tokens": True, "output_tokens": -1}}
+        evaluator._keep_usage(EvaluationException(message="failed"), ["not a response", {"model": "m"}, invalid])
+        recorded.assert_not_called()
+        failure = EvaluationException(message="failed")
+        evaluator._keep_usage(failure, [{"usage": {"input_tokens": 1}}])
+        recorded.assert_called_once_with(failure, [{"output_quality_prompt_tokens": 1, "output_quality_model": None}])
 
     @pytest.mark.parametrize("outcome", ["fail", "mixed", "skipped"])
     @pytest.mark.parametrize("conversation", [False, True])
