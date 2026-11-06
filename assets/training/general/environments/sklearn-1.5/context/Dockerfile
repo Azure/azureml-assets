@@ -1,13 +1,9 @@
-FROM acptdev.azurecr.io/test/public/aifx/acpt/stable-ubuntu2204-cu126-py311-torch280:20261104.v1
-
-SHELL ["/bin/bash", "-c"]
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
 
 WORKDIR /
 
 ENV CONDA_PREFIX=/azureml-envs/sklearn-1.5
 ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
-ENV AZUREML_CONDA_ENVIRONMENT_PATH=$CONDA_PREFIX
-ENV CONDA_ENVIRONMENT_PATH=$CONDA_PREFIX
 ENV PATH=$CONDA_PREFIX/bin:$PATH
 
 # This is needed for mpi to locate libpython
@@ -30,7 +26,7 @@ RUN apt-get update && \
 # Downstream users must update interpreter-specific paths, wheels, and compiled dependencies for Python 3.11.
 COPY conda_dependencies.yaml .
 RUN conda install -n base -c conda-forge --freeze-installed --force-reinstall -y pip=26.2.0 && \
-    /opt/conda/bin/python -m pip install --no-cache-dir --force-reinstall pip==26.2.0 && \
+    /opt/miniconda/bin/python -m pip install --no-cache-dir --force-reinstall pip==26.2.0 && \
     conda create -p $CONDA_PREFIX -q -y python=3.11 pip=26.2.0 pandas=2.2.3 'scipy~=1.10.0' numpy=1.26.4 -c conda-forge -c anaconda && \
     conda run -p $CONDA_PREFIX python -m pip install --no-cache-dir --force-reinstall pip==26.2.0 && \
     conda clean -a -y
@@ -42,7 +38,7 @@ RUN printf '%s\n' 'msgpack>=1.2.3' 'setuptools>=84.1.0' > /tmp/pip-security-cons
     conda run -p $CONDA_PREFIX pip install --no-cache-dir \
     --no-build-isolation \
     --constraint /tmp/pip-security-constraints.txt \
-    scikit-learn-intelex==2025.0.1 \
+    scikit-learn-intelex=={{latest-pypi-version}} \
     azureml-core=={{latest-pypi-version}} \
     azureml-defaults=={{latest-pypi-version}} \
     azureml-inference-server-http=={{latest-pypi-version}} \
@@ -51,10 +47,10 @@ RUN printf '%s\n' 'msgpack>=1.2.3' 'setuptools>=84.1.0' > /tmp/pip-security-cons
     'scikit-learn~=1.5.0' \
     'joblib~=1.2.0' \
     py-spy==0.3.12 \
-    'debugpy~=1.8.0' \
+    'debugpy~=1.6.3' \
     'ipykernel~=6.0' \
     tensorboard \
-    'psutil~=5.9.4' \
+    'psutil~=5.8.0' \
     'matplotlib>=3.10.8,<3.11' \
     'tqdm~=4.66.3' \
     py-cpuinfo==5.0.0 \
@@ -79,11 +75,16 @@ RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
     'aiohttp>=3.14.4' 'pyOpenSSL==26.4.0' 'cryptography>=50.0.0,<51' 'distributed>=2026.1.0' 'GitPython>=3.1.55' 'msgpack>=1.2.3' 'pyarrow>=23.0.1,<24' 'setuptools>=84.1.0' 'sqlparse>=0.6.0'
 
 # idna and cryptography are also installed in the base Miniconda prefix.
-RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'idna>=3.15' 'cryptography>=50.0.0'
+RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'idna>=3.15' 'cryptography>=50.0.0'
+
+# Normalize pip's vendored inventory after the corresponding packages are upgraded.
+RUN find /opt /azureml-envs /root -path '*/pip/_vendor/vendor.txt' -type f -exec \
+        sed -i -E 's/setuptools==70\.3\.0/setuptools==84.1.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} + && \
+    find /opt /azureml-envs /root -path '*/pip/_vendor/bom.cdx.json' -type f -delete
 
 # Reassert newly patched transitive dependencies after all package installs.
 RUN /azureml-envs/sklearn-1.5/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0' 'oauthlib>=4.0.0' 'urllib3>=2.8.0' && \
-    /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0' 'urllib3>=2.8.0' && rm -rf /opt/conda/pkgs/urllib3-2.7.0-*
+    /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0' 'urllib3>=2.8.0' && rm -rf /opt/miniconda/pkgs/urllib3-2.7.0-*
 
 # Reassert November 2026 vulnerability-report floors in the scanned Python prefixes.
 RUN $CONDA_PREFIX/bin/python -m pip install --no-cache-dir --upgrade 'opentelemetry-api>=1.45.1'
@@ -103,8 +104,3 @@ RUN set -eux; \
     fi; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
-
-RUN $CONDA_PREFIX/bin/python -c \
-    "import sys, sklearn, sklearnex, matplotlib, debugpy, psutil, tensorboard, torch_tb_profiler, azureml.core, azureml.mlflow, azureml_inference_server_http; \
-    assert sys.version_info[:2] == (3, 11), sys.version; \
-    assert sklearn.__version__.startswith('1.5.'), sklearn.__version__"

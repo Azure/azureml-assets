@@ -4,12 +4,12 @@ channels:
 - anaconda
 dependencies:
 - python=3.11
-- pip=26.2.0
-- pandas=2.2.3
+- pip=26.2.1
+- pandas~=1.5.3
 - scipy~=1.10.0
-- numpy=1.26.4
+- numpy~=1.22.0
 - pip:
-  - scikit-learn-intelex==2025.0.1
+  - scikit-learn-intelex=={{latest-pypi-version}}
   - azureml-core=={{latest-pypi-version}}
   - azureml-defaults=={{latest-pypi-version}}
   - azureml-inference-server-http=={{latest-pypi-version}}
@@ -19,10 +19,10 @@ dependencies:
   - joblib~=1.2.0
   # azureml-automl-common-tools packages
   - py-spy==0.3.12
-  - debugpy~=1.8.0
+  - debugpy~=1.6.3
   - ipykernel~=6.0
   - tensorboard
-  - psutil~=5.9.4
+  - psutil~=5.8.0
   - matplotlib>=3.10.8,<3.11
   - tqdm~=4.66.3
   - py-cpuinfo==5.0.0
