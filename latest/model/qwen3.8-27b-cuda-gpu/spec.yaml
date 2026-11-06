@@ -30,7 +30,6 @@ system_metadata:
   toolResponseStart: <tool_response>
   tasks:
     inferenceTasks:
-    - chat-completion
     - coding
   platformCapabilities:
     enableMaap: false
