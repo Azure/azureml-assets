@@ -93,6 +93,10 @@ class ModelTypesTests:
         evaluator._strategy.evaluate.assert_awaited_once()
         if self.result_key == "task_completion":
             assert scoring.call_args.args == (0.8,)
+            native_output = {"task_completion": {"label": True}}
+            evaluator._strategy.parse.return_value = {"task_completion": 1}
+            assert evaluator._parse_prompty_output(native_output) == {"task_completion": 1}
+            evaluator._strategy.parse.assert_called_once_with(native_output)
             result = asyncio.run(evaluator._do_eval({"messages": MESSAGES}))
             assert result == {self.result_key: 1}
             evaluator._multi_turn_strategy.evaluate.assert_awaited_once()

@@ -11,6 +11,7 @@ from typing import Any
 from urllib.parse import urlencode
 
 import aiohttp
+from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
 
 
 class RealtimeTaskCompletionFormatError(ValueError):
@@ -212,6 +213,13 @@ class RealtimeTaskCompletionClient:
             if score is not None or properties is not None:
                 raise ValueError("Skipped evaluation must have null score/properties.")
         elif status == "completed":
+            if score is None:
+                raise EvaluationException(
+                    message="Evaluator returned a null score.",
+                    blame=ErrorBlame.SYSTEM_ERROR,
+                    category=ErrorCategory.FAILED_EXECUTION,
+                    target=ErrorTarget.EVALUATE,
+                )
             if (
                 type(score) is not int
                 or score not in (0, 1)

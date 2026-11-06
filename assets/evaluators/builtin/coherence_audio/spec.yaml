@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.coherence_audio"
-version: 1
+version: 2
 displayName: "Coherence-Audio-Evaluator-(Preview)"
 description: "Evaluates the logical and natural flow of agent responses across a full audio conversation by analyzing the call recording, conversation history, and tool interactions on a 1–5 scale."
 evaluatorType: "builtin"

@@ -85,10 +85,10 @@ class _ValidatorUnitTestSupport:
     # A string is the returned "<key>_status"; an exception class means it raises.
     _PARSE_MALFORMED_EXPECTATIONS = {
         "coherence": ("error", "error", "error"),
-        "customer_satisfaction": ("completed", TypeError, "error"),
+        "customer_satisfaction": ("error", "error", "error"),
         "groundedness": ("completed", "error", "error"),
-        "task_adherence": ("completed", ValueError, EvaluationException),
-        "task_completion": ("completed", ValueError, EvaluationException),
+        "task_adherence": (EvaluationException, ValueError, EvaluationException),
+        "task_completion": (EvaluationException, ValueError, EvaluationException),
         "deflection_rate": ("completed", "completed", EvaluationException),
     }
 
@@ -98,14 +98,9 @@ class _ValidatorUnitTestSupport:
     _DO_EVAL_MISSING_SCORE_KEYERROR = frozenset({"groundedness"})
     _DO_EVAL_MISSING_SCORE_RETURNS_DICT = frozenset(
         {
-            "relevance",
             "customer_satisfaction",
-            "task_adherence",
-            "task_completion",
             "deflection_rate",
             "quality_grader",
-            "tool_call_success",
-            "tool_output_utilization",
         }
     )
 

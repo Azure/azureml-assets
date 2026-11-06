@@ -10,6 +10,7 @@ from copy import deepcopy
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from .base_judge_score_handling_test import JudgeScoreHandlingTests
 
 from azure.ai.evaluation._exceptions import EvaluationException
 
@@ -49,6 +50,14 @@ from ..common.evaluator_mock_config import create_mocked_evaluator
 
 
 _DECISION_MODULE = "azure.ai.evaluation._evaluators._common._decision_strategy"
+
+
+@pytest.mark.unittest
+class TestToolOutputUtilizationJudgeScores(JudgeScoreHandlingTests):
+    """Collect shared null-score regressions through this asset's CI selector."""
+
+    evaluator_class = ToolOutputUtilizationEvaluator
+    evaluator_name = "tool_output_utilization"
 
 
 @pytest.mark.unittest

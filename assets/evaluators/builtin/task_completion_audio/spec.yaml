@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.task_completion_audio"
-version: 1
+version: 2
 displayName: "Task-Completion-Audio-Evaluator-(Preview)"
 description: "Evaluates whether an AI agent successfully completed the requested task end to end across a full audio conversation by analyzing the call recording, conversation history, and tool interactions to determine if all task requirements were met, ignoring rule adherence or intent understanding."
 evaluatorType: "builtin"

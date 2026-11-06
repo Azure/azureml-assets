@@ -5,7 +5,9 @@
 
 import asyncio
 import pytest
+from .base_judge_score_handling_test import JudgeScoreHandlingTests
 from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock
 
 from azure.ai.evaluation._exceptions import EvaluationException
 
@@ -34,6 +36,39 @@ from ..common.evaluator_mock_config import (
     create_mocked_evaluator,
     run_none_score_not_applicable,
 )
+
+
+@pytest.mark.unittest
+class TestTaskCompletionJudgeScores(JudgeScoreHandlingTests):
+    """Collect shared null-score regressions through this asset's CI selector."""
+
+    evaluator_class = TaskCompletionEvaluator
+    evaluator_name = "task_completion"
+
+    def test_existing_strategy_controls_evaluation(self, score_case):
+        """Preserve strategy-based routing for turn and conversation inputs."""
+        evaluator, judge, _ = score_case
+        strategy = Mock()
+        strategy.evaluate = AsyncMock(return_value={"task_completion": 1})
+        evaluator._strategy = evaluator._multi_turn_strategy = strategy
+
+        assert self._evaluate(score_case, {"score": None}) == {"task_completion": 1}
+
+        strategy.evaluate.assert_awaited_once()
+        strategy.parse.assert_not_called()
+        judge.assert_not_awaited()
+
+    def test_existing_strategy_controls_parsing(self):
+        """An existing strategy retains ownership of raw output parsing."""
+        evaluator = create_mocked_evaluator(TaskCompletionEvaluator, "task_completion")
+        strategy = Mock()
+        strategy.parse.return_value = {"task_completion": 1}
+        evaluator._strategy = strategy
+        output = {"llm_output": {"score": None}}
+
+        assert evaluator._parse_prompty_output(output) == {"task_completion": 1}
+
+        strategy.parse.assert_called_once_with(output)
 
 
 @pytest.mark.unittest

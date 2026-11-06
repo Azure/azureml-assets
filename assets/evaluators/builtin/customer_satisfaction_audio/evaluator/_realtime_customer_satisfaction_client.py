@@ -12,6 +12,7 @@ from typing import Any, Dict
 from urllib.parse import quote
 
 import aiohttp
+from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
 
 
 class RealtimeCustomerSatisfactionFormatError(ValueError):
@@ -218,6 +219,13 @@ class RealtimeCustomerSatisfactionClient:
                     f"Skipped Customer Satisfaction evaluation must have null score/properties: {payload}"
                 )
         elif eval_status == "completed":
+            if score is None:
+                raise EvaluationException(
+                    message="Evaluator returned a null score.",
+                    blame=ErrorBlame.SYSTEM_ERROR,
+                    category=ErrorCategory.FAILED_EXECUTION,
+                    target=ErrorTarget.EVALUATE,
+                )
             if type(score) is not int or not (1 <= score <= 5) or not isinstance(props, dict):
                 raise ValueError(f"Invalid Customer Satisfaction score/properties: {payload}")
             if (

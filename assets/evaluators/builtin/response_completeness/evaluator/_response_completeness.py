@@ -4,7 +4,6 @@
 import os
 import json
 import logging
-import math
 from typing import Dict, List, Union, Optional, Tuple
 
 from typing_extensions import overload, override
@@ -371,7 +370,6 @@ class ResponseCompletenessEvaluator(ModelEvaluatorBase[Union[str, float]]):
         result = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         llm_output = result.get("llm_output", result) if isinstance(result, dict) else result
 
-        score = math.nan
         if isinstance(llm_output, dict):
             # Handle skipped status from LLM
             llm_status = llm_output.get("status", "completed")
@@ -383,10 +381,18 @@ class ResponseCompletenessEvaluator(ModelEvaluatorBase[Union[str, float]]):
                 skipped.update({f"{self._result_key}_{key}": value for key, value in metadata.items()})
                 return skipped
 
-            score = float(llm_output.get("score", math.nan))
+            score = llm_output.get("score")
+            if score is None:
+                raise EvaluationException(
+                    message="Evaluator returned a missing or null score.",
+                    blame=ErrorBlame.SYSTEM_ERROR,
+                    category=ErrorCategory.FAILED_EXECUTION,
+                    target=ErrorTarget.COMPLETENESS_EVALUATOR,
+                )
+            score = float(score)
+            score_result = self._get_binary_result(score)
             reason = llm_output.get("reason", "")
             llm_properties = llm_output.get("properties", {}) or {}
-            score_result = self._get_binary_result(score)
 
             token_metadata = self._get_token_metadata(result if isinstance(result, dict) else {})
             llm_properties.update(token_metadata)

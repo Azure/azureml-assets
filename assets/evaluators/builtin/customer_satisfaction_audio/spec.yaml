@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.customer_satisfaction_audio"
-version: 1
+version: 2
 displayName: "Customer-Satisfaction-Audio-Evaluator-(Preview)"
 description: "Evaluates overall user experience across a full audio conversation by assessing helpfulness, completeness, clarity, tone, resolution, and adaptability from the call recording, conversation history, and tool interactions, predicting customer satisfaction on a 1–5 Likert scale."
 evaluatorType: "builtin"

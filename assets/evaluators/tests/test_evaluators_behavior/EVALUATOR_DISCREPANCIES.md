@@ -68,9 +68,9 @@ define `_parse_prompty_output` are shown). A cell value is the returned
 | --- | --- | --- | --- |
 | `coherence` | `error` | `error` | `error` |
 | `groundedness` | `completed` | `error` | `error` |
-| `customer_satisfaction` | `completed` | `raise TypeError` | `error` |
-| `task_adherence` | `completed` | `raise ValueError` | `raise EvaluationException` |
-| `task_completion` | `completed` | `raise ValueError` | `raise EvaluationException` |
+| `customer_satisfaction` | `error` | `error` | `error` |
+| `task_adherence` | `raise EvaluationException` | `raise ValueError` | `raise EvaluationException` |
+| `task_completion` | `raise EvaluationException` | `raise ValueError` | `raise EvaluationException` |
 
 **Recommended convergence:** all evaluators should handle malformed output the
 same deterministic way — prefer `coherence`'s behaviour (return a result dict with
@@ -85,8 +85,8 @@ With a turn-level flow returning `{"status": "completed", "reason": "no score fi
 | Outcome | Evaluators |
 | --- | --- |
 | `raise KeyError` (require extra input before scoring) | `groundedness` (`'context'`) |
-| return a result dict (degrade, no raise) | `relevance`, `customer_satisfaction`, `task_adherence`, `task_completion`, `deflection_rate`, `quality_grader`, `tool_call_success`, `tool_output_utilization` |
-| `raise EvaluationException` | `coherence`, `fluency`, `retrieval`, `similarity`, `response_completeness`, `intent_resolution`, `tool_call_accuracy`, `tool_input_accuracy`, `tool_selection` |
+| return a result dict (degrade, no raise) | `customer_satisfaction`, `deflection_rate`, `quality_grader` |
+| `raise EvaluationException` | `coherence`, `fluency`, `retrieval`, `similarity`, `relevance`, `response_completeness`, `intent_resolution`, `task_adherence`, `task_completion`, `tool_call_success`, `tool_output_utilization`, `tool_call_accuracy`, `tool_input_accuracy`, `tool_selection` |
 
 The invariant that must always hold (and does today) is that a missing score is
 never an unhandled `TypeError` from `math.isnan(None)`.
@@ -97,7 +97,11 @@ case (`groundedness`) should validate its required inputs and raise a typed
 `EvaluationException` instead of a bare `KeyError`. `tool_output_utilization` used
 to raise `KeyError('tool_definitions')` here; tool definitions are now optional (the
 row is skipped as `not_applicable` without them), so with definitions supplied it
-reaches the scoring path and coerces a missing score to `0` (`fail`, `completed`).
+reaches the scoring path and reports a missing score as a typed execution error.
+
+The six text evaluators updated alongside `customer_satisfaction` preserve an
+explicit judge `status="error"` before interpreting any score. The error outcome
+has no score or pass/fail grade and retains the judge's reason and usage metadata.
 
 ## 6. `deflection_rate` ignores `status="skipped"`
 
@@ -114,4 +118,3 @@ behavior (see `test_deflection_rate_evaluator_behavior.py`).
 **Recommended convergence:** `deflection_rate._do_eval` should honor
 `status="skipped"` / a `None` score the same way the others do (return a
 not-applicable result) instead of coercing to `0`/`pass`.
-
