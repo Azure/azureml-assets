@@ -32,7 +32,7 @@ RUN printf '%s\n' 'msgpack>=1.2.3' 'setuptools>=84.1.0' > /tmp/pip-security-cons
     azureml-mlflow=={{latest-pypi-version}} \
     azureml-telemetry=={{latest-pypi-version}} \
     'scikit-learn~=1.9.0' \
-    'joblib~=1.6.0' \
+    'joblib~=1.5.3' \
     py-spy==0.3.12 \
     'debugpy~=1.8.0' \
     'ipykernel~=6.0' \

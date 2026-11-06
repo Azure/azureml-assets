@@ -11,6 +11,10 @@ Pip is bumped to 26.2.2, which is available on both PyPI and conda-forge.
 Azure ML packages and Intel Extension retain their latest-version macros, and
 security requirements are preserved from `sklearn-1.5`.
 
+Joblib is upgraded from main's 1.2 series to 1.5.3. Its 1.6 series requires
+cloudpickle >=3, which conflicts with the latest Azure ML Data Prep's <3 constraint
+during SDK dependency resolution.
+
 The existing `sklearn-1.5` asset is unchanged. This separate asset upgrades
 Scikit-learn instead of downgrading Intel Extension to support older sklearn APIs.
 
