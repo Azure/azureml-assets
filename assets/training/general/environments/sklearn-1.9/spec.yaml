@@ -1,0 +1,22 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+
+description: >-
+  An environment for regression, clustering, and classification with Scikit-learn 1.9
+  and Intel Extension for Scikit-learn. Contains Python 3.11 and the Azure ML SDK.
+
+name: "{{asset.name}}"
+version: "{{asset.version}}"
+
+build:
+  path: "{{image.context.path}}"
+  dockerfile_path: "{{image.dockerfile.path}}"
+
+os_type: linux
+
+tags:
+  Scikit-learn: "1.9"
+  OS: Ubuntu24.04
+  Training: ""
+  Preview: ""
+  OpenMpi: "5.0"
+  Python: "3.11"
