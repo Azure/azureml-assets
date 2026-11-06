@@ -517,6 +517,22 @@ assert evaluator(**inputs)[cls._RESULT_KEY] == 1
 assert evaluator(**inputs, tool_definitions=None)[cls._RESULT_KEY] == 1
 assert evaluator(messages=[{'role': 'user', 'content': 'Hello?'}, {'role': 'assistant', 'content': 'Hello'}])[
     cls._RESULT_KEY] == 1
+if cls._RESULT_KEY == 'output_quality':
+    renders = []
+    async def record(timeout, **flow_inputs):
+        flow = actual_conversation if 'messages' in flow_inputs else actual_turn
+        renders.append(str(flow.render(**flow_inputs)))
+        return output
+    evaluator._flow = AsyncMock(side_effect=record)
+    evaluator._multi_turn_flow = AsyncMock(side_effect=record)
+    hello = [{'role': 'user', 'content': 'Hello?'}, {'role': 'assistant', 'content': 'Hello'}]
+    evaluator(**inputs, context='Context marker 4711')
+    evaluator(messages=hello, context='Context marker 4712')
+    evaluator(**inputs, context=' ')
+    evaluator(messages=hello, context='<>')
+    assert 'Context marker 4711' in renders[0] and 'GROUNDEDNESS CONTEXT' in renders[0], renders[0]
+    assert 'Context marker 4712' in renders[1] and 'GROUNDEDNESS_CONTEXT' in renders[1], renders[1]
+    assert all('GROUNDEDNESS' not in text for text in renders[2:]), renders[2:]
 for invalid in (True, '3', {'unknown': 1}, {cls._EVALUATORS[0]['name']: True}):
     try:
         cls(config, threshold=invalid)

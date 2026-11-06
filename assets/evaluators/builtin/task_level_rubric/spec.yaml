@@ -9,7 +9,7 @@ categories: ["agents", "quality"]
 tags:
   provider: "Microsoft"
   preview: "true"
-supportedEvaluationLevels: ["conversation"]
+supportedEvaluationLevels: ["turn", "conversation"]
 initParameterSchema:
   type: "object"
   properties:
