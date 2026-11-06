@@ -49,10 +49,10 @@ model call. Output Quality treats an empty optional text query as absent rather
 than dropping its response. Output Quality also accepts optional text context
 as the primary grounding source for its Groundedness member, on chat and native
 paths for turn and conversation inputs. When context is supplied, the chat
-prompts tell the judge to use it only for Groundedness, and the native Intent
-resolution, Task adherence and Task completion questions tell it to ignore the
-context; the native Fluency and Coherence questions stay as they are. One judge
-call scores all six members, so supplied context can still shift other members.
+prompts tell the judge to use it only for Groundedness. A native judge scores
+the other five members from the request sent without context, and Groundedness
+from a second, concurrent request that adds the context, so supplied context
+cannot change the other native members' answers.
 A mapping is not grounding text and counts as no context, including the summary
 the hosted service maps to context for stored agent responses. Without context,
 its prompts and native requests are unchanged. These input and direct-cancellation

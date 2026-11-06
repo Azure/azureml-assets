@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 """Output Quality Evaluator."""
+import asyncio
 import contextvars
 import functools
 import json
@@ -531,7 +532,8 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
     groundedness scores a neutral 3 (passing by default); conversation-level groundedness
     is skipped and does not affect the aggregate.
     Optional text ``context`` is grounding evidence meant for the groundedness member; a mapping is ignored.
-    Without it, the prompts and Decision requests are the ones sent before context was supported.
+    Without it, the prompts and Decision requests are the ones sent before context was supported. With it, a
+    Decision judge scores the other members from that same request and groundedness from a second one.
     """
 
     _PROMPTY_FILE = "output_quality.prompty"
@@ -661,9 +663,8 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
     def _load_decision_strategies(self, rubric_path: str) -> Tuple[Dict, Dict]:
         """Load independent member strategies from this evaluator's rubric file.
 
-        The second mapping is used only when a request carries supplied context. A member's
-        ``result_with_context`` question replaces its result question, and a member's ``context_note`` is
-        appended to it. Every other question stays the same, as it does for requests without context.
+        The second mapping holds a strategy only for each member whose rubric defines ``result_with_context``.
+        Those members are asked again, with the supplied context, in a request of their own.
         """
         from azure.ai.evaluation._legacy.prompty._yaml_utils import load_yaml
 
@@ -687,62 +688,123 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         for member in self._EVALUATORS:
             name = member["name"]
             definition = rubric[name]
-            status, result = definition["status"], definition["result"]
-            strategies[name] = strategy(member, status, result)
+            strategies[name] = strategy(member, definition["status"], definition["result"])
             if "result_with_context" in definition:
-                with_context[name] = strategy(member, status, definition["result_with_context"])
-            elif "context_note" in definition:
-                noted = {**result, "instructions": f"{result['instructions']} {definition['context_note']}"}
-                with_context[name] = strategy(member, status, noted)
-            else:
-                with_context[name] = strategies[name]
+                with_context[name] = strategy(member, definition["status"], definition["result_with_context"])
         return strategies, with_context
 
-    def _decision_request(self, state: Dict, context: Optional[str], conversation: bool) -> Tuple[Dict, Dict]:
-        """Return the native state and member strategies, adding supplied context only when present."""
+    async def _ask_decision_model(self, state: Dict, strategies: Dict) -> Dict:
+        """Send one request with each strategy's status and result question."""
+        questions = {}
+        for name, strategy in strategies.items():
+            questions[f"{name}_status"] = strategy.questions["status"]
+            questions[name] = strategy.questions[name]
+        return await self._decision_model_runner(
+            state=dict(state), questions=questions, timeout=self._LLM_CALL_TIMEOUT
+        )
+
+    @staticmethod
+    def _parse_decision_member(name: str, strategy, response: Dict, state: Dict) -> Dict:
+        """Parse one member's answers from a Decision response."""
+        member_response = {
+            **response,
+            "answers": {"status": response["answers"][f"{name}_status"], name: response["answers"][name]},
+        }
+        parsed = strategy.parse(member_response, state)
+        properties = parsed.get(f"{name}_properties") or {}
+        member = {
+            field: parsed[f"{name}_{field}"]
+            for field in ("score", "status", "reason", "result", "passed", "threshold")
+            if f"{name}_{field}" in parsed
+        }
+        member["properties"] = (
+            {"decision_model": properties["decision_model"]} if "decision_model" in properties else {}
+        )
+        return member
+
+    async def _evaluate_decision(self, state: Dict, context: Optional[str], conversation: bool) -> Dict:
+        """Score the members from one request, and ask context-aware members again when context is supplied.
+
+        Decision-1 answers every question with the whole state in view, so context sent in the members'
+        request changed members that should not use it. The first request is therefore always the one sent
+        without context. With context, members whose rubric defines ``result_with_context`` (groundedness) are
+        asked again in a concurrent request whose state adds ``groundedness_context``, and that answer is used.
+        """
         if conversation:
             strategies = self._multi_turn_decision_strategies
             context_strategies = self._multi_turn_context_decision_strategies
         else:
             strategies, context_strategies = self._decision_strategies, self._context_decision_strategies
+        requests = [(state, strategies)]
         if context is None:
-            return state, strategies
-        return {**state, "groundedness_context": context}, context_strategies
-
-    async def _evaluate_decision(self, eval_input: Dict, strategies: Dict) -> Dict:
-        """Execute all twelve questions once and parse each member independently."""
-        questions = {}
-        for name, strategy in strategies.items():
-            questions[f"{name}_status"] = strategy.questions["status"]
-            questions[name] = strategy.questions[name]
-        response = await self._decision_model_runner(
-            state=dict(eval_input), questions=questions, timeout=self._LLM_CALL_TIMEOUT
-        )
+            responses = [await self._ask_decision_model(state, strategies)]
+        else:
+            requests.append(({**state, "groundedness_context": context}, context_strategies))
+            responses = await self._ask_concurrently(requests)
+        answered_by = {name: 0 for name in strategies}
+        if context is not None:
+            answered_by.update({name: 1 for name in context_strategies})
         evaluators = {}
-        for name, strategy in strategies.items():
-            member_response = {
-                **response,
-                "answers": {"status": response["answers"][f"{name}_status"],
-                            name: response["answers"][name]},
-            }
-            parsed = strategy.parse(member_response, eval_input)
-            properties = parsed.get(f"{name}_properties") or {}
-            evaluators[name] = {
-                field: parsed[f"{name}_{field}"]
-                for field in ("score", "status", "reason", "result", "passed", "threshold")
-                if f"{name}_{field}" in parsed
-            }
-            evaluators[name]["properties"] = (
-                {"decision_model": properties["decision_model"]} if "decision_model" in properties else {}
-            )
-        usage = response["usage"]
+        for name, index in answered_by.items():
+            request_state, members = requests[index]
+            try:
+                evaluators[name] = self._parse_decision_member(name, members[name], responses[index], request_state)
+            except (EvaluationException, CancelledError) as error:
+                self._keep_usage(error, [response for position, response in enumerate(responses) if position != index])
+                raise
+        input_tokens = sum(response["usage"]["input_tokens"] for response in responses)
+        output_tokens = sum(response["usage"]["output_tokens"] for response in responses)
         token_metadata = {
-            "prompt_tokens": usage["input_tokens"],
-            "completion_tokens": usage["output_tokens"],
-            "total_tokens": usage["input_tokens"] + usage["output_tokens"],
-            "model": response["model"],
+            "prompt_tokens": input_tokens,
+            "completion_tokens": output_tokens,
+            "total_tokens": input_tokens + output_tokens,
+            "model": responses[0]["model"],
         }
         return self._build_aggregate_result(evaluators, token_metadata)
+
+    async def _ask_concurrently(self, requests: List[Tuple[Dict, Dict]]) -> List[Dict]:
+        """Send the requests concurrently and return their responses in request order.
+
+        A failure or cancellation is raised once every request has finished, and the raised error keeps the
+        usage of each answered request, as a failed evaluation keeps the usage of its completed turns.
+        """
+        tasks = [asyncio.ensure_future(self._ask_decision_model(*request)) for request in requests]
+        try:
+            await asyncio.wait(tasks)
+        except CancelledError as error:
+            for task in tasks:
+                task.cancel()
+            await asyncio.wait(tasks)
+            self._keep_usage(error, self._answered(tasks))
+            raise
+        errors = [CancelledError() if task.cancelled() else task.exception() for task in tasks]
+        for error in errors:
+            if error is not None:
+                self._keep_usage(error, self._answered(tasks))
+                raise error
+        return [task.result() for task in tasks]
+
+    @staticmethod
+    def _answered(tasks: List["asyncio.Future"]) -> List[Dict]:
+        """Return the responses of the finished requests that were answered."""
+        return [task.result() for task in tasks if task.done() and not task.cancelled() and task.exception() is None]
+
+    def _keep_usage(self, error: BaseException, responses: List[Dict]) -> None:
+        """Add the usage of answered requests to ``error``, as the usage of completed turns is kept."""
+        if not isinstance(error, (EvaluationException, CancelledError)):
+            return
+        answered = []
+        for response in responses:
+            usage = response.get("usage") if isinstance(response, dict) else None
+            if isinstance(usage, dict) and "input_tokens" in usage and "output_tokens" in usage:
+                answered.append({
+                    f"{self._result_key}_prompt_tokens": usage["input_tokens"],
+                    f"{self._result_key}_completion_tokens": usage["output_tokens"],
+                    f"{self._result_key}_total_tokens": usage["input_tokens"] + usage["output_tokens"],
+                    f"{self._result_key}_model": response.get("model"),
+                })
+        if answered:
+            self._on_evaluation_error(error, answered)
 
     @overload
     def __call__(
@@ -1020,9 +1082,7 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         if self._decision_strategies is not None:
             # A fixed key order sends identical inputs as identical requests on every SDK version.
             state = {key: eval_input[key] for key in ("query", "response", "tool_definitions") if key in eval_input}
-            return await self._evaluate_decision(
-                *self._decision_request(state, eval_input.get("context"), conversation=False)
-            )
+            return await self._evaluate_decision(state, eval_input.get("context"), conversation=False)
         if eval_input.get("tool_definitions") is None:
             eval_input["tool_definitions"] = []
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
@@ -1039,7 +1099,7 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         context = eval_input.get("context")
 
         if self._decision_strategies is not None:
-            return await self._evaluate_decision(*self._decision_request(prompty_kwargs, context, conversation=True))
+            return await self._evaluate_decision(prompty_kwargs, context, conversation=True)
         if context is not None:
             # output_quality_multi_turn.prompty renders the context block only when it is supplied.
             prompty_kwargs["context"] = context

@@ -70,8 +70,6 @@ _RUBRICS = {
     name: yaml.safe_load((Path(output_quality_module.__file__).parent / name).read_text(encoding="utf-8"))
     for name in _RUBRIC_FILES
 }
-_ISOLATION = _RUBRICS["output_quality.decision.yaml"]["task_adherence"]["context_note"]
-_ISOLATED = {"intent_resolution", "task_adherence", "task_completion"}
 _CYCLIC = ["doc"]
 _CYCLIC.append(_CYCLIC)
 
@@ -200,9 +198,9 @@ class TestOutputQualityDecisionBehavior:
         """Set up member strategies and return before loading multi-turn chat."""
         evaluator = _make_decision_evaluator(threshold={"fluency": 4})
         mocks = decision_mocks
-        assert mocks.factory.call_count == 20
-        assert mocks.binary.call_count == 8
-        assert mocks.likert.call_count == 12
+        assert mocks.factory.call_count == 14
+        assert mocks.binary.call_count == 4
+        assert mocks.likert.call_count == 10
         for call in mocks.binary.call_args_list:
             assert call.args == (0.8,)
         for call in mocks.likert.call_args_list:
@@ -234,44 +232,32 @@ class TestOutputQualityDecisionBehavior:
             (evaluator._decision_strategies, evaluator._context_decision_strategies),
             (evaluator._multi_turn_decision_strategies, evaluator._multi_turn_context_decision_strategies),
         ):
-            assert list(context_strategies) == _EVALUATOR_NAMES
+            assert list(context_strategies) == ["groundedness"]
+            original, with_context = strategies["groundedness"].questions, context_strategies["groundedness"].questions
+            assert set(with_context) == set(original) == {"status", "groundedness"}
+            assert with_context["status"] == original["status"]
+            assert with_context["groundedness"]["type"] == original["groundedness"]["type"]
+            assert with_context["groundedness"]["criteria"] == original["groundedness"]["criteria"]
+            assert "groundedness_context" in with_context["groundedness"]["instructions"]
             for name in _EVALUATOR_NAMES:
-                if name not in _ISOLATED | {"groundedness"}:
-                    assert context_strategies[name] is strategies[name]
-                    continue
-                original, with_context = strategies[name].questions, context_strategies[name].questions
-                assert set(with_context) == set(original) == {"status", name}
-                assert with_context["status"] == original["status"]
-                assert with_context[name]["type"] == original[name]["type"]
-                assert with_context[name]["criteria"] == original[name]["criteria"]
-                assert _ISOLATION not in original[name]["instructions"]
-                if name == "groundedness":
-                    assert "groundedness_context" in with_context[name]["instructions"]
-                    assert "groundedness_context" not in original[name]["instructions"]
-                else:
-                    assert with_context[name]["instructions"] == f"{original[name]['instructions']} {_ISOLATION}"
+                assert "groundedness_context" not in json.dumps(strategies[name].questions)
         mocks.runner.assert_not_awaited()
         mocks.chat_load.assert_called_once()
         assert not hasattr(evaluator, "_multi_turn_flow")
 
     @pytest.mark.parametrize("file_name", _RUBRIC_FILES)
     def test_rubric_top_level_keys_are_only_members(self, file_name):
-        """Keep each rubric's top-level keys to the six members, each with its own context variant at most.
+        """Keep each rubric's top-level keys to the six members; only groundedness has a context question.
 
         Tools outside this asset read every top-level key as a member with status and result questions.
         """
         rubric = _RUBRICS[file_name]
-        allowed = {"status", "result", "result_with_context", "context_note"}
         assert set(rubric) == set(_EVALUATOR_NAMES)
         for name, definition in rubric.items():
-            assert {"status", "result"} <= set(definition) <= allowed
-            assert not {"result_with_context", "context_note"} <= set(definition)
-            if "context_note" in definition:
-                assert definition["context_note"] == _ISOLATION
+            assert {"status", "result"} <= set(definition) <= {"status", "result", "result_with_context"}
             if "result_with_context" in definition:
                 assert set(definition["result_with_context"]) == set(definition["result"])
                 assert definition["result_with_context"]["type"] == definition["result"]["type"]
-        assert {name for name, definition in rubric.items() if "context_note" in definition} == _ISOLATED
         assert {name for name, definition in rubric.items() if "result_with_context" in definition} == {"groundedness"}
 
     @pytest.mark.parametrize("inputs,level,conversation", [
@@ -338,35 +324,48 @@ class TestOutputQualityDecisionBehavior:
         ({"query": VALID_QUERY, "response": VALID_RESPONSE}, "conversation", True),
         ({"messages": VALID_MESSAGES}, "turn", False),
     ])
-    def test_supplied_context_uses_the_context_question_set(self, decision_mocks, inputs, level, conversation):
-        """Send supplied context with the context-aware question set on either route."""
+    def test_supplied_context_is_asked_only_of_groundedness(self, decision_mocks, inputs, level, conversation):
+        """Score members from the request sent without context, and ask groundedness again with the context."""
         evaluator = _make_decision_evaluator(evaluation_level=level)
-        evaluator(**deepcopy(inputs), tool_definitions=deepcopy(VALID_TOOL_DEFINITIONS), context=_CONTEXT)
+        result = evaluator(**deepcopy(inputs), tool_definitions=deepcopy(VALID_TOOL_DEFINITIONS), context=_CONTEXT)
         runner = decision_mocks.runner
-        runner.assert_awaited_once()
-        state = runner.await_args.kwargs["state"]
-        questions = runner.await_args.kwargs["questions"]
-        assert list(state) == (
-            ["messages", "tool_definitions", "groundedness_context"] if conversation
-            else ["query", "response", "tool_definitions", "groundedness_context"]
+        assert runner.await_count == 2
+        members_call, groundedness_call = runner.await_args_list
+        plain = members_call.kwargs["state"]
+        assert list(plain) == (
+            ["messages", "tool_definitions"] if conversation else ["query", "response", "tool_definitions"]
         )
-        assert state["groundedness_context"] == _CONTEXT
+        assert groundedness_call.kwargs["state"] == {**plain, "groundedness_context": _CONTEXT}
+        assert list(groundedness_call.kwargs["state"]) == [*plain, "groundedness_context"]
+        for call in runner.await_args_list:
+            assert call.kwargs["timeout"] == evaluator._LLM_CALL_TIMEOUT
         strategies, context_strategies = (
             (evaluator._multi_turn_decision_strategies, evaluator._multi_turn_context_decision_strategies)
             if conversation else (evaluator._decision_strategies, evaluator._context_decision_strategies)
         )
+        assert members_call.kwargs["questions"] == {
+            key: question for name, strategy in strategies.items()
+            for key, question in ((f"{name}_status", strategy.questions["status"]), (name, strategy.questions[name]))
+        }
+        grounded = context_strategies["groundedness"]
+        assert groundedness_call.kwargs["questions"] == {
+            "groundedness_status": grounded.questions["status"], "groundedness": grounded.questions["groundedness"],
+        }
+        answers = runner.return_value["answers"]
         for name in _EVALUATOR_NAMES:
-            assert questions[name] == context_strategies[name].questions[name]
-            assert questions[f"{name}_status"] == strategies[name].questions["status"]
-            context_strategies[name].parse.assert_called_once()
-            if name in _ISOLATED:
-                original = strategies[name].questions[name]["instructions"]
-                assert questions[name]["instructions"] == f"{original} {_ISOLATION}"
-            elif name != "groundedness":
-                assert questions[name] == strategies[name].questions[name]
-            if context_strategies[name] is not strategies[name]:
+            member_response = {**runner.return_value,
+                               "answers": {"status": answers[f"{name}_status"], name: answers[name]}}
+            if name == "groundedness":
                 strategies[name].parse.assert_not_called()
-        assert questions["groundedness"] != strategies["groundedness"].questions["groundedness"]
+                grounded.parse.assert_called_once_with(member_response, groundedness_call.kwargs["state"])
+                expected = grounded.parse.return_value
+            else:
+                strategies[name].parse.assert_called_once_with(member_response, plain)
+                expected = strategies[name].parse.return_value
+            assert result["output_quality_evaluators"][name]["score"] == expected[f"{name}_score"]
+        for field, value in {"prompt_tokens": 60, "completion_tokens": 8, "total_tokens": 68,
+                             "model": "decision-model"}.items():
+            assert result[f"output_quality_{field}"] == value
 
     @pytest.mark.parametrize("context", _ABSENT_CONTEXTS.values(), ids=_ABSENT_CONTEXTS.keys())
     @pytest.mark.parametrize("conversation", [False, True])
