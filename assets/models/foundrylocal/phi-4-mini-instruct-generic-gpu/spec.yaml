@@ -34,6 +34,7 @@ system_metadata:
     enableMaap: false
   reasoningStart: ''
   reasoningEnd: ''
+  reasoningLevels: []
   minFLVersion: 0.0.0
 variantInfo:
   parents:

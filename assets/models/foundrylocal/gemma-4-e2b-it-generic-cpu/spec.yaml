@@ -36,6 +36,7 @@ system_metadata:
     enableMaap: false
   reasoningStart: '<|channel>thought\n'
   reasoningEnd: '<|channel|>'
+  reasoningLevels: ["on", "off"]
   minFLVersion: 2.0.0
 variantInfo:
   parents:

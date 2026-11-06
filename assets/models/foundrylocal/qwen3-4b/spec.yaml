@@ -5,4 +5,5 @@ system_metadata:
   previewType: hideUI
   foundryLocal: ''
   deploymentOptions: ['Foundry Local on Devices']
+  reasoningLevels: ["on", "off"]
 version: 2
