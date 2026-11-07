@@ -11,7 +11,7 @@ import json
 import logging
 from pathlib import Path
 from typing import get_args, get_type_hints
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 import jsonschema
 import pandas as pd
@@ -99,6 +99,15 @@ def _native(evaluator_class, skipped=False):
              "probabilities": {str(index): float(index == 4) for index in range(5)}}
         )
     return {"model": "actual-model", "answers": answers, "usage": {"input_tokens": 30, "output_tokens": 4}}
+
+
+def _native_post(evaluator_class):
+    """Return a native ``_post`` mock that answers exactly the questions each request asks."""
+    async def post(content, **_):
+        payload = _native(evaluator_class)
+        asked = json.loads(content)["questions"]
+        return {**payload, "answers": {key: answer for key, answer in payload["answers"].items() if key in asked}}
+    return AsyncMock(side_effect=post)
 
 
 @pytest.mark.parametrize("evaluator_class", COMPOSITES)
@@ -586,6 +595,275 @@ def test_output_quality_queryless_conversation_keeps_response(backend, query_sha
     state = json.loads(post.call_args.args[0])["state"] if post is not None else flow.await_args.kwargs
     assert response in state["messages"]
     assert "User turn" not in state["messages"]
+
+
+CONTEXT = "France's capital city is Paris."
+CONTEXT_ROW = {"query": "What is the capital of France?", "response": "Paris is the capital of France."}
+
+
+def _chat_flow():
+    return AsyncMock(return_value={"llm_output": {
+        member["name"]: {"score": member["max"], "status": "completed", "reason": "ok"}
+        for member in OutputQualityEvaluator._EVALUATORS
+    }})
+
+
+def test_output_quality_schema_accepts_text_context_like_groundedness():
+    """Expose optional text context in the hosted data schema, as standalone Groundedness does."""
+    builtin = Path(__file__).parents[2] / "builtin"
+    schema = yaml.safe_load(
+        (builtin / "output_quality" / "spec.yaml").read_text(encoding="utf-8"))["dataMappingSchema"]
+    groundedness = yaml.safe_load(
+        (builtin / "groundedness" / "spec.yaml").read_text(encoding="utf-8"))["dataMappingSchema"]
+    assert schema["properties"]["context"] == groundedness["properties"]["context"] == {"type": "string"}
+    for inputs in ({**CONTEXT_ROW, "context": CONTEXT}, {"response": "Paris.", "context": ""},
+                   {"messages": [{"role": "user", "content": "Hi"}], "context": CONTEXT}):
+        jsonschema.validate(inputs, schema)
+    for context in (12, None, [CONTEXT], {"text": CONTEXT}):
+        with pytest.raises(jsonschema.ValidationError):
+            jsonschema.validate({**CONTEXT_ROW, "context": context}, schema)
+
+
+@pytest.mark.parametrize("conversation", [False, True])
+def test_output_quality_native_request_changes_only_with_supplied_context(conversation):
+    """Keep the request sent without context, and ask groundedness again only when context carries evidence."""
+    inputs = {"messages": [{"role": "user", "content": CONTEXT_ROW["query"]},
+                           {"role": "assistant", "content": CONTEXT_ROW["response"]}]} if conversation else CONTEXT_ROW
+    bodies, results = {}, {}
+    for label, extra in (("omitted", {}), ("none", {"context": None}), ("blank", {"context": " "}),
+                         ("placeholder", {"context": "<>"}), ("supplied", {"context": CONTEXT})):
+        evaluator = OutputQualityEvaluator(CONFIG)
+        post = _native_post(OutputQualityEvaluator)
+        evaluator._decision_model_runner._post = post
+        results[label] = evaluator(**deepcopy(inputs), **extra)
+        bodies[label] = [call.args[0] for call in post.await_args_list]
+    absent = ("omitted", "none", "blank", "placeholder")
+    assert all(len(bodies[label]) == 1 for label in absent)
+    assert len({bodies[label][0] for label in absent}) == 1
+    assert len(bodies["supplied"]) == 2
+    plain = json.loads(bodies["omitted"][0])
+    assert "groundedness_context" not in plain["state"]
+    members_body = [body for body in bodies["supplied"] if "groundedness_context" not in json.loads(body)["state"]]
+    assert members_body == bodies["omitted"]
+    grounded = next(json.loads(body) for body in bodies["supplied"] if body not in members_body)
+    assert grounded["state"] == {**plain["state"], "groundedness_context": CONTEXT}
+    assert list(grounded["state"]) == [*plain["state"], "groundedness_context"]
+    assert list(grounded["questions"]) == ["groundedness_status", "groundedness"]
+    assert grounded["questions"]["groundedness_status"] == plain["questions"]["groundedness_status"]
+    assert grounded["questions"]["groundedness"]["criteria"] == plain["questions"]["groundedness"]["criteria"]
+    assert "groundedness_context" in grounded["questions"]["groundedness"]["instructions"]
+    assert "groundedness_context" not in json.dumps(plain["questions"])
+
+    def digest(question):
+        return hashlib.sha256(json.dumps(question, sort_keys=True).encode()).hexdigest()
+
+    for label in ("omitted", "supplied"):
+        for member in OutputQualityEvaluator._EVALUATORS:
+            name = member["name"]
+            body = grounded if label == "supplied" and name == "groundedness" else plain
+            provenance = results[label]["output_quality_evaluators"][name]["properties"]["decision_model"]
+            assert provenance["rubric_hash"] == digest(body["questions"][name])
+            assert provenance["status_rubric_hash"] == digest(body["questions"][f"{name}_status"])
+    for field, expected in (("prompt_tokens", 60), ("completion_tokens", 8), ("total_tokens", 68)):
+        assert results["supplied"][f"output_quality_{field}"] == expected
+
+
+_CONTEXT_REQUEST_USAGE = {"members": {"input_tokens": 12, "output_tokens": 3},
+                          "groundedness": {"input_tokens": 34, "output_tokens": 5}}
+
+
+def _context_request_kind(content):
+    return "groundedness" if "groundedness_context" in json.loads(content)["state"] else "members"
+
+
+@pytest.mark.parametrize("failure", ["timeout", "semantic"])
+@pytest.mark.parametrize("failing", ["members", "groundedness"])
+def test_output_quality_context_request_failure_keeps_answered_usage(failing, failure):
+    """Raise a failed request of a context evaluation with the usage of every answered request."""
+    evaluator = OutputQualityEvaluator(CONFIG)
+
+    async def post(content, **_):
+        kind = _context_request_kind(content)
+        if kind == failing and failure == "timeout":
+            raise asyncio.TimeoutError()
+        payload = _native(OutputQualityEvaluator)
+        asked = json.loads(content)["questions"]
+        payload["answers"] = {key: answer for key, answer in payload["answers"].items() if key in asked}
+        payload["usage"] = dict(_CONTEXT_REQUEST_USAGE[kind])
+        if kind == failing:
+            payload["answers"]["groundedness_status" if kind == "groundedness" else "fluency_status"]["noul"] = 2
+        return payload
+
+    evaluator._decision_model_runner._post = AsyncMock(side_effect=post)
+    with pytest.raises(EvaluationException) as raised:
+        evaluator(**CONTEXT_ROW, context=CONTEXT)
+    assert evaluator._decision_model_runner._post.await_count == 2
+    paid = [usage for kind, usage in _CONTEXT_REQUEST_USAGE.items() if failure == "semantic" or kind != failing]
+    prompt, completion = sum(u["input_tokens"] for u in paid), sum(u["output_tokens"] for u in paid)
+    properties = raised.value.properties
+    assert {field: properties[field] for field in ("prompt_tokens", "completion_tokens", "total_tokens")} == {
+        "prompt_tokens": prompt, "completion_tokens": completion, "total_tokens": prompt + completion}
+    assert properties["model"] == "actual-model"
+    assert properties["decision_model"]["result_usage_scope"] == "reported_turns_only"
+    assert "execution" not in properties["decision_model"]
+
+
+def _failing_context_post(failures, models=None, usage=None):
+    """Answer each context-evaluation request, failing it with a timeout or an invalid answer type as asked.
+
+    An invalid answer type makes the SDK runner raise inside the request, with that request's usage.
+    """
+    async def post(content, **_):
+        kind = _context_request_kind(content)
+        if failures.get(kind) == "timeout":
+            raise asyncio.TimeoutError()
+        payload = _native(OutputQualityEvaluator)
+        asked = json.loads(content)["questions"]
+        payload["answers"] = {key: answer for key, answer in payload["answers"].items() if key in asked}
+        payload["usage"] = dict((usage or {}).get(kind, _CONTEXT_REQUEST_USAGE[kind]))
+        payload["model"] = (models or {}).get(kind, payload["model"])
+        if failures.get(kind) == "invalid":
+            payload["answers"][next(iter(payload["answers"]))] = {"type": "unsupported"}
+        return payload
+    return AsyncMock(side_effect=post)
+
+
+@pytest.mark.parametrize(
+    "members,groundedness", [("timeout", "invalid"), ("invalid", "invalid"), ("invalid", "timeout")]
+)
+def test_output_quality_context_requests_that_both_fail_keep_every_paid_usage(members, groundedness):
+    """Raise the first of two failed context requests with the usage of each one that was paid for."""
+    evaluator = OutputQualityEvaluator(CONFIG)
+    failures = {"members": members, "groundedness": groundedness}
+    evaluator._decision_model_runner._post = _failing_context_post(failures)
+    with pytest.raises(EvaluationException) as raised:
+        evaluator(**CONTEXT_ROW, context=CONTEXT)
+    paid = [_CONTEXT_REQUEST_USAGE[kind] for kind, failure in failures.items() if failure == "invalid"]
+    prompt, completion = sum(u["input_tokens"] for u in paid), sum(u["output_tokens"] for u in paid)
+    properties = raised.value.properties
+    assert {field: properties[field] for field in ("prompt_tokens", "completion_tokens", "total_tokens")} == {
+        "prompt_tokens": prompt, "completion_tokens": completion, "total_tokens": prompt + completion}
+    assert properties["model"] == "actual-model"
+
+
+def test_output_quality_failed_context_request_keeps_a_partial_usage_count():
+    """Keep the valid count of another failed request's usage without inventing a total."""
+    evaluator = OutputQualityEvaluator(CONFIG)
+    evaluator._decision_model_runner._post = _failing_context_post(
+        {"members": "timeout", "groundedness": "invalid"},
+        usage={"groundedness": {"input_tokens": 34, "output_tokens": True}},
+    )
+    with pytest.raises(EvaluationException) as raised:
+        evaluator(**CONTEXT_ROW, context=CONTEXT)
+    properties = raised.value.properties
+    assert properties["prompt_tokens"] == 34
+    assert "completion_tokens" not in properties
+    assert "total_tokens" not in properties
+
+
+def test_output_quality_context_requests_answered_by_different_models_report_no_model():
+    """Report a model for a context evaluation only when both of its requests were answered by the same one."""
+    evaluator = OutputQualityEvaluator(CONFIG)
+    evaluator._decision_model_runner._post = _failing_context_post(
+        {}, models={"members": "model-a", "groundedness": "model-b"}
+    )
+    result = evaluator(**CONTEXT_ROW, context=CONTEXT)
+    assert "output_quality_model" not in result
+    assert result["output_quality_total_tokens"] == 54
+
+    evaluator._decision_model_runner._post = _failing_context_post({})
+    assert evaluator(**CONTEXT_ROW, context=CONTEXT)["output_quality_model"] == "actual-model"
+
+
+def test_output_quality_context_request_cancellation_keeps_answered_usage():
+    """Cancel while groundedness is still being asked, and keep the answered members request's usage."""
+    evaluator = OutputQualityEvaluator(CONFIG)
+
+    async def scenario():
+        entered, finished = asyncio.Event(), []
+
+        async def post(content, **_):
+            if _context_request_kind(content) == "groundedness":
+                entered.set()
+                await asyncio.sleep(10)
+                raise AssertionError("Cancelled inference must not complete")
+            payload = _native(OutputQualityEvaluator)
+            payload["usage"] = dict(_CONTEXT_REQUEST_USAGE["members"])
+            finished.append(content)
+            return payload
+
+        evaluator._decision_model_runner._post = post
+        task = asyncio.create_task(evaluator._to_async()(**CONTEXT_ROW, context=CONTEXT))
+        await asyncio.wait_for(entered.wait(), timeout=2)
+        await asyncio.sleep(0.2)
+        assert finished
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError) as raised:
+            await task
+        assert raised.value.properties["total_tokens"] == 15
+        assert raised.value.properties["model"] == "actual-model"
+        assert raised.value.properties["decision_model"]["result_usage_scope"] == "reported_turns_only"
+
+    asyncio.run(scenario())
+
+
+@pytest.mark.parametrize("backend", ["native", "chat"])
+def test_output_quality_mapped_context_column_reaches_only_rows_with_context(backend):
+    """Carry a mapped context column through a batch run; blank, missing and mapping cells add no context.
+
+    Q4 is shaped like a stored agent response row, where the hosted service maps its own summary of the
+    response to context.
+    """
+    rows = pd.DataFrame([
+        {**CONTEXT_ROW, "query": "Q0", "context": CONTEXT},
+        {**CONTEXT_ROW, "query": "Q1", "context": ""},
+        {**CONTEXT_ROW, "query": "Q2", "context": None},
+        {**CONTEXT_ROW, "query": "Q3"},
+        {**CONTEXT_ROW, "query": "Q4", "context": {
+            "ToolCallsAndResults": [], "ConversationHistory": [{"role": "user", "content": "Q4"}],
+            "ToolDefinitions": [],
+        }},
+    ])
+    flow = _chat_flow()
+    with patch("azure.ai.evaluation._legacy.prompty.AsyncPrompty.load", return_value=flow):
+        evaluator = OutputQualityEvaluator(CONFIG if backend == "native" else CHAT_CONFIG)
+    post = _native_post(OutputQualityEvaluator) if backend == "native" else None
+    if post is not None:
+        evaluator._decision_model_runner._post = post
+    client = RunSubmitterClient()
+    try:
+        run = client.run(evaluator, rows, evaluator_name="output_quality",
+                         column_mapping={key: f"${{data.{key}}}" for key in ("query", "response", "context")})
+        summary = client.get_run_summary(run)
+    finally:
+        client._thread_pool.shutdown(wait=True)
+    assert summary["failed_lines"] == 0
+    if post is not None:
+        sent = [json.loads(call.args[0]) for call in post.await_args_list]
+        grounded = [body for body in sent if "groundedness_context" in body["state"]]
+        assert [body["state"]["query"] for body in grounded] == ["Q0"]
+        assert grounded[0]["state"]["groundedness_context"] == CONTEXT
+        assert list(grounded[0]["questions"]) == ["groundedness_status", "groundedness"]
+        plain = [body["state"]["query"] for body in sent if "groundedness_context" not in body["state"]]
+        assert sorted(plain) == ["Q0", "Q1", "Q2", "Q3", "Q4"]
+        return
+    by_query = {inputs["query"]: inputs for inputs in (call.kwargs for call in flow.await_args_list)}
+    assert sorted(by_query) == ["Q0", "Q1", "Q2", "Q3", "Q4"]
+    assert by_query["Q0"]["context"] == CONTEXT
+    assert all("context" not in by_query[query] for query in ("Q1", "Q2", "Q3", "Q4"))
+
+
+def test_output_quality_conversation_turns_keep_their_native_state():
+    """Keep each converted turn's request: no invented context and no added keys."""
+    evaluator = OutputQualityEvaluator(CONFIG)
+    post = AsyncMock(side_effect=[_native(OutputQualityEvaluator), _native(OutputQualityEvaluator)])
+    evaluator._decision_model_runner._post = post
+    evaluator(conversation={"context": "Conversation context is not read.", "messages": [
+        {"role": role, "content": f"{role}-{turn}"} for turn in range(2) for role in ("user", "assistant")
+    ]})
+    assert [json.loads(call.args[0])["state"] for call in post.await_args_list] == [
+        {"query": "user-0", "response": "assistant-0"}, {"query": "user-1", "response": "assistant-1"},
+    ]
 
 
 def test_binary_public_member_threshold_is_independent_of_probability_cutoff():

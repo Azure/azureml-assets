@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 """Smoke tests running a job in the ai-ml-automl-dnn-vision-gpu environment."""
-# This only tests that scikit-learn training can be dome in the environment.
+# Test AutoML vision imports, CPU/CUDA NMS, YOLO ONNX export, and scikit-learn training.
 # After the environment is deployed, notebooks tests should be run before updating
 # the "Prod" label in the Jasmine service
 import os

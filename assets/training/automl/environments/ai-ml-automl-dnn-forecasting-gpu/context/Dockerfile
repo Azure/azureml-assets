@@ -1,5 +1,8 @@
 FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04:{{latest-image-tag}}
 
+# IMPORTANT (2026-10-26): Python was upgraded from 3.10 to 3.11 for Pillow 13 security fixes.
+# Downstream users must update interpreter-specific paths, wheels, and compiled dependencies for Python 3.11.
+
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl-dnn-forecasting-gpu
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
@@ -56,7 +59,7 @@ RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'pip>=26.1'
 
 # Create conda environment; packages are installed via pip to avoid solver OOM.
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    python=3.10 \
+    python=3.11 \
     -c conda-forge && \
     conda clean -a -y
 
@@ -68,8 +71,25 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
     'scipy==1.10.1' \
     'psutil>=5.2.2,<6.0.0' \
     'pip>=26.1' \
-    'setuptools>=83.0.0' \
+    'setuptools>=84.1.0' \
     'wheel>=0.46.2'
+
+# Build the legacy pmdarima pin before AzureML installs it transitively.
+RUN pip install --no-cache-dir --upgrade \
+        'setuptools==59.8.0' 'Cython<3' 'numpy>=1.23.5,<1.24' wheel && \
+    pip wheel --no-cache-dir --no-deps --no-build-isolation \
+        --wheel-dir /opt/pmdarima-wheel 'pmdarima==1.8.5' && \
+    pip install --no-cache-dir --no-index --find-links /opt/pmdarima-wheel \
+        --no-deps 'pmdarima==1.8.5' && \
+    pip install --no-cache-dir --upgrade 'setuptools>=84.1.0'
+
+ENV PIP_FIND_LINKS=/opt/pmdarima-wheel
+
+# pmdarima 1.8.5 imports pkg_resources, which patched setuptools no longer ships.
+RUN find $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/pmdarima -type f -name '*.py' \
+        -exec sed -i 's/from pkg_resources import parse_version/from packaging.version import parse as parse_version/' {} + && \
+    ! grep -R 'from pkg_resources import parse_version' \
+        $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/pmdarima
 
 # Install AzureML dependencies with security constraints for transitive packages
 # pulled in by the AzureML AutoML stack.
@@ -77,21 +97,21 @@ RUN printf '%s\n' \
                 '# GitPython pinned transitive dep of azureml-core; fixes GHSA-2f96-g7mh-g2hx, GHSA-956x-8gvw-wg5v, GHSA-v396-v7q4-x2qj, GHSA-94p4-4cq8-9g67, GHSA-fjr4-x663-mwxc, GHSA-6p8h-3wgx-97gf, and GHSA-r9mr-m37c-5fr3' \
                 'GitPython>=3.1.55' \
                 '# msgpack pinned transitive dep of AzureML AutoML/Dask; fixes GHSA-6v7p-g79w-8964' \
-                'msgpack>=1.2.1' \
+                'msgpack>=1.2.3' \
                 '# numpy is NOT a security floor. onnx pulls ml_dtypes, which as of 0.6.0 requires numpy>=2.0.0; without this cap the security-override resolve below silently upgrades numpy to 2.x, contradicting azureml-automl-runtime/numba/scipy and leaving the prebuilt pandas 1.5.3 wheel binary-incompatible, so the image fails on import pandas with "numpy.dtype size changed".' \
                 'numpy>=1.23.5,<1.24' \
-                '# pillow pinned transitive dep of matplotlib/bokeh/tensorboard; fixes GHSA-8v84-f9pq-wr9x, GHSA-9hw9-ch79-4vh6, GHSA-vjc4-5qp5-m44j, GHSA-pg7v-jwj7-p798, GHSA-45hq-cxwh-f6vc, GHSA-phj9-mv4w-65pm, GHSA-62p4-gmf7-7g93, and GHSA-5x94-69rx-g8h2' \
-                'pillow>=12.3.0' \
+                '# pillow pinned transitive dep of matplotlib/bokeh/tensorboard; Pillow 13 fixes the current advisories' \
+                'pillow>=13.0.0' \
                 '# pydantic-settings pinned transitive dep of AzureML/MLflow; fixes GHSA-4xgf-cpjx-pc3j' \
                 'pydantic-settings>=2.14.2' \
                 '# pyasn1 pinned transitive dep of azure-identity/msal; fixes GHSA-hm4w-wwcw-mr6r and GHSA-8ppf-4f7h-5ppj' \
                 'pyasn1>=0.6.4' \
                 '# setuptools pinned packaging tool in this conda env; fixes GHSA-h35f-9h28-mq5c' \
-                'setuptools>=83.0.0' \
+                'setuptools>=84.1.0' \
                 '# sqlparse pinned transitive dep of mlflow-skinny; fixes GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr, GHSA-3496-9g83-7v6x, and GHSA-pwgv-4x5q-6m9f' \
                 'sqlparse>=0.6.0' \
                 > /tmp/security-constraints.txt && \
-    pip install --no-cache-dir -c /tmp/security-constraints.txt \
+    pip install --no-cache-dir --use-deprecated=legacy-resolver -c /tmp/security-constraints.txt \
                 azureml-core=={{latest-pypi-version}} \
                 azureml-mlflow=={{latest-pypi-version}} \
                 azureml-defaults=={{latest-pypi-version}} \
@@ -110,7 +130,7 @@ RUN printf '%s\n' \
 RUN pip install --no-cache-dir --upgrade 'azure-identity>=1.25.1'
 
 # Install packages with torch packages separately to reduce layer size
-RUN pip install --no-cache-dir -c /tmp/security-constraints.txt \
+RUN pip install --no-cache-dir --use-deprecated=legacy-resolver -c /tmp/security-constraints.txt \
                 azureml-train-automl=={{latest-pypi-version}} \
                 azureml-train-automl-client=={{latest-pypi-version}} \
                 azureml-train-automl-runtime=={{latest-pypi-version}} \
@@ -121,7 +141,7 @@ RUN pip install --no-cache-dir -c /tmp/security-constraints.txt \
 # cryptography>=50.0.0: CVE-2026-26007 (via azureml-mlflow, azure-identity, azureml-core -> msal/pyopenssl)
 # mlflow-skinny>=2.16.0: security fixes (via azureml-mlflow, azureml-contrib-automl-dnn-forecasting)
 # protobuf>=5.29.6: CVE-2026-0994 (via mlflow-skinny, azureml-automl-runtime -> onnx/onnxruntime)
-# pillow>=12.3.0: current Pillow GHSA findings (via matplotlib, bokeh, tensorboard)
+# pillow>=13.0.0: current Pillow GHSA findings (via matplotlib, bokeh, tensorboard)
 # bokeh>=3.8.2: GHSA-793v-589g-574v CSWSH (overrides azureml-train-automl-runtime's bokeh<3.0.0 cap)
 # onnx>=1.21.0: GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6, GHSA-538c-55jv-c5g9,
 #   GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m (via azureml-automl-runtime -> onnxconverter-common/skl2onnx)
@@ -132,7 +152,7 @@ RUN pip install --no-cache-dir --upgrade -c /tmp/security-constraints.txt \
                           'cryptography>=50.0.0' \
                           'mlflow-skinny>=2.16.0' \
                           'protobuf>=5.29.6' \
-                          'pillow>=12.3.0' \
+                          'pillow>=13.0.0' \
                           'bokeh>=3.8.2' \
                           'onnx>=1.21.0' \
                           'pyarrow>=23.0.1' \
@@ -159,23 +179,29 @@ RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
 
 # Normalize pip's vendored inventory after the corresponding packages are upgraded.
 RUN find /opt /azureml-envs /root -path '*/pip/_vendor/vendor.txt' -type f -exec \
-        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} + && \
+        sed -i -E 's/setuptools==70\.3\.0/setuptools==84.1.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} + && \
     find /opt /azureml-envs /root -path '*/pip/_vendor/bom.cdx.json' -type f -delete
 
-# Refresh packages for the latest Ubuntu security advisories.
+# Reassert newly patched transitive dependencies after all package installs.
+RUN /azureml-envs/azureml-automl-dnn-forecasting-gpu/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0' 'oauthlib>=4.0.0' && \
+    /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0'
+
+# Reassert November 2026 vulnerability-report floors in the scanned Python prefixes.
+RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'certifi>=2026.10.19'
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/python -m pip install --no-cache-dir --upgrade 'opentelemetry-api>=1.45.1'
+
+# Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="curl libcurl3-gnutls libcurl4 libexpat1 libssl3 openssl"; \
+    security_packages="libnginx-mod-http-echo libbrotli1"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
             installed_packages="$installed_packages $package"; \
         fi; \
     done; \
-    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    if [ -n "$installed_packages" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade $installed_packages; \
+    fi; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
-
-# Reassert newly patched transitive dependencies after all package installs.
-RUN /azureml-envs/azureml-automl-dnn-forecasting-gpu/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0' 'oauthlib>=4.0.0' && \
-    /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0'

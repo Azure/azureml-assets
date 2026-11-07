@@ -1,5 +1,8 @@
 FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
 
+# IMPORTANT (2026-10-26): Python was upgraded from 3.10 to 3.11 for Pillow 13 security fixes.
+# Downstream users must update interpreter-specific paths, wheels, and compiled dependencies for Python 3.11.
+
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
@@ -11,40 +14,39 @@ ENV PYTHONIOENCODING=utf-8
 ENV PIP_NO_COLOR=1
 ENV PIP_PROGRESS_BAR=off
 
-# Upgrade vulnerable Ubuntu packages inherited from the base image when this image variant includes them.
-RUN set -eux; \
-    apt-get update; \
-    os_security_packages="coreutils curl diffutils gir1.2-glib-2.0 gzip libarchive13 libattr1 libc-bin libc-dev-bin libc6 libc6-dev libasound2 libasound2-data libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libevent-core-2.1-7 libexpat1 libgcrypt20 libglib2.0-0t64 libglib2.0-data libgssapi-krb5-2 libk5crypto3 libkrb5-3 libkrb5support0 libnghttp2-14 libnginx-mod-http-echo libnginx-mod-http-geoip2 libp11-kit0 libpam-modules libpam-modules-bin libpam-runtime libpam0g libperl5.34 libperl5.38 libperl5.38t64 libpython3.10-minimal libpython3.10-stdlib libpython3.12-minimal libpython3.12-stdlib libsqlite3-0 libssh-4 libssl3 libssl3t64 libxml2 nginx nginx-common nginx-light openssh-client openssh-server openssh-sftp-server openssl perl perl-base perl-modules-5.34 perl-modules-5.38 python3.10 python3.10-minimal python3.12 python3.12-minimal rsyslog tar wget zlib1g"; \
-    installed_os_packages=""; \
-    for package in $os_security_packages; do \
-        if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
-            installed_os_packages="$installed_os_packages $package"; \
-        fi; \
-    done; \
-    if [ -n "$installed_os_packages" ]; then \
-        apt-get install -y --only-upgrade $installed_os_packages; \
-    fi; \
-    apt-get clean; \
-    rm -rf /var/lib/apt/lists/*
-
 RUN conda create -q -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    python=3.10 \
+    python=3.11 \
     -c conda-forge && \
     conda clean -q -a -y
 
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --progress-bar off --upgrade \
     'pip>=26.2.0' \
-    'msgpack>=1.2.1' \
-    'setuptools>=83.0.0'
+    'msgpack>=1.2.3' \
+    'setuptools>=84.1.0'
 
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --progress-bar off \
     'py-cpuinfo==5.0.0' \
     'joblib==1.2.0' \
-    'msgpack>=1.2.1' \
+    'msgpack>=1.2.3' \
     'setuptools-git' \
-    'setuptools>=83.0.0' \
+    'setuptools>=84.1.0' \
     'psutil>5.0.0,<6.0.0' \
     'torch==2.13.0'
+
+# azureml-automl-runtime pins pmdarima 1.8.5, whose legacy build metadata omits
+# NumPy and no longer builds in an isolated environment with current setuptools.
+# Build it first with explicit build dependencies, then restore patched setuptools.
+RUN pip install --no-cache-dir --progress-bar off --upgrade \
+        'setuptools==59.8.0' 'Cython<3' 'numpy>=1.23.5,<1.24' wheel && \
+    pip install --no-cache-dir --progress-bar off --no-deps --no-build-isolation \
+        'pmdarima==1.8.5' && \
+    pip install --no-cache-dir --progress-bar off --upgrade 'setuptools>=84.1.0'
+
+# pmdarima 1.8.5 imports pkg_resources, which patched setuptools no longer ships.
+RUN find $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/pmdarima -type f -name '*.py' \
+        -exec sed -i 's/from pkg_resources import parse_version/from packaging.version import parse as parse_version/' {} + && \
+    ! grep -R 'from pkg_resources import parse_version' \
+        $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/pmdarima
 
 # Install pip dependencies, then apply security overrides for vulnerable transitive packages.
 # distributed and bokeh are pinned transitive deps of azureml-train-automl-runtime; fixes CVE-2026-23528 and GHSA-793v-589g-574v.
@@ -64,17 +66,17 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --pr
 RUN printf '%s\n' \
                 'cryptography>=50.0.0' \
                 'GitPython>=3.1.58' \
-                'msgpack>=1.2.1' \
+                'msgpack>=1.2.3' \
                 'numpy>=1.23.5,<1.24' \
-                'pillow>=12.3.0' \
+                'pillow>=13.0.0' \
                 'pydantic-settings>=2.14.2' \
                 'pyasn1>=0.6.4' \
-                'setuptools>=83.0.0' \
+                'setuptools>=84.1.0' \
                 'sqlparse>=0.6.0' \
                 > /tmp/security-constraints.txt && \
     pip install --no-cache-dir --progress-bar off --upgrade --use-deprecated=legacy-resolver -c /tmp/security-constraints.txt \
-                'msgpack>=1.2.1' \
-                'setuptools>=83.0.0' \
+                'msgpack>=1.2.3' \
+                'setuptools>=84.1.0' \
                 azureml-core=={{latest-pypi-version}} \
                 azureml-mlflow=={{latest-pypi-version}} \
                 azureml-pipeline-core=={{latest-pypi-version}} \
@@ -96,21 +98,21 @@ RUN printf '%s\n' \
                 'mltable>=1.0.0' \
                 'cryptography>=50.0.0' \
                 'GitPython>=3.1.58' \
-                'msgpack>=1.2.1' \
-                'pillow==12.3.0' \
+                'msgpack>=1.2.3' \
+                'pillow==13.0.0' \
                 'pydantic-settings>=2.14.2' \
                 'pyasn1>=0.6.4' \
-                'setuptools>=83.0.0' \
+                'setuptools>=84.1.0' \
                 'sqlparse>=0.6.0' && \
     pip install --no-cache-dir --progress-bar off --upgrade -c /tmp/security-constraints.txt \
                 'distributed>=2026.1.0' \
                 'bokeh>=3.8.2' \
                 'cryptography>=50.0.0' \
                 'onnx>=1.21.0' \
-                'pillow>=12.3.0' \
+                'pillow>=13.0.0' \
                 'pydantic-settings>=2.14.2' \
                 'pyasn1>=0.6.4' \
-                'setuptools>=83.0.0' \
+                'setuptools>=84.1.0' \
                 'python-dotenv>=1.2.2' \
                 'pyarrow>=23.0.1' \
                 'sqlparse>=0.6.0' && \
@@ -126,9 +128,9 @@ RUN if [ -x /opt/miniconda/bin/python ]; then \
         /opt/miniconda/bin/python -m pip install --no-cache-dir --progress-bar off --upgrade \
             'cryptography>=50.0.0' \
             'h2>=4.4.1' \
-            'msgpack>=1.2.1' \
+            'msgpack>=1.2.3' \
             'pydantic-settings>=2.14.2' \
-            'setuptools>=83.0.0'; \
+            'setuptools>=84.1.0'; \
     fi
 
 RUN pip install --no-deps --force-reinstall 'skl2onnx==1.19.1'
@@ -142,35 +144,49 @@ RUN python /tmp/patch_automl_pandas2_sparse.py && \
 # Patch the PTCA conda environment when present.
 # pip>=26.2.0 fixes GHSA-qwm4-qh6w-59xr; VCM reads the conda-meta record, so
 #   conda must update it.
-# msgpack>=1.2.1 fixes GHSA-6v7p-g79w-8964 in inherited PTCA environments.
-# setuptools>=83.0.0 fixes GHSA-h35f-9h28-mq5c in Python prefixes that carry older setuptools.
+# msgpack>=1.2.3 fixes GHSA-6v7p-g79w-8964 in inherited PTCA environments.
+# setuptools>=84.1.0 fixes GHSA-h35f-9h28-mq5c in Python prefixes that carry older setuptools.
 # sqlparse>=0.6.0 fixes GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr, GHSA-3496-9g83-7v6x, and GHSA-pwgv-4x5q-6m9f in inherited PTCA environments.
 # torch==2.13.0 fixes GHSA-rrmf-rvhw-rf47, GHSA-vgrw-7cvw-pwgx, and
 #   GHSA-qfhq-4f3w-5fph in inherited PTCA environments.
 RUN set -eux; \
     if [ -d /opt/conda/envs/ptca ]; then \
         conda install -p /opt/conda/envs/ptca -c conda-forge -y 'pip>=26.2.0'; \
-        conda run -p /opt/conda/envs/ptca python -m pip install --no-cache-dir --progress-bar off --upgrade 'torch==2.13.0' 'msgpack>=1.2.1' 'setuptools>=83.0.0' 'cryptography>=50.0.0' 'GitPython>=3.1.58' 'sqlparse>=0.6.0'; \
+        conda run -p /opt/conda/envs/ptca python -m pip install --no-cache-dir --progress-bar off --upgrade 'torch==2.13.0' 'msgpack>=1.2.3' 'setuptools>=84.1.0' 'cryptography>=50.0.0' 'GitPython>=3.1.58' 'sqlparse>=0.6.0'; \
     fi
 
 # Normalize pip's vendored inventory after the corresponding packages are upgraded.
 RUN find /opt /azureml-envs /root -path '*/pip/_vendor/vendor.txt' -type f -exec \
-        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} + && \
+        sed -i -E 's/setuptools==70\.3\.0/setuptools==84.1.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} + && \
     find /opt /azureml-envs /root -path '*/pip/_vendor/bom.cdx.json' -type f -delete
 
-# Refresh packages for the latest Ubuntu security advisories.
+# XGBoost 1.5.2 uses pkg_resources only to detect optional Dask support.
+RUN sed -i \
+        -e 's/import pkg_resources/from importlib import metadata as importlib_metadata/' \
+        -e 's/pkg_resources\.get_distribution/importlib_metadata.distribution/g' \
+        -e 's/pkg_resources\.DistributionNotFound/importlib_metadata.PackageNotFoundError/g' \
+        $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/xgboost/compat.py && \
+    ! grep -q 'pkg_resources' \
+        $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/xgboost/compat.py
+
+# Reassert newly patched transitive dependencies after all package installs.
+RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0'
+
+# Reassert November 2026 vulnerability-report floors in the scanned Python prefixes.
+RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'certifi>=2026.10.19'
+
+# Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="libssl3t64 openssl"; \
+    security_packages="nginx libbrotli1"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
             installed_packages="$installed_packages $package"; \
         fi; \
     done; \
-    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    if [ -n "$installed_packages" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade $installed_packages; \
+    fi; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
-
-# Reassert newly patched transitive dependencies after all package installs.
-RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0'

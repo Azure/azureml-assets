@@ -146,9 +146,9 @@ RUN LOG4J_VERSION=${LOG4J_VERSION} \
 COPY patch_ray_jackson.py /tmp/patch_ray_jackson.py
 # Ray vendors Jackson inside its fat jar; patch the embedded classes and Maven
 # metadata so the embedded dependency is consistently upgraded.
-RUN JACKSON_CORE_VERSION=2.21.5 \
-    JACKSON_CORE_JAR_SHA1=7ec0c8bf8402fa998f64b2009632d6566a42ceb7 \
-    JACKSON_CORE_POM_SHA1=32a98918e6a365962063ac88abe54b1251f1c2d0 \
+RUN JACKSON_CORE_VERSION=2.21.7 \
+    JACKSON_CORE_JAR_SHA1=5abfb904683e642f4a5458f2a78ab9308c7c5a46 \
+    JACKSON_CORE_POM_SHA1=001d8b74379bebc7478521efe15d9b50f0eab00c \
     JACKSON_DATABIND_VERSION=2.21.7 \
     JACKSON_DATABIND_JAR_SHA1=a2ebbc72e3092323f0f3defa786ff3bb0c47218c \
     JACKSON_DATABIND_POM_SHA1=2042d73ac64ef7586d763c44aff5398753941fde \
@@ -327,7 +327,7 @@ RUN chmod -R a+rX /opt/slime /opt/Megatron-LM
 # Refresh packages for the latest Ubuntu security advisories.
 RUN set -eux; \
     apt-get update; \
-    security_packages="libssl3t64 openssl"; \
+    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libssl3t64 openssh-client openssh-server openssh-sftp-server openssl"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \

@@ -36,7 +36,7 @@ on:
 
 jobs:
   check-execution-context:
-    uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
+    uses: $/.github/workflows/check-execution-context.yaml
 
   build:
     needs: check-execution-context
@@ -44,6 +44,13 @@ jobs:
     steps:
       - run: echo "Add build/test steps here"
 ```
+
+The [self-repository syntax](https://github.blog/changelog/2026-07-30-reference-same-repository-actions-with-self-repository-syntax/)
+resolves the gate at the calling workflow's commit and requires GitHub Actions
+runner 2.336.0 or newer. The validator also accepts the existing
+`Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main`
+reference during migration. Both forms require the same rejection/output
+contract and fail-closed job dependencies; alternate gate paths are not accepted.
 
 Every other job must depend on the gate, directly or through gated jobs.
 Conditions without status functions retain GitHub's implicit `success()` check.
@@ -97,10 +104,10 @@ The read-only `scripts-syntax` PR workflow also runs these regression tests.
 Those tests exercise proposed validator changes; the independent trusted-base
 policy check remains the enforcement authority.
 
-An exception for a new workflow must be reviewed and landed in the base policy
-first, then the workflow PR must receive a new update. Do not relax the checker
-in the same PR just to make a new workflow pass. Policy-sensitive changes are
-owned by `@azure/aml-assets` in `CODEOWNERS`.
+Support for a new gate reference, or an exception for a new workflow, must be
+reviewed and landed in the base policy first, then the workflow PR must receive
+a new update. Do not relax the checker in the same PR just to make a new workflow
+pass. Policy-sensitive changes are owned by `@azure/aml-assets` in `CODEOWNERS`.
 
 **Administrator setup:** after the initial policy implementation is merged into
 `main` and its check has appeared, require

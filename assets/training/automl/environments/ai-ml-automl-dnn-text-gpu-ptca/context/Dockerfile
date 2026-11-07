@@ -2,6 +2,28 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 
 USER root:root
 
+# IMPORTANT (2026-10-26): Python was upgraded from 3.10 to 3.11 for Pillow 13 security fixes.
+# Downstream users must update interpreter-specific paths, wheels, and compiled dependencies for Python 3.11.
+RUN conda install -n ptca -c conda-forge -y python=3.11 pip && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.10 && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.8.0+cu126' 'torchvision==0.23.0+cu126' 'torchaudio==2.8.0+cu126' && \
+    conda clean -a -y
+
+# Build the legacy pmdarima pin before AzureML installs it transitively.
+RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade \
+        'setuptools==59.8.0' 'Cython<3' 'numpy>=1.23.5,<1.24' wheel && \
+    conda run -n ptca python -m pip install --no-cache-dir --no-deps --no-build-isolation \
+        'pmdarima==1.8.5' && \
+    conda run -n ptca python -m pip install --no-cache-dir --upgrade 'setuptools>=84.1.0'
+
+# pmdarima 1.8.5 imports pkg_resources, which patched setuptools no longer ships.
+RUN find /opt/conda/envs/ptca/lib/python3.11/site-packages/pmdarima -type f -name '*.py' \
+        -exec sed -i 's/from pkg_resources import parse_version/from packaging.version import parse as parse_version/' {} + && \
+    ! grep -R 'from pkg_resources import parse_version' \
+        /opt/conda/envs/ptca/lib/python3.11/site-packages/pmdarima
+
 # Upgrade Ubuntu security fixes inherited from the ACPT base image.
 RUN apt-get update && \
     apt-get upgrade -y && \
@@ -15,7 +37,11 @@ RUN pip install --no-cache-dir --use-deprecated=legacy-resolver \
 # onnx and onnxruntime-training installation
 RUN pip uninstall -y onnxruntime
 RUN pip uninstall -y onnxruntime-training
-RUN pip install -i https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/ onnxruntime-training==1.18.0
+RUN pip install \
+        cerberus flatbuffers h5py 'numpy>=1.16.6' onnx packaging protobuf sympy 'setuptools>=61.0.0' && \
+    pip install --no-deps \
+        --index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/ \
+        onnxruntime-training==1.18.0
 
 # torch-ort installation
 RUN TORCH_CUDA_ARCH_LIST="5.2;6.0;7.0;8.0;8.6;9.0" python -m onnxruntime.training.ortmodule.torch_cpp_extensions.install
@@ -32,7 +58,7 @@ RUN pip install \
 # version, so direct override is required.
 RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.10.0'
 
-# Vulnerability patches for ptca environment (python 3.10 at /opt/conda/envs/ptca)
+# Vulnerability patches for ptca environment (python 3.11 at /opt/conda/envs/ptca)
 # pip -> >=26.1.2 (GHSA-jp4c-xjxw-mgf9, CVE-2026-6357,
 #   GHSA-wf93-45jw-7689 / CVE-2026-8643): no parent
 #   package controls pip here, so direct upgrade is required. The stale
@@ -67,19 +93,20 @@ RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.1
 #   the patched version, so direct override is required.
 RUN conda install -p /opt/conda/envs/ptca -c conda-forge -y 'pip>=26.1.2' && \
     /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
-    'setuptools>=83.0.0' \
-    'msgpack>=1.2.1' \
+    'setuptools>=84.1.0' \
+    'msgpack>=1.2.3' \
     'numpy<2' \
     'onnx>=1.21.0' \
     'bokeh>=3.8.2' \
     'distributed>=2026.1.0' \
-    'aiohttp>=3.14.0' \
+    'aiohttp>=3.14.4' \
     'httpx<1' \
     'huggingface-hub>=1.5.0,<2.0' \
     'pyarrow>=23.0.1' \
     'cryptography>=50.0.0' \
     'GitPython>=3.1.57' \
-    'sqlparse>=0.6.0' && \
+    'sqlparse>=0.6.0' \
+    'pillow>=13.0.0' && \
     rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0.1-*.json \
           /opt/conda/envs/ptca/conda-meta/pip-26.1.1-*.json
 
@@ -122,15 +149,15 @@ RUN /opt/conda/bin/pip install --no-cache-dir --upgrade \
     'urllib3>=2.7.0' \
     'idna>=3.15' \
     'click>=8.3.3' \
-    'setuptools>=83.0.0' \
+    'setuptools>=84.1.0' \
     'python-dotenv>=1.2.2' \
-    'aiohttp>=3.14.0' \
+    'aiohttp>=3.14.4' \
     'anyio>=4.14.2' \
     'PyJWT>=2.13.0' \
     'py-rattler>=0.24.0' \
     'cryptography>=50.0.0' \
     'pydantic-settings>=2.14.2' \
-    'msgpack>=1.2.1' && \
+    'msgpack>=1.2.3' && \
     rm -rf /opt/conda/pkgs/click-8.2.1-* \
            /opt/conda/pkgs/idna-3.11-* \
            /opt/conda/pkgs/pip-26.0.1-* \
@@ -147,7 +174,7 @@ RUN /opt/conda/envs/ptca/bin/pip uninstall -y torchaudio && \
         --index-url https://download.pytorch.org/whl/cu126 \
         'torch==2.13.0' 'torchvision==0.28.0' && \
     /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade --no-deps \
-        'setuptools>=83.0.0' 'huggingface-hub==1.33.0' 'tokenizers==0.22.2'
+        'setuptools>=84.1.0' 'huggingface-hub==1.33.0' 'tokenizers==0.22.2'
 
 # pip 26.2.1's vendor inventories report its private setuptools 70.3.0 and
 # msgpack 1.1.2 copies as pathless packages. Remove generated pip vendor
@@ -177,16 +204,27 @@ RUN set -eu; \
     if find "$@" -type f -path '*/pip/_vendor/vendor.txt' \
         -exec grep -IlE '^(setuptools==70\.3\.0|msgpack==1\.1\.2)$' {} + | grep -q .; then exit 1; fi
 
-# Refresh packages for the latest Ubuntu security advisories.
+RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade \
+    'datasets>=5.0.1' 'fsspec>=2026.6.0'
+
+# Reassert November 2026 vulnerability-report floors in the scanned Python prefixes.
+RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'certifi>=2026.10.19' 'brotlicffi>=1.2.1.0' 'opentelemetry-api>=1.45.1' && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/certifi-2024.7.4.dist-info && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/opentelemetry__api-1.43.0.dist-info
+RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'opentelemetry-api>=1.45.1'
+
+# Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="libssl-dev libssl3 openssl"; \
+    security_packages="dotnet-hostfxr-8.0 libbrotli1"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
             installed_packages="$installed_packages $package"; \
         fi; \
     done; \
-    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    if [ -n "$installed_packages" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade $installed_packages; \
+    fi; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*

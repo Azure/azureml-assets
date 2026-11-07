@@ -98,7 +98,7 @@ RUN pip install --no-cache-dir --upgrade 'onnx>=1.21.0'
 RUN /opt/conda/bin/conda install -n base -c conda-forge 'pip>=26.1' -y && \
     /opt/conda/bin/pip install --no-cache-dir --upgrade 'requests>=2.33.0' 'urllib3>=2.7.0' 'aiohttp>=3.14.0' 'wheel>=0.46.2' \
     'setuptools>=83.0.0' 'cryptography>=46.0.7' 'PyJWT>=2.12.0' \
-    'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3' 'pydantic-settings>=2.14.2' 'msgpack>=1.2.1' && \
+    'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3' 'pydantic-settings>=2.14.2' 'msgpack>=1.2.1' 'multidict>=6.9.1' && \
     find /opt/conda /root -type d \( -name 'setuptools-70.3.0.dist-info' -o -name 'msgpack-1.1.2.dist-info' \) -prune -exec rm -rf {} + && \
     rm -f /opt/conda/conda-meta/setuptools-70*.json \
           /opt/conda/conda-meta/msgpack-python-1.1*.json \
@@ -116,7 +116,8 @@ RUN /opt/conda/bin/conda install -n ptca -c conda-forge 'pip>=26.1' -y && \
     /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'filelock>=3.20.3' \
     'wheel>=0.46.2' 'setuptools>=83.0.0' 'protobuf>=6.33.5' \
     'pillow>=12.2.0' 'onnx>=1.21.0' 'requests>=2.33.0' 'urllib3>=2.7.0' \
-    'aiohttp>=3.14.0' 'pytest>=9.0.3' 'idna>=3.15' 'msgpack>=1.2.1' && \
+    'aiohttp>=3.14.0' 'pytest>=9.0.3' 'idna>=3.15' 'msgpack>=1.2.1' \
+    'fsspec>=2026.6.0' 'multidict>=6.9.1' && \
     find /opt/conda/envs/ptca /root -type d \( -name 'setuptools-70.3.0.dist-info' -o -name 'msgpack-1.1.2.dist-info' \) -prune -exec rm -rf {} + && \
     rm -f /opt/conda/envs/ptca/conda-meta/setuptools-70*.json \
           /opt/conda/envs/ptca/conda-meta/msgpack-python-1.1*.json \
@@ -161,7 +162,7 @@ ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
 # Refresh packages for the latest Ubuntu security advisories.
 RUN set -eux; \
     apt-get update; \
-    security_packages="libevent-core-2.1-7 libssl-dev libssl3 openssl"; \
+    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libevent-core-2.1-7 libssl-dev libssl3 libx11-6 libx11-data libx11-xcb1 openssh-client openssh-server openssh-sftp-server openssl"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \

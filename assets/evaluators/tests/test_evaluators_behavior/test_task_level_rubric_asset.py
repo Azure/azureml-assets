@@ -25,7 +25,7 @@ class TestTaskLevelRubricAsset:
         }
         assert SPEC["version"] == 2
         assert SPEC["evaluatorSubType"] == "service"
-        assert SPEC["supportedEvaluationLevels"] == ["conversation"]
+        assert SPEC["supportedEvaluationLevels"] == ["turn", "conversation"]
         assert not {"path", "code", "code_text", "blob_uri"} & SPEC.keys()
         assert SPEC["outputSchema"]["task_level_rubric"]["type"] == "boolean"
 
@@ -94,12 +94,46 @@ class TestTaskLevelRubricAsset:
         validator = Draft202012Validator(SPEC["dataMappingSchema"])
         assert list(validator.iter_errors(row))
 
+    @pytest.mark.parametrize("include_query_response", [False, True])
+    def test_messages_contract(self, include_query_response):
+        """Messages can replace query/response or accompany them."""
+        row = {
+            "messages": [
+                {"role": "user", "content": "Question"},
+                {"role": "assistant", "content": "Answer"},
+            ],
+            "rubric_dimensions": [
+                {"id": "quality", "description": "Answer", "weight": 1}
+            ],
+        }
+        if include_query_response:
+            row.update(query="Other question", response="Other answer")
+        validator = Draft202012Validator(SPEC["dataMappingSchema"])
+        assert validator.is_valid(row)
+        assert not validator.is_valid(
+            {key: value for key, value in row.items()
+             if key != "rubric_dimensions"}
+        )
+
+    @pytest.mark.parametrize("messages", [None, [], "[]", {}, [None], [1]])
+    def test_invalid_messages(self, messages):
+        """A messages mapping must contain a nonempty structured array."""
+        row = {
+            "messages": messages,
+            "rubric_dimensions": [
+                {"id": "quality", "description": "Answer", "weight": 1}
+            ],
+        }
+        assert not Draft202012Validator(
+            SPEC["dataMappingSchema"]
+        ).is_valid(row)
+
     @pytest.mark.parametrize(
         "count,valid",
-        [(0, False), (1, True), (10, True), (11, True), (20, True), (21, False)],
+        [(0, True), (1, True), (10, True), (11, True), (20, True), (21, False)],
     )
     def test_dimension_count(self, count, valid):
-        """The public schema accepts 1-20 dimensions, matching ACA."""
+        """The public schema accepts 0-20 dimensions, matching ACA."""
         schema = SPEC["dataMappingSchema"]
         assert schema["properties"]["rubric_dimensions"]["maxItems"] == 20
         row = {

@@ -18,7 +18,7 @@ import sys
 EXPECTED_VERSIONS = {
     "torch": "2.13.0",
     "torchvision": "0.28.0",
-    "vllm": "0.28.0",
+    "vllm": "0.30.0",
     "openai": "2.25.0",
     "nvidia-nccl-cu12": "2.29.7",
     "flashinfer-python": "0.6.13",

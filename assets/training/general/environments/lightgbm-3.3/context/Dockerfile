@@ -1,5 +1,8 @@
 FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
 
+# IMPORTANT (2026-10-26): Python was upgraded from 3.10 to 3.11 for Pillow 13 security fixes.
+# Downstream users must update interpreter-specific paths, wheels, and compiled dependencies for Python 3.11.
+
 WORKDIR /
 
 ENV CONDA_PREFIX=/azureml-envs/lightgbm-3.3
@@ -29,7 +32,7 @@ RUN apt-get update && \
 # setuptools=84.0.0: pinned transitive dep seeded by conda/pip; fixes CVE-2025-47273 and CVE-2026-59890.
 # msgpack-python=1.2.2: pinned transitive dep of distributed/dask; fixes GHSA-6v7p-g79w-8964.
 COPY conda_dependencies.yaml .
-RUN conda create -p $CONDA_PREFIX -q -y python=3.10 pip=26.2.1 setuptools=84.0.0 msgpack-python=1.2.2 'pandas~=1.5.3' 'scipy~=1.10.0' 'numpy~=1.22.0' -c conda-forge -c anaconda && \
+RUN conda create -p $CONDA_PREFIX -q -y python=3.11 pip=26.2.1 setuptools=84.0.0 msgpack-python=1.2.2 'pandas>=2.2,<2.3' 'scipy>=1.11,<1.12' 'numpy==1.26.4' -c conda-forge -c anaconda && \
     conda clean -a -y
 
 # Step 2: Install pip packages separately (pip resolver uses less memory than conda's SAT solver)
@@ -47,12 +50,12 @@ RUN conda create -p $CONDA_PREFIX -q -y python=3.10 pip=26.2.1 setuptools=84.0.0
 # pyarrow>=23.0.1: pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg.
 # starlette>=1.0.1 / idna>=3.15: transitive via fastapi / requests.
 # h2>=4.4.1: pinned transitive dep brought in by the base miniconda env; fixes GHSA-6hr6-w5qg-qmwg.
-# setuptools>=84.0.0 / msgpack>=1.2.2: pinned transitive deps introduced while
+# setuptools>=84.1.0 / msgpack>=1.2.3: pinned transitive deps introduced while
 # resolving distributed/dask and pip build dependencies; fix CVE-2025-47273,
 # CVE-2026-59890, and GHSA-6v7p-g79w-8964.
 # pip vendor inventory files are removed because VCM scans them as installed
 # packages even though they are non-runtime metadata.
-RUN printf "setuptools>=84.0.0\nmsgpack>=1.2.2\n" > /tmp/pip-security-constraints.txt
+RUN printf "setuptools>=84.1.0\nmsgpack>=1.2.3\n" > /tmp/pip-security-constraints.txt
 RUN PIP_CONSTRAINT=/tmp/pip-security-constraints.txt conda run -p $CONDA_PREFIX pip install --no-cache-dir \
     azureml-core=={{latest-pypi-version}} \
     azureml-defaults=={{latest-pypi-version}} \
@@ -68,13 +71,13 @@ RUN PIP_CONSTRAINT=/tmp/pip-security-constraints.txt conda run -p $CONDA_PREFIX 
     'ipykernel~=6.0' \
     tensorboard \
     'psutil~=5.8.0' \
-    'matplotlib~=3.5.0' \
+    'matplotlib>=3.10.8,<3.11' \
     'tqdm~=4.66.3' \
     py-cpuinfo==5.0.0 \
     'torch-tb-profiler~=0.4.0' \
     'starlette>=1.0.1' && \
     PIP_CONSTRAINT=/tmp/pip-security-constraints.txt conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
-        'aiohttp>=3.14.0' 'protobuf>=6.33.5' 'distributed>=2026.1.0' 'GitPython>=3.1.58' 'cryptography>=50.0.0' 'sqlparse>=0.6.0' 'idna>=3.15' 'starlette>=1.0.1' 'pyarrow>=23.0.1' 'setuptools>=84.0.0' 'msgpack>=1.2.2' && \
+        'aiohttp>=3.14.4' 'protobuf>=6.33.5' 'distributed>=2026.1.0' 'GitPython>=3.1.58' 'cryptography>=50.0.0' 'sqlparse>=0.6.0' 'idna>=3.15' 'starlette>=1.0.1' 'pyarrow>=23.0.1' 'setuptools>=84.1.0' 'msgpack>=1.2.3' && \
     PIP_CONSTRAINT=/tmp/pip-security-constraints.txt /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'cryptography>=50.0.0' 'h2>=4.4.1' 'idna>=3.15' && \
     rm conda_dependencies.yaml /tmp/pip-security-constraints.txt
 
@@ -83,20 +86,26 @@ RUN find /opt /azureml-envs /root -path '*/pip/_vendor/vendor.txt' -type f -exec
         sed -i -E 's/setuptools==70\.3\.0/setuptools==84.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.2/g' {} + && \
     find /opt /azureml-envs /root -path '*/pip/_vendor/bom.cdx.json' -type f -delete
 
-# Refresh packages for the latest Ubuntu security advisories.
+# Reassert newly patched transitive dependencies after all package installs.
+RUN /azureml-envs/lightgbm-3.3/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0' 'oauthlib>=4.0.0' 'urllib3>=2.8.0' && \
+    /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0' 'urllib3>=2.8.0' && rm -rf /opt/miniconda/pkgs/urllib3-2.7.0-*
+
+# Reassert November 2026 vulnerability-report floors in the scanned Python prefixes.
+RUN $CONDA_PREFIX/bin/python -m pip install --no-cache-dir --upgrade 'opentelemetry-api>=1.45.1'
+RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'certifi>=2026.10.19'
+
+# Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="curl libcurl3t64-gnutls libcurl4t64 libexpat1 libssl3t64 openssl"; \
+    security_packages="libbrotli1 nginx"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
             installed_packages="$installed_packages $package"; \
         fi; \
     done; \
-    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    if [ -n "$installed_packages" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade $installed_packages; \
+    fi; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
-
-# Reassert newly patched transitive dependencies after all package installs.
-RUN /azureml-envs/lightgbm-3.3/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0' 'oauthlib>=4.0.0' 'urllib3>=2.8.0' && \
-    /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0' 'urllib3>=2.8.0' && rm -rf /opt/miniconda/pkgs/urllib3-2.7.0-*

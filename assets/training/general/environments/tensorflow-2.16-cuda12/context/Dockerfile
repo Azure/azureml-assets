@@ -191,6 +191,7 @@ RUN apt-get update && \
 # re-upgraded here.
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+        libbrotli1 \
         nginx-common \
         nginx-light \
         libnginx-mod-http-geoip2 \
@@ -256,7 +257,7 @@ RUN conda run -p $CONDA_PREFIX conda install -c conda-forge openssl
 # GHSA-prg7-hcfm-mfcr, GHSA-3496-9g83-7v6x, and GHSA-pwgv-4x5q-6m9f
 # PyJWT>=2.13.0 fixes GHSA-993g-76c3-p5m4 and GHSA-jq35-7prp-9v3f
 # pyarrow>=23.0.1,<24 fixes GHSA-rgxp-2hwp-jwgg while staying compatible with azureml-dataset-runtime
-RUN conda run -p $CONDA_PREFIX pip install --upgrade 'pip>=26.1' 'cryptography>=50.0.0' 'setuptools>=83.0.0' 'protobuf>=5.29.6,<6' 'requests>=2.33.0' 'pillow>=12.2.0' 'starlette>=1.0.1' 'idna>=3.15' 'msgpack>=1.2.1' 'GitPython>=3.1.58' 'sqlparse>=0.6.0' 'PyJWT>=2.13.0' 'pyarrow>=23.0.1,<24' && \
+RUN conda run -p $CONDA_PREFIX pip install --upgrade 'pip>=26.1' 'cryptography>=50.0.0' 'setuptools>=83.0.0' 'protobuf>=5.29.6,<6' 'requests>=2.33.0' 'pillow>=12.2.0' 'starlette>=1.0.1' 'idna>=3.15' 'msgpack>=1.2.1' 'GitPython>=3.1.58' 'sqlparse>=0.6.0' 'PyJWT>=2.13.0' 'pyarrow>=23.0.1,<24' 'opentelemetry-api>=1.45.1' && \
     find $CONDA_PREFIX \( -iname '*setuptools*70.3.0*' -o -iname '*msgpack*1.1.2*' -o -path '*/pip/_vendor/bom.cdx.json' \) -exec rm -rf {} +
 
 # Upgrade vulnerable packages in the base miniconda env (python3.10)
@@ -294,7 +295,7 @@ ENV TF_USE_LEGACY_KERAS=1
 # Refresh packages for the latest Ubuntu security advisories.
 RUN set -eux; \
     apt-get update; \
-    security_packages="libssl3 openssl"; \
+    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libssl3 libx11-6 libx11-data libx11-xcb1 openssh-client openssh-server openssh-sftp-server openssl"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
@@ -307,3 +308,19 @@ RUN set -eux; \
 
 # Reassert newly patched transitive dependencies after all package installs.
 RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'urllib3>=2.8.0'
+
+# Reassert November 2026 OS-package floors for installed packages only.
+RUN set -eux; \
+    apt-get update; \
+    security_packages="libbrotli1 libnginx-mod-http-echo"; \
+    installed_packages=""; \
+    for package in $security_packages; do \
+        if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
+            installed_packages="$installed_packages $package"; \
+        fi; \
+    done; \
+    if [ -n "$installed_packages" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade $installed_packages; \
+    fi; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*
