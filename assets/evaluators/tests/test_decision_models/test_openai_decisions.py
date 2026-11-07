@@ -74,7 +74,7 @@ def test_packaged_openai_decisions(tmp_path, name, scenario):
         post.assert_awaited_once()
         assert error.value.properties["total_tokens"] == 13
         provenance = error.value.properties["decision_model"]
-        assert provenance["protocol"] == "openai" and provenance["error_kind"] == "model_refusal"
+        assert provenance["decision_protocol"] == "openai" and provenance["error_kind"] == "model_refusal"
         assert provenance["usage_details"] == {"input_tokens_details": {"cached_tokens": 4}}
         return
     result = evaluator(**_inputs(name))
@@ -85,7 +85,7 @@ def test_packaged_openai_decisions(tmp_path, name, scenario):
     for member in [member["name"] for member in getattr(evaluator, "_EVALUATORS", ())] or [name]:
         provenance = result[f"{member}_properties"]["decision_model"]
         # Answers are canonical: OpenAI provenance has the Microsoft shape and only names its protocol and model.
-        assert provenance["protocol"] == "openai" and provenance["model"] == DEPLOYMENT
+        assert provenance["decision_protocol"] == "openai" and provenance["model"] == DEPLOYMENT
         assert provenance["native_status_answer"]["type"] == "noul"
         assert provenance["usage_details"] == {"input_tokens_details": {"cached_tokens": 4}}
         if scenario != "skipped":

@@ -11,7 +11,7 @@ ineligible.
 
 The SDK translates the shared rubrics to OpenAI predicates and ordered score levels, and binds the answers back in
 the same canonical shape as Microsoft Decision answers, so each asset's score, applicability, threshold and
-composite contracts are unchanged. Provenance names the `protocol` and the returned model, which for Azure OpenAI
+composite contracts are unchanged. Provenance names the `decision_protocol` and the returned model, which for Azure OpenAI
 is the deployment alias. OpenAI's probability-weighted score is diagnostic, while ordinal metrics continue to use
 argmax. A refusal fails a result only when the asset reads the refused answer, with known usage; it never becomes a
 fabricated score or skip, and a refused grade behind a false applicability gate stays skipped.

@@ -216,8 +216,8 @@ jobs:
     permissions:
       contents: read
     env:
-      SDK_CANDIDATE_COMMIT: ee99b7368828db368f3e142a63049fef3d77945a
-      SDK_CANDIDATE_VERSION: 1.18.11
+      SDK_CANDIDATE_COMMIT: 4ea0574f14ce535c051b4a3f4eda614bd5815b28
+      SDK_CANDIDATE_VERSION: 1.18.12
     steps:
       - name: Clone branch
         uses: $/.github/actions/clone-repo
