@@ -1,5 +1,15 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
-ARG VLLM_WHEEL=https://github.com/vllm-project/vllm/releases/download/v0.30.0/vllm-0.30.0%2Bcu129-cp38-abi3-manylinux_2_28_x86_64.whl
+
+# IMPORTANT (2026-10-26): Python was upgraded from 3.10 to 3.11 for Pillow 13 security fixes.
+# Downstream users must update interpreter-specific paths, wheels, and compiled dependencies for Python 3.11.
+RUN conda install -n ptca -c conda-forge -y python=3.11 pip && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.10 && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.8.0+cu126' 'torchvision==0.23.0+cu126' 'torchaudio==2.8.0+cu126' && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir 'pillow>=13.0.0' && \
+    conda clean -a -y
+ARG VLLM_WHEEL=https://github.com/vllm-project/vllm/releases/download/v0.32.0/vllm-0.32.0%2Bcu129-cp38-abi3-manylinux_2_28_x86_64.whl
 USER root
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade --fix-missing || \
@@ -27,28 +37,28 @@ RUN pip install azureml-evaluate-mlflow=={{latest-pypi-version}} azureml-metrics
 RUN pip install -r requirements.txt --no-cache-dir
 RUN pip install verl==0.7.1
 RUN pip install sacrebleu==2.5.1
-COPY tracking /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/tracking.py
+COPY tracking /opt/conda/envs/ptca/lib/python3.11/site-packages/verl/utils/tracking.py
 
 RUN pip install --no-cache-dir accelerate==1.10.0
 RUN pip install --no-cache-dir sglang==0.5.15
 RUN pip install --no-cache-dir sglang-kernel==0.4.4
 
 RUN pip uninstall -y mlflow
-RUN pip install --no-cache-dir --force-reinstall "mlflow>=3.2.0,<4.0.0"
+RUN pip install --no-cache-dir --force-reinstall "mlflow>=3.2.0,<4.0.0" 'dnspython>=2.9.0'
 # Upgrade wandb to latest; remove wandb-core Go binary to fix GO-2026-4864..4947.
 # wandb 0.26.1 ships wandb-core compiled with Go 1.26.1 (needs 1.26.2); no fixed wandb release yet.
 # Removing the binary forces wandb to use its Python backend (safe fallback).
 RUN pip install --no-cache-dir --upgrade "wandb>=0.26.0" && \
     find /opt/conda/envs/ptca -name 'wandb-core' -path '*/wandb/bin/*' -delete 2>/dev/null || true
-COPY vllm_async_server /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/workers/rollout/vllm_rollout/vllm_async_server.py
-COPY __init__ /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/reward_score/__init__.py
-COPY azure_grader /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/reward_score/azure_grader.py
-COPY azure_python_grader /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/reward_score/azure_python_grader.py
-COPY utils /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/vllm/utils.py
+COPY vllm_async_server /opt/conda/envs/ptca/lib/python3.11/site-packages/verl/workers/rollout/vllm_rollout/vllm_async_server.py
+COPY __init__ /opt/conda/envs/ptca/lib/python3.11/site-packages/verl/utils/reward_score/__init__.py
+COPY azure_grader /opt/conda/envs/ptca/lib/python3.11/site-packages/verl/utils/reward_score/azure_grader.py
+COPY azure_python_grader /opt/conda/envs/ptca/lib/python3.11/site-packages/verl/utils/reward_score/azure_python_grader.py
+COPY utils /opt/conda/envs/ptca/lib/python3.11/site-packages/verl/utils/vllm/utils.py
 # vLLM's default PyPI wheel is built for CUDA 13. Install the official CUDA 12.9
 # wheel so A100 v4 hosts with a CUDA 12.8 driver can load vllm._C.
 RUN pip install --no-cache-dir "${VLLM_WHEEL}"
-# Keep native Torch packages on the CUDA lineage vLLM 0.28 was built against.
+# Keep native Torch packages on the CUDA lineage vLLM 0.32 was built against.
 # torchaudio is unused by this image and must not remain inherited at a
 # potentially incompatible ABI.
 RUN pip install --no-cache-dir --force-reinstall \
@@ -107,9 +117,9 @@ RUN pip install --upgrade 'cryptography>=48.0.1' 'pydantic-settings>=2.14.2' 'fa
 # PyJWT>=2.13.0 (base env, py3.14): GHSA-993g-76c3-p5m4, GHSA-jq35-7prp-9v3f / VCM 5013533,
 #   5013521. PyJWT is pulled transitively by various auth/azure packages; no parent pins
 #   >=2.13.0 in published releases. Direct override is the only remediation.
-# msgpack>=1.2.1 (base env, py3.14): GHSA-6v7p-g79w-8964 / VCM 5014304.
+# msgpack>=1.2.3 (base env, py3.14): GHSA-6v7p-g79w-8964 / VCM 5014304.
 #   msgpack is pulled transitively by distributed runtime packages with loose floors.
-# setuptools>=83.0.0 (base env, py3.14): GHSA-h35f-9h28-mq5c / VCM 5016030.
+# setuptools>=84.1.0 (base env, py3.14): GHSA-h35f-9h28-mq5c / VCM 5016030.
 #   setuptools is bootstrapped by the base conda image, so patch it directly.
 # anyio>=4.14.2 (base env, py3.14): GHSA-5p39-cfhj-2xmp, GHSA-82r6-8w77-94w6; transitive dep
 #   of httpx/starlette/mcp, none of which pin anyio>=4.14.2 in published releases. Direct
@@ -117,7 +127,7 @@ RUN pip install --upgrade 'cryptography>=48.0.1' 'pydantic-settings>=2.14.2' 'fa
 # Remove only obsolete pip/setuptools records and stale dependency SBOM metadata after upgrading.
 # virtualenv's PEP 770 SBOM advertises its bundled pip 26.0.1 seed wheel even though the
 # functional pip installations are upgraded above.
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'cryptography>=48.0.1' 'python-dotenv>=1.2.2' 'pip>=26.2.0' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'PyJWT>=2.13.0' 'msgpack>=1.2.1' 'setuptools>=83.0.0' 'anyio>=4.14.2' && \
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'cryptography>=48.0.1' 'python-dotenv>=1.2.2' 'pip>=26.2.0' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'PyJWT>=2.13.0' 'msgpack>=1.2.3' 'setuptools>=84.1.0' 'anyio>=4.14.2' && \
     rm -rf /opt/conda/lib/python3.14/site-packages/pip-26.0.1.dist-info \
            /opt/conda/lib/python3.14/site-packages/setuptools-82.0.1.dist-info && \
     rm -f /opt/conda/conda-meta/pip-26.0.1-*.json \
@@ -138,18 +148,18 @@ RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'cryptograp
     test -z "$stale_metadata"
 # GHSA-65pc-fj4g-8rjx: idna>=3.15 for ptca env (base env covered above)
 # GHSA-993g-76c3-p5m4, GHSA-jq35-7prp-9v3f: PyJWT>=2.13.0 for ptca env (base env covered above)
-# GHSA-h35f-9h28-mq5c: setuptools>=83.0.0 for ptca env (base env covered above)
-RUN pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.2.0' 'idna>=3.15' 'PyJWT>=2.13.0' 'setuptools>=83.0.0' && \
-    rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/pip-26.0.1.dist-info \
-           /opt/conda/envs/ptca/lib/python3.10/site-packages/setuptools-82.0.1.dist-info && \
+# GHSA-h35f-9h28-mq5c: setuptools>=84.1.0 for ptca env (base env covered above)
+RUN pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.2.0' 'idna>=3.15' 'PyJWT>=2.13.0' 'setuptools>=84.1.0' && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.11/site-packages/pip-26.0.1.dist-info \
+           /opt/conda/envs/ptca/lib/python3.11/site-packages/setuptools-82.0.1.dist-info && \
     rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0.1-*.json \
           /opt/conda/envs/ptca/conda-meta/setuptools-82.0.1-*.json \
           /opt/conda/envs/ptca/conda-meta/setuptools-70*.json /opt/conda/envs/ptca/conda-meta/setuptools-81*.json \
           /opt/conda/envs/ptca/conda-meta/msgpack-python-1.1*.json /opt/conda/envs/ptca/conda-meta/msgpack-1.1*.json && \
-    rm -f /opt/conda/envs/ptca/lib/python3.10/site-packages/pip/_vendor/bom.cdx.json \
-          /opt/conda/envs/ptca/lib/python3.10/site-packages/pip/_vendor/vendor.txt \
-          /opt/conda/envs/ptca/lib/python3.10/site-packages/virtualenv-*.dist-info/sboms/virtualenv.cdx.json && \
-    stale_metadata="$(find /opt/conda/envs/ptca/lib/python3.10/site-packages \
+    rm -f /opt/conda/envs/ptca/lib/python3.11/site-packages/pip/_vendor/bom.cdx.json \
+          /opt/conda/envs/ptca/lib/python3.11/site-packages/pip/_vendor/vendor.txt \
+          /opt/conda/envs/ptca/lib/python3.11/site-packages/virtualenv-*.dist-info/sboms/virtualenv.cdx.json && \
+    stale_metadata="$(find /opt/conda/envs/ptca/lib/python3.11/site-packages \
                            /opt/conda/envs/ptca/conda-meta \
                            \( -path '*/pip-26.0.1.dist-info' \
                               -o -path '*/setuptools-82.0.1.dist-info' \
@@ -161,12 +171,12 @@ RUN pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.2.0' 'i
     test -z "$stale_metadata"
 # Ray vendors its own copies of aiohttp and idna inside thirdparty_files/ for the runtime_env
 # agent; those vendored copies are not upgraded by the pip installs above.
-# aiohttp>=3.14.3 closes GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, and GHSA-mfx4-hv73-q22v.
-RUN conda run -n base python -m pip install --no-cache-dir 'aiohttp>=3.14.3' && \
-    pip install --no-cache-dir 'aiohttp>=3.14.3'
-RUN find /opt/conda/envs/ptca/lib/python3.10/site-packages/ray -type d -name 'thirdparty_files' | while read dir; do \
+# aiohttp>=3.14.4 closes GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, and GHSA-mfx4-hv73-q22v.
+RUN conda run -n base python -m pip install --no-cache-dir 'aiohttp>=3.14.4' && \
+    pip install --no-cache-dir 'aiohttp>=3.14.4'
+RUN find /opt/conda/envs/ptca/lib/python3.11/site-packages/ray -type d -name 'thirdparty_files' | while read dir; do \
       rm -rf "$dir"/aiohttp* "$dir"/idna* "$dir"/multidict*; \
-      pip install --no-cache-dir --target "$dir" 'aiohttp>=3.14.3' 'idna>=3.15' 'multidict>=6.9.1'; \
+      pip install --no-cache-dir --target "$dir" 'aiohttp>=3.14.4' 'idna>=3.15' 'multidict>=6.9.1'; \
     done
 # Ray's distribution jar shades vulnerable Maven artifacts that pip cannot upgrade.
 # Patch jackson-databind/core, vendored by ray, for GHSA-5jmj-h7xm-6q6v,
@@ -191,9 +201,12 @@ JACKSON_DATABIND_POM_SHA1=2042d73ac64ef7586d763c44aff5398753941fde \
     HTTPCORE5_VERSION=5.4.3 \
     HTTPCORE5_JAR_SHA1=32a0699fbcb103f5621c00983ee8f5aac080e4a6 \
     HTTPCORE5_POM_SHA1=4553084e7ef07928bc1c2b65d4b099b972ba53a6 \
+    GUAVA_VERSION=33.7.2-jre \
+    GUAVA_JAR_SHA1=e70def5b06cfb109ea050de99870e79c8ce80dbc \
+    GUAVA_POM_SHA1=aa78c19dd6023ef92b554d13ab4f6ed467e9f7bf \
     /opt/conda/envs/ptca/bin/python /tmp/patch_ray_jackson_databind.py && \
     rm -f /tmp/patch_ray_jackson_databind.py
-COPY vllm_rollout /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/workers/rollout/vllm_rollout/vllm_rollout.py
+COPY vllm_rollout /opt/conda/envs/ptca/lib/python3.11/site-packages/verl/workers/rollout/vllm_rollout/vllm_rollout.py
 # ---- verl RFT (GRPO) compatibility patches ----------------------------------
 # Reconciles the bundled kernels / transformers / vLLM / verl / flash-attn lineages
 # so the verl Reinforced Fine-Tuning (GRPO) recipe runs end-to-end (model load,
@@ -213,27 +226,37 @@ RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir "accelerate==1.14.0" && 
     /opt/conda/envs/ptca/bin/python /tmp/verl_rft_compat_patches.py && \
     rm -f /tmp/verl_rft_compat_patches.py
 COPY cuda_preflight.py /opt/conda/envs/ptca/bin/acft-rft-cuda-preflight
-RUN chmod +x /opt/conda/envs/ptca/bin/acft-rft-cuda-preflight && \
+RUN sed -i 's/\r$//' /opt/conda/envs/ptca/bin/acft-rft-cuda-preflight && \
+    chmod +x /opt/conda/envs/ptca/bin/acft-rft-cuda-preflight && \
     /opt/conda/envs/ptca/bin/acft-rft-cuda-preflight --skip-cuda
 RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
-ENV LD_LIBRARY_PATH=/opt/conda/envs/ptca/lib/python3.10/site-packages/nvidia/nccl/lib:${LD_LIBRARY_PATH} \
+ENV LD_LIBRARY_PATH=/opt/conda/envs/ptca/lib/python3.11/site-packages/nvidia/nccl/lib:${LD_LIBRARY_PATH} \
     PYTHONHASHSEED=random \
     PYTHONDONTWRITEBYTECODE=1
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/ /opt/conda/pkgs/
 
-# Refresh packages for the latest Ubuntu security advisories.
+# Reassert newly patched transitive dependencies after all package installs.
+RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'oauthlib>=4.0.0'
+
+# Reassert November 2026 vulnerability-report floors in the scanned Python prefix.
+RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade \
+    'certifi>=2026.10.19' 'opentelemetry-api>=1.45.1' 'brotlicffi>=1.2.1.0' && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/certifi-2024.7.4.dist-info && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/opentelemetry__api-1.43.0.dist-info
+RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'virtualenv>=21.14.9'
+
+# Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libevent-core-2.1-7 libssl-dev libssl3 libx11-6 libx11-data libx11-xcb1 libxml2 openssh-client openssh-server openssh-sftp-server openssl"; \
+    security_packages="libbrotli1 dotnet-hostfxr-8.0"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
             installed_packages="$installed_packages $package"; \
         fi; \
     done; \
-    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    if [ -n "$installed_packages" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade $installed_packages; \
+    fi; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
-
-# Reassert newly patched transitive dependencies after all package installs.
-RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'oauthlib>=4.0.0'

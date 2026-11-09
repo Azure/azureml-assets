@@ -4,6 +4,19 @@ USER root
 
 ENV PIP_PROGRESS_BAR=off
 
+# IMPORTANT (2026-10-26): Python was upgraded from 3.10 to 3.11 for Pillow 13 security fixes.
+# Downstream users must update interpreter-specific paths, wheels, and compiled dependencies for Python 3.11.
+RUN conda install -n ptca -c conda-forge -y python=3.11 pip && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.10 && \
+    conda clean -a -y
+
+# Reinstall the CUDA 12.6 PyTorch stack before compiling FlashAttention. The Python
+# migration's Conda solve may otherwise select a CUDA 13 build incompatible with this base.
+RUN conda run -n ptca python -m pip install --upgrade --no-cache-dir \
+    --index-url https://download.pytorch.org/whl/cu126 \
+    'torch==2.13.0' \
+    'torchvision==0.28.0'
+
 RUN apt-get update && apt-get -y upgrade && \
     apt-get install -y --only-upgrade \
       curl \
@@ -36,18 +49,18 @@ RUN pip install -r requirements.txt --no-cache-dir
 
 # sqlparse is a transitive dependency of mlflow; pin to >=0.6.0 for GHSA-f2ff-p2ww-7p4p,
 # GHSA-prg7-hcfm-mfcr, GHSA-3496-9g83-7v6x, and GHSA-pwgv-4x5q-6m9f.
-RUN pip install --no-cache-dir mlflow==3.15.0 'sqlparse>=0.6.0'
-RUN pip install nltk==3.10.3 --no-cache-dir
+RUN pip install --no-cache-dir mlflow==3.17.2 'sqlparse>=0.6.0' 'dnspython>=2.9.0'
+RUN pip install nltk==3.10.4 --no-cache-dir
 RUN python -m nltk.downloader punkt
 RUN python -m nltk.downloader punkt_tab
-RUN MAX_JOBS=$(nproc) pip install --no-cache-dir --upgrade flash-attn==2.8.3 --no-build-isolation
+RUN pip install --no-cache-dir 'flash-attn-4>=4.0.0b9'
 
 # Security overrides that cannot be added to requirements.txt without breaking pip resolution.
 # fastmcp: GHSA-rww4-4w9c-7733, GHSA-m8x7-r2rg-vh5g, GHSA-vv7q-7jx5-f767; >=3.2.0 required
 RUN pip install --upgrade --no-cache-dir 'fastmcp>=3.2.0'
 
 # pyasn1 is a transitive dep (mlflow -> databricks-sdk -> google-auth -> pyasn1-modules -> pyasn1);
-# parent packages use loose floors, so override to 0.6.4 for GHSA-8ppf-4f7h-5ppj/GHSA-hm4w-wwcw-mr6r.
+# parent packages use loose floors, so override to 0.6.5.
 # python-multipart: transitive dep (fastmcp → fastapi → python-multipart); fastapi pins >=0.0.18; override needed (GHSA-mj87-hwqh-73pj)
 # Mako: transitive dep (mlflow → alembic → Mako); alembic has no version constraint; override needed (GHSA-v92g-xgxw-vvmm)
 # python-dotenv: transitive dep (fastmcp → python-dotenv); fastmcp 3.2.4 uses >=1.1.0; override needed (GHSA-mf9w-mj56-hr94)
@@ -58,14 +71,14 @@ RUN pip install --upgrade --no-cache-dir 'fastmcp>=3.2.0'
 # urllib3: transitive dep brought in by many parents (requests, botocore, kubernetes, etc.); the closest
 #          parent `requests` declares `urllib3>=1.26,<3` (loose floor) so upgrading requests does
 #          not pull urllib3>=2.7.0; direct override required for GHSA-mf9v-mfxr-j63j, GHSA-qccp-gfcp-xxvc
-RUN pip install --upgrade --no-cache-dir pyasn1==0.6.4 'python-multipart>=0.0.26' 'Mako>=1.3.11' 'python-dotenv>=1.2.2' 'onnx>=1.21.0' 'skops>=0.13.0' 'urllib3>=2.7.0'
+RUN pip install --upgrade --no-cache-dir pyasn1==0.6.5 'python-multipart>=0.0.26' 'Mako>=1.3.11' 'python-dotenv>=1.2.2' 'onnx>=1.21.0' 'skops>=0.13.0' 'urllib3>=2.7.0'
 
 # setuptools is inherited from the ACPT base image in both conda envs; upgrade pip metadata and
 # override setuptools to fix GHSA-5rjg-fvgr-3xxf/GHSA-h35f-9h28-mq5c.
-RUN conda install -n base -c conda-forge --no-deps -y 'setuptools>=83.0.0' && \
-    conda install -n ptca -c conda-forge --no-deps -y 'setuptools>=83.0.0' && \
-    /opt/conda/bin/python -m pip install --upgrade --no-cache-dir 'pip>=26.1' 'setuptools==83.0.0' && \
-    conda run -n ptca python -m pip install --upgrade --no-cache-dir 'pip>=26.1' 'setuptools==83.0.0' && \
+RUN conda install -n base -c conda-forge --no-deps -y 'setuptools>=84.1.0' && \
+    conda install -n ptca -c conda-forge --no-deps -y 'setuptools>=84.1.0' && \
+    /opt/conda/bin/python -m pip install --upgrade --no-cache-dir 'pip>=26.1' 'setuptools==84.1.0' && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir 'pip>=26.1' 'setuptools==84.1.0' && \
     rm -rf /opt/conda/lib/python*/site-packages/setuptools-8[0-2].*.dist-info \
            /opt/conda/envs/*/lib/python*/site-packages/setuptools-8[0-2].*.dist-info \
            /opt/conda/lib/python*/site-packages/pip/_vendor/bom.cdx.json \
@@ -74,38 +87,40 @@ RUN conda install -n base -c conda-forge --no-deps -y 'setuptools>=83.0.0' && \
            /opt/conda/envs/*/lib/python*/site-packages/pip/_vendor/vendor.txt
 
 # msgpack and anyio are inherited by the base conda env; override their vulnerable versions.
-RUN /opt/conda/bin/python -m pip install --upgrade --no-cache-dir 'msgpack>=1.2.1' 'anyio>=4.14.2' && \
+RUN /opt/conda/bin/python -m pip install --upgrade --no-cache-dir 'msgpack>=1.2.3' 'anyio>=4.14.2' && \
     rm -rf /opt/conda/lib/python*/site-packages/msgpack-1.1*.dist-info
 
 # aiohttp and cryptography are inherited from the ACPT base image in the base and ptca conda envs.
 # cryptography is pinned as a transitive/base image package to fix GHSA-g6cj-pr64-35w5.
-RUN /opt/conda/bin/python -m pip install --upgrade --no-cache-dir 'aiohttp>=3.14.3' 'cryptography>=50.0.0' && \
-    conda run -n ptca python -m pip install --upgrade --no-cache-dir 'aiohttp>=3.14.3' 'cryptography>=50.0.0'
-
-# torch is inherited from the ACPT base image and overridden here; keep CUDA 12.6 wheels to fix GHSA-rrmf-rvhw-rf47.
-RUN conda run -n ptca python -m pip install --upgrade --no-cache-dir \
-    --index-url https://download.pytorch.org/whl/cu126 \
-    'torch==2.13.0+cu126' \
-    'torchvision==0.28.0+cu126'
+RUN /opt/conda/bin/python -m pip install --upgrade --no-cache-dir 'aiohttp>=3.14.4' 'cryptography>=50.0.0' && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir 'aiohttp>=3.14.4' 'cryptography>=50.0.0'
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
 
-# Refresh packages for the latest Ubuntu security advisories.
+# Reassert newly patched transitive dependencies after all package installs.
+RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0' 'urllib3>=2.8.0' && \
+    /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'oauthlib>=4.0.0'
+
+# Reassert November 2026 vulnerability-report floors in the scanned Python prefix.
+RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade \
+    'certifi>=2026.10.19' 'opentelemetry-api>=1.45.1' 'brotlicffi>=1.2.1.0' && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/certifi-2024.7.4.dist-info && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/opentelemetry__api-1.43.0.dist-info
+
+# Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libevent-core-2.1-7 libssl-dev libssl3 libx11-6 libx11-data libx11-xcb1 libxml2 openssh-client openssh-server openssh-sftp-server openssl"; \
+    security_packages="libbrotli1 dotnet-hostfxr-8.0"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
             installed_packages="$installed_packages $package"; \
         fi; \
     done; \
-    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    if [ -n "$installed_packages" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade $installed_packages; \
+    fi; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
-
-# Reassert newly patched transitive dependencies after all package installs.
-RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0' 'urllib3>=2.8.0' && \
-    /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'oauthlib>=4.0.0'

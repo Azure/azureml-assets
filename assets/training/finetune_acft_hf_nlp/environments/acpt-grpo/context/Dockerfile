@@ -1,5 +1,15 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
+# IMPORTANT (2026-10-26): Python was upgraded from 3.10 to 3.11 for Pillow 13 security fixes.
+# Downstream users must update interpreter-specific paths, wheels, and compiled dependencies for Python 3.11.
+RUN conda install -n ptca -c conda-forge -y python=3.11 pip && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.10 && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.8.0+cu126' 'torchvision==0.23.0+cu126' 'torchaudio==2.8.0+cu126' && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir 'pillow>=13.0.0' && \
+    conda clean -a -y
+
 USER root
 ENV PIP_PROGRESS_BAR=off
 # Pull in latest OS security updates on top of the base image.
@@ -23,7 +33,7 @@ RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 # mlflow:          azureml-mlflow 1.62.0.post2 pins mlflow-skinny<=3.9.0; explicit upgrade
 #                  required to clear CVE-2025-14287, CVE-2026-2033, CVE-2026-2635
 # vllm:            GHSA-pq5c-rjhq-qp7p, GHSA-3mwp-wvh9-7528, GHSA-6c4r-fmh3-7rh8 (librosa LFE),
-#                  GHSA-8pw2-6jv3-mj5j; fix in >=0.28.0.
+#                  GHSA-8pw2-6jv3-mj5j; current report requires >=0.32.0.
 # pyOpenSSL:       GHSA-vp96-hxj8-p424, GHSA-5pwr-322w-8jr4; azureml-core 1.61.0.post3 pins
 #                  pyopenssl<26.0.0, so explicit override is the only remediation.
 # cryptography:    mlflow currently constrains cryptography<50, so it is patched separately
@@ -37,21 +47,27 @@ RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 # gunicorn:        pinned transitive dep introduced by azureml evaluate/ACFT packages; fixes
 #                  CVE-2024-1135 and CVE-2024-6827.
 RUN pip install --upgrade 'protobuf>=6.33.5,<7' 'xgrammar>=0.1.32' \
-    'nltk>=3.9.4' 'pyasn1>=0.6.3' 'python-multipart>=0.0.22' 'ray>=2.55.0' \
-    'mlflow>=3.8.1,<4.0.0' 'vllm>=0.28.0' 'pyOpenSSL>=26.0.0' \
+    'nltk>=3.10.4' 'pyasn1>=0.6.3' 'python-multipart>=0.0.22' 'ray>=2.55.0' \
+    'mlflow>=3.8.1,<4.0.0' 'vllm>=0.32.0' 'dnspython>=2.9.0' 'pyOpenSSL>=26.0.0' \
     'urllib3>=2.7.0' 'sqlparse>=0.6.0' 'gunicorn>=22.0.0'
 # cryptography: pinned transitive dep of mlflow/base image; mlflow constrains
 # cryptography<50, so install the scanner-required GHSA-g6cj-pr64-35w5 floor separately.
 RUN pip install --no-cache-dir --upgrade --no-deps 'cryptography>=50.0.0'
 # torch: pinned transitive dep of vllm; vllm 0.24.0-0.26.0 pins torch==2.11.0,
-# so install the GHSA-rrmf-rvhw-rf47 security floor separately. transformers:
+# so install the GHSA-rrmf-rvhw-rf47 security floor with its matching torchvision.
+# Torchaudio is unused and must not retain an incompatible ABI. transformers:
 # vllm requires transformers<5, so reinstall the scanner-required 5.x floor after vllm.
 # Fixes GHSA-xrqw-3rrv-vx5w (transformers < 5.10.0).
-RUN pip install --no-cache-dir --upgrade --no-deps 'torch>=2.13.0' 'transformers>=5.10.0'
+RUN pip install --no-cache-dir --force-reinstall \
+        'torch==2.13.0+cu126' 'torchvision==0.28.0+cu126' \
+        'nvidia-nvshmem-cu12==3.4.5' \
+        --index-url https://download.pytorch.org/whl/cu126 && \
+    pip uninstall -y torchaudio && \
+    pip install --no-cache-dir --upgrade --no-deps 'transformers>=5.10.0'
 # aiohttp: GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8 (fix in >=3.14.0)
 # starlette: GHSA-86qp-5c8j-p5mr (fix in >=1.0.1)
 # idna: GHSA-65pc-fj4g-8rjx (fix in >=3.15)
-RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' 'starlette>=1.0.1' 'idna>=3.15'
+RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.4' 'starlette>=1.0.1' 'idna>=3.15'
 # pip: GHSA-wf93-45jw-7689; fixed in 26.1.2. pip is the Python
 # package installer itself - it has NO parent/transitive package that pulls it in
 # (it is bootstrapped by the conda/python distribution), so the only available
@@ -62,7 +78,7 @@ RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.0' 'starlette>=1.0.1' 'i
 # later upgrades; fixes GHSA-6v7p-g79w-8964.
 # Also remove stale conda metadata because `pip install --upgrade` does not
 # update conda's metadata DB, and SBOM scanners read those records.
-RUN pip install --no-cache-dir --upgrade 'pip>=26.1.2' 'setuptools>=83.0.0' 'msgpack>=1.2.1' && \
+RUN pip install --no-cache-dir --upgrade 'pip>=26.1.2' 'setuptools>=84.1.0' 'msgpack>=1.2.3' && \
     rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0*.json \
           /opt/conda/envs/ptca/conda-meta/pip-26.1.1-*.json \
           /opt/conda/envs/ptca/conda-meta/setuptools-70.3*.json \
@@ -81,8 +97,8 @@ RUN rm -rf ~/.cache/pip
 # setuptools: see note above - bootstrap tool, must be upgraded directly in base env too.
 # msgpack: see note above - clean stale metadata in base env too.
 # Also clean stale conda-meta/pip-*.json (see ptca env note above for scanner detail).
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'pip>=26.1.2' 'setuptools>=83.0.0' 'msgpack>=1.2.1' 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' \
-        'aiohttp>=3.14.0' 'click>=8.3.3' 'idna>=3.15' 'anyio>=4.14.2' \
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'pip>=26.1.2' 'setuptools>=84.1.0' 'msgpack>=1.2.3' 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' \
+        'aiohttp>=3.14.4' 'click>=8.3.3' 'idna>=3.15' 'anyio>=4.14.2' \
         'PyJWT>=2.13.0' 'py-rattler>=0.24.0' 'cryptography>=50.0.0' 'pydantic-settings>=2.14.2' && \
         rm -f /opt/conda/conda-meta/pip-26.0*.json \
               /opt/conda/conda-meta/pip-26.1.1-*.json \
@@ -94,9 +110,9 @@ RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'pip>=26.1.
 RUN pip install --no-cache-dir --upgrade 'pyarrow>=23.0.1'
 # ray vendors aiohttp/idna under _private/runtime_env/agent/thirdparty_files (single underscore).
 # The actual Python module path is ray/_private (not ray/__private).
-RUN rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/ray/_private/runtime_env/agent/thirdparty_files/aiohttp* \
-           /opt/conda/envs/ptca/lib/python3.10/site-packages/ray/_private/runtime_env/agent/thirdparty_files/idna* && \
-    pip install --no-cache-dir --target /opt/conda/envs/ptca/lib/python3.10/site-packages/ray/_private/runtime_env/agent/thirdparty_files 'aiohttp>=3.14.0' 'idna>=3.15'
+RUN rm -rf /opt/conda/envs/ptca/lib/python3.11/site-packages/ray/_private/runtime_env/agent/thirdparty_files/aiohttp* \
+           /opt/conda/envs/ptca/lib/python3.11/site-packages/ray/_private/runtime_env/agent/thirdparty_files/idna* && \
+    pip install --no-cache-dir --target /opt/conda/envs/ptca/lib/python3.11/site-packages/ray/_private/runtime_env/agent/thirdparty_files 'aiohttp>=3.14.4' 'idna>=3.15'
 # Patch Log4j artifacts inside Ray's fat JAR to 2.25.5.
 # ray bundles Log4j in java/dependencies.bzl, so manual JAR surgery is required.
 # Fixes: CVE-2026-49844, GHSA-3pxv-7cmr-fjr4, GHSA-445c-vh5m-36rj, GHSA-6hg6-v5c8-fphq
@@ -118,6 +134,11 @@ RUN JACKSON_ARTIFACT=jackson-core \
     JACKSON_JAR_SHA1=625e36b952b4d7766e6df729c458f1e5223468a4 \
     JACKSON_POM_SHA1=7f4fe42fa60d598a3d5d2f4375ae350ce4050294 \
     python3 /tmp/patch_ray_jackson_databind.py && \
+    JACKSON_ARTIFACT=guava \
+    JACKSON_VERSION=33.7.2-jre \
+    JACKSON_JAR_SHA1=e70def5b06cfb109ea050de99870e79c8ce80dbc \
+    JACKSON_POM_SHA1=aa78c19dd6023ef92b554d13ab4f6ed467e9f7bf \
+    python3 /tmp/patch_ray_jackson_databind.py && \
     rm -f /tmp/patch_ray_jackson_databind.py
 # httpcore5: pinned transitive dep of ray; bundled in Ray's fat JAR,
 # fixes GHSA-hf6x-8p5f-cgmf.
@@ -132,19 +153,27 @@ RUN find /opt/conda -type d \( -name 'setuptools-70.3.0.dist-info' -o -name 'msg
     find /opt/conda -path '*/site-packages/pip/_vendor/vendor.txt' -exec sed -i -e '/^setuptools==70\.3\.0$/d' -e '/^msgpack==1\.1\.2$/d' {} + && \
     conda clean -a -y && rm -rf /opt/conda/pkgs/ /opt/miniconda/pkgs/ /root/.cache/pip
 
-# Refresh packages for the latest Ubuntu security advisories.
+# Reassert newly patched transitive dependencies after all package installs.
+RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'oauthlib>=4.0.0'
+
+# Reassert November 2026 vulnerability-report floors in the scanned Python prefix.
+RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade \
+    'certifi>=2026.10.19' 'opentelemetry-api>=1.45.1' 'brotlicffi>=1.2.1.0' && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/certifi-2024.7.4.dist-info && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/opentelemetry__api-1.43.0.dist-info
+
+# Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libevent-core-2.1-7 libexpat1 libssl-dev libssl3 libx11-6 libx11-data libx11-xcb1 libxml2 openssh-client openssh-server openssh-sftp-server openssl"; \
+    security_packages="libbrotli1 dotnet-hostfxr-8.0"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
             installed_packages="$installed_packages $package"; \
         fi; \
     done; \
-    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    if [ -n "$installed_packages" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade $installed_packages; \
+    fi; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
-
-# Reassert newly patched transitive dependencies after all package installs.
-RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'oauthlib>=4.0.0'
