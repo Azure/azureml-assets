@@ -480,7 +480,7 @@ class TaskAdherenceEvaluator(ModelEvaluatorBase[Union[str, float]]):
     _RESULT_KEY = "task_adherence"
     _OPTIONAL_PARAMS = ["tool_definitions", "messages"]
 
-    _DEFAULT_TASK_ADHERENCE_SCORE = 0
+    _DEFAULT_TASK_ADHERENCE_SCORE = 1
 
     _validator: ValidatorInterface
     _evaluation_level: Optional[EvaluationLevel]
