@@ -25,7 +25,7 @@ class TestTaskLevelRubricAsset:
         }
         assert SPEC["version"] == 2
         assert SPEC["evaluatorSubType"] == "service"
-        assert SPEC["supportedEvaluationLevels"] == ["conversation"]
+        assert SPEC["supportedEvaluationLevels"] == ["turn", "conversation"]
         assert not {"path", "code", "code_text", "blob_uri"} & SPEC.keys()
         assert SPEC["outputSchema"]["task_level_rubric"]["type"] == "boolean"
 

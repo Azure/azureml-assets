@@ -218,7 +218,7 @@ def test_native_happy_path_without_prompty(cls, asynchronous):
                   else evaluator(**inputs_for(cls)))
     score = 1 if cls is TaskAdherenceEvaluator else 5
     assert result[name] == result[f"{name}_score"] == score
-    assert result[f"{name}_threshold"] == (0 if cls is TaskAdherenceEvaluator else 3)
+    assert result[f"{name}_threshold"] == (1 if cls is TaskAdherenceEvaluator else 3)
     assert result[f"{name}_result"] == "pass"
     assert result[f"{name}_passed"] is True
     assert result[f"{name}_total_tokens"] == 18
@@ -280,16 +280,27 @@ def test_likert_tie_selects_lower_level(cls):
 @pytest.mark.parametrize("top_level", [False, True])
 @pytest.mark.parametrize("probability,score", [(0.79999, 0), (0.8, 1)])
 def test_adherence_probability_cutoff_and_legacy_public_threshold(probability, score, top_level):
-    """The probability cutoff affects the binary score; public threshold zero never makes a failure pass."""
+    """The cutoff sets the binary score; a legacy public threshold of zero never makes a failure pass."""
     config = {**CONFIG, "probability_threshold": 0.75 if top_level else 0.8}
     original = deepcopy(config)
-    evaluator = TaskAdherenceEvaluator(config, **({"probability_threshold": 0.8} if top_level else {}))
+    evaluator = TaskAdherenceEvaluator(config, threshold=0, **({"probability_threshold": 0.8} if top_level else {}))
     stub(evaluator, native("task_adherence", probability=probability))
     result = evaluator(**inputs_for(TaskAdherenceEvaluator))
     assert result["task_adherence"] == score
     assert result["task_adherence_passed"] is bool(score)
     assert result["task_adherence_threshold"] == 0
     assert config == original
+
+
+@pytest.mark.parametrize("probability,score", [(0.74999, 0), (0.75, 1)])
+def test_adherence_reports_its_passing_score_as_the_default_threshold(probability, score):
+    """Task adherence scores 0 or 1 and passes only at 1, so 1 is the threshold it reports by default."""
+    evaluator = TaskAdherenceEvaluator(CONFIG)
+    stub(evaluator, native("task_adherence", probability=probability))
+    result = evaluator(**inputs_for(TaskAdherenceEvaluator))
+    assert result["task_adherence"] == score
+    assert result["task_adherence_passed"] is bool(score)
+    assert result["task_adherence_threshold"] == 1
 
 
 @pytest.mark.parametrize("cutoff", [0, 1])

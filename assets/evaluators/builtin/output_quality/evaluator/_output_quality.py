@@ -2,14 +2,16 @@
 # Licensed under the MIT License.
 
 """Output Quality Evaluator."""
+import asyncio
 import contextvars
 import functools
 import json
 import logging
 import os
 from asyncio import CancelledError
+from collections.abc import Mapping
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 from typing_extensions import overload, override
 
@@ -480,10 +482,47 @@ _EVALUATORS: Tuple[Dict[str, Union[str, int]], ...] = (
     {"name": "task_completion", "min": 0, "max": 1, "default_threshold": 1},
 )
 
+# Placeholder some dataset pipelines write for an empty context; standalone Groundedness ignores it too.
+_NO_CONTEXT_MARKER = "<>"
+
+
+def _normalize_context(context: Any) -> Optional[str]:
+    """Return supplied grounding context as text, or None when it carries no evidence.
+
+    As in standalone Groundedness, None, blank text, the ``<>`` placeholder, empty values and lists of
+    blank entries count as no context. So do missing table cells (NaN, NaT and pandas.NA). Text is kept
+    unchanged; a list or another non-mapping value becomes one JSON string so both judges receive the same
+    text. A mapping is not grounding text and counts as no context: the hosted service maps its own summary
+    of a stored agent response (tool calls, conversation history and tool definitions) to ``context``, and
+    this evaluator already reads that conversation from the response.
+
+    :param context: The supplied context.
+    :type context: Any
+    :return: The context text, or None.
+    :rtype: Optional[str]
+    """
+    if hasattr(context, "tolist"):  # numpy values read from table cells
+        context = context.tolist()
+    if isinstance(context, str):
+        return context if context.strip() and context != _NO_CONTEXT_MARKER else None
+    if isinstance(context, Mapping):
+        return None
+    try:
+        if not context or context != context:  # empty values, NaN and NaT
+            return None
+    except (TypeError, ValueError):  # pandas.NA has no truth value
+        return None
+    if isinstance(context, (list, tuple)) and not any(str(item).strip() for item in context):
+        return None
+    try:
+        return json.dumps(context, ensure_ascii=False, default=str)
+    except (TypeError, ValueError):  # keys JSON can't encode, or a circular reference
+        return str(context)
+
 
 @experimental
 class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
-    """Batch six quality evaluators into one LLM call.
+    """Batch six quality evaluators into one LLM call, or two with a Decision judge and supplied context.
 
     Raw member evaluator objects are preserved under ``output_quality_evaluators``.
     Converter-compatible member fields are also emitted as flat, member-prefixed keys.
@@ -492,6 +531,10 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
     With a user turn and a nonempty response containing no factual claims, turn-level
     groundedness scores a neutral 3 (passing by default); conversation-level groundedness
     is skipped and does not affect the aggregate.
+    Optional text ``context`` is grounding evidence meant for the groundedness member; a mapping is ignored.
+    Without it, the prompts and Decision requests are the ones sent before context was supported. With it, a
+    Decision judge still scores the other members from that request, which has no context, and asks groundedness
+    about the context in a second, concurrent request.
     """
 
     _PROMPTY_FILE = "output_quality.prompty"
@@ -499,7 +542,7 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
     _DECISION_FILE = "output_quality.decision.yaml"
     _MULTI_TURN_DECISION_FILE = "output_quality_multi_turn.decision.yaml"
     _RESULT_KEY = "output_quality"
-    _OPTIONAL_PARAMS = ["messages", "tool_definitions"]
+    _OPTIONAL_PARAMS = ["messages", "tool_definitions", "context"]
     _EVALUATORS = _EVALUATORS
     _supports_decision_models = True
     _binary_decision = True
@@ -597,12 +640,12 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
 
         self._decision_strategies = None
         if decision_selected:
-            self._decision_strategies = self._load_decision_strategies(
+            self._decision_strategies, self._context_decision_strategies = self._load_decision_strategies(
                 os.path.join(current_dir, self._DECISION_FILE)
             )
-            self._multi_turn_decision_strategies = self._load_decision_strategies(
-                os.path.join(current_dir, self._MULTI_TURN_DECISION_FILE)
-            )
+            (
+                self._multi_turn_decision_strategies, self._multi_turn_context_decision_strategies
+            ) = self._load_decision_strategies(os.path.join(current_dir, self._MULTI_TURN_DECISION_FILE))
             return
 
         multi_turn_prompty_path = os.path.join(current_dir, self._MULTI_TURN_PROMPTY_FILE)
@@ -618,61 +661,183 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
             is_reasoning_model=self._is_reasoning_model,
         )
 
-    def _load_decision_strategies(self, rubric_path: str) -> Dict:
-        """Load independent member strategies from this evaluator's rubric file."""
+    def _load_decision_strategies(self, rubric_path: str) -> Tuple[Dict, Dict]:
+        """Load independent member strategies from this evaluator's rubric file.
+
+        The second mapping holds a strategy only for each member whose rubric defines ``result_with_context``.
+        Those members are asked again, with the supplied context, in a request of their own.
+        """
         from azure.ai.evaluation._legacy.prompty._yaml_utils import load_yaml
 
         rubric = json.loads(json.dumps(load_yaml(rubric_path)))
         runner = self._decision_model_runner
-        return {
-            member["name"]: DecisionEvaluationStrategy(
+
+        def strategy(member: Dict, status: Dict, result: Dict):
+            name = member["name"]
+            return DecisionEvaluationStrategy(
                 runner,
-                result_key=member["name"],
+                result_key=name,
                 error_target=ExtendedErrorTarget.OUTPUT_QUALITY_EVALUATOR,
-                questions={"status": rubric[member["name"]]["status"],
-                           member["name"]: rubric[member["name"]]["result"]},
+                questions={"status": status, name: result},
                 scoring=(BinaryScoring(runner.probability_threshold) if member["max"] == 1
                          else LikertScoring(5, minimum=1)),
-                threshold=self._threshold_for(member["name"]),
+                threshold=self._threshold_for(name),
                 timeout=self._LLM_CALL_TIMEOUT,
             )
-            for member in self._EVALUATORS
-        }
 
-    async def _evaluate_decision(self, eval_input: Dict, strategies: Dict) -> Dict:
-        """Execute all twelve questions once and parse each member independently."""
+        strategies, with_context = {}, {}
+        for member in self._EVALUATORS:
+            name = member["name"]
+            definition = rubric[name]
+            strategies[name] = strategy(member, definition["status"], definition["result"])
+            if "result_with_context" in definition:
+                with_context[name] = strategy(member, definition["status"], definition["result_with_context"])
+        return strategies, with_context
+
+    async def _ask_decision_model(self, state: Dict, strategies: Dict) -> Dict:
+        """Send one request with each strategy's status and result question."""
         questions = {}
         for name, strategy in strategies.items():
             questions[f"{name}_status"] = strategy.questions["status"]
             questions[name] = strategy.questions[name]
-        response = await self._decision_model_runner(
-            state=dict(eval_input), questions=questions, timeout=self._LLM_CALL_TIMEOUT
+        return await self._decision_model_runner(
+            state=dict(state), questions=questions, timeout=self._LLM_CALL_TIMEOUT
         )
-        evaluators = {}
-        for name, strategy in strategies.items():
-            member_response = {
-                **response,
-                "answers": {"status": response["answers"][f"{name}_status"],
-                            name: response["answers"][name]},
-            }
-            parsed = strategy.parse(member_response, eval_input)
-            properties = parsed.get(f"{name}_properties") or {}
-            evaluators[name] = {
-                field: parsed[f"{name}_{field}"]
-                for field in ("score", "status", "reason", "result", "passed", "threshold")
-                if f"{name}_{field}" in parsed
-            }
-            evaluators[name]["properties"] = (
-                {"decision_model": properties["decision_model"]} if "decision_model" in properties else {}
-            )
-        usage = response["usage"]
-        token_metadata = {
-            "prompt_tokens": usage["input_tokens"],
-            "completion_tokens": usage["output_tokens"],
-            "total_tokens": usage["input_tokens"] + usage["output_tokens"],
-            "model": response["model"],
+
+    @staticmethod
+    def _parse_decision_member(name: str, strategy, response: Dict, state: Dict) -> Dict:
+        """Parse one member's answers from a Decision response."""
+        member_response = {
+            **response,
+            "answers": {"status": response["answers"][f"{name}_status"], name: response["answers"][name]},
         }
+        parsed = strategy.parse(member_response, state)
+        properties = parsed.get(f"{name}_properties") or {}
+        member = {
+            field: parsed[f"{name}_{field}"]
+            for field in ("score", "status", "reason", "result", "passed", "threshold")
+            if f"{name}_{field}" in parsed
+        }
+        member["properties"] = (
+            {"decision_model": properties["decision_model"]} if "decision_model" in properties else {}
+        )
+        return member
+
+    async def _evaluate_decision(self, state: Dict, context: Optional[str], conversation: bool) -> Dict:
+        """Score the members from one request, and ask context-aware members again when context is supplied.
+
+        Decision-1 answers every question with the whole state in view, so context sent in the members'
+        request changed members that should not use it. The first request is therefore always the one sent
+        without context. With context, members whose rubric defines ``result_with_context`` (groundedness) are
+        asked again in a concurrent request whose state adds ``groundedness_context``, and that answer is used.
+        """
+        if conversation:
+            strategies = self._multi_turn_decision_strategies
+            context_strategies = self._multi_turn_context_decision_strategies
+        else:
+            strategies, context_strategies = self._decision_strategies, self._context_decision_strategies
+        requests = [(state, strategies)]
+        if context is None:
+            responses = [await self._ask_decision_model(state, strategies)]
+        else:
+            requests.append(({**state, "groundedness_context": context}, context_strategies))
+            responses = await self._ask_concurrently(requests)
+        answered_by = {name: 0 for name in strategies}
+        if context is not None:
+            answered_by.update({name: 1 for name in context_strategies})
+        evaluators = {}
+        for name, index in answered_by.items():
+            request_state, members = requests[index]
+            try:
+                evaluators[name] = self._parse_decision_member(name, members[name], responses[index], request_state)
+            except (EvaluationException, CancelledError) as error:
+                self._keep_usage(error, [response for position, response in enumerate(responses) if position != index])
+                raise
+        input_tokens = sum(response["usage"]["input_tokens"] for response in responses)
+        output_tokens = sum(response["usage"]["output_tokens"] for response in responses)
+        token_metadata = {
+            "prompt_tokens": input_tokens,
+            "completion_tokens": output_tokens,
+            "total_tokens": input_tokens + output_tokens,
+        }
+        models = [response["model"] for response in responses]
+        if all(model == models[0] for model in models):
+            token_metadata["model"] = models[0]
         return self._build_aggregate_result(evaluators, token_metadata)
+
+    async def _ask_concurrently(self, requests: List[Tuple[Dict, Dict]]) -> List[Dict]:
+        """Send the requests concurrently and return their responses in request order.
+
+        A failure or cancellation is raised once every request has finished, and the raised error keeps the
+        usage of each answered request and of each other failed request that reports one, as a failed evaluation
+        keeps the usage of its completed turns.
+        """
+        tasks = [asyncio.ensure_future(self._ask_decision_model(*request)) for request in requests]
+        try:
+            await asyncio.wait(tasks)
+        except CancelledError as error:
+            for task in tasks:
+                task.cancel()
+            await asyncio.wait(tasks)
+            self._keep_usage(error, self._answered(tasks), self._failures(tasks))
+            raise
+        errors = [CancelledError() if task.cancelled() else task.exception() for task in tasks]
+        for error in errors:
+            if error is not None:
+                self._keep_usage(
+                    error, self._answered(tasks), [other for other in self._failures(tasks) if other is not error]
+                )
+                raise error
+        return [task.result() for task in tasks]
+
+    @staticmethod
+    def _answered(tasks: List["asyncio.Future"]) -> List[Dict]:
+        """Return the responses of the finished requests that were answered."""
+        return [task.result() for task in tasks if task.done() and not task.cancelled() and task.exception() is None]
+
+    @staticmethod
+    def _failures(tasks: List["asyncio.Future"]) -> List[BaseException]:
+        """Return the errors of the finished requests that failed."""
+        return [
+            task.exception() for task in tasks if task.done() and not task.cancelled() and task.exception() is not None
+        ]
+
+    def _keep_usage(
+        self, error: BaseException, responses: List[Dict], failures: Sequence[BaseException] = ()
+    ) -> None:
+        """Add the usage of answered requests and of other failed requests to ``error``.
+
+        The usage of completed turns is kept the same way when an evaluation fails. Each token count that is a
+        non-negative integer is kept, and a total only when both counts are.
+        """
+        if not isinstance(error, (EvaluationException, CancelledError)):
+            return
+        counts = []
+        for response in responses:
+            usage = response.get("usage") if isinstance(response, dict) else None
+            if isinstance(usage, dict):
+                counts.append((usage.get("input_tokens"), usage.get("output_tokens"), response.get("model")))
+        for failure in failures:
+            properties = getattr(failure, "properties", None)
+            if isinstance(properties, dict):
+                counts.append(
+                    (properties.get("prompt_tokens"), properties.get("completion_tokens"), properties.get("model"))
+                )
+        answered = []
+        for prompt, completion, model in counts:
+            entry = {
+                f"{self._result_key}_{field}": count
+                for field, count in (("prompt_tokens", prompt), ("completion_tokens", completion))
+                if isinstance(count, int) and not isinstance(count, bool) and count >= 0
+            }
+            if not entry:
+                continue
+            if len(entry) == 2:
+                entry[f"{self._result_key}_total_tokens"] = prompt + completion
+            entry[f"{self._result_key}_model"] = model
+            answered.append(entry)
+        if answered:
+            self._on_evaluation_error(error, answered)
 
     @overload
     def __call__(
@@ -681,8 +846,9 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         query: Union[str, List[dict]],
         response: Union[str, List[dict]],
         tool_definitions: Optional[Union[dict, List[dict]]] = None,
+        context: Optional[str] = None,
     ) -> Dict[str, Union[str, int, float, Dict, None]]:
-        """Evaluate a single query and response."""
+        """Evaluate a single query and response, with optional grounding context for groundedness."""
 
     @overload
     def __call__(
@@ -690,8 +856,9 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         *,
         messages: List[dict],
         tool_definitions: Optional[Union[dict, List[dict]]] = None,
+        context: Optional[str] = None,
     ) -> Dict[str, Union[str, int, float, Dict, None]]:
-        """Evaluate a full multi-turn conversation."""
+        """Evaluate a full multi-turn conversation, with optional grounding context for groundedness."""
 
     @override
     def __call__(self, *args, **kwargs):
@@ -875,6 +1042,20 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         self._validator.validate_eval_input(validation_input)
         return await self._the_super_real_call(**kwargs)
 
+    def _convert_kwargs_to_eval_input(self, **kwargs):
+        """Attach only explicitly supplied context to every evaluation input.
+
+        For a ``conversation`` input the base converter would write ``str({})`` as each turn's context.
+        Context fields inside a conversation are not read, as before; a supplied context applies to every turn.
+        """
+        context = _normalize_context(kwargs.pop("context", None))
+        eval_inputs = super()._convert_kwargs_to_eval_input(**kwargs)
+        for eval_input in eval_inputs:
+            eval_input.pop("context", None)
+            if context is not None:
+                eval_input["context"] = context
+        return eval_inputs
+
     async def _the_super_real_call(self, **kwargs):
         """Execute one or more evaluation inputs."""
         try:
@@ -932,7 +1113,9 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         eval_input.pop("messages", None)
 
         if self._decision_strategies is not None:
-            return await self._evaluate_decision(eval_input, self._decision_strategies)
+            # A fixed key order sends identical inputs as identical requests on every SDK version.
+            state = {key: eval_input[key] for key in ("query", "response", "tool_definitions") if key in eval_input}
+            return await self._evaluate_decision(state, eval_input.get("context"), conversation=False)
         if eval_input.get("tool_definitions") is None:
             eval_input["tool_definitions"] = []
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
@@ -946,9 +1129,13 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         tool_definitions = eval_input.get("tool_definitions")
         if tool_definitions:
             prompty_kwargs["tool_definitions"] = reformat_tool_definitions(tool_definitions, logger)
+        context = eval_input.get("context")
 
         if self._decision_strategies is not None:
-            return await self._evaluate_decision(prompty_kwargs, self._multi_turn_decision_strategies)
+            return await self._evaluate_decision(prompty_kwargs, context, conversation=True)
+        if context is not None:
+            # output_quality_multi_turn.prompty renders the context block only when it is supplied.
+            prompty_kwargs["context"] = context
         prompty_output_dict = await self._multi_turn_flow(timeout=self._LLM_CALL_TIMEOUT, **prompty_kwargs)
         return self._parse_prompty_output(prompty_output_dict, is_multi_turn=True)
 
