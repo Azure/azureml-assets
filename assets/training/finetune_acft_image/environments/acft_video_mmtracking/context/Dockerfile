@@ -1,6 +1,16 @@
 # PTCA image
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
+# IMPORTANT (2026-10-26): Python was upgraded from 3.10 to 3.11 for Pillow 13 security fixes.
+# Downstream users must update interpreter-specific paths, wheels, and compiled dependencies for Python 3.11.
+RUN conda install -n ptca -c conda-forge -y python=3.11 pip && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.10 && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.8.0+cu126' 'torchvision==0.23.0+cu126' 'torchaudio==2.8.0+cu126' && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir 'pillow>=13.0.0' && \
+    conda clean -a -y
+
 USER root
 # Upgrade inherited OS packages to current Ubuntu 22.04 security archive versions.
 RUN apt-get -y update \
@@ -28,15 +38,15 @@ RUN pip install -r requirements.txt --no-cache-dir
 # GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, GHSA-mfx4-hv73-q22v, and GHSA-g6cj-pr64-35w5.
 # Both interpreter prefixes must be patched or the untouched env keeps the vulnerable copy.
 RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade \
-    'setuptools>=83.0.0' \
-    'msgpack>=1.2.1' \
-    'aiohttp>=3.14.3' \
+    'setuptools>=84.1.0' \
+    'msgpack>=1.2.3' \
+    'aiohttp>=3.14.4' \
     'cryptography>=50.0.0,<51' \
     'pip>=26.2.0' \
     'anyio>=4.14.2' \
  && conda run -n ptca python -m pip install --no-cache-dir --upgrade \
-    'setuptools>=83.0.0' \
-    'msgpack>=1.2.1' \
+    'setuptools>=84.1.0' \
+    'msgpack>=1.2.3' \
     'pip>=26.2.0'
 
 # transformers: use the scanner-required safe Trainer implementation.
@@ -56,7 +66,7 @@ RUN pip install --no-cache-dir --upgrade 'onnx==1.22.0'
 RUN pip install --no-cache-dir --upgrade \
     'cryptography>=50.0.0,<51' \
     'GitPython>=3.1.57,<4' \
-    'aiohttp>=3.14.3'
+    'aiohttp>=3.14.4'
 
 # It is recommended to upgrade to numpy version 1.23.5 to address the numpy.core.multiarray issue
 RUN pip install numpy==1.23.5
@@ -116,20 +126,28 @@ RUN set -eu; \
     conda clean -a -y; \
     rm -rf /opt/conda/pkgs/ /opt/miniconda/pkgs/
 
-# Refresh packages for the latest Ubuntu security advisories.
+# Reassert newly patched transitive dependencies after all package installs.
+RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0' 'urllib3>=2.8.0' && \
+    /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'oauthlib>=4.0.0'
+
+# Reassert November 2026 vulnerability-report floors in the scanned Python prefix.
+RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade \
+    'certifi>=2026.10.19' 'opentelemetry-api>=1.45.1' 'brotlicffi>=1.2.1.0' && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/certifi-2024.7.4.dist-info && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/opentelemetry__api-1.43.0.dist-info
+
+# Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libevent-core-2.1-7 libssl-dev libssl3 libx11-6 libx11-data libx11-xcb1 libxml2 openssh-client openssh-server openssh-sftp-server openssl sudo"; \
+    security_packages="libbrotli1 dotnet-hostfxr-8.0"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
             installed_packages="$installed_packages $package"; \
         fi; \
     done; \
-    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    if [ -n "$installed_packages" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade $installed_packages; \
+    fi; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
-
-# Reassert newly patched transitive dependencies after all package installs.
-RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0' 'urllib3>=2.8.0' && \
-    /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'oauthlib>=4.0.0'

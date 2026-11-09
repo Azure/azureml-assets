@@ -1,6 +1,16 @@
 # PTCA image
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
+# IMPORTANT (2026-10-26): Python was upgraded from 3.10 to 3.11 for Pillow 13 security fixes.
+# Downstream users must update interpreter-specific paths, wheels, and compiled dependencies for Python 3.11.
+RUN conda install -n ptca -c conda-forge -y python=3.11 pip && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.10 && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.8.0+cu126' 'torchvision==0.23.0+cu126' 'torchaudio==2.8.0+cu126' && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir 'pillow>=13.0.0' && \
+    conda clean -a -y
+
 # Pull latest Ubuntu 22.04 security patches on each rebuild.
 # Explicit package list ensures frequently flagged USN fixes are applied even
 # when apt-get upgrade would otherwise hold them back.
@@ -50,7 +60,7 @@ RUN apt-get -y update && apt-get -y upgrade && \
         xz-utils && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install required packages (ptca env). setuptools>=83.0.0 patches
+# Install required packages (ptca env). setuptools>=84.1.0 patches
 # GHSA-58pv-8j8x-9vj2 and GHSA-h35f-9h28-mq5c in the ptca env.
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
@@ -67,7 +77,7 @@ ENV AZURE_ML_CLI_PRIVATE_FEATURES_ENABLED=True
 #   anaconda-auth; fixes GHSA-mf9w-mj56-hr94.
 # - urllib3>=2.7.0: transitive dep of requests; fixes GHSA-qccp-gfcp-xxvc and
 #   GHSA-mf9v-mfxr-j63j.
-# - aiohttp>=3.14.3: fixes GHSA-jg22-mg44-37j8, GHSA-hg6j-4rv6-33pg,
+# - aiohttp>=3.14.4: fixes GHSA-jg22-mg44-37j8, GHSA-hg6j-4rv6-33pg,
 #   GHSA-mq44-7p77-q5h7, GHSA-cq5v-8q36-5273, and GHSA-mfx4-hv73-q22v.
 # - click>=8.3.3: transitive dep of typer/mlflow-skinny; fixes
 #   GHSA-47fr-3ffg-hgmw.
@@ -86,10 +96,10 @@ ENV AZURE_ML_CLI_PRIVATE_FEATURES_ENABLED=True
 #   in by requirements.txt, fixes GHSA-6v7p-g79w-8964.
 # - anyio: inherited base version is below the scanner-required safe floor.
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
-        'setuptools>=83.0.0' 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' \
-        'aiohttp>=3.14.3' 'click>=8.3.3' 'idna>=3.15' 'PyJWT>=2.13.0' \
+        'setuptools>=84.1.0' 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' \
+        'aiohttp>=3.14.4' 'click>=8.3.3' 'idna>=3.15' 'PyJWT>=2.13.0' \
         'py-rattler>=0.24.0' 'cryptography>=50.0.0' 'pydantic-settings>=2.14.2' \
-        'msgpack>=1.2.1' 'anyio>=4.14.2'
+        'msgpack>=1.2.3' 'anyio>=4.14.2'
 
 # Vulnerability overrides in ptca conda env (python3.10):
 # - urllib3: requirements can re-resolve loose dependencies back to vulnerable
@@ -115,8 +125,8 @@ RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
 #   GHSA-rrmf-rvhw-rf47. torchvision is upgraded with torch to keep the CUDA
 #   PyTorch stack compatible.
 RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade \
-        'urllib3>=2.7.0' 'aiohttp>=3.14.3' 'starlette>=1.0.1' 'click>=8.3.3' \
-        'pyarrow>=23.0.1' 'cryptography>=50.0.0' 'msgpack>=1.2.1' && \
+        'urllib3>=2.7.0' 'aiohttp>=3.14.4' 'starlette>=1.0.1' 'click>=8.3.3' \
+        'pyarrow>=23.0.1' 'cryptography>=50.0.0' 'msgpack>=1.2.3' && \
     conda run -n ptca python -m pip install --no-cache-dir --upgrade \
         --index-url https://download.pytorch.org/whl/cu126 \
         'torch==2.13.0' 'torchvision==0.28.0'
@@ -127,8 +137,8 @@ RUN set -eu; \
     for py in /opt/conda/bin/python /opt/conda/envs/*/bin/python; do \
         if [ -x "$py" ]; then \
             "$py" -m pip install --no-cache-dir --upgrade \
-                'setuptools>=83.0.0' \
-                'msgpack>=1.2.1' \
+                'setuptools>=84.1.0' \
+                'msgpack>=1.2.3' \
                 'pip>=26.2.0'; \
         fi; \
     done && \
@@ -168,19 +178,27 @@ RUN set -eu; \
 
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
 
-# Refresh packages for the latest Ubuntu security advisories.
+# Reassert newly patched transitive dependencies after all package installs.
+RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'oauthlib>=4.0.0'
+
+# Reassert November 2026 vulnerability-report floors in the scanned Python prefix.
+RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade \
+    'certifi>=2026.10.19' 'opentelemetry-api>=1.45.1' 'brotlicffi>=1.2.1.0' && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/certifi-2024.7.4.dist-info && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/opentelemetry__api-1.43.0.dist-info
+
+# Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libevent-core-2.1-7 libssl-dev libssl3 libx11-6 libx11-data libx11-xcb1 libxml2 openssh-client openssh-server openssh-sftp-server openssl"; \
+    security_packages="libbrotli1 dotnet-hostfxr-8.0"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
             installed_packages="$installed_packages $package"; \
         fi; \
     done; \
-    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    if [ -n "$installed_packages" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade $installed_packages; \
+    fi; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
-
-# Reassert newly patched transitive dependencies after all package installs.
-RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'oauthlib>=4.0.0'

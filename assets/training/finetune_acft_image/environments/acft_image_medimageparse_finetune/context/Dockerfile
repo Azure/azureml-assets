@@ -1,5 +1,15 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
+# IMPORTANT (2026-10-26): Python was upgraded from 3.10 to 3.11 for Pillow 13 security fixes.
+# Downstream users must update interpreter-specific paths, wheels, and compiled dependencies for Python 3.11.
+RUN conda install -n ptca -c conda-forge -y python=3.11 pip && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.10 && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.8.0+cu126' 'torchvision==0.23.0+cu126' 'torchaudio==2.8.0+cu126' && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir 'pillow>=13.0.0' && \
+    conda clean -a -y
+
 USER root
 
 RUN apt-get update && \
@@ -34,8 +44,8 @@ RUN apt-get update && \
 # files and overlaying a conda pip on top leaves a mix of two pip trees behind
 # ("ImportError: cannot import name 'get_runnable_pip' from 'pip._internal.utils.misc'").
 # Remove the pip package directory first so conda lays down a coherent installation.
-RUN rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/pip \
-           /opt/conda/envs/ptca/lib/python3.10/site-packages/pip-*.dist-info && \
+RUN rm -rf /opt/conda/envs/ptca/lib/python3.11/site-packages/pip \
+           /opt/conda/envs/ptca/lib/python3.11/site-packages/pip-*.dist-info && \
     conda install -y -n ptca -c conda-forge pip==26.2.0 && \
     rm -f /opt/conda/envs/ptca/conda-meta/pip-26.1*.json && \
     conda clean -ay
@@ -50,14 +60,14 @@ RUN rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/pip \
 RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade --progress-bar off \
         'urllib3>=2.7.0' \
         'idna>=3.15' \
-        'aiohttp>=3.14.0' \
+        'aiohttp>=3.14.4' \
         'starlette>=1.0.1' \
         'pydantic-settings>=2.14.2' && \
-    rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/urllib3-2.6*.dist-info \
-           /opt/conda/envs/ptca/lib/python3.10/site-packages/idna-3.11.dist-info \
-           /opt/conda/envs/ptca/lib/python3.10/site-packages/aiohttp-3.13*.dist-info \
-           /opt/conda/envs/ptca/lib/python3.10/site-packages/starlette-1.0.0.dist-info \
-           /opt/conda/envs/ptca/lib/python3.10/site-packages/pydantic_settings-2.14.1.dist-info
+    rm -rf /opt/conda/envs/ptca/lib/python3.11/site-packages/urllib3-2.6*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.11/site-packages/idna-3.11.dist-info \
+           /opt/conda/envs/ptca/lib/python3.11/site-packages/aiohttp-3.13*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.11/site-packages/starlette-1.0.0.dist-info \
+           /opt/conda/envs/ptca/lib/python3.11/site-packages/pydantic_settings-2.14.1.dist-info
 
 # ptca env (python 3.10): torch is inherited from the torch280 base image;
 # pin the patched CUDA build for GHSA-rrmf-rvhw-rf47,
@@ -68,12 +78,12 @@ RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade \
         'torch==2.13.0+cu126' \
         'torchvision==0.28.0+cu126' \
         'torchaudio==2.11.0+cu126' && \
-    rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/torch-2.8*.dist-info \
-           /opt/conda/envs/ptca/lib/python3.10/site-packages/torch-2.10*.dist-info \
-           /opt/conda/envs/ptca/lib/python3.10/site-packages/torchvision-0.23*.dist-info \
-           /opt/conda/envs/ptca/lib/python3.10/site-packages/torchvision-0.25*.dist-info \
-           /opt/conda/envs/ptca/lib/python3.10/site-packages/torchaudio-2.8*.dist-info \
-           /opt/conda/envs/ptca/lib/python3.10/site-packages/torchaudio-2.10*.dist-info
+    rm -rf /opt/conda/envs/ptca/lib/python3.11/site-packages/torch-2.8*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.11/site-packages/torch-2.10*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.11/site-packages/torchvision-0.23*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.11/site-packages/torchvision-0.25*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.11/site-packages/torchaudio-2.8*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.11/site-packages/torchaudio-2.10*.dist-info
 
 # Override vulnerable base-environment dependencies whose parent ranges permit
 # older versions. Patch the inherited tooling directly in both conda environments.
@@ -84,17 +94,17 @@ RUN conda run -n base python -m pip install --no-cache-dir --upgrade --progress-
 
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade --progress-bar off \
         'pip==26.2.0' \
-        'setuptools>=83.0.0' \
+        'setuptools>=84.1.0' \
         'py-rattler>=0.24.0' \
         'python-dotenv>=1.2.2' \
         'urllib3>=2.7.0' \
         'anyio>=4.14.2' \
         'idna>=3.15' \
         'click>=8.3.3' \
-        'aiohttp>=3.14.0' \
+        'aiohttp>=3.14.4' \
         'PyJWT>=2.13.0' \
         'pydantic-settings>=2.14.2' \
-        'msgpack>=1.2.1' && \
+        'msgpack>=1.2.3' && \
     rm -rf /opt/conda/lib/python*/site-packages/pip-26.0*.dist-info \
            /opt/conda/lib/python*/site-packages/pip-26.1*.dist-info \
            /opt/conda/lib/python*/site-packages/setuptools-8[12]*.dist-info \
@@ -110,8 +120,8 @@ RUN conda run -n base python -m pip install --no-cache-dir --upgrade --progress-
     rm -f /opt/conda/conda-meta/pip-26.1*.json
 
 RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade --progress-bar off \
-        'setuptools>=83.0.0' && \
-    rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/setuptools-81*.dist-info
+        'setuptools>=84.1.0' && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.11/site-packages/setuptools-81*.dist-info
 
 COPY requirements.txt .
 RUN pip install --progress-bar off -r requirements.txt
@@ -153,19 +163,27 @@ RUN set -eu; \
     \) -print -quit)"; \
     [ -z "$stale" ] || { echo "stale setuptools/msgpack scanner metadata remains: $stale" >&2; exit 1; }
 
-# Refresh packages for the latest Ubuntu security advisories.
+# Reassert newly patched transitive dependencies after all package installs.
+RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'oauthlib>=4.0.0'
+
+# Reassert November 2026 vulnerability-report floors in the scanned Python prefix.
+RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade \
+    'certifi>=2026.10.19' 'opentelemetry-api>=1.45.1' 'brotlicffi>=1.2.1.0' && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/certifi-2024.7.4.dist-info && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/opentelemetry__api-1.43.0.dist-info
+
+# Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libevent-core-2.1-7 libssl-dev libssl3 libx11-6 libx11-data libx11-xcb1 libxml2 openssh-client openssh-server openssh-sftp-server openssl"; \
+    security_packages="libbrotli1 dotnet-hostfxr-8.0"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
             installed_packages="$installed_packages $package"; \
         fi; \
     done; \
-    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    if [ -n "$installed_packages" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade $installed_packages; \
+    fi; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
-
-# Reassert newly patched transitive dependencies after all package installs.
-RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'oauthlib>=4.0.0'

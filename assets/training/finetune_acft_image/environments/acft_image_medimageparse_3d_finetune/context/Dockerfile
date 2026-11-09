@@ -36,12 +36,14 @@ RUN apt-get update && \
 # Upgrade the vulnerable anyio package in the base Python prefix.
 RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade "anyio>=4.14.2"
 
-# Step 1: minimal conda env with python 3.10 (matches azureml-acft-image-components compat).
+# IMPORTANT (2026-10-26): Python was upgraded from 3.10 to 3.11 for Pillow 13 security fixes.
+# Downstream users must update interpreter-specific paths, wheels, and compiled dependencies for Python 3.11.
+# Step 1: minimal conda env with Python 3.11.
 # Keep this step pure conda-channel — the SAT solver OOMs on ACR Standard build
 # agents when conda + pip resolution run together. Sibling envs split for the
 # same reason.
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH -q -y \
-        python=3.10 pip=26.2.0 \
+        python=3.11 pip=26.2.0 \
         -c conda-forge && \
     conda clean -a -y
 
@@ -96,20 +98,25 @@ RUN set -eu; \
     \) -print -quit)"; \
     [ -z "$stale" ] || { echo "stale setuptools/msgpack scanner metadata remains: $stale" >&2; exit 1; }
 
-# Refresh packages for the latest Ubuntu security advisories.
+# Reassert newly patched transitive dependencies after all package installs.
+RUN /azureml-envs/acft-medimageparse-3d-finetune/bin/python -m pip install --no-cache-dir --upgrade 'oauthlib>=4.0.0' && \
+    /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0'
+
+# Reassert November 2026 vulnerability-report floors in the scanned Python prefix.
+RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'certifi>=2026.10.19'
+
+# Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libssl3t64 libx11-6 libx11-data libx11-xcb1 libxml2 openssh-client openssh-server openssh-sftp-server openssl"; \
+    security_packages="nginx libbrotli1"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
             installed_packages="$installed_packages $package"; \
         fi; \
     done; \
-    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    if [ -n "$installed_packages" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade $installed_packages; \
+    fi; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
-
-# Reassert newly patched transitive dependencies after all package installs.
-RUN /azureml-envs/acft-medimageparse-3d-finetune/bin/python -m pip install --no-cache-dir --upgrade 'oauthlib>=4.0.0' && \
-    /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0'
