@@ -321,6 +321,7 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
         """
 
         enforce_tool_definitions: bool = False
+        requires_assistant: bool = True
 
         def __init__(
             self,
@@ -401,7 +402,7 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
                         category=ErrorCategory.INVALID_VALUE,
                         target=self.error_target,
                     )
-                if MessageRole.ASSISTANT.value not in roles_present:
+                if self.requires_assistant and MessageRole.ASSISTANT.value not in roles_present:
                     raise EvaluationException(
                         message="messages must contain at least one message with role 'assistant'.",
                         blame=ErrorBlame.USER_ERROR,
@@ -550,6 +551,7 @@ class TaskCompletionEvaluator(ModelEvaluatorBase[Union[str, int]]):
             error_target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
             enforce_tool_definitions=True,
         )
+        self._validator.requires_assistant = False
 
         decision_selected = _is_decision_config(model_config)
         if probability_threshold is not None:

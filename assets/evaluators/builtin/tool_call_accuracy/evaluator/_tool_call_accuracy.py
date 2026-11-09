@@ -318,6 +318,7 @@ class ToolCallAccuracyEvaluator(ModelEvaluatorBase[Union[str, float]]):
             optional_tool_definitions=True,
             check_for_unsupported_tools=False,
         )
+        self._validator.allow_empty_calls = True
 
         decision_selected = _is_decision_config(model_config)
         self._decision_selected = decision_selected

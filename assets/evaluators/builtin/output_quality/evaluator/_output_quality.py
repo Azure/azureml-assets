@@ -244,6 +244,7 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
         """Validate query/response or messages inputs, optionally checking tool definitions."""
 
         enforce_tool_definitions: bool = False
+        requires_assistant: bool = True
 
         def __init__(
             self,
@@ -321,7 +322,7 @@ except ImportError:  # azure-ai-evaluation 1.17.x (backward compat; remove when 
                         category=ErrorCategory.INVALID_VALUE,
                         target=self.error_target,
                     )
-                if MessageRole.ASSISTANT.value not in roles_present:
+                if self.requires_assistant and MessageRole.ASSISTANT.value not in roles_present:
                     raise EvaluationException(
                         message="messages must contain at least one message with role 'assistant'.",
                         blame=ErrorBlame.USER_ERROR,
@@ -609,6 +610,7 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
             requires_query=False,
             enforce_tool_definitions=False,
         )
+        self._validator.requires_assistant = False
 
         decision_selected = isinstance(model_config, dict) and model_config.get("type") == "decision"
         if probability_threshold is not None:
