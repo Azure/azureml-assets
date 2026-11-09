@@ -754,7 +754,9 @@ class ToolOutputUtilizationEvaluator(ModelEvaluatorBase[Union[str, float]]):
             )
 
         if self._decision_strategy is not None:
-            return await self._decision_strategy.evaluate(eval_input)
+            # A fixed key order sends identical inputs as identical requests on every SDK version.
+            state = {key: eval_input[key] for key in ("query", "response", "tool_definitions") if key in eval_input}
+            return await self._decision_strategy.evaluate(state)
 
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)

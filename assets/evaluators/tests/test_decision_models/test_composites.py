@@ -866,6 +866,20 @@ def test_output_quality_conversation_turns_keep_their_native_state():
     ]
 
 
+@pytest.mark.parametrize("sdk_order", [
+    ["tool_definitions", "messages", "response", "query"],
+    ["response", "messages", "query", "tool_definitions"],
+])
+def test_tool_use_quality_native_state_order_does_not_follow_sdk_input_order(sdk_order):
+    """Send query, response, tool_definitions whatever order the SDK lists the inputs in (random before 1.18.12)."""
+    evaluator = ToolUseQualityEvaluator(CONFIG)
+    post = _native_post(ToolUseQualityEvaluator)
+    evaluator._decision_model_runner._post = post
+    evaluator._get_all_singleton_inputs = lambda: list(sdk_order)
+    evaluator(**deepcopy(INPUT))
+    assert list(json.loads(post.await_args.args[0])["state"]) == ["query", "response", "tool_definitions"]
+
+
 def test_binary_public_member_threshold_is_independent_of_probability_cutoff():
     """Apply the public score threshold separately from the native binary probability cutoff."""
     evaluator = OutputQualityEvaluator(CONFIG, threshold={"task_completion": 0})

@@ -75,6 +75,20 @@ def test_completion_sync_without_prompty():
     assert questions["status"]["type"] == "noul"
 
 
+@pytest.mark.parametrize("sdk_order", [
+    ["tool_definitions", "messages", "response", "query"],
+    ["response", "messages", "query", "tool_definitions"],
+])
+def test_completion_native_state_order_does_not_follow_sdk_input_order(sdk_order):
+    """Send query, response, tool_definitions whatever order the SDK lists the inputs in (random before 1.18.12)."""
+    evaluator = TaskCompletionEvaluator(CONFIG)
+    post = stub(evaluator, native("task_completion", {"type": "noul", "noul": 0.9}))
+    evaluator._get_all_singleton_inputs = lambda: list(sdk_order)
+    evaluator(query="What is the capital of France?", response="Paris.")
+    state, _ = request_evidence(post)
+    assert list(state) == ["query", "response", "tool_definitions"]
+
+
 @pytest.mark.parametrize("conversation", [False, True])
 def test_completion_model_status_skips_before_parsing_score(conversation):
     """Skip inapplicable tasks before reading an unusable completion answer."""

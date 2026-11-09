@@ -1059,7 +1059,7 @@ def test_native_decision_rubrics_and_init_schema():
             assert member["result"]["type"] == ("score" if name == "tool_call_accuracy" else "noul")
             assert len(member["result"]["criteria"]) == (5 if name == "tool_call_accuracy" else 2)
     spec = yaml.safe_load((root.parent / "spec.yaml").read_text(encoding="utf-8"))
-    assert spec["version"] == 7
+    assert spec["version"] == 8
     schema = spec["initParameterSchema"]
     config = {key: value for key, value in _native_decision_CONFIG.items() if key != "api_key"}
     assert "model_config" not in schema["properties"]

@@ -1139,7 +1139,9 @@ class ToolUseQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
         eval_input["tool_definitions"] = eval_input.get("tool_definitions") or []
 
         if self._decision_strategies is not None:
-            return await self._evaluate_decision(eval_input, self._decision_strategies)
+            # A fixed key order sends identical inputs as identical requests on every SDK version.
+            state = {key: eval_input[key] for key in ("query", "response", "tool_definitions") if key in eval_input}
+            return await self._evaluate_decision(state, self._decision_strategies)
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         return self._parse_prompty_output(prompty_output_dict)
 

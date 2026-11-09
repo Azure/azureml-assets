@@ -302,6 +302,18 @@ def test_optional_definitions_skip_before_native_request(evaluator_type):
     evaluator._model_runner._post.assert_not_called()
 
 
+@pytest.mark.parametrize("sdk_order", [
+    ["tool_definitions", "response", "query"],
+    ["response", "query", "tool_definitions"],
+])
+def test_utilization_native_state_order_does_not_follow_sdk_input_order(sdk_order):
+    """Send query, response, tool_definitions whatever order the SDK lists the inputs in (random before 1.18.12)."""
+    evaluator = native_evaluator(ToolOutputUtilizationEvaluator)
+    evaluator._get_all_singleton_inputs = lambda: list(sdk_order)
+    evaluator(**inputs())
+    assert list(request(evaluator)["state"]) == ["query", "response", "tool_definitions"]
+
+
 def test_success_optional_definitions_and_matched_execution_evidence():
     """Success keeps matched results and supports definitions being omitted."""
     evaluator = native_evaluator(ToolCallSuccessEvaluator)

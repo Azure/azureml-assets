@@ -987,6 +987,12 @@ class TaskCompletionEvaluator(ModelEvaluatorBase[Union[str, int]]):
         eval_input.pop("messages", None)
 
         if self._strategy is not None:
+            if _SDK_SUPPORTS_DECISION and self._uses_decision_model:
+                # A fixed key order sends identical inputs as identical requests on every SDK version.
+                state = {
+                    key: eval_input[key] for key in ("query", "response", "tool_definitions") if key in eval_input
+                }
+                return await self._strategy.evaluate(state)
             return await self._strategy.evaluate(eval_input)
         return self._parse_prompty_output(await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input))
 
