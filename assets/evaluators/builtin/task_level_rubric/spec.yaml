@@ -8,7 +8,6 @@ evaluatorSubType: "service"
 categories: ["agents", "quality"]
 tags:
   provider: "Microsoft"
-  preview: "true"
 supportedEvaluationLevels: ["turn", "conversation"]
 initParameterSchema:
   type: "object"
