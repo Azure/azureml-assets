@@ -13,6 +13,7 @@ from copy import deepcopy
 import pytest
 
 from azure.ai.evaluation._exceptions import EvaluationException
+from azure.ai.evaluation._evaluators._common._validators import ToolCallsValidator
 
 from .base_tool_calls_evaluator_behavior_test import BaseToolCallEvaluatorBehaviorTest
 from .base_tool_evaluation_test import BaseToolEvaluationTest
@@ -90,6 +91,26 @@ class TestToolCallAccuracyEvaluatorBehavior(BaseToolCallEvaluatorBehaviorTest, B
     check_for_unsupported_tools = False
 
     MINIMAL_RESPONSE = BaseToolCallEvaluatorBehaviorTest.email_tool_call_and_assistant_response
+
+    def _empty_calls_expectation(self):
+        """New shared validators reach applicability; older SDKs retain their error."""
+        return (
+            self.AssertType.SKIPPED
+            if hasattr(ToolCallsValidator, "allow_empty_calls")
+            else self.AssertType.MISSING_FIELD
+        )
+
+    def test_response_not_present(self):
+        """An absent response and absent calls have no tool-call accuracy to score."""
+        self.run_response_test(None, "Response Not Present", self._empty_calls_expectation())
+
+    def test_response_empty_list(self):
+        """An empty response and absent calls remain unscored."""
+        self.run_response_test([], "Response Empty List", self._empty_calls_expectation())
+
+    def test_tool_calls_empty_list(self):
+        """An empty call list with no response reaches the no-calls result."""
+        self.run_tool_calls_test([], "Tool Calls Empty List", self._empty_calls_expectation())
 
     def test_messages_are_split_into_query_and_response(self):
         """Top-level messages are routed through the existing turn-level path."""
