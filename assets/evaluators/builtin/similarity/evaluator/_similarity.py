@@ -6,7 +6,7 @@ import logging
 import math
 import os
 import re
-from typing import Dict, List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
 from typing_extensions import overload, override
 
@@ -111,6 +111,31 @@ def _parse_json_response_if_applicable(response):
         if isinstance(parsed, list):
             return parsed
     return response
+
+
+def _invalid_output_message(model_output: Any) -> str:
+    """Describe why the judge model output was unusable, using only non-content metadata."""
+    details = model_output if isinstance(model_output, dict) else {"llm_output": model_output}
+    llm_output = details.get("llm_output", details)
+    finish_reason = details.get("finish_reason")
+    if finish_reason not in ("stop", "length", "content_filter", "tool_calls", "function_call"):
+        finish_reason = "unknown"
+    output_tokens = details.get("output_token_count", details.get("completion_tokens"))
+    if isinstance(output_tokens, bool) or not isinstance(output_tokens, int):
+        output_tokens = "unknown"
+    if finish_reason == "length":
+        cause = "the judge model output was truncated"
+    elif finish_reason == "content_filter":
+        cause = "the judge model output was blocked by the content filter"
+    elif llm_output is None or (isinstance(llm_output, (str, dict)) and not llm_output):
+        cause = "the judge model returned an empty response"
+    elif isinstance(llm_output, str):
+        cause = "the judge model output was not a valid JSON object"
+    elif not isinstance(llm_output, dict):
+        cause = f"the judge model output had unexpected type {type(llm_output).__name__}"
+    else:
+        cause = "no valid score could be parsed from the judge model output"
+    return f"Evaluator returned invalid output: {cause} (finish_reason={finish_reason}, output_tokens={output_tokens})."
 
 
 class SimilarityEvaluator(ModelEvaluatorBase):
@@ -433,7 +458,7 @@ class SimilarityEvaluator(ModelEvaluatorBase):
             result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
             return result
         raise EvaluationException(
-            message="Evaluator returned invalid output.",
+            message=_invalid_output_message(prompty_output_dict),
             blame=ErrorBlame.SYSTEM_ERROR,
             category=ErrorCategory.FAILED_EXECUTION,
             target=ErrorTarget.EVALUATE,
@@ -466,7 +491,7 @@ class SimilarityEvaluator(ModelEvaluatorBase):
         _score = result.get(self._result_key, 0)
         if _score is not None and math.isnan(_score):
             raise EvaluationException(
-                message="Evaluator returned invalid output.",
+                message=_invalid_output_message(result.get(f"{self._result_key}_properties")),
                 blame=ErrorBlame.SYSTEM_ERROR,
                 category=ErrorCategory.FAILED_EXECUTION,
                 target=ErrorTarget.SIMILARITY_EVALUATOR,

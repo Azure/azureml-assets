@@ -85,6 +85,30 @@ class TestRetrievalDoEvalBranches:
         )
         assert result["retrieval_score"] == 5
 
+    @pytest.mark.parametrize(
+        "flow_output, expected",
+        [
+            (None, "the judge model returned an empty response"),
+            (
+                {"llm_output": "Partial judgement of CUSTOMER-SECRET", "finish_reason": "length",
+                 "output_token_count": 800},
+                "the judge model output was truncated (finish_reason=length, output_tokens=800)",
+            ),
+        ],
+    )
+    def test_invalid_output_reports_cause_without_content(self, flow_output, expected):
+        """Unusable judge output raises an actionable, privacy-safe error."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+
+        async def flow(timeout=None, **kwargs):
+            return flow_output
+
+        evaluator._flow = flow
+        with pytest.raises(EvaluationException) as exc_info:
+            asyncio.run(evaluator._do_eval({"query": "What are the hours?", "context": "Open 9 to 5."}))
+        assert expected in exc_info.value.message
+        assert "CUSTOMER-SECRET" not in exc_info.value.message
+
 
 @pytest.mark.unittest
 class TestRetrievalConversationContextExtraction:
