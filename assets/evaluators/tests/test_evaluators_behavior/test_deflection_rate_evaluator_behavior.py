@@ -384,3 +384,12 @@ class TestDeflectionRateDecisionRouting(DecisionRoutingTests):
 
 
 # endregion
+
+
+@pytest.mark.unittest
+def test_invalid_output_message_is_actionable_and_privacy_safe():
+    """Invalid judge output is reported with its cause and safe metadata, never its content."""
+    from ..common.invalid_output_cases import assert_invalid_output_diagnostics
+    from ...builtin.deflection_rate.evaluator._deflection_rate import _invalid_output_message
+
+    assert_invalid_output_diagnostics(_invalid_output_message)

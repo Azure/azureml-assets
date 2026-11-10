@@ -159,7 +159,10 @@ def _invalid_output_message(model_output: Any) -> str:
         cause = f"the judge model output had unexpected type {type(llm_output).__name__}"
     else:
         cause = "no valid score could be parsed from the judge model output"
-    return f"Evaluator returned invalid output: {cause} (finish_reason={finish_reason}, output_tokens={output_tokens})."
+    return (
+        f"Evaluator returned invalid output: {cause} "
+        f"(finish_reason={finish_reason}, output_tokens={output_tokens})."
+    )
 
 
 class FluencyEvaluator(ModelEvaluatorBase[Union[str, float]]):

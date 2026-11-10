@@ -899,3 +899,12 @@ class TestToolOutputUtilizationDecisionRouting(DecisionRoutingTests):
         messages = deepcopy(data.LOCAL_CALLS_QUERY + data.LOCAL_CALLS_RESPONSE)
         evaluator(messages=messages, tool_definitions=deepcopy(data.LOCAL_CALLS_TOOL_DEFINITIONS))
         assert evaluator._decision_strategy.evaluate.await_args.args[0] == self.rendered_state
+
+
+@pytest.mark.unittest
+def test_invalid_output_message_is_actionable_and_privacy_safe():
+    """Invalid judge output is reported with its cause and safe metadata, never its content."""
+    from ..common.invalid_output_cases import assert_invalid_output_diagnostics
+    from ...builtin.tool_output_utilization.evaluator._tool_output_utilization import _invalid_output_message
+
+    assert_invalid_output_diagnostics(_invalid_output_message)
