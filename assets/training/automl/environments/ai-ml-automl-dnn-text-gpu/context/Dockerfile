@@ -1,5 +1,14 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
+# IMPORTANT (2026-10-26): Python was upgraded from 3.10 to 3.11 for Pillow 13 security fixes.
+# Downstream users must update interpreter-specific paths, wheels, and compiled dependencies for Python 3.11.
+RUN conda install -n ptca -c conda-forge -y python=3.11 pip && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.10 && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.8.0+cu126' 'torchvision==0.23.0+cu126' 'torchaudio==2.8.0+cu126' && \
+    conda clean -a -y
+
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl-dnn-text-gpu
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
@@ -61,13 +70,13 @@ ENV ENABLE_METADATA=true
 # begin conda create
 # Create conda environment
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    python=3.10 \
+    python=3.11 \
     # begin conda dependencies
     pip \
     numpy~=1.23.5\
     scikit-learn=1.5.1 \
     pandas~=1.5.3 \
-    'setuptools>=83.0.0' \
+    'setuptools>=84.1.0' \
     wheel=0.46.3 \
     scipy=1.10.1 \
     pybind11=2.10.1 \
@@ -77,11 +86,28 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
 # Ensure additional conda and pip install commands apply to our conda env of interest.
 SHELL ["conda", "run", "-p", "$AZUREML_CONDA_ENVIRONMENT_PATH", "/bin/bash", "-c"]
 
+# Build the legacy pmdarima pin before AzureML installs it transitively.
+RUN pip install --no-cache-dir --upgrade \
+        'setuptools==59.8.0' 'Cython<3' 'numpy>=1.23.5,<1.24' wheel && \
+    pip wheel --no-cache-dir --no-deps --no-build-isolation \
+        --wheel-dir /opt/pmdarima-wheel 'pmdarima==1.8.5' && \
+    pip install --no-cache-dir --no-index --find-links /opt/pmdarima-wheel \
+        --no-deps 'pmdarima==1.8.5' && \
+    pip install --no-cache-dir --upgrade 'setuptools>=84.1.0'
+
+ENV PIP_FIND_LINKS=/opt/pmdarima-wheel
+
+# pmdarima 1.8.5 imports pkg_resources, which patched setuptools no longer ships.
+RUN find $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/pmdarima -type f -name '*.py' \
+        -exec sed -i 's/from pkg_resources import parse_version/from packaging.version import parse as parse_version/' {} + && \
+    ! grep -R 'from pkg_resources import parse_version' \
+        $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/pmdarima
+
 # begin pip install
 # Install pip dependencies
 # Here, we pin sentencepiece since 0.1.98 breaks training. Earlier versions of horovod contain a sev2 vulnerability,
 # and earlier versions of tokenizers cause log spam with transformers==4.16.0.
-RUN pip install --no-cache-dir \
+RUN pip install --no-cache-dir --use-deprecated=legacy-resolver \
                 # begin pypi dependencies
                 azureml-core=={{latest-pypi-version}} \
                 azureml-mlflow=={{latest-pypi-version}} \
@@ -90,11 +116,11 @@ RUN pip install --no-cache-dir \
                 azureml-defaults=={{latest-pypi-version}} \
                 'azure-identity>=1.25.1' \
                 'sentencepiece==0.2.1' \
-                'filelock>=3.20.3'
+                'filelock>=4.2.1'
                 # end pypi dependencies
 
 # Install packages with torch packages separately to reduce layer size
-RUN pip install --no-cache-dir \
+RUN pip install --no-cache-dir --use-deprecated=legacy-resolver \
                 azureml-train-automl-client=={{latest-pypi-version}} \
                 azureml-train-automl-runtime=={{latest-pypi-version}} \
                 azureml-automl-dnn-nlp=={{latest-pypi-version}}
@@ -125,22 +151,22 @@ RUN pip install --no-cache-dir --upgrade 'pip>=26.1.2'
 # 2.x, which contradicts azureml-automl-runtime and scipy and leaves the prebuilt pandas 1.5.3
 # wheel binary-incompatible, so the image fails on import pandas with
 # "ValueError: numpy.dtype size changed".
-RUN pip install --upgrade 'numpy~=1.23.5' 'distributed>=2026.1.0' 'cryptography>=50.0.0' 'bokeh>=3.8.2' 'onnx>=1.22.0' 'sqlparse>=0.6.0'
+RUN pip install --upgrade 'numpy~=1.23.5' 'distributed>=2026.1.0' 'cryptography>=50.0.0' 'bokeh>=3.8.2' 'onnx>=1.22.0' 'sqlparse>=0.6.0' 'pillow>=13.0.0' 'filelock>=4.2.1' 'pyasn1>=0.6.5' 'tornado>=6.6'
 
 # Security: upgrade aiohttp to fix GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8,
 # and follow-up aiohttp advisories requiring >=3.14.3 in the AzureML conda env.
-RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3'
+RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.14.4'
 
 # The ACPT ptca env and the base conda prefix carry their own copies of these
 # packages, which the AzureML conda env above never touches; patch them explicitly.
-RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3' 'httpx<1' 'huggingface-hub>=1.5.0,<2.0'
-RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3' 'anyio>=4.14.2' 'cryptography>=50.0.0'
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'aiohttp>=3.14.4' 'httpx<1' 'huggingface-hub>=1.5.0,<2.0' 'pillow>=13.0.0' 'pyasn1>=0.6.5'
+RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'aiohttp>=3.14.4' 'anyio>=4.14.2' 'cryptography>=50.0.0' 'pyasn1>=0.6.5'
 
-RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'setuptools>=83.0.0' 'msgpack>=1.2.1'
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'setuptools>=84.1.0' 'msgpack>=1.2.3'
 
 # Apply the same setuptools and msgpack security fixes in the AzureML and base conda envs.
-RUN pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==83.0.0' 'msgpack>=1.2.1'
-RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'setuptools>=83.0.0' 'msgpack>=1.2.1'
+RUN pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==84.1.0' 'msgpack>=1.2.3'
+RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'setuptools>=84.1.0' 'msgpack>=1.2.3'
 
 # Temporary override for the Torch stack inherited from the ACPT torch280 base.
 # The CUDA 12.6 index has no torchaudio build compatible with torch>=2.12, so
@@ -151,7 +177,7 @@ RUN /opt/conda/envs/ptca/bin/pip uninstall -y torchaudio && \
         --index-url https://download.pytorch.org/whl/cu126 \
         'torch==2.13.0' 'torchvision==0.28.0' && \
     /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade --no-deps \
-        'setuptools>=83.0.0' 'huggingface-hub==1.33.0' 'tokenizers==0.22.2' && \
+        'setuptools>=84.1.0' 'huggingface-hub==1.33.0' 'tokenizers==0.22.2' && \
     "$AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip" uninstall -y torchaudio && \
     "$AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip" install --no-cache-dir --upgrade \
         --index-url https://download.pytorch.org/whl/cu126 \
@@ -165,7 +191,7 @@ RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  CMAKE_LIBRARY_PATH=/usr/local/cuda/targets/x86_64-linux/lib:/usr/local/cuda-12.6/targets/x86_64-linux/lib \
  pip install --no-cache-dir --no-build-isolation \
  git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d && \
- pip install --no-cache-dir --upgrade --no-deps 'setuptools>=83.0.0' 'huggingface-hub==1.33.0' 'tokenizers==0.22.2'"
+ pip install --no-cache-dir --upgrade --no-deps 'setuptools>=84.1.0' 'huggingface-hub==1.33.0' 'tokenizers==0.22.2'"
 
 RUN rm -rf /opt/conda/pkgs/
 
@@ -198,21 +224,29 @@ RUN set -eu; \
         -exec grep -IlE '^(setuptools==70\.3\.0|msgpack==1\.1\.2)$' {} + | grep -q .; then exit 1; fi
 # end pip install
 
-# Refresh packages for the latest Ubuntu security advisories.
+# Reassert newly patched transitive dependencies after all package installs.
+RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/python -m pip install --no-cache-dir --upgrade \
+        'datasets>=5.0.1' 'fsspec>=2026.6.0' 'urllib3>=2.8.0' && \
+    /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0' 'urllib3>=2.8.0'
+
+# Reassert November 2026 vulnerability-report floors in the scanned Python prefixes.
+RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'certifi>=2026.10.19' 'brotlicffi>=1.2.1.0' 'opentelemetry-api>=1.45.1' && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/certifi-2024.7.4.dist-info && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/opentelemetry__api-1.43.0.dist-info
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/python -m pip install --no-cache-dir --upgrade 'opentelemetry-api>=1.45.1'
+
+# Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libssl-dev libssl3 libx11-6 libx11-data libx11-xcb1 openssh-client openssh-server openssh-sftp-server openssl"; \
+    security_packages="dotnet-host-8.0 dotnet-hostfxr-8.0 dotnet-runtime-8.0 libbrotli1 libnginx-mod-http-echo libnginx-mod-http-geoip2 libpcre2-8-0 nginx-common nginx-light"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
             installed_packages="$installed_packages $package"; \
         fi; \
     done; \
-    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    if [ -n "$installed_packages" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade $installed_packages; \
+    fi; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
-
-# Reassert newly patched transitive dependencies after all package installs.
-RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/python -m pip install --no-cache-dir --upgrade \
-        'datasets>=5.0.1' 'fsspec>=2026.6.0' 'urllib3>=2.8.0' && \
-    /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0' 'urllib3>=2.8.0'
