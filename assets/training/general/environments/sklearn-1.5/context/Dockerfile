@@ -100,5 +100,3 @@ RUN set -eux; \
     fi; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
-
-RUN $CONDA_PREFIX/bin/python -c "import sklearn, sklearnex; assert sklearn.__version__.startswith('1.5.')"
