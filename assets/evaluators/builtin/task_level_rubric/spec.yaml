@@ -2,7 +2,7 @@ type: "evaluator"
 name: "builtin.task_level_rubric"
 version: 2
 displayName: "Task-Level-Rubric-Evaluator-(Preview)"
-description: "Evaluates each Task (one dataset row containing a trace) against that row's rubric dimensions. Returns overall and per-dimension pass/fail with explanations. Uses a temporary placeholder judge prompt for integration testing, not approved production grading."
+description: "Evaluates an agent's response or full conversation against the task-specific rubric supplied for each dataset row. Uses an LLM judge with dedicated last-turn and conversation prompts to return overall and per-dimension verdicts with explanations. Applicable criteria receive pass/fail verdicts; inapplicable criteria are marked as skipped. When a valid expected field is provided, its expected-answer check is a hard pass/fail gate: failure fails the overall task regardless of rubric results. Requires rubric_dimensions together with either messages or both query and response. Optional tool definitions and a test-case description provide additional context."
 evaluatorType: "builtin"
 evaluatorSubType: "service"
 categories: ["agents", "quality"]
