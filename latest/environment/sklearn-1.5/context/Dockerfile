@@ -25,20 +25,21 @@ RUN apt-get update && \
 # IMPORTANT (2026-10-26): Python was upgraded from 3.10 to 3.11 for Pillow 13 security fixes.
 # Downstream users must update interpreter-specific paths, wheels, and compiled dependencies for Python 3.11.
 COPY conda_dependencies.yaml .
-RUN conda install -n base -c conda-forge --freeze-installed --force-reinstall -y pip=26.2.0 && \
-    /opt/miniconda/bin/python -m pip install --no-cache-dir --force-reinstall pip==26.2.0 && \
-    conda create -p $CONDA_PREFIX -q -y python=3.11 pip=26.2.0 pandas=2.2.3 'scipy~=1.10.0' numpy=1.26.4 -c conda-forge -c anaconda && \
-    conda run -p $CONDA_PREFIX python -m pip install --no-cache-dir --force-reinstall pip==26.2.0 && \
+RUN conda install -n base -c conda-forge --freeze-installed --force-reinstall -y pip=26.2.2 && \
+    /opt/miniconda/bin/python -m pip install --no-cache-dir --force-reinstall pip==26.2.2 && \
+    conda create -p $CONDA_PREFIX -q -y python=3.11 pip=26.2.2 pandas=2.2.3 'scipy~=1.10.0' numpy=1.26.4 -c conda-forge -c anaconda && \
+    conda run -p $CONDA_PREFIX python -m pip install --no-cache-dir --force-reinstall pip==26.2.2 && \
     conda clean -a -y
 
 # Step 2: Install pip packages separately (pip resolver uses less memory than conda's SAT solver).
 # starlette>=1.0.1 / idna>=3.15: pinned transitive deps of fastapi / requests; fix GHSA-86qp-5c8j-p5mr and GHSA-65pc-fj4g-8rjx.
 # msgpack>=1.2.3 / setuptools>=84.1.0: pinned transitive deps of distributed / AzureML packages; fix GHSA-6v7p-g79w-8964, GHSA-5rjg-fvgr-3xxf, and GHSA-h35f-9h28-mq5c.
+# Pin Intel to retain sklearn 1.5 compatibility; newer releases require sklearn >=1.6 and removed older API fallbacks.
 RUN printf '%s\n' 'msgpack>=1.2.3' 'setuptools>=84.1.0' > /tmp/pip-security-constraints.txt && \
     conda run -p $CONDA_PREFIX pip install --no-cache-dir \
     --no-build-isolation \
     --constraint /tmp/pip-security-constraints.txt \
-    scikit-learn-intelex==2026.2.0 \
+    scikit-learn-intelex==2025.0.1 \
     azureml-core==1.61.0.post4 \
     azureml-defaults==1.62.0 \
     azureml-inference-server-http==1.5.1 \
@@ -76,11 +77,6 @@ RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
 
 # idna and cryptography are also installed in the base Miniconda prefix.
 RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'idna>=3.15' 'cryptography>=50.0.0'
-
-# Normalize pip's vendored inventory after the corresponding packages are upgraded.
-RUN find /opt /azureml-envs /root -path '*/pip/_vendor/vendor.txt' -type f -exec \
-        sed -i -E 's/setuptools==70\.3\.0/setuptools==84.1.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} + && \
-    find /opt /azureml-envs /root -path '*/pip/_vendor/bom.cdx.json' -type f -delete
 
 # Reassert newly patched transitive dependencies after all package installs.
 RUN /azureml-envs/sklearn-1.5/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0' 'oauthlib>=4.0.0' 'urllib3>=2.8.0' && \

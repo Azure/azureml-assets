@@ -4,12 +4,13 @@ channels:
 - anaconda
 dependencies:
 - python=3.11
-- pip=26.2.1
-- pandas~=1.5.3
+- pip=26.2.2
+- pandas=2.2.3
 - scipy~=1.10.0
-- numpy~=1.22.0
+- numpy=1.26.4
 - pip:
-  - scikit-learn-intelex==2026.2.0
+  # Pin Intel to retain sklearn 1.5 compatibility; newer releases require sklearn >=1.6 and removed older API fallbacks.
+  - scikit-learn-intelex==2025.0.1
   - azureml-core==1.61.0.post4
   - azureml-defaults==1.62.0
   - azureml-inference-server-http==1.5.1
