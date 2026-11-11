@@ -75,8 +75,9 @@ RUN printf '%s\n' 'msgpack>=1.2.3' 'setuptools>=84.1.0' > /tmp/pip-security-cons
 RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
     'aiohttp>=3.14.4' 'pyOpenSSL==26.4.0' 'cryptography>=50.0.0,<51' 'distributed>=2026.1.0' 'GitPython>=3.1.55' 'msgpack>=1.2.3' 'pyarrow>=23.0.1,<24' 'setuptools>=84.1.0' 'sqlparse>=0.6.0'
 
-# idna and cryptography are also installed in the base Miniconda prefix.
-RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'idna>=3.15' 'cryptography>=50.0.0'
+# Apply security floors to packages in the base Miniconda prefix as well.
+RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade \
+    'idna>=3.15' 'cryptography>=50.0.0' 'setuptools>=84.1.0' 'msgpack>=1.2.3'
 
 # Reassert newly patched transitive dependencies after all package installs.
 RUN /azureml-envs/sklearn-1.5/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0' 'oauthlib>=4.0.0' 'urllib3>=2.8.0' && \
