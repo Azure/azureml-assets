@@ -14,6 +14,9 @@ from azure.identity import AzureCliCredential
 import pytest
 
 
+BUILD_CONTEXT = Path("..") / "context"
+
+
 @pytest.mark.parametrize("intel_extension", [False, True])
 def test_sklearn_1_5(intel_extension, tmp_path):
     """Build and test an explicitly versioned environment without shared latest aliases."""
@@ -27,7 +30,7 @@ def test_sklearn_1_5(intel_extension, tmp_path):
     environment = client.environments.create_or_update(Environment(
         name="sklearn-1-5-test",
         version=uuid4().hex,
-        build=BuildContext(path=str(directory.parent / "context")),
+        build=BuildContext(path=str(directory / BUILD_CONTEXT)),
         description="Scikit-learn 1.5 Python 3.11 MCR image test.",
     ))
     timeout_minutes = int(os.environ.get("timeout_minutes", "45"))
