@@ -178,7 +178,7 @@ RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'certifi>=
 # Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="nginx libbrotli1"; \
+    security_packages="nginx libbrotli1 libpcre2-8-0"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \

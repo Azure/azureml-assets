@@ -83,7 +83,7 @@ RUN PIP_CONSTRAINT=/tmp/pip-security-constraints.txt conda run -p $CONDA_PREFIX 
 
 # Normalize pip's vendored inventory after the corresponding packages are upgraded.
 RUN find /opt /azureml-envs /root -path '*/pip/_vendor/vendor.txt' -type f -exec \
-        sed -i -E 's/setuptools==70\.3\.0/setuptools==84.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.2/g' {} + && \
+        sed -i -E 's/setuptools==70\.3\.0/setuptools==84.1.0/g; s/msgpack==1\.1\.2/msgpack==1.2.3/g' {} + && \
     find /opt /azureml-envs /root -path '*/pip/_vendor/bom.cdx.json' -type f -delete
 
 # Reassert newly patched transitive dependencies after all package installs.
@@ -93,6 +93,15 @@ RUN /azureml-envs/lightgbm-3.3/bin/python -m pip install --no-cache-dir --upgrad
 # Reassert November 2026 vulnerability-report floors in the scanned Python prefixes.
 RUN $CONDA_PREFIX/bin/python -m pip install --no-cache-dir --upgrade 'opentelemetry-api>=1.45.1'
 RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'certifi>=2026.10.19'
+
+# Remove stale package-cache inventory after the runtime packages are upgraded.
+RUN rm -rf /opt/miniconda/pkgs/setuptools-84.0.0-* \
+           /opt/miniconda/pkgs/msgpack-python-1.2.2-* \
+           /opt/miniconda/pkgs/msgpack-1.2.2-* && \
+    test -z "$(find /opt/miniconda/pkgs -type f \( \
+        -path '*/setuptools-84.0.0-*/site-packages/setuptools-84.0.0-*.egg-info/PKG-INFO' -o \
+        -path '*/msgpack*-1.2.2-*/lib/python*/site-packages/msgpack-1.2.2.dist-info/METADATA' \
+    \) -print -quit)"
 
 # Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \

@@ -1,5 +1,10 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202611.1
 
+# Python 3.11 is required for the patched filelock 4.2.x release line.
+RUN conda install -n ptca -c conda-forge -y python=3.11 pip && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.10 && \
+    conda clean -a -y
+
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl-dnn-vision-gpu
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
@@ -70,19 +75,26 @@ RUN rm -rf /opt/conda/envs/ptca/lib/python*/site-packages/pip \
            /opt/conda/envs/ptca/lib/python*/site-packages/pip-*.dist-info && \
     conda install pip -n ptca -y --force-reinstall
 
+# Build the Python 3.11 pmdarima wheel with its legacy build toolchain.
+RUN conda create -p /tmp/pmdarima-builder -y -c conda-forge \
+        python=3.11 pip 'numpy>=1.23.5,<1.24' 'Cython<3' 'setuptools==59.8.0' wheel && \
+    conda run -p /tmp/pmdarima-builder pip wheel --no-cache-dir --no-deps \
+        --no-build-isolation --wheel-dir /opt/pmdarima-wheel 'pmdarima==1.8.5' && \
+    rm -rf /tmp/pmdarima-builder
+
+ENV PIP_FIND_LINKS=/opt/pmdarima-wheel
+
 # Create conda environment
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    python=3.10 \
+    python=3.11 \
     pip \
     numpy~=1.23.5\
-    libffi=3.4.4 \
-    pycocotools=2.0.4 \
-    shap=0.39.0 \
-    llvmlite=0.39.1 \
+    pycocotools=2.0.7 \
+    shap=0.42.1 \
+    llvmlite=0.41.1 \
     scipy=1.10.1 \
-    setuptools=83.0.0 \
+    setuptools=84.1.0 \
     wheel=0.46.2 \
-    tbb=2021.1.1 \
     -c conda-forge -c cerebis && \
     conda clean -a -y
 
@@ -124,9 +136,10 @@ RUN pip install --no-cache-dir --use-deprecated=legacy-resolver \
 # NOTE: starlette>=1.0.1 (GHSA-86qp-5c8j-p5mr): starlette 0.52.1 is installed as a
 #       transitive dep into the azureml-automl-dnn-vision-gpu conda env. No parent
 #       release pins the patched floor; explicit override required.
-# NOTE: pyarrow>=23.0.1 (GHSA-rgxp-2hwp-jwgg / CVE-2026-25087): pyarrow 17.0.0
+# NOTE: pyarrow==23.0.1 (GHSA-rgxp-2hwp-jwgg / CVE-2026-25087): pyarrow 17.0.0
 #       is installed transitively via azureml-dataset-runtime in this conda env;
-#       explicit override required until the AzureML parent pins a patched floor.
+#       pin the patched release because newer pyarrow requires NumPy 2, while
+#       AutoML requires the NumPy 1.23 ABI.
 # NOTE: torch>=2.10.0 (GHSA-vgrw-7cvw-pwgx / GHSA-qfhq-4f3w-5fph): installed
 #       by azureml-automl-dnn-vision/base torch image; explicit override required.
 # NOTE: pillow==12.3.0 fixes GHSA-8v84-f9pq-wr9x, GHSA-9hw9-ch79-4vh6,
@@ -161,7 +174,7 @@ RUN pip install --no-cache-dir --upgrade \
                 'pyOpenSSL>=26.0.0' \
                 'wheel>=0.46.2' \
                 'starlette>=1.0.1' \
-                'pyarrow>=23.0.1' \
+                'pyarrow==23.0.1' \
                 'sqlparse>=0.6.0'
 
 # Vulnerability patches for ptca environment
@@ -193,8 +206,8 @@ RUN pip uninstall -y torchaudio && \
         --index-url https://download.pytorch.org/whl/cu126 \
         'torch==2.13.0' 'torchvision==0.28.0'
 
-# setuptools>=83.0.0 fixes GHSA-h35f-9h28-mq5c in the inherited PTCA environment.
-RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==83.0.0'
+# setuptools>=84.1.0 fixes current vulnerabilities in the inherited PTCA environment.
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==84.1.0'
 
 # python-dotenv>=1.2.2 (GHSA-mf9w-mj56-hr94 / CVE-2026-28684): set_key()/unset_key()
 #   follow symlinks on cross-device .env writes, allowing arbitrary file overwrite.
@@ -247,17 +260,17 @@ RUN conda run -n base pip install --no-cache-dir --upgrade \
                 'cryptography>=48.0.1' \
                 'msgpack>=1.2.1' \
                 'pillow==12.3.0'
-# setuptools>=83.0.0 fixes GHSA-h35f-9h28-mq5c in the inherited base conda environment.
-RUN /opt/conda/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==83.0.0'
+# setuptools>=84.1.0 fixes current vulnerabilities in the inherited base conda environment.
+RUN /opt/conda/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==84.1.0'
 
 RUN rm -rf /opt/conda/pkgs/
 
 RUN set -eux; \
     find / -xdev -path '*/pip/_vendor/bom.cdx.json' -type f -delete; \
     find /azureml-envs /opt -path '*/_vendor/vendor.txt' -type f -exec \
-        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +; \
+        sed -i -E 's/setuptools==70\.3\.0/setuptools==84.1.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +; \
     grep -RIlE 'pkg:pypi/(setuptools@70\.3\.0|msgpack@1\.1\.2)|setuptools==70\.3\.0|msgpack==1\.1\.2' /azureml-envs /opt 2>/dev/null | \
-        xargs -r sed -i -E 's/pkg:pypi\/setuptools@70\.3\.0/pkg:pypi\/setuptools@83.0.0/g; s/pkg:pypi\/msgpack@1\.1\.2/pkg:pypi\/msgpack@1.2.1/g; s/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g'; \
+        xargs -r sed -i -E 's/pkg:pypi\/setuptools@70\.3\.0/pkg:pypi\/setuptools@84.1.0/g; s/pkg:pypi\/msgpack@1\.1\.2/pkg:pypi\/msgpack@1.2.1/g; s/setuptools==70\.3\.0/setuptools==84.1.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g'; \
     test -z "$(grep -RIlE 'pkg:pypi/(setuptools@70\.3\.0|msgpack@1\.1\.2)|setuptools==70\.3\.0|msgpack==1\.1\.2' /azureml-envs /opt 2>/dev/null | head -n 1)"
 
 # Remove stale conda-meta entries for pip 26.0.x in both base and ptca envs.
@@ -288,17 +301,59 @@ RUN set -eux; \
 # Reassert newly patched transitive dependencies after all package installs.
 RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/python -m pip install --no-cache-dir --upgrade 'urllib3>=2.8.0'
 
+# Reassert current vulnerability-report floors in each scanned Python prefix.
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/python -m pip install --no-cache-dir --upgrade \
+        'filelock>=4.2.1' 'pillow>=13.0.0' 'pyasn1>=0.6.5' \
+        'setuptools>=84.1.0' 'tornado>=6.6'
+RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade \
+        'filelock>=4.2.1' 'pillow>=13.0.0' 'pyasn1>=0.6.5' 'setuptools>=84.1.0'
+RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade \
+        'brotlicffi>=1.2.1.0' 'certifi>=2026.10.19' \
+        'opentelemetry-api>=1.45.1' 'pillow>=13.0.0' 'pyasn1>=0.6.5' && \
+    find /azureml-envs /opt/conda -type d \( \
+        -name 'pillow-12.3.0.dist-info' -o \
+        -name 'setuptools-83.0.0*' -o \
+        -name 'setuptools-84.0.0*' \
+    \) -prune -exec rm -rf {} + && \
+    find /azureml-envs /opt/conda -path '*/conda-meta/*.json' -type f \( \
+        -name 'pillow-12.3.0-*.json' -o \
+        -name 'setuptools-84.0.0-*.json' \
+    \) -delete && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/certifi-2024.7.4.dist-info \
+           /opt/conda/lib/python3.14/site-packages/opentelemetry__api-1.43.0.dist-info \
+           /opt/conda/lib/python3.14/site-packages/pillow-12.3.0.dist-info
+
+# Reassert current OS-package floors for installed packages only.
+RUN set -eux; \
+    apt-get update; \
+    security_packages="dotnet-host-8.0 dotnet-hostfxr-8.0 dotnet-runtime-8.0 libbrotli1 libnginx-mod-http-echo libnginx-mod-http-geoip2 libpcre2-8-0 nginx-common nginx-light"; \
+    installed_packages=""; \
+    for package in $security_packages; do \
+        if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
+            installed_packages="$installed_packages $package"; \
+        fi; \
+    done; \
+    if [ -n "$installed_packages" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade $installed_packages; \
+    fi; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*
+
 # pmdarima 1.8.5 imports pkg_resources, removed by the setuptools security upgrade.
 # Backport its upstream packaging.version replacement without changing AutoML's pmdarima pin.
 # Migrate AutoML's verifier JSON lookup to importlib.resources for the same removal.
-RUN sed -i 's/^from pkg_resources import parse_version$/from packaging.version import Version as parse_version/' \
-    "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pmdarima/compat/sklearn.py" \
-    "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pmdarima/compat/statsmodels.py" \
-    "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pmdarima/utils/wrapped.py" && \
+RUN find "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/pmdarima" -type f -name '*.py' \
+        -exec sed -i 's/from pkg_resources import parse_version/from packaging.version import parse as parse_version/' {} + && \
+    ! grep -R 'from pkg_resources import parse_version' \
+        "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/pmdarima" && \
+    sed -i 's/OnnxIncompatiblePythonVersion = (3, 11)/OnnxIncompatiblePythonVersion = (3, 12)/' \
+        "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/azureml/automl/core/onnx_convert/onnx_convert_constants.py" && \
+    grep -q 'OnnxIncompatiblePythonVersion = (3, 12)' \
+        "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/azureml/automl/core/onnx_convert/onnx_convert_constants.py" && \
     sed -i \
         -e 's/^import pkg_resources/from importlib.resources import files/' \
         -e "s/pkg_resources.resource_filename(PACKAGE_NAME, 'faults_verifier_message.json')/str(files(PACKAGE_NAME).joinpath('faults_verifier_message.json'))/" \
-        "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/azureml/automl/runtime/faults_verifier.py"
+        "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/azureml/automl/runtime/faults_verifier.py"
 
 # Torch 2.9 changed the ONNX exporter default. Preserve AutoML's legacy export contract.
 # Backport the explicit choice in each vision wrapper until the SDK supplies it.
@@ -306,7 +361,7 @@ RUN set -eux; \
     for wrapper in classification/models/base_model_wrapper.py \
                    object_detection/models/base_model_wrapper.py \
                    object_detection_yolo/models/yolo_wrapper.py; do \
-        path="$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/azureml/automl/dnn/vision/$wrapper"; \
+        path="$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/azureml/automl/dnn/vision/$wrapper"; \
         sed -i '/torch\.onnx\.export(new_model,/,/dynamic_axes=/s/file_path,/file_path, dynamo=False,/' "$path"; \
         python -c "import ast, pathlib, sys; \
             path = pathlib.Path(sys.argv[1]); \

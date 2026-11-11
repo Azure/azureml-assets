@@ -6,7 +6,11 @@ FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20261108.v1
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade \
-        libgcrypt20=1.10.3-2ubuntu0.2 && \
+        libgcrypt20=1.10.3-2ubuntu0.2 \
+        libbrotli1 \
+        nginx \
+        nginx-common \
+        nginx-light && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -16,19 +20,22 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir \
     && pip install "cryptography>=50.0.0" --no-cache-dir
 
-# Refresh packages for the latest Ubuntu security advisories.
+# Reassert newly patched transitive dependencies after all package installs.
+RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade \
+    'PyJWT>=2.15.0' 'oauthlib>=4.0.0' 'pyasn1>=0.6.5' 'setuptools>=84.1.0'
+
+# Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libexpat1 libssl3t64 openssh-client openssh-server openssh-sftp-server openssl"; \
+    security_packages="nginx nginx-common nginx-light libbrotli1 libpcre2-8-0"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
             installed_packages="$installed_packages $package"; \
         fi; \
     done; \
-    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    if [ -n "$installed_packages" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade $installed_packages; \
+    fi; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
-
-# Reassert newly patched transitive dependencies after all package installs.
-RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0' 'oauthlib>=4.0.0'
