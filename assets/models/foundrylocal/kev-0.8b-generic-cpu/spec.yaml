@@ -11,7 +11,7 @@ system_metadata:
   - text
   license: apache-2.0
   licenseDescription: This model is provided under the License Terms available at
-    <https://huggingface.co/jaredpalmer/kev-0.8b/blob/main/LICENSE>.
+    <https://huggingface.co/Qwen/Qwen3.5-0.8B-Base/blob/main/LICENSE>.
   minFLVersion: 2.4.0
   outputModalities:
   - text
