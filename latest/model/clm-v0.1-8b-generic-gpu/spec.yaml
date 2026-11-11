@@ -1,0 +1,52 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: clm-v0.1-8b-generic-gpu
+path: ./
+system_metadata:
+  alias: clm-v0.1-8b
+  deploymentOptions:
+  - Foundry Local on Devices
+  directoryPath: v1
+  foundryLocal: ''
+  inputModalities:
+  - text
+  license: apache-2.0
+  licenseDescription: This model is provided under the License Terms available 
+    at <https://huggingface.co/Contrastive-LM/CLM-v0.1-8B/blob/main/LICENSE>.
+  minFLVersion: 2.4.0
+  outputModalities:
+  - text
+  platformCapabilities:
+    enableMaap: false
+  previewType: hideUI
+  publisher: Microsoft
+  tasks:
+    inferenceTasks:
+    - ranking
+tags:
+  capabilities: candidate-ranking,structured-input,action-cache
+  contextLength: 40960
+variantInfo:
+  parents:
+  - assetId: azureml://registries/azureml/models/clm-v0.1-8b/versions/1
+  variantMetadata:
+    device: gpu
+    executionProvider: WebGPUExecutionProvider
+    fileSizeBytes: 8959139038
+    modelType: ONNX
+    quantization:
+    - RTN
+    vRamFootprintBytes: 8959139038
+version: 1
+description: |
+  This is a mixed FP16 and INT4 ONNX version of CLM-v0.1-8B for local candidate ranking with WebGPU. It requires Foundry Local 2.4.0 or later.
+
+  # Model Description
+  - **Developed by:** Contrastive-LM
+  - **Optimized by:** Microsoft
+  - **Model type:** ONNX
+  - **License:** apache-2.0
+  - **Model Description:** This model ranks candidate answers against a question and optional structured context.
+  - **Disclaimer:** This model is an optimization of the base model. Validate its ranking behavior for your scenario.
+
+  # Base Model Information
+  See Hugging Face model [CLM-v0.1-8B](https://huggingface.co/Contrastive-LM/CLM-v0.1-8B) for details.
