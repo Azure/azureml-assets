@@ -1,5 +1,8 @@
 FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.8-ubuntu24.04:{{latest-image-tag}}
 
+# IMPORTANT (2026-10-26): This image already uses Python 3.12; Pillow was upgraded to 13 for security fixes.
+# Downstream users must keep interpreter-specific paths, wheels, and compiled dependencies compatible with Python 3.12.
+
 USER root
 # Editable sources live under /opt so AML/Singularity jobs (uid 9000) can
 # read them. /root is mode 700 and would make `import slime`, the slime
@@ -152,6 +155,9 @@ RUN JACKSON_CORE_VERSION=2.21.7 \
     JACKSON_DATABIND_VERSION=2.21.7 \
     JACKSON_DATABIND_JAR_SHA1=a2ebbc72e3092323f0f3defa786ff3bb0c47218c \
     JACKSON_DATABIND_POM_SHA1=2042d73ac64ef7586d763c44aff5398753941fde \
+    GUAVA_VERSION=33.7.2-jre \
+    GUAVA_JAR_SHA1=e70def5b06cfb109ea050de99870e79c8ce80dbc \
+    GUAVA_POM_SHA1=aa78c19dd6023ef92b554d13ab4f6ed467e9f7bf \
     python /tmp/patch_ray_jackson.py && \
     rm /tmp/patch_ray_jackson.py
 
@@ -235,19 +241,19 @@ RUN python -m pip install --no-cache-dir \
         torchvision==0.28.0 \
         torchaudio==2.11.0 && \
     python -m pip install --no-cache-dir \
-        "aiohttp>=3.14.3" \
+        "aiohttp>=3.14.4" \
         "starlette>=1.0.1" \
         "idna>=3.15" \
         "pyarrow>=23.0.1" \
         "pyasn1>=0.6.4" \
-        "pillow>=12.3.0" \
+        "pillow>=13.0.0" \
         "transformers>=5.10.0" \
         "mcp[cli]>=1.28.1" \
         "wandb>=0.28.1" \
         "GitPython>=3.1.57" \
         "cryptography>=50.0.0" \
         "pip>=26.2.0" \
-        "setuptools>=83.0.0"
+        "setuptools>=84.1.0"
 
 # pip and virtualenv publish PEP 770 inventories for bootstrap/vendored
 # components. Remove only inventories and package-manager records that still
@@ -313,7 +319,7 @@ COPY patch_ray_thirdparty.py /tmp/patch_ray_thirdparty.py
 # so without it the vendored aiohttp stays at the vulnerable version.
 RUN python -m pip install --no-cache-dir --upgrade \
         "idna>=3.15" \
-        "aiohttp>=3.14.3" \
+        "aiohttp>=3.14.4" \
         --target "$(python -c 'import site; print(site.getsitepackages()[0])')/ray/_private/runtime_env/agent/thirdparty_files" && \
     python /tmp/patch_ray_thirdparty.py && \
     rm /tmp/patch_ray_thirdparty.py
@@ -324,19 +330,38 @@ RUN python -m pip install --no-cache-dir --upgrade \
 # Megatron-LM import all succeed without requiring `--user root`.
 RUN chmod -R a+rX /opt/slime /opt/Megatron-LM
 
-# Refresh packages for the latest Ubuntu security advisories.
+# Reassert newly patched transitive dependencies after all package installs.
+RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade \
+        'PyJWT>=2.15.0' 'filelock>=4.2.1' 'pyasn1>=0.6.5'
+
+# Reassert November 2026 vulnerability-report floors in the scanned Python prefixes.
+RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'virtualenv>=21.14.9'
+
+# Remove stale bootstrap inventories recreated by the final Virtualenv upgrade.
+RUN set -eux; \
+    sed -i '/pip-26\.0\.1/d; /setuptools-82\.0\.1/d' \
+        /opt/miniconda/conda-meta/initial-state.explicit.txt; \
+    find /opt/miniconda/lib/python*/site-packages/virtualenv-*.dist-info/sboms \
+        -type f -exec sh -c \
+        'for inventory do if grep -Eq "26\.0\.1|82\.0\.1" "$inventory"; then rm -f "$inventory"; fi; done' \
+        sh {} +; \
+    ! grep -Eq 'pip-26\.0\.1|setuptools-82\.0\.1' \
+        /opt/miniconda/conda-meta/initial-state.explicit.txt; \
+    ! find /opt/miniconda/lib/python*/site-packages/virtualenv-*.dist-info/sboms \
+        -type f -exec grep -IlE '26\.0\.1|82\.0\.1' {} + | grep -q .
+
+# Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libssl3t64 openssh-client openssh-server openssh-sftp-server openssl"; \
+    security_packages="bind9-dnsutils bind9-host bind9-libs zlib1g nginx nginx-common nginx-light libbrotli1 libpcre2-8-0"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
             installed_packages="$installed_packages $package"; \
         fi; \
     done; \
-    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    if [ -n "$installed_packages" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade $installed_packages; \
+    fi; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
-
-# Reassert newly patched transitive dependencies after all package installs.
-RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0'

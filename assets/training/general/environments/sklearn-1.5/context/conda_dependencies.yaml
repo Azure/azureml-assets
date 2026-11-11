@@ -4,12 +4,13 @@ channels:
 - anaconda
 dependencies:
 - python=3.11
-- pip=26.2.1
-- pandas~=1.5.3
+- pip=26.2.2
+- pandas=2.2.3
 - scipy~=1.10.0
-- numpy~=1.22.0
+- numpy=1.26.4
 - pip:
-  - scikit-learn-intelex=={{latest-pypi-version}}
+  # Pin Intel to retain sklearn 1.5 compatibility; newer releases require sklearn >=1.6 and removed older API fallbacks.
+  - scikit-learn-intelex==2025.0.1
   - azureml-core=={{latest-pypi-version}}
   - azureml-defaults=={{latest-pypi-version}}
   - azureml-inference-server-http=={{latest-pypi-version}}
@@ -37,4 +38,5 @@ dependencies:
   - msgpack>=1.2.3  # pinned transitive dep of distributed; fixes GHSA-6v7p-g79w-8964
   - pyarrow>=23.0.1  # pinned transitive dep of azureml-dataset-runtime; fixes GHSA-rgxp-2hwp-jwgg
   - setuptools>=84.1.0  # pinned transitive build/runtime dep of AzureML packages; fixes GHSA-5rjg-fvgr-3xxf and GHSA-h35f-9h28-mq5c
+  - urllib3>=2.8.0
   - sqlparse>=0.6.0  # pinned transitive dep of azureml-mlflow / mlflow; fixes GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr, GHSA-3496-9g83-7v6x, GHSA-pwgv-4x5q-6m9f
