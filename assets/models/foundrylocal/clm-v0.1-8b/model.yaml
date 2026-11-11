@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/models/clm-v0.1-8b
+  container_path: foundrylocal/models/clm-v0.1-8b/base/v1
   storage_name: foundrylocalassetdata
   type: azureblob
 publish:
