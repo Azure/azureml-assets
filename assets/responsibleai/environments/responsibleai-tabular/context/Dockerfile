@@ -47,28 +47,24 @@ RUN pip install 'pyarrow>=14.0.1'
 # TODO: remove rai-core-flask pin with next raiwidgets release
 RUN pip install 'rai-core-flask==0.7.6'
 
-# MLflow 3.14 changed sklearn serialization to skops by default. The compatibility
-# patch preserves the previous cloudpickle behavior for existing callers and uses
-# mlflow-skinny in generated model environments to avoid dependency downgrades.
-RUN pip install 'mlflow==3.15.0' \
-                'mlflow-skinny==3.15.0' \
-                'mlflow-tracing==3.15.0' \
-                'numpy<1.24.0'
-COPY patch_mlflow_sklearn.py .
-RUN python patch_mlflow_sklearn.py && rm patch_mlflow_sklearn.py
 RUN pip install 'gunicorn>=22.0.0'
 RUN pip install 'Werkzeug>=3.0.3'
 RUN pip install 'tqdm>=4.66.3'
 # vulnerability of requests GHSA-9hjg-9r4m-mvj7
 RUN pip install 'requests>=2.32.4'
 RUN pip install 'mcp>=1.23.0'
-# vulnerability fixes for skops (GHSA-m7f4-hrc6-fwg3, GHSA-4v6w-xpmh-gfgp, GHSA-378x-6p4f-8jgm)
-# --no-deps to prevent skops from upgrading numpy (skops 0.16.0 requires numpy>=1.25 but we pin numpy<1.24)
-RUN pip install --no-deps 'skops==0.16.0'
-
-# Must remain the final pip install until azureml-mlflow supports MLflow 3.16+.
-# MLflow 3.15 otherwise downgrades cryptography to 49.x.
-RUN pip install 'cryptography>=50.0.2,<51'
+# Apply security versions after azureml-mlflow, temporarily overriding its skinny
+# upper bound until the compatible SDK release. Keep this the final dependency resolve.
+# Restore skops after resolution, without its incompatible NumPy upgrade, to fix
+# GHSA-m7f4-hrc6-fwg3, GHSA-4v6w-xpmh-gfgp and GHSA-378x-6p4f-8jgm.
+COPY patch_mlflow_sklearn.py /tmp/patch_mlflow_sklearn.py
+RUN pip install --no-cache-dir \
+        'pillow==13.0.0' 'filelock==4.2.1' \
+        'mlflow==3.17.2' 'mlflow-skinny==3.17.2' 'mlflow-tracing==3.17.2' \
+        'numpy<1.24.0' 'pandas<2.0.0' 'cryptography>=50.0.2,<51' && \
+    pip install --no-cache-dir --no-deps 'skops==0.16.0' && \
+    python /tmp/patch_mlflow_sklearn.py && \
+    rm /tmp/patch_mlflow_sklearn.py
 
 # Drop pip's vendored-dependency SBOM. Modern pip ships pip/_vendor/bom.cdx.json (a CycloneDX
 # file) that scanners ingest, surfacing pip's internal vendored setuptools (70.3.0,

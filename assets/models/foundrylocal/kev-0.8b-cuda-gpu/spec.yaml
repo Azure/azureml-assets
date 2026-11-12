@@ -1,0 +1,39 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: kev-0.8b-cuda-gpu
+path: ./
+system_metadata:
+  alias: kev-0.8b
+  deploymentOptions:
+  - Foundry Local on Devices
+  directoryPath: v1
+  foundryLocal: ''
+  inputModalities:
+  - text
+  license: apache-2.0
+  licenseDescription: This model is provided under the License Terms available at
+    <https://huggingface.co/Qwen/Qwen3.5-0.8B-Base/blob/main/LICENSE>.
+  minFLVersion: 2.4.0
+  outputModalities:
+  - text
+  platformCapabilities:
+    enableMaap: false
+  previewType: hideUI
+  publisher: Microsoft
+  tasks:
+    inferenceTasks:
+    - decision
+tags:
+  capabilities: noul,choice,score,structured-input
+  contextLength: 262144
+variantInfo:
+  parents:
+  - assetId: azureml://registries/azureml/models/kev-0.8b/versions/1
+  variantMetadata:
+    device: gpu
+    executionProvider: CUDAExecutionProvider
+    fileSizeBytes: 1300252028
+    modelType: ONNX
+    quantization:
+    - RTN
+    vRamFootprintBytes: 1300252028
+version: 1
