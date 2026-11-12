@@ -83,8 +83,9 @@ RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade \
 RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade \
     'pyarrow>=23.0.1'
 
-# torch: pinned transitive dep of the ACFT image stack; this image overrides
-# the ACPT base version, fixes GHSA-rrmf-rvhw-rf47.
+# Torch 2.13 fixes GHSA-rrmf-rvhw-rf47; no ACPT base currently publishes it.
+# Keep the parent CUDA 12.6 runtime by using cu126 wheels with matching torchvision.
+# Remove unused torchaudio before the override to avoid an incompatible ABI.
 RUN conda run -n ptca python -m pip uninstall -y torchaudio \
  && conda run -n ptca python -m pip install --no-cache-dir --upgrade \
     --index-url https://download.pytorch.org/whl/cu126 \

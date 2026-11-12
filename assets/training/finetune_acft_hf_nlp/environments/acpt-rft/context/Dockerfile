@@ -58,9 +58,9 @@ COPY utils /opt/conda/envs/ptca/lib/python3.11/site-packages/verl/utils/vllm/uti
 # vLLM's default PyPI wheel is built for CUDA 13. Install the official CUDA 12.9
 # wheel so A100 v4 hosts with a CUDA 12.8 driver can load vllm._C.
 RUN pip install --no-cache-dir "${VLLM_WHEEL}"
-# Keep native Torch packages on the CUDA lineage vLLM 0.32 was built against.
-# torchaudio is unused by this image and must not remain inherited at a
-# potentially incompatible ABI.
+# Torch 2.13 fixes the reported PyTorch findings; no ACPT base currently publishes it.
+# Use CUDA 12.9 wheels because vLLM 0.32 is built for that compatible CUDA lineage.
+# Keep torchvision matched and remove unused torchaudio to avoid ABI conflicts.
 RUN pip install --no-cache-dir --force-reinstall \
         torch==2.13.0 torchvision==0.28.0 \
         --index-url https://download.pytorch.org/whl/cu129 && \

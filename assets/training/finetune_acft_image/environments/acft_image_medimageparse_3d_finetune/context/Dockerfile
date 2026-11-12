@@ -47,7 +47,9 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH -q -y \
         -c conda-forge && \
     conda clean -a -y
 
-# Step 2: PyTorch from the CUDA 12.6 index (split out so pip doesn't pull CPU-only wheels).
+# Torch 2.13 fixes the reported PyTorch findings; the parent image does not provide it.
+# Keep the parent CUDA 12.6 runtime by using cu126 wheels instead of CPU-only wheels.
+# Install matching torchvision and the latest compatible torchaudio release.
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
         --index-url https://download.pytorch.org/whl/cu126 \
         torch==2.13.0 torchvision==0.28.0 torchaudio==2.11.0

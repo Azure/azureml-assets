@@ -127,9 +127,9 @@ RUN conda run -n base python -m pip install --progress-bar off --no-cache-dir --
 # setuptools in ptca env: direct requirement below covers GHSA-h35f-9h28-mq5c;
 #   keep both conda envs consistent.
 RUN conda run -n ptca python -m pip install --progress-bar off --no-cache-dir --upgrade 'aiohttp>=3.14.4' 'pyarrow>=23.0.1' 'cryptography>=50.0.0' 'setuptools>=84.1.0'
-# torch in ptca env: inherited from the ACPT torch 2.8 CUDA 12.6 base image and
-#   flagged by GHSA-vgrw-7cvw-pwgx, GHSA-qfhq-4f3w-5fph, and GHSA-rrmf-rvhw-rf47.
-# Keep torchvision on its matching ABI and remove unused torchaudio.
+# Torch 2.13 fixes the reported PyTorch findings; no ACPT base currently publishes it.
+# Keep the parent CUDA 12.6 runtime by using cu126 wheels with matching torchvision.
+# Remove unused torchaudio to avoid retaining an incompatible ABI.
 RUN conda run -n ptca python -m pip install --progress-bar off --no-cache-dir \
         --force-reinstall \
         'torch==2.13.0+cu126' 'torchvision==0.28.0+cu126' \

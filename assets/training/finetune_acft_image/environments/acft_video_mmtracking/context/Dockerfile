@@ -83,8 +83,9 @@ RUN pip install --no-cache-dir --no-deps 'diffusers==0.38.0'
 # pinned transitive dep of datasets; fixes GHSA-rgxp-2hwp-jwgg.
 RUN pip install --no-cache-dir 'pyarrow>=23.0.1'
 
-# torch: pinned dep from ACPT ptca env; fixes GHSA-rrmf-rvhw-rf47, GHSA-qfhq-4f3w-5fph, and GHSA-vgrw-7cvw-pwgx.
-# torchvision and torchaudio are upgraded with torch to keep the CUDA PyTorch stack compatible.
+# Torch 2.13 fixes the reported PyTorch findings; no ACPT base currently publishes it.
+# Keep the parent CUDA 12.6 runtime by using cu126 wheels.
+# Upgrade torchvision and torchaudio with Torch to preserve the CUDA ABI.
 RUN pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 \
     'torch==2.13.0' 'torchvision==0.28.0' 'torchaudio==2.11.0'
 

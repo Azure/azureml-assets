@@ -127,9 +127,9 @@ RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
 # - pillow>=13.0.0 patches current Pillow GHSA findings in image stacks.
 # - cryptography>=50.0.0 patches GHSA-537c-gmf6-5ccf and GHSA-g6cj-pr64-35w5;
 #   it is pinned by the ACPT base image, so no parent floors the fixed release.
-# - torch==2.13.0+cu126 overrides the ACPT base image's vulnerable PyTorch
-#   package; fixes GHSA-rrmf-rvhw-rf47. torchvision is upgraded with torch to
-#   keep the CUDA vision stack compatible.
+# - Torch 2.13 fixes GHSA-rrmf-rvhw-rf47; no ACPT base currently publishes it.
+#   Keep the parent CUDA 12.6 runtime by using cu126 wheels.
+#   Upgrade matching torchvision to preserve the CUDA vision ABI.
 RUN conda run -n ptca pip install --no-cache-dir --upgrade \
     'idna>=3.15' 'aiohttp>=3.14.4' 'PyJWT>=2.13.0' 'pyasn1>=0.6.4' \
     'pillow>=13.0.0' 'cryptography>=50.0.0' \

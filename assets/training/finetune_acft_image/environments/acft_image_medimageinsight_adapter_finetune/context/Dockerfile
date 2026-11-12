@@ -63,10 +63,9 @@ RUN pip install -r requirements.txt --no-cache-dir && \
     rm -rf /opt/conda/envs/ptca/lib/python3.11/site-packages/setuptools-70.3.0.dist-info \
            /opt/conda/envs/ptca/lib/python3.11/site-packages/msgpack-1.1*.dist-info
 
-# torch is a direct training dependency; install CUDA 12.6 PyTorch wheels to
-# override vulnerable torch from the ACPT base image (GHSA-vgrw-7cvw-pwgx,
-# GHSA-qfhq-4f3w-5fph, GHSA-rrmf-rvhw-rf47). torchvision is upgraded with
-# torch; torchaudio is kept at the latest CUDA 12.6 wheel currently published.
+# Torch 2.13 fixes the reported PyTorch findings; no ACPT base currently publishes it.
+# Keep the parent CUDA 12.6 runtime by using cu126 wheels with matching torchvision.
+# Keep torchaudio at the latest compatible cu126 release available.
 RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 \
         'torch==2.13.0' \
         'torchvision==0.28.0' \

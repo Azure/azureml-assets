@@ -69,9 +69,9 @@ RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade --pr
            /opt/conda/envs/ptca/lib/python3.11/site-packages/starlette-1.0.0.dist-info \
            /opt/conda/envs/ptca/lib/python3.11/site-packages/pydantic_settings-2.14.1.dist-info
 
-# ptca env (python 3.10): torch is inherited from the torch280 base image;
-# pin the patched CUDA build for GHSA-rrmf-rvhw-rf47,
-# and keep torchvision/torchaudio aligned with the torch ABI.
+# Torch 2.13 fixes GHSA-rrmf-rvhw-rf47; no ACPT base currently publishes it.
+# Keep the parent CUDA 12.6 runtime by using cu126 wheels.
+# Keep torchvision and torchaudio aligned with the Torch ABI.
 RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade \
         --progress-bar off \
         --index-url https://download.pytorch.org/whl/cu126 \

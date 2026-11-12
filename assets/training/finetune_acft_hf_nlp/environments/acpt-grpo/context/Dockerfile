@@ -53,9 +53,9 @@ RUN pip install --upgrade 'protobuf>=6.33.5,<7' 'xgrammar>=0.1.32' \
 # cryptography: pinned transitive dep of mlflow/base image; mlflow constrains
 # cryptography<50, so install the scanner-required GHSA-g6cj-pr64-35w5 floor separately.
 RUN pip install --no-cache-dir --upgrade --no-deps 'cryptography>=50.0.0'
-# torch: pinned transitive dep of vllm; vllm 0.24.0-0.26.0 pins torch==2.11.0,
-# so install the GHSA-rrmf-rvhw-rf47 security floor with its matching torchvision.
-# Torchaudio is unused and must not retain an incompatible ABI. transformers:
+# Torch 2.13 fixes GHSA-rrmf-rvhw-rf47; no ACPT base currently publishes it.
+# Keep the parent CUDA 12.6 runtime by using cu126 wheels with matching torchvision.
+# Torchaudio is unused and removed to avoid retaining an incompatible ABI. transformers:
 # vllm requires transformers<5, so reinstall the scanner-required 5.x floor after vllm.
 # Fixes GHSA-xrqw-3rrv-vx5w (transformers < 5.10.0).
 RUN pip install --no-cache-dir --force-reinstall \

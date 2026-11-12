@@ -10,8 +10,9 @@ RUN conda install -n ptca -c conda-forge -y python=3.11 pip && \
     rm -rf /opt/conda/envs/ptca/lib/python3.10 && \
     conda clean -a -y
 
-# Reinstall the CUDA 12.6 PyTorch stack before compiling FlashAttention. The Python
-# migration's Conda solve may otherwise select a CUDA 13 build incompatible with this base.
+# Torch 2.13 fixes the reported PyTorch findings; no ACPT base currently publishes it.
+# Keep the parent CUDA 12.6 runtime by using cu126 wheels instead of a CUDA 13 solve.
+# Install matching torchvision before compiling FlashAttention to preserve the ABI.
 RUN conda run -n ptca python -m pip install --upgrade --no-cache-dir \
     --index-url https://download.pytorch.org/whl/cu126 \
     'torch==2.13.0' \

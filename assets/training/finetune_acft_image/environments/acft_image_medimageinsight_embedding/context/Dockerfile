@@ -55,9 +55,9 @@ RUN apt-get -y update && \
 COPY requirements.txt .
 RUN pip install --progress-bar off -r requirements.txt --no-cache-dir
 
-# ptca env torch is inherited from the ACPT torch280 base image; pin the patched CUDA build for
-# GHSA-qfhq-4f3w-5fph, GHSA-vgrw-7cvw-pwgx, and GHSA-rrmf-rvhw-rf47. Keep torchvision aligned
-# with torch; remove torchaudio because no compatible 2.13 CUDA wheel is available.
+# Torch 2.13 fixes the reported PyTorch findings; no ACPT base currently publishes it.
+# Keep the parent CUDA 12.6 runtime by using cu126 wheels with matching torchvision.
+# Remove torchaudio because no compatible Torch 2.13 wheel is available.
 RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade \
         --progress-bar off \
         --index-url https://download.pytorch.org/whl/cu126 \

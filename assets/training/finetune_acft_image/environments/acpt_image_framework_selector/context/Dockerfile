@@ -121,9 +121,9 @@ RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
 #   image; fixes GHSA-537c-gmf6-5ccf and GHSA-g6cj-pr64-35w5.
 # - msgpack: pinned transitive dep of azureml-mlflow -> mlflow-skinny; brought
 #   in by requirements.txt, fixes GHSA-6v7p-g79w-8964.
-# - torch: inherited from the ACPT torch280 base image; fixes
-#   GHSA-rrmf-rvhw-rf47. torchvision is upgraded with torch to keep the CUDA
-#   PyTorch stack compatible.
+# - Torch 2.13 fixes GHSA-rrmf-rvhw-rf47; no ACPT base currently publishes it.
+#   Keep the parent CUDA 12.6 runtime by using cu126 wheels.
+#   Upgrade matching torchvision to preserve the CUDA ABI.
 RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade \
         'urllib3>=2.7.0' 'aiohttp>=3.14.4' 'starlette>=1.0.1' 'click>=8.3.3' \
         'pyarrow>=23.0.1' 'cryptography>=50.0.0' 'msgpack>=1.2.3' && \
