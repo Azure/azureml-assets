@@ -107,6 +107,21 @@ ARTIFACTS = (
         "jar_sha1_env": "HTTPCORE5_JAR_SHA1",
         "pom_sha1_env": "HTTPCORE5_POM_SHA1",
     },
+    {
+        "name": "guava",
+        "group_path": "com/google/guava",
+        "maven_prefix": "META-INF/maven/com.google.guava/guava/",
+        "entry_prefixes": (
+            "com/google/common/",
+        ),
+        "entry_fragments": (
+            "/com/google/common/",
+            "/META-INF/maven/com.google.guava/guava/",
+        ),
+        "version_env": "GUAVA_VERSION",
+        "jar_sha1_env": "GUAVA_JAR_SHA1",
+        "pom_sha1_env": "GUAVA_POM_SHA1",
+    },
 )
 
 
