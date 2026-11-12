@@ -40,6 +40,8 @@ variantInfo:
   - assetId: azureml://registries/azureml/models/ling-3.0-tiny/versions/1
   variantMetadata:
     modelType: ONNX
+    quantization:
+    - RTN
     device: gpu
     executionProvider: CUDAExecutionProvider
     fileSizeBytes: 4675228803
