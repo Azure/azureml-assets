@@ -19,6 +19,8 @@ RAY_DIST_NAMES = ("ray_dist.jar", "ray__dist.jar")
 ARTIFACTS = (
     {
         "name": "jackson-core",
+        "group_path": "com/fasterxml/jackson/core",
+        "maven_group": "com.fasterxml.jackson.core",
         "entry_prefixes": (
             "com/fasterxml/jackson/core/",
             "META-INF/services/com.fasterxml.jackson.core.",
@@ -29,6 +31,8 @@ ARTIFACTS = (
     },
     {
         "name": "jackson-databind",
+        "group_path": "com/fasterxml/jackson/core",
+        "maven_group": "com.fasterxml.jackson.core",
         "entry_prefixes": (
             "com/fasterxml/jackson/databind/",
             "META-INF/services/com.fasterxml.jackson.databind.",
@@ -36,6 +40,17 @@ ARTIFACTS = (
         "version_env": "JACKSON_DATABIND_VERSION",
         "jar_sha1_env": "JACKSON_DATABIND_JAR_SHA1",
         "pom_sha1_env": "JACKSON_DATABIND_POM_SHA1",
+    },
+    {
+        "name": "guava",
+        "group_path": "com/google/guava",
+        "maven_group": "com.google.guava",
+        "entry_prefixes": (
+            "com/google/common/",
+        ),
+        "version_env": "GUAVA_VERSION",
+        "jar_sha1_env": "GUAVA_JAR_SHA1",
+        "pom_sha1_env": "GUAVA_POM_SHA1",
     },
 )
 
@@ -66,7 +81,9 @@ def download_verified(url: str, expected_sha1: str) -> bytes:
 def download_maven_artifacts(artifact: dict[str, object], version: str) -> tuple[bytes, bytes]:
     """Download the Maven jar and pom artifacts."""
     name = str(artifact["name"])
-    base_url = f"https://repo.maven.apache.org/maven2/com/fasterxml/jackson/core/{name}/{version}"
+    base_url = (
+        f"https://repo.maven.apache.org/maven2/{artifact['group_path']}/{name}/{version}"
+    )
     jar = download_verified(
         f"{base_url}/{name}-{version}.jar",
         os.environ[str(artifact["jar_sha1_env"])],
@@ -80,7 +97,7 @@ def download_maven_artifacts(artifact: dict[str, object], version: str) -> tuple
 
 def maven_prefix(artifact: dict[str, object]) -> str:
     """Return the Maven metadata prefix for an artifact."""
-    return f"META-INF/maven/com.fasterxml.jackson.core/{artifact['name']}/"
+    return f"META-INF/maven/{artifact['maven_group']}/{artifact['name']}/"
 
 
 def is_artifact_entry(filename: str, artifact: dict[str, object]) -> bool:
@@ -184,7 +201,7 @@ def validate_patch(ray_dist: pathlib.Path, artifact: dict[str, object], version:
 
 
 def main() -> None:
-    """Patch Ray's vendored Jackson dependencies."""
+    """Patch Ray's vendored Maven dependencies."""
     ray_dist = find_ray_dist()
     for artifact in ARTIFACTS:
         version = os.environ[str(artifact["version_env"])]

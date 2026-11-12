@@ -8,7 +8,7 @@ mlflow_sklearn_spec = find_spec("mlflow.sklearn")
 mlflow_sklearn_path = Path(mlflow_sklearn_spec.origin)
 source = mlflow_sklearn_path.read_text(encoding="utf-8")
 
-serialization_default = "serialization_format=SERIALIZATION_FORMAT_SKOPS,"
+serialization_default = "serialization_format=None,"
 if source.count(serialization_default) != 2:
     raise RuntimeError(
         "Unexpected MLflow sklearn serialization defaults"
