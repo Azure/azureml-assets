@@ -4,7 +4,7 @@ This model is an optimized ONNX version of Ling-3.0-tiny for local text inferenc
 - **Developed by:** inclusionAI
 - **Optimized by:** Microsoft
 - **Model type:** ONNX
-- **License:** mit
+- **License:** MIT
 - **Model Description:** This is a conversion of Ling-3.0-tiny for local inference on CUDA GPUs.
 - **Disclaimer:** This model is an optimization of the base model. Please verify and test it for your scenarios. Outputs may differ slightly from the base model. Optimizations are distinct from fine-tuning and do not alter the model's intended uses or capabilities.
 

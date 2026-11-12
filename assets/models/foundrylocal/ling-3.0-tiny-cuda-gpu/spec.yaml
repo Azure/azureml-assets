@@ -14,7 +14,7 @@ system_metadata:
   deploymentOptions: ['Foundry Local on Devices']
   inputModalities:
   - text
-  license: mit
+  license: MIT
   licenseDescription: This model is provided under the MIT license declared in its model card at <https://huggingface.co/inclusionAI/Ling-3.0-tiny/blob/main/README.md>.
   maxOutputTokens: 2048
   outputModalities:
