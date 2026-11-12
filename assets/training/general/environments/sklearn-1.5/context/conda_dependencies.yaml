@@ -23,7 +23,7 @@ dependencies:
   - debugpy~=1.6.3
   - ipykernel~=6.0
   - tensorboard
-  - psutil~=5.8.0
+  - psutil>=5.9,<8
   - matplotlib>=3.10.8,<3.11
   - tqdm~=4.66.3
   - py-cpuinfo==5.0.0
