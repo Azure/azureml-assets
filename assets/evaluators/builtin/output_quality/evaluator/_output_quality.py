@@ -487,6 +487,7 @@ def _read_member_score(score: Any) -> Any:
         return score
     return int(number) if number.is_integer() else number
 
+
 # Ordered description of the six member evaluators batched into one LLM call.
 _EVALUATORS: Tuple[Dict[str, Union[str, int]], ...] = (
     {"name": "fluency", "min": 1, "max": 5, "default_threshold": 3},
