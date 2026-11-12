@@ -1,0 +1,64 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: ling-3.0-tiny-cuda-gpu
+path: ./
+tags:
+  capabilities: reasoning,tool-calling
+  supportsReasoning: 'true'
+  contextLength: 131072
+system_metadata:
+  previewType: hideUI
+  alias: ling-3.0-tiny
+  publisher: Microsoft
+  directoryPath: v1
+  foundryLocal: ''
+  deploymentOptions: ['Foundry Local on Devices']
+  inputModalities:
+  - text
+  license: MIT
+  licenseDescription: This model is provided under the MIT license declared in 
+    its model card at 
+    <https://huggingface.co/inclusionAI/Ling-3.0-tiny/blob/main/README.md>.
+  maxOutputTokens: 2048
+  outputModalities:
+  - text
+  promptTemplate: ''
+  supportsToolCalling: true
+  toolCallEnd: </tool_call>
+  toolCallStart: <tool_call>
+  toolRegisterEnd: </tools>
+  toolRegisterStart: <tools>
+  toolResponseEnd: </tool_response>
+  toolResponseStart: <tool_response>
+  tasks:
+    inferenceTasks:
+    - chat-completion
+  platformCapabilities:
+    enableMaap: false
+  reasoningStart: <think>
+  reasoningEnd: </think>
+  minFLVersion: 2.5.0
+variantInfo:
+  parents:
+  - assetId: azureml://registries/azureml/models/ling-3.0-tiny/versions/1
+  variantMetadata:
+    modelType: ONNX
+    quantization:
+    - RTN
+    device: gpu
+    executionProvider: CUDAExecutionProvider
+    fileSizeBytes: 4675228803
+    vRamFootprintBytes: 4675228803
+version: 1
+description: |
+  This model is an optimized ONNX version of Ling-3.0-tiny for local text inference on CUDA GPUs. The export supports a 131,072-token context window, reasoning, and tool calling.
+
+  # Model Description
+  - **Developed by:** inclusionAI
+  - **Optimized by:** Microsoft
+  - **Model type:** ONNX
+  - **License:** MIT
+  - **Model Description:** This is a conversion of Ling-3.0-tiny for local inference on CUDA GPUs.
+  - **Disclaimer:** This model is an optimization of the base model. Please verify and test it for your scenarios. Outputs may differ slightly from the base model. Optimizations are distinct from fine-tuning and do not alter the model's intended uses or capabilities.
+
+  # Base Model Information
+  See Hugging Face model [Ling-3.0-tiny](https://huggingface.co/inclusionAI/Ling-3.0-tiny) for details.

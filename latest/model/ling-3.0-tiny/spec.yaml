@@ -1,0 +1,24 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: ling-3.0-tiny
+path: ./
+system_metadata:
+  previewType: hideUI
+  foundryLocal: ''
+  deploymentOptions: ['Foundry Local on Devices']
+version: 1
+description: |
+  Ling-3.0-tiny is a hybrid reasoning mixture-of-experts language model with 7.9 billion total parameters and 1.3 billion active parameters per token. This optimized ONNX version enables local text inference on CUDA GPUs with a 131,072-token context window.
+
+  # ONNX Models
+  The available configuration targets CUDA GPUs and supports text generation, reasoning, and tool calling.
+
+  # Model Description
+  - **Developed by:** inclusionAI
+  - **Optimized by:** Microsoft
+  - **Model type:** ONNX
+  - **License:** MIT
+  - **Model Description:** This is a conversion of Ling-3.0-tiny for local inference.
+  - **Disclaimer:** This model is an optimization of the base model. Please verify and test it for your scenarios. Outputs may differ slightly from the base model. Optimizations are distinct from fine-tuning and do not alter the model's intended uses or capabilities.
+
+  # Base Model Information
+  See Hugging Face model [Ling-3.0-tiny](https://huggingface.co/inclusionAI/Ling-3.0-tiny) for details.
