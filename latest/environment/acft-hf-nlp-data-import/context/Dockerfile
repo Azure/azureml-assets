@@ -2,8 +2,8 @@ FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20261108.v1
 
 USER root
 
-# Keep this environment on Python 3.10 to preserve the existing component runtime
-# behavior while the base image's miniconda uses Python 3.12.
+# Use Python 3.11 because the required Filelock security release no longer
+# supports Python 3.10, while the base image's miniconda uses Python 3.12.
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-acft-hf-nlp-data-import
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
@@ -66,9 +66,9 @@ apt-get install -y --only-upgrade \
 RUN find /opt/miniconda \( -path '*/pip/_vendor/vendor.txt' -o -path '*/pip/_vendor/bom.cdx.json' \) -delete && \
     rm -rf /root/.cache/pip
 
-# Provision the Python 3.10 conda env. The conda channel now provides a patched
+# Provision the Python 3.11 conda env. The conda channel now provides a patched
 # pip, so no post-create pip upgrade is needed.
-RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 pip -y && \
+RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.11 pip -y && \
     find $AZUREML_CONDA_ENVIRONMENT_PATH \( -path '*/pip/_vendor/vendor.txt' -o -path '*/pip/_vendor/bom.cdx.json' \) -delete && \
     conda clean -afy
 
@@ -81,7 +81,7 @@ COPY requirements.txt .
 #   to >=3.14.0 to resolve USN-reported CVEs (previous floor >=3.13.4 was insufficient).
 # requests (GHSA-gc5v-m9x4-r6x2): transitive dep of many packages; parents use loose floors.
 # setuptools (GHSA-5rjg-fvgr-3xxf, GHSA-h35f-9h28-mq5c): transitive dep of azureml_acft_common_components/
-#   azureml-acft-contrib-hf-nlp; requirements install can downgrade the Python 3.10 env.
+#   azureml-acft-contrib-hf-nlp; requirements install can downgrade the Python 3.11 env.
 # msgpack (GHSA-6v7p-g79w-8964): transitive dep of azureml_acft_common_components/azureml-acft-contrib-hf-nlp.
 # scikit-learn: explicit pin removed — azureml-acft-contrib-hf-nlp 0.0.89 already
 #   pins `scikit-learn<1.6.0,>=1.5.1`, so the parent enforces the secure floor (>=1.5.1
@@ -91,26 +91,32 @@ COPY requirements.txt .
 # Remove pip's informational vendored-version manifest after installation; VCM
 # reports its stale setuptools/msgpack entries even though the installed packages
 # are patched by the constraints above.
-RUN pip install --no-cache-dir -r requirements.txt 'aiohttp>=3.14.0' 'requests>=2.33.0' 'setuptools>=83.0.0' 'msgpack>=1.2.1' 'cryptography>=50.0.0' 'pyarrow>=23.0.1' && \
+RUN pip install --no-cache-dir -r requirements.txt 'aiohttp>=3.14.4' 'requests>=2.33.0' 'setuptools>=84.1.0' 'filelock>=4.2.1' 'msgpack>=1.2.3' 'cryptography>=50.0.0' 'pyarrow>=23.0.1' && \
+    rm -rf $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/filelock-4.1.0.dist-info && \
     find $AZUREML_CONDA_ENVIRONMENT_PATH \( -path '*/pip/_vendor/vendor.txt' -o -path '*/pip/_vendor/bom.cdx.json' \) -delete && \
     rm -rf /root/.cache/pip
 
 # The below file is required for baking the code into the environment
 COPY data_import_run.py /azureml/data_import/run.py
 
-# Refresh packages for the latest Ubuntu security advisories.
+# Reassert newly patched transitive dependencies after all package installs.
+RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0'
+
+# Reassert November 2026 vulnerability-report floors in the scanned Python prefix.
+RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'certifi>=2026.10.19'
+
+# Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libssl-dev libssl3t64 libxml2 openssh-client openssh-server openssh-sftp-server openssl"; \
+    security_packages="nginx libbrotli1"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
             installed_packages="$installed_packages $package"; \
         fi; \
     done; \
-    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    if [ -n "$installed_packages" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade $installed_packages; \
+    fi; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
-
-# Reassert newly patched transitive dependencies after all package installs.
-RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0'

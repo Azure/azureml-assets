@@ -1,5 +1,15 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202611.1
 
+# IMPORTANT (2026-10-26): Python was upgraded from 3.10 to 3.11 for Pillow 13 security fixes.
+# Downstream users must update interpreter-specific paths, wheels, and compiled dependencies for Python 3.11.
+RUN conda install -n ptca -c conda-forge -y python=3.11 pip && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.10 && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.8.0+cu126' 'torchvision==0.23.0+cu126' 'torchaudio==2.8.0+cu126' && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir 'pillow>=13.0.0' && \
+    conda clean -a -y
+
 USER root
 
 # OS packages inherited from the ACPT base image but still below current
@@ -52,9 +62,9 @@ RUN pip install -r requirements.txt --no-cache-dir \
  && conda run -n ptca python -m pip install --no-cache-dir 'setuptools<82' \
  && mim install mmdet==3.3.0 \
  && mim install mmcv==2.2.0 -f https://download.openmmlab.com/mmcv/dist/cu118/torch2.2/index.html --no-cache-dir \
- && /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'setuptools==83.0.0' \
- && conda run -n ptca python -m pip install --no-cache-dir --upgrade 'setuptools==83.0.0' \
- && sed -i 's/2.2.0/2.3.0/' /opt/conda/envs/ptca/lib/python3.10/site-packages/mmdet/__init__.py
+ && /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'setuptools==84.1.0' \
+ && conda run -n ptca python -m pip install --no-cache-dir --upgrade 'setuptools==84.1.0' \
+ && sed -i 's/2.2.0/2.3.0/' /opt/conda/envs/ptca/lib/python3.11/site-packages/mmdet/__init__.py
 
 # onnx-weekly: pinned transitive dep of azureml-acft-accelerator; it caps
 # onnx<=1.17.0, fixes GHSA-3r9x-f23j-gc73 and GHSA-hqmj-h5c6-369m.
@@ -64,17 +74,18 @@ RUN pip uninstall -y onnx && pip install --no-cache-dir 'onnx-weekly>=1.22.0.dev
 # aiohttp and anyio: pinned inherited deps from the ACPT base image; fix current GHSA findings.
 # cryptography: pinned inherited base dep and transitive dep of azureml-core in ptca; fixes GHSA-g6cj-pr64-35w5.
 RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade \
-    'aiohttp>=3.14.3' \
+    'aiohttp>=3.14.4' \
     'anyio>=4.14.2' \
     'cryptography>=50.0.0' \
  && conda run -n ptca python -m pip install --no-cache-dir --upgrade \
-    'aiohttp>=3.14.3' \
+    'aiohttp>=3.14.4' \
     'cryptography>=50.0.0'
 RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade \
     'pyarrow>=23.0.1'
 
-# torch: pinned transitive dep of the ACFT image stack; this image overrides
-# the ACPT base version, fixes GHSA-rrmf-rvhw-rf47.
+# Torch 2.13 fixes GHSA-rrmf-rvhw-rf47; no ACPT base currently publishes it.
+# Keep the parent CUDA 12.6 runtime by using cu126 wheels with matching torchvision.
+# Remove unused torchaudio before the override to avoid an incompatible ABI.
 RUN conda run -n ptca python -m pip uninstall -y torchaudio \
  && conda run -n ptca python -m pip install --no-cache-dir --upgrade \
     --index-url https://download.pytorch.org/whl/cu126 \
@@ -93,19 +104,31 @@ RUN find /opt/conda -path '*/site-packages/pip/_vendor/bom.cdx.json' -delete \
 
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
 
-# Refresh packages for the latest Ubuntu security advisories.
+# Reassert newly patched transitive dependencies after all package installs.
+RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade \
+    'PyJWT>=2.15.0' 'urllib3>=2.8.0' 'msgpack>=1.2.3' && \
+    rm -rf /opt/conda/lib/python*/site-packages/msgpack-1.2.1.dist-info \
+           /opt/conda/conda-meta/msgpack-1.2.1-*.json \
+           /opt/conda/conda-meta/msgpack-python-1.2.1-*.json
+
+# Reassert November 2026 vulnerability-report floors in the scanned Python prefix.
+RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade \
+    'certifi>=2026.10.19' 'opentelemetry-api>=1.45.1' 'brotlicffi>=1.2.1.0' && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/certifi-2024.7.4.dist-info && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/opentelemetry__api-1.43.0.dist-info
+
+# Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libevent-core-2.1-7 libssl-dev libssl3 libx11-6 libx11-data libx11-xcb1 libxml2 openssh-client openssh-server openssh-sftp-server openssl sudo"; \
+    security_packages="dotnet-host-8.0 libbrotli1 dotnet-hostfxr-8.0"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
             installed_packages="$installed_packages $package"; \
         fi; \
     done; \
-    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    if [ -n "$installed_packages" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade $installed_packages; \
+    fi; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
-
-# Reassert newly patched transitive dependencies after all package installs.
-RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0' 'urllib3>=2.8.0'

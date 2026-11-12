@@ -1,4 +1,14 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202611.1
+
+# IMPORTANT (2026-10-26): Python was upgraded from 3.10 to 3.11 for Pillow 13 security fixes.
+# Downstream users must update interpreter-specific paths, wheels, and compiled dependencies for Python 3.11.
+RUN conda install -n ptca -c conda-forge -y python=3.11 pip && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.10 && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.8.0+cu126' 'torchvision==0.23.0+cu126' 'torchaudio==2.8.0+cu126' && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir 'pillow>=13.0.0' && \
+    conda clean -a -y
 USER root
 ENV PIP_PROGRESS_BAR=off
 
@@ -76,17 +86,17 @@ RUN pip install -r requirements.txt --no-cache-dir \
  && pip install --no-cache-dir xgrammar==0.1.32 \
  && pip install --no-cache-dir transformers==5.10.0 \
  && pip install --no-cache-dir 'starlette>=1.0.1' \
- && pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3' 'cryptography>=50.0.0' \
- && conda run -n base python -m pip install --no-cache-dir --upgrade 'aiohttp>=3.14.3' \
+ && pip install --no-cache-dir --upgrade 'aiohttp>=3.14.4' 'cryptography>=50.0.0' \
+ && conda run -n base python -m pip install --no-cache-dir --upgrade 'aiohttp>=3.14.4' \
  && conda run -n base python -m pip install --no-cache-dir --upgrade \
         'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'pip>=26.2.0' 'anyio>=4.14.2' \
-        'PyJWT>=2.13.0' 'py-rattler>=0.24.0' 'cryptography>=50.0.0' 'pydantic-settings>=2.14.2' 'msgpack>=1.2.1' \
-        'setuptools>=83.0.0' \
- && pip install --no-cache-dir --upgrade 'pip>=26.2.0' 'PyJWT>=2.13.0' 'msgpack>=1.2.1' 'setuptools>=83.0.0' 'sqlparse>=0.6.0' \
+        'PyJWT>=2.13.0' 'py-rattler>=0.24.0' 'cryptography>=50.0.0' 'pydantic-settings>=2.14.2' 'msgpack>=1.2.3' \
+        'setuptools>=84.1.0' \
+ && pip install --no-cache-dir --upgrade 'pip>=26.2.0' 'PyJWT>=2.13.0' 'msgpack>=1.2.3' 'setuptools>=84.1.0' 'sqlparse>=0.6.0' \
  && rm -rf /opt/conda/lib/python3.14/site-packages/pip-26.0.1.dist-info \
            /opt/conda/lib/python3.14/site-packages/setuptools-82.0.1.dist-info \
-           /opt/conda/envs/ptca/lib/python3.10/site-packages/pip-26.0.1.dist-info \
-           /opt/conda/envs/ptca/lib/python3.10/site-packages/setuptools-82.0.1.dist-info \
+           /opt/conda/envs/ptca/lib/python3.11/site-packages/pip-26.0.1.dist-info \
+           /opt/conda/envs/ptca/lib/python3.11/site-packages/setuptools-82.0.1.dist-info \
  && rm -f /opt/conda/conda-meta/pip-26.0.1-*.json \
           /opt/conda/conda-meta/setuptools-82.0.1-*.json \
           /opt/conda/envs/ptca/conda-meta/pip-26.0.1-*.json \
@@ -94,11 +104,11 @@ RUN pip install -r requirements.txt --no-cache-dir \
           /opt/conda/lib/python3.14/site-packages/pip/_vendor/bom.cdx.json \
           /opt/conda/lib/python3.14/site-packages/pip/_vendor/vendor.txt \
           /opt/conda/lib/python3.14/site-packages/virtualenv-*.dist-info/sboms/virtualenv.cdx.json \
-          /opt/conda/envs/ptca/lib/python3.10/site-packages/pip/_vendor/bom.cdx.json \
-          /opt/conda/envs/ptca/lib/python3.10/site-packages/pip/_vendor/vendor.txt \
-          /opt/conda/envs/ptca/lib/python3.10/site-packages/virtualenv-*.dist-info/sboms/virtualenv.cdx.json \
+          /opt/conda/envs/ptca/lib/python3.11/site-packages/pip/_vendor/bom.cdx.json \
+          /opt/conda/envs/ptca/lib/python3.11/site-packages/pip/_vendor/vendor.txt \
+          /opt/conda/envs/ptca/lib/python3.11/site-packages/virtualenv-*.dist-info/sboms/virtualenv.cdx.json \
  && stale_metadata="$(find /opt/conda/lib/python3.14/site-packages \
-                           /opt/conda/envs/ptca/lib/python3.10/site-packages \
+                           /opt/conda/envs/ptca/lib/python3.11/site-packages \
                            /opt/conda/conda-meta /opt/conda/envs/ptca/conda-meta \
                            \( -path '*/pip-26.0.1.dist-info' \
                               -o -path '*/setuptools-82.0.1.dist-info' \
@@ -109,23 +119,31 @@ RUN pip install -r requirements.txt --no-cache-dir \
                               -o -path '*/virtualenv-*.dist-info/sboms/virtualenv.cdx.json' \) -print -quit)" \
  && test -z "$stale_metadata" \
  && rm -rf ~/.cache/pip /root/.cache/pip /tmp/pip-*
-COPY loss /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/core/loss.py
-COPY eagle3 /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/core/eagle3.py
-COPY parse /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/data/parse.py
+COPY loss /opt/conda/envs/ptca/lib/python3.11/site-packages/specforge/core/loss.py
+COPY eagle3 /opt/conda/envs/ptca/lib/python3.11/site-packages/specforge/core/eagle3.py
+COPY parse /opt/conda/envs/ptca/lib/python3.11/site-packages/specforge/data/parse.py
 
-# Refresh packages for the latest Ubuntu security advisories.
+# Reassert newly patched transitive dependencies after all package installs.
+RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'oauthlib>=4.0.0'
+
+# Reassert November 2026 vulnerability-report floors in the scanned Python prefix.
+RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade \
+    'certifi>=2026.10.19' 'opentelemetry-api>=1.45.1' 'brotlicffi>=1.2.1.0' && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/certifi-2024.7.4.dist-info && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/opentelemetry__api-1.43.0.dist-info
+
+# Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libevent-core-2.1-7 libssl-dev libssl3 libx11-6 libx11-data libx11-xcb1 libxml2 openssh-client openssh-server openssh-sftp-server openssl"; \
+    security_packages="dotnet-hostfxr-8.0 libbrotli1"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
             installed_packages="$installed_packages $package"; \
         fi; \
     done; \
-    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    if [ -n "$installed_packages" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade $installed_packages; \
+    fi; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
-
-# Reassert newly patched transitive dependencies after all package installs.
-RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'oauthlib>=4.0.0'

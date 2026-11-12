@@ -1,7 +1,15 @@
 azureml-acft-common-components==0.0.91
 azureml-acft-contrib-hf-nlp==0.0.91
-azureml-acft-image-components[hls]==0.0.91
+# The hls extra pins Python 3.10-only numpy==1.22.2 and timm~=0.4.
+# Install the base component and carry the HLS dependencies explicitly.
+azureml-acft-image-components==0.0.91
 azureml-mlflow==1.62.0.post6
+tensorboard
+mpi4py
+flake8
+pdoc3==0.9.2
+infinibatch==0.1.1
+fairscale==0.4.5
 opencv-python==4.11.0.86
 pyyaml==6.0.2
 json_tricks==3.17.3
@@ -9,7 +17,7 @@ yacs==0.1.8
 scikit-learn==1.5.2
 pandas==2.0.3
 timm==0.9.12
-numpy==1.22.2
+numpy==1.26.4
 einops==0.8.1
 fvcore==0.1.5.post20221221
 transformers==5.10.0
@@ -24,6 +32,6 @@ deepspeed==0.17.1
 GPUtil==1.4.0
 mup==1.0.0
 safetensors==0.5.2
-setuptools>=83.0.0
-filelock>=3.20.1
+setuptools>=84.1.0
+filelock>=4.2.1
 SecretStorage>=3.3.0  # constrain transitive dep of azureml-core; avoids dbus-python sdist build during image build

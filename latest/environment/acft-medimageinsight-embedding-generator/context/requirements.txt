@@ -1,7 +1,7 @@
 azureml-acft-common-components==0.0.91
 azureml-acft-contrib-hf-nlp==0.0.91
 # mlflow 3.11.1 has GHSA-7gwp-5pfp-969j (CRITICAL) and GHSA-2cm6-r77w-6g96 (HIGH); patched in 3.15.0.
-mlflow==3.15.0
+mlflow==3.17.2
 cloudpickle==2.2.1
 colorama==0.4.6
 einops==0.8.0
@@ -20,10 +20,10 @@ scipy==1.13.1
 sentencepiece==0.2.1
 tenacity==9.0.0
 timm==1.0.13
-tornado>=6.5.5
+tornado>=6.6
 transformers>=5.3.0
-setuptools>=82.0.1
-filelock>=3.20.1
-pillow>=12.1.1
+setuptools>=84.1.0
+filelock>=4.2.1
+pillow>=13.0.0
 # protobuf 6.33.4 has CVE-2026-0994 (HIGH 8.6); transitive dep from mlflow -> mlflow-skinny (requires >=3.12.0,<7)
 protobuf>=6.33.5

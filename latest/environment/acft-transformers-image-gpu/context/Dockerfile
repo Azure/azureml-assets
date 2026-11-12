@@ -1,5 +1,15 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202611.1
 
+# IMPORTANT (2026-10-26): Python was upgraded from 3.10 to 3.11 for Pillow 13 security fixes.
+# Downstream users must update interpreter-specific paths, wheels, and compiled dependencies for Python 3.11.
+RUN conda install -n ptca -c conda-forge -y python=3.11 pip && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.10 && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.8.0+cu126' 'torchvision==0.23.0+cu126' 'torchaudio==2.8.0+cu126' && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir 'pillow>=13.0.0' && \
+    conda clean -a -y
+
 USER root
 # Pull latest Ubuntu 22.04 security patches for packages present in the base image.
 RUN apt-get -y update && apt-get -y upgrade \
@@ -79,13 +89,13 @@ RUN pip install --progress-bar off -r requirements.txt --no-cache-dir
 # aiohttp: transitive dep (mlflow and other packages); ships 3.13.5 which has
 #   GHSA-jg22-mg44-37j8 and GHSA-hg6j-4rv6-33pg; handled separately via conda run
 #   (see below) to ensure the correct ptca env is targeted.
-RUN pip install --progress-bar off --no-cache-dir --upgrade 'onnx>=1.21.0' 'pyasn1>=0.6.4' 'fastmcp>=3.2.0' 'Mako>=1.3.12' 'GitPython>=3.1.55' 'python-dotenv>=1.2.2' 'pillow>=12.2.0' 'pytest>=9.0.3' 'urllib3>=2.7.0'
+RUN pip install --progress-bar off --no-cache-dir --upgrade 'onnx>=1.21.0' 'pyasn1>=0.6.4' 'fastmcp>=3.2.0' 'Mako>=1.3.12' 'GitPython>=3.1.55' 'python-dotenv>=1.2.2' 'pillow>=13.0.0' 'pytest>=9.0.3' 'urllib3>=2.7.0'
 # pip: package installer itself - there is no parent package that brings it in.
 #   Both conda envs (ptca python3.10, base python3.14) ship pip from the base
 #   image, vulnerable to GHSA-wf93-45jw-7689 and GHSA-qwm4-qh6w-59xr. Use conda-forge
 #   to upgrade pip in both envs without allowing the solver to roll back other
 #   packages (--freeze-installed).
-RUN rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/pip* \
+RUN rm -rf /opt/conda/envs/ptca/lib/python3.11/site-packages/pip* \
            /opt/conda/lib/python3.14/site-packages/pip* \
  && conda install -n ptca -y -c conda-forge --freeze-installed --force-reinstall 'pip=26.2.0' \
  && conda install -n base -y -c conda-forge --freeze-installed --force-reinstall 'pip=26.2.0'
@@ -108,18 +118,24 @@ RUN rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/pip* \
 #   base ships 2.12.0 which has GHSA-4xgf-cpjx-pc3j; override to >=2.14.2.
 # setuptools in base conda env: base image ships 82.0.0 which has GHSA-h35f-9h28-mq5c;
 #   override to >=83.0.0.
-# anyio in base conda env: inherited version is below the scanner-required safe floor.
-RUN conda run -n base python -m pip install --progress-bar off --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'aiohttp>=3.14.0' 'click>=8.3.3' 'idna>=3.15' 'PyJWT>=2.13.0' 'cryptography>=50.0.0' 'pydantic-settings>=2.14.2' 'setuptools>=83.0.0' 'anyio>=4.14.2'
+# anyio and msgpack in base conda env: inherited versions are below the scanner-required safe floors.
+RUN conda run -n base python -m pip install --progress-bar off --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'aiohttp>=3.14.4' 'click>=8.3.3' 'idna>=3.15' 'PyJWT>=2.13.0' 'cryptography>=50.0.0' 'pydantic-settings>=2.14.2' 'setuptools>=84.1.0' 'anyio>=4.14.2' 'msgpack>=1.2.3'
 # aiohttp in ptca env: same CVEs as base env — GHSA-jg22-mg44-37j8 and GHSA-hg6j-4rv6-33pg.
 # pyarrow in ptca env: ships 20.0.0 which has GHSA-rgxp-2hwp-jwgg; override to >=23.0.1.
 # cryptography in ptca env: pinned transitive/base-image dep brought in by the base ACPT image;
 #   prior override installed 48.0.1, which has GHSA-g6cj-pr64-35w5; override to >=50.0.0.
 # setuptools in ptca env: direct requirement below covers GHSA-h35f-9h28-mq5c;
 #   keep both conda envs consistent.
-RUN conda run -n ptca python -m pip install --progress-bar off --no-cache-dir --upgrade 'aiohttp>=3.14.0' 'pyarrow>=23.0.1' 'cryptography>=50.0.0' 'setuptools>=83.0.0'
-# torch in ptca env: inherited from the ACPT torch 2.8 CUDA 12.6 base image and
-#   flagged by GHSA-vgrw-7cvw-pwgx, GHSA-qfhq-4f3w-5fph, and GHSA-rrmf-rvhw-rf47.
-RUN conda run -n ptca python -m pip install --progress-bar off --no-cache-dir --upgrade --index-url https://download.pytorch.org/whl/cu126 'torch>=2.13.0'
+RUN conda run -n ptca python -m pip install --progress-bar off --no-cache-dir --upgrade 'aiohttp>=3.14.4' 'pyarrow>=23.0.1' 'cryptography>=50.0.0' 'setuptools>=84.1.0'
+# Torch 2.13 fixes the reported PyTorch findings; no ACPT base currently publishes it.
+# Keep the parent CUDA 12.6 runtime by using cu126 wheels with matching torchvision.
+# Remove unused torchaudio to avoid retaining an incompatible ABI.
+RUN conda run -n ptca python -m pip install --progress-bar off --no-cache-dir \
+        --force-reinstall \
+        'torch==2.13.0+cu126' 'torchvision==0.28.0+cu126' \
+        'nvidia-nvshmem-cu12==3.4.5' \
+        --index-url https://download.pytorch.org/whl/cu126 && \
+    conda run -n ptca python -m pip uninstall -y torchaudio
 # The conda pip upgrade can reinstall the rattler solver. The base image does
 # not need it for runtime, and its compiled extension currently carries Rust CVEs.
 RUN conda config --system --set solver classic \
@@ -144,12 +160,17 @@ RUN set -eu; \
         -name 'setuptools-70.3.0-py*.egg-info' -o \
         -name 'msgpack-1.1.2.dist-info' -o \
         -name 'msgpack-1.1.2.egg-info' -o \
-        -name 'msgpack-1.1.2-py*.egg-info' \
+        -name 'msgpack-1.1.2-py*.egg-info' -o \
+        -name 'msgpack-1.2.1.dist-info' -o \
+        -name 'msgpack-1.2.1.egg-info' -o \
+        -name 'msgpack-1.2.1-py*.egg-info' \
     \) -prune -exec rm -rf {} +; \
     find $roots -type f \( \
         -path '*/conda-meta/setuptools-70.3.0-*.json' -o \
         -path '*/conda-meta/msgpack-python-1.1.2-*.json' -o \
-        -path '*/conda-meta/msgpack-1.1.2-*.json' \
+        -path '*/conda-meta/msgpack-1.1.2-*.json' -o \
+        -path '*/conda-meta/msgpack-python-1.2.1-*.json' -o \
+        -path '*/conda-meta/msgpack-1.2.1-*.json' \
     \) -delete; \
     stale="$(find $roots \( \
         -path '*/site-packages/pip/_vendor/bom.cdx.json' -o \
@@ -160,27 +181,48 @@ RUN set -eu; \
         -name 'msgpack-1.1.2.dist-info' -o \
         -name 'msgpack-1.1.2.egg-info' -o \
         -name 'msgpack-1.1.2-py*.egg-info' -o \
+        -name 'msgpack-1.2.1.dist-info' -o \
+        -name 'msgpack-1.2.1.egg-info' -o \
+        -name 'msgpack-1.2.1-py*.egg-info' -o \
         -path '*/conda-meta/setuptools-70.3.0-*.json' -o \
         -path '*/conda-meta/msgpack-python-1.1.2-*.json' -o \
-        -path '*/conda-meta/msgpack-1.1.2-*.json' \
+        -path '*/conda-meta/msgpack-1.1.2-*.json' -o \
+        -path '*/conda-meta/msgpack-python-1.2.1-*.json' -o \
+        -path '*/conda-meta/msgpack-1.2.1-*.json' \
     \) -print -quit)"; \
     [ -z "$stale" ] || { echo "stale setuptools/msgpack scanner metadata remains: $stale" >&2; exit 1; }
 
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
 
-# Refresh packages for the latest Ubuntu security advisories.
+# Reassert newly patched transitive dependencies after all package installs.
+RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'oauthlib>=4.0.0'
+
+# Remove the Conda-owned Setuptools files before reinstalling so stale vendored
+# package metadata from 78.1.0 cannot remain in the final SBOM.
+RUN rm -rf /opt/conda/envs/ptca/lib/python3.11/site-packages/setuptools \
+           /opt/conda/envs/ptca/lib/python3.11/site-packages/setuptools-78.1.0.dist-info && \
+    rm -f /opt/conda/envs/ptca/conda-meta/setuptools-78.1.0-*.json && \
+    /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --force-reinstall --no-deps \
+        'setuptools==84.1.0'
+
+# Reassert November 2026 vulnerability-report floors in the scanned Python prefix.
+RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade \
+    'certifi>=2026.10.19' 'opentelemetry-api>=1.45.1' 'brotlicffi>=1.2.1.0' && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/certifi-2024.7.4.dist-info && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/opentelemetry__api-1.43.0.dist-info
+
+# Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libevent-core-2.1-7 libssl-dev libssl3 libx11-6 libx11-data libx11-xcb1 libxml2 openssh-client openssh-server openssh-sftp-server openssl"; \
+    security_packages="libbrotli1 dotnet-hostfxr-8.0"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
             installed_packages="$installed_packages $package"; \
         fi; \
     done; \
-    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    if [ -n "$installed_packages" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade $installed_packages; \
+    fi; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
-
-# Reassert newly patched transitive dependencies after all package installs.
-RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'oauthlib>=4.0.0'
