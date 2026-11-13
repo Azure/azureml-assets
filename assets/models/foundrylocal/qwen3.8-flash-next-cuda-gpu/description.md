@@ -8,7 +8,7 @@ The CUDA package includes mixed-precision 2-, 3-, and 4-bit expert weights using
 - **Base model:** Qwen/Qwen3.8-Flash-Next
 - **Model type:** ONNX
 - **License:** Qwen Community License Agreement 1.0 (custom).
-- **Context length:** Up to 262144 tokens, subject to the selected runtime profile.
+- **Configured runtime token limit:** Up to 262144 tokens (`256 * 1024`), subject to the selected runtime profile.
 - **Capabilities:** Coding, text generation, reasoning, and tool calling.
 - **Protocol:** Reasoning uses `<think>` and `</think>`. Tool calls use `<tool_call>` with nested `<function=...>` and `<parameter=...>` XML-style arguments, rather than JSON tool-call bodies.
 - **Memory requirements:** The catalog declares 61 GiB (65,498,251,264 bytes) of VRAM, above the export's 61 GB (61,000,000,000 bytes) minimum for the resident-expert 256K profile. The 20 GiB tier requires expert offloading and a smaller cache; the resident-expert 128K tier requires 57 GB. These are declared requirements, not locally measured inference peaks. Host-memory and disk requirements also depend on the selected profile.
