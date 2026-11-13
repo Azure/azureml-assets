@@ -1,8 +1,9 @@
 # Build ORAS and Trivy with the latest patched Go release, including the
-# crypto/x509 security fixes in Go 1.27.3.
-ARG GO_VERSION=1.27.3
-# Trivy's upstream download also includes the CVE-2026-111943 fix from v0.76.1.
-ARG TRIVY_VERSION=0.76.1
+# net/http security fix in Go 1.27.4 (CVE-2026-97054).
+ARG GO_VERSION=1.27.4
+# Trivy v0.76.2 links golang.org/x/net v0.62.0 (CVE-2026-78661, CVE-2026-97045) in both
+# the source build and the upstream download; that download is built with Go 1.27.3.
+ARG TRIVY_VERSION=0.76.2
 ARG ORAS_VERSION=1.3.5
 
 # Mode toggles: "build" (compile from source with patched Go + deps) or
