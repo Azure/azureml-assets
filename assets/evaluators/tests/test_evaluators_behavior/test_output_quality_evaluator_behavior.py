@@ -990,14 +990,38 @@ class TestOutputQualityEvaluatorBehavior:
         with pytest.raises(EvaluationException):
             evaluator(query=VALID_QUERY, response=VALID_RESPONSE)
 
-    def test_out_of_range_member_score_raises(self):
-        """An out-of-range member score raises an evaluation exception."""
+    @pytest.mark.parametrize("score", [6, "completed", float("nan"), "-inf"])
+    def test_out_of_range_member_score_raises(self, score):
+        """An out-of-range, unreadable or non-finite member score raises an evaluation exception."""
         evaluator = _mock_flows(
             _make_evaluator(),
-            _all_completed_llm_output(score_overrides={"fluency": 6}),
+            _all_completed_llm_output(score_overrides={"fluency": score}),
         )
-        with pytest.raises(EvaluationException):
+        with pytest.raises(EvaluationException, match="Invalid score value for fluency"):
             evaluator(query=VALID_QUERY, response=VALID_RESPONSE)
+
+    @pytest.mark.parametrize("text,score,passed", [("2", 2, False), (" 4 ", 4, True), ("5.0", 5, True)])
+    def test_member_score_written_as_text_is_read_as_a_number(self, text, score, passed):
+        """A judge that writes a member's score as text still scores that member."""
+        evaluator = _mock_flows(
+            _make_evaluator(),
+            _all_completed_llm_output(score_overrides={"fluency": text}),
+        )
+        result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE)
+        member = result["output_quality_evaluators"]["fluency"]
+        assert (member["score"], member["passed"], result["fluency_score"]) == (score, passed, score)
+        assert result["output_quality"] == int(passed)
+
+    def test_member_score_written_as_null_text_is_skipped(self):
+        """A null score written as text skips that member like a JSON null does."""
+        evaluator = _mock_flows(
+            _make_evaluator(),
+            _all_completed_llm_output(score_overrides={"fluency": "null"}),
+        )
+        result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE)
+        assert result["output_quality"] == 1
+        assert result["output_quality_evaluators"]["fluency"]["score"] is None
+        assert result["output_quality_properties"]["skipped_evaluators"] == ["fluency"]
 
     def test_boolean_member_score_raises(self):
         """A boolean member score raises an evaluation exception."""
