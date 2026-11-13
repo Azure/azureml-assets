@@ -281,6 +281,83 @@ def get_run_history_uri(tracking_uri: str, run_id: str,
     )
 
 
+def _get_mlflow_subprocess_env(use_legacy_resolver=False):
+    install_env = os.environ.copy()
+    if use_legacy_resolver:
+        install_env["PIP_USE_DEPRECATED"] = "legacy-resolver"
+    else:
+        install_env.pop("PIP_USE_DEPRECATED", None)
+    for variable in (
+        "MLFLOW_EXPERIMENT_ID",
+        "MLFLOW_EXPERIMENT_NAME",
+        "MLFLOW_RUN_ID",
+        "MLFLOW_TRACKING_URI",
+    ):
+        install_env.pop(variable, None)
+    return install_env
+
+
+def _get_model_conda_env_info(model_uri):
+    try:
+        model_config = mlflow.models.Model.load(model_uri)
+        pyfunc_env = model_config.flavors["python_function"]["env"]
+        conda_file = (
+            pyfunc_env["conda"]
+            if isinstance(pyfunc_env, dict)
+            else pyfunc_env
+        )
+    except (KeyError, TypeError) as e:
+        raise RuntimeError(
+            "MLflow model does not declare a Conda environment."
+        ) from e
+
+    from mlflow.utils.conda import _get_conda_env_name
+    metadata = model_config.metadata or {}
+    is_automl_model = (
+        metadata.get("azureml.engine") == "automl" or
+        "automl-forecasting" in model_config.flavors
+    )
+    conda_env_name = _get_conda_env_name(
+        os.path.join(model_uri, conda_file))
+    return conda_env_name, is_automl_model
+
+
+def _get_model_conda_env_name(model_uri):
+    return _get_model_conda_env_info(model_uri)[0]
+
+
+def _get_mlflow_model_server_command(model_uri, conda_env_name=None):
+    if conda_env_name is None:
+        return [
+            "mlflow",
+            "models",
+            "serve",
+            "-m",
+            model_uri,
+            "--env-manager",
+            "conda",
+            "-p",
+            str(MLFLOW_MODEL_SERVER_PORT),
+        ]
+    from mlflow.utils.conda import get_conda_bin_executable
+    return [
+        get_conda_bin_executable("conda"),
+        "run",
+        "--no-capture-output",
+        "--name",
+        conda_env_name,
+        "mlflow",
+        "models",
+        "serve",
+        "-m",
+        model_uri,
+        "--env-manager",
+        "local",
+        "-p",
+        str(MLFLOW_MODEL_SERVER_PORT),
+    ]
+
+
 class InstallCondaEnv(object):
     def __init__(self, use_separate_conda_env: bool, conda_file: str,
                  model_path: str, model_id: str = None, model=None):
@@ -289,6 +366,9 @@ class InstallCondaEnv(object):
         self.model_path = model_path
         self.model_id = model_id
         self.model = model
+        self.local_model_path = None
+        self.conda_env_name = None
+        self.use_legacy_resolver = False
 
     def install(self):
         try:
@@ -328,6 +408,10 @@ class InstallCondaEnv(object):
 
                 shutil.copytree(model_path, tmp_model_path)
                 model_uri = tmp_model_path
+                self.local_model_path = model_uri
+                (self.conda_env_name,
+                 self.use_legacy_resolver) = _get_model_conda_env_info(
+                    model_uri)
 
                 _logger.info("MODEL URI: {}".format(
                     model_uri
@@ -352,7 +436,12 @@ class InstallCondaEnv(object):
                                          "--prefix", conda_prefix,
                                          "-f", local_conda_dep]
 
-            install_log = subprocess.check_output(conda_install_command)
+            check_output_args = {}
+            if self.use_separate_conda_env:
+                check_output_args["env"] = _get_mlflow_subprocess_env(
+                    use_legacy_resolver=self.use_legacy_resolver)
+            install_log = subprocess.check_output(
+                conda_install_command, **check_output_args)
             _logger.info(
                 "Conda dependency installation successful, logs: {}".format(
                     install_log
@@ -378,6 +467,7 @@ def load_mlflow_model(
     model_uri = model_path
     client = mlflow.tracking.MlflowClient()
     model = None
+    conda_env_name = None
 
     if model_id:
         split_model_id = model_id.rsplit(":", 1)
@@ -428,6 +518,9 @@ def load_mlflow_model(
                 "You may also check error log above to manually resolve package conflict error"
             )
         _logger.info("Successfully installed model dependencies")
+        if use_separate_conda_env:
+            model_uri = installer.local_model_path
+            conda_env_name = installer.conda_env_name
 
     try:
         if not use_separate_conda_env:
@@ -439,21 +532,16 @@ def load_mlflow_model(
         try:
             # run mlflow model server in background
             with open(mlflow_models_serve_logfile_name, "w") as logfile:
+                popen_args = {}
+                if conda_env_name is not None:
+                    popen_args["env"] = _get_mlflow_subprocess_env()
                 model_serving_log = subprocess.Popen(
-                    [
-                        "mlflow",
-                        "models",
-                        "serve",
-                        "-m",
-                        model_uri,
-                        "--env-manager",
-                        "conda",
-                        "-p",
-                        str(MLFLOW_MODEL_SERVER_PORT)
-                    ],
+                    _get_mlflow_model_server_command(
+                        model_uri, conda_env_name),
                     close_fds=True,
                     stdout=logfile,
-                    stderr=logfile
+                    stderr=logfile,
+                    **popen_args
                 )
             _logger.info("Started mlflow model server process in the background")
         except subprocess.CalledProcessError as e:
