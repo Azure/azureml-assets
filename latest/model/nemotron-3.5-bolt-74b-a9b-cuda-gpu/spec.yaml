@@ -1,0 +1,71 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: nemotron-3.5-bolt-74b-a9b-cuda-gpu
+path: ./
+tags:
+  capabilities: reasoning,tool-calling
+  supportsReasoning: 'true'
+  contextLength: 135160
+system_metadata:
+  previewType: hideUI
+  alias: nemotron-3.5-bolt-74b-a9b
+  publisher: Microsoft
+  directoryPath: v1
+  foundryLocal: ''
+  deploymentOptions: ['Foundry Local on Devices']
+  inputModalities:
+  - text
+  license: custom
+  licenseDescription: This model is provided under the OpenMDW-1.1 License 
+    Agreement available at <https://openmdw.ai/license/1-1/>.
+  maxOutputTokens: 2048
+  outputModalities:
+  - text
+  promptTemplate: ''
+  supportsToolCalling: true
+  toolCallStart: <tool_call>
+  toolCallEnd: </tool_call>
+  toolRegisterStart: <tools>
+  toolRegisterEnd: </tools>
+  toolResponseStart: <tool_response>
+  toolResponseEnd: </tool_response>
+  reasoningStart: <think>
+  reasoningEnd: </think>
+  tasks:
+    inferenceTasks:
+    - coding
+  platformCapabilities:
+    enableMaap: false
+  minFLVersion: 2.5.0
+variantInfo:
+  parents:
+  - assetId: 
+      azureml://registries/azureml/models/nemotron-3.5-bolt-74b-a9b/versions/1
+  variantMetadata:
+    modelType: ONNX
+    quantization:
+    - RTN
+    device: gpu
+    executionProvider: CUDAExecutionProvider
+    fileSizeBytes: 26358839077
+    vRamFootprintBytes: 33285996544
+version: 1
+description: |
+  This model is an optimized ONNX export of NVIDIA Nemotron 3.5 Bolt 74B-A9B 24GB for local text inference on CUDA GPUs.
+
+  # ONNX Models
+  The CUDA variant is cataloged with RTN quantization; its source configuration declares ModelOpt mixed precision. The CUDA export includes packed expert weights, Mamba-2 recurrent states, attention caches, shared embedding initializers, and a DFlash2 speculative decoder. The main decoder uses non-paged attention caches; the drafter uses paged attention.
+
+  # Model Description
+  - **Developed by:** NVIDIA Corporation
+  - **Base model:** nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB
+  - **Model type:** ONNX
+  - **License:** OpenMDW-1.1 (custom).
+  - **Context length:** 132K tokens (nominal export context; `K = 1024`). The upstream model supports 256K, but the supplied ONNX decoder has a 132K KV cache and a slightly smaller configured runtime token limit.
+  - **Capabilities:** Coding, reasoning, and tool calling.
+  - **Protocol:** Reasoning uses `<think>` and `</think>`. Tool calls use `<tool_call>` with nested `<function=...>` and `<parameter=...>` XML-style arguments, rather than JSON tool-call bodies.
+  - **Memory requirements:** The catalog declares 31 GiB (33,285,996,544 bytes) of VRAM. The `consumer-gpu-32g` and `gpu-132k` profiles apply identical full-context configurations with expert offloading disabled. The lower profile's minimum device-memory threshold is 32,212,254,721 bytes, rounded up to a whole GiB for the catalog; a 32 GiB GPU is the corresponding practical hardware tier. Lower-memory profiles allow adaptive expert offloading and have different host-memory requirements. This requirement is configuration-derived, not a locally measured inference peak.
+  - **Modalities:** This export supports text only; the upstream vision encoder is not included.
+  - **Disclaimer:** This model is an optimization of the base model. Please verify and test it for your scenarios; optimizations can introduce differences in output.
+
+  # Base Model Information
+  See the Hugging Face model [NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB](https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB) for the upstream architecture, capabilities, benchmarks, and [OpenMDW-1.1 license](https://openmdw.ai/license/1-1/).
