@@ -1,0 +1,49 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: mai-code-1.1-flash-cuda-gpu
+path: ./
+tags:
+  capabilities: reasoning,tool-calling
+  supportsReasoning: ''
+  contextLength: 262145
+system_metadata:
+  previewType: hideUI
+  alias: mai-code-1.1-flash
+  publisher: Microsoft
+  directoryPath: v1
+  foundryLocal: ''
+  deploymentOptions: ['Foundry Local on Devices']
+  inputModalities:
+  - text
+  license: MIT
+  licenseDescription: This model is provided under the MIT License Terms documented at <https://github.com/Azure/azureml-assets/blob/main/assets/models/system/MAI-Code-1.1-Flash-On-Device/spec.yaml>.
+  maxOutputTokens: 2048
+  outputModalities:
+  - text
+  promptTemplate: ''
+  supportsToolCalling: true
+  toolCallEnd: ''
+  toolCallStart: ''
+  toolRegisterEnd: ''
+  toolRegisterStart: ''
+  toolResponseEnd: ''
+  toolResponseStart: ''
+  reasoningStart: ''
+  reasoningEnd: ''
+  tasks:
+    inferenceTasks:
+    - coding
+  platformCapabilities:
+    enableMaap: false
+  minFLVersion: 2.5.0
+variantInfo:
+  parents:
+  - assetId: azureml://registries/azureml/models/mai-code-1.1-flash/versions/1
+  variantMetadata:
+    modelType: ONNX
+    quantization:
+    - RTN
+    device: gpu
+    executionProvider: CUDAExecutionProvider
+    fileSizeBytes: 70606579362
+    vRamFootprintBytes: 85899345920
+version: 1

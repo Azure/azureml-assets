@@ -1,0 +1,49 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: nemotron-3.5-bolt-74b-a9b-cuda-gpu
+path: ./
+tags:
+  capabilities: reasoning,tool-calling
+  supportsReasoning: 'true'
+  contextLength: 135160
+system_metadata:
+  previewType: hideUI
+  alias: nemotron-3.5-bolt-74b-a9b
+  publisher: Microsoft
+  directoryPath: v1
+  foundryLocal: ''
+  deploymentOptions: ['Foundry Local on Devices']
+  inputModalities:
+  - text
+  license: custom
+  licenseDescription: This model is provided under the OpenMDW-1.1 License Agreement available at <https://openmdw.ai/license/1-1/>.
+  maxOutputTokens: 2048
+  outputModalities:
+  - text
+  promptTemplate: ''
+  supportsToolCalling: true
+  toolCallStart: <tool_call>
+  toolCallEnd: </tool_call>
+  toolRegisterStart: <tools>
+  toolRegisterEnd: </tools>
+  toolResponseStart: <tool_response>
+  toolResponseEnd: </tool_response>
+  reasoningStart: <think>
+  reasoningEnd: </think>
+  tasks:
+    inferenceTasks:
+    - coding
+  platformCapabilities:
+    enableMaap: false
+  minFLVersion: 2.5.0
+variantInfo:
+  parents:
+  - assetId: azureml://registries/azureml/models/nemotron-3.5-bolt-74b-a9b/versions/1
+  variantMetadata:
+    modelType: ONNX
+    quantization:
+    - RTN
+    device: gpu
+    executionProvider: CUDAExecutionProvider
+    fileSizeBytes: 26358839077
+    vRamFootprintBytes: 33285996544
+version: 1
