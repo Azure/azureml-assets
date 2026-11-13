@@ -1,5 +1,15 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
+# IMPORTANT (2026-10-26): Python was upgraded from 3.10 to 3.11 for Pillow 13 security fixes.
+# Downstream users must update interpreter-specific paths, wheels, and compiled dependencies for Python 3.11.
+RUN conda install -n ptca -c conda-forge -y python=3.11 pip && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.10 && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir \
+        --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.8.0+cu126' 'torchvision==0.23.0+cu126' 'torchaudio==2.8.0+cu126' && \
+    conda run -n ptca python -m pip install --upgrade --no-cache-dir 'pillow>=13.0.0' && \
+    conda clean -a -y
+
 USER root
 
 # Install unzip and upgrade OS packages to fix vulnerabilities.
@@ -54,21 +64,21 @@ RUN pip install --no-cache-dir --upgrade 'pip>=26.2.0,<27' && \
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
-# ptca env torch is inherited from the ACPT torch280 base image; pin the patched CUDA build for
-# GHSA-qfhq-4f3w-5fph, GHSA-vgrw-7cvw-pwgx, and GHSA-rrmf-rvhw-rf47. Keep torchvision aligned
-# with torch; remove torchaudio because no compatible 2.13 CUDA wheel is available.
+# Torch 2.13 fixes the reported PyTorch findings; no ACPT base currently publishes it.
+# Keep the parent CUDA 12.6 runtime by using cu126 wheels with matching torchvision.
+# Remove torchaudio because no compatible Torch 2.13 wheel is available.
 RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade \
         --progress-bar off \
         --index-url https://download.pytorch.org/whl/cu126 \
         'torch==2.13.0+cu126' \
         'torchvision==0.28.0+cu126' && \
     /opt/conda/envs/ptca/bin/python -m pip uninstall -y torchaudio && \
-    rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/torch-2.8*.dist-info \
-           /opt/conda/envs/ptca/lib/python3.10/site-packages/torch-2.10*.dist-info \
-           /opt/conda/envs/ptca/lib/python3.10/site-packages/torchvision-0.23*.dist-info \
-           /opt/conda/envs/ptca/lib/python3.10/site-packages/torchvision-0.25*.dist-info \
-           /opt/conda/envs/ptca/lib/python3.10/site-packages/torchaudio \
-           /opt/conda/envs/ptca/lib/python3.10/site-packages/torchaudio-*.dist-info
+    rm -rf /opt/conda/envs/ptca/lib/python3.11/site-packages/torch-2.8*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.11/site-packages/torch-2.10*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.11/site-packages/torchvision-0.23*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.11/site-packages/torchvision-0.25*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.11/site-packages/torchaudio \
+           /opt/conda/envs/ptca/lib/python3.11/site-packages/torchaudio-*.dist-info
 
 # ptca-env (py3.10) transitive deps pip won't auto-upgrade; no parent floors the safe versions:
 # Mako>=1.3.11 (GHSA-v92g-xgxw-vvmm), GitPython>=3.1.58 (GHSA-x2qx-6953-8485, GHSA-rpm5-65cw-6hj4,
@@ -76,7 +86,7 @@ RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade \
 # GHSA-fjr4-x663-mwxc, GHSA-6p8h-3wgx-97gf, GHSA-r9mr-m37c-5fr3, GHSA-p538-c434-8v24,
 # GHSA-539m-9xh6-q6rr, and GHSA-3f7w-8rr8-f37f),
 # pytest>=9.0.3 (GHSA-6w46-j5rx-g56g), skops>=0.13.0 (CVE-2025-54412/54413/54886),
-# urllib3>=2.7.0 (GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j), aiohttp>=3.14.3 (GHSA-hg6j-4rv6-33pg,
+# urllib3>=2.7.0 (GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j), aiohttp>=3.14.4 (GHSA-hg6j-4rv6-33pg,
 # GHSA-jg22-mg44-37j8, GHSA-mfx4-hv73-q22v, GHSA-cq5v-8q36-5273, GHSA-mq44-7p77-q5h7),
 # pyarrow>=23.0.1 (GHSA-rgxp-2hwp-jwgg).
 # cryptography: pinned transitive dep of ACPT base image; brought in by base image, fixes
@@ -88,11 +98,11 @@ RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade \
 #   GHSA-phj9-mv4w-65pm, GHSA-62p4-gmf7-7g93, and GHSA-5x94-69rx-g8h2.
 # msgpack: transitive dep of the AzureML Dask stack; fixes GHSA-6v7p-g79w-8964.
 # setuptools: bootstrapped in the ptca env; fixes GHSA-h35f-9h28-mq5c.
-RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.58' 'pytest>=9.0.3' 'skops>=0.13.0' 'urllib3>=2.7.0' 'aiohttp>=3.14.3' 'pyarrow>=23.0.1' 'cryptography>=50.0.0' 'pyasn1>=0.6.4' 'pillow>=12.3.0' 'msgpack>=1.2.1' 'setuptools>=83.0.0'
+RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.58' 'pytest>=9.0.3' 'skops>=0.13.0' 'urllib3>=2.7.0' 'aiohttp>=3.14.4' 'pyarrow>=23.0.1' 'cryptography>=50.0.0' 'pyasn1>=0.6.4' 'pillow>=13.0.0' 'msgpack>=1.2.3' 'setuptools>=84.1.0'
 
 # base-env transitive deps not reached by the ptca pip installs; explicit upgrades required:
 # python-dotenv>=1.2.2 (GHSA-mf9w-mj56-hr94), urllib3>=2.7.0 (GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j),
-# idna>=3.15 (GHSA-65pc-fj4g-8rjx), click>=8.3.3 (GHSA-47fr-3ffg-hgmw), aiohttp>=3.14.3
+# idna>=3.15 (GHSA-65pc-fj4g-8rjx), click>=8.3.3 (GHSA-47fr-3ffg-hgmw), aiohttp>=3.14.4
 # (GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8, GHSA-mfx4-hv73-q22v, GHSA-cq5v-8q36-5273,
 # GHSA-mq44-7p77-q5h7), PyJWT>=2.13.0 (GHSA-jq35-7prp-9v3f, GHSA-993g-76c3-p5m4).
 # py-rattler: pinned transitive dep of ACPT base image conda tooling; brought in by base image, fixes GHSA-q53q-5r4j-5729.
@@ -104,7 +114,7 @@ RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.58' 'pyt
 # msgpack: the base conda prefix carries its own copy that the ptca pin above never reaches;
 #   fixes GHSA-6v7p-g79w-8964.
 # anyio: base-prefix dependency; fixes GHSA-5p39-cfhj-2xmp and GHSA-82r6-8w77-94w6.
-RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.3' 'PyJWT>=2.13.0' 'py-rattler>=0.24.0' 'cryptography>=50.0.0' 'pydantic-settings>=2.14.2' 'pyasn1>=0.6.4' 'setuptools>=83.0.0' 'msgpack>=1.2.1' 'anyio>=4.14.2'
+RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.4' 'PyJWT>=2.13.0' 'py-rattler>=0.24.0' 'cryptography>=50.0.0' 'pydantic-settings>=2.14.2' 'pyasn1>=0.6.4' 'setuptools>=84.1.0' 'msgpack>=1.2.3' 'anyio>=4.14.2'
 
 # pip vendors its own copies of setuptools and msgpack and declares them in
 # pip/_vendor/bom.cdx.json, which the scanner reports as setuptools 70.3.0
@@ -114,21 +124,29 @@ RUN set -eux; \
     find / -xdev -path '*/site-packages/pip/_vendor/bom.cdx.json' -type f -delete; \
     find /opt /root -type d \( -name 'setuptools-70.3.0.dist-info' -o -name 'msgpack-1.1.2.dist-info' \) -prune -exec rm -rf {} +; \
     find /opt /root -path '*/_vendor/vendor.txt' -type f -exec \
-        sed -i -E 's/setuptools==70\.3\.0/setuptools==83.0.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +
+        sed -i -E 's/setuptools==70\.3\.0/setuptools==84.1.0/g; s/msgpack==1\.1\.2/msgpack==1.2.1/g' {} +
 
-# Refresh packages for the latest Ubuntu security advisories.
+# Reassert newly patched transitive dependencies after all package installs.
+RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'oauthlib>=4.0.0'
+
+# Reassert November 2026 vulnerability-report floors in the scanned Python prefix.
+RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade \
+    'certifi>=2026.10.19' 'opentelemetry-api>=1.45.1' 'brotlicffi>=1.2.1.0' && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/certifi-2024.7.4.dist-info && \
+    rm -rf /opt/conda/lib/python3.14/site-packages/opentelemetry__api-1.43.0.dist-info
+
+# Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="curl libcurl3-gnutls libcurl3t64-gnutls libcurl4 libcurl4t64 libevent-core-2.1-7 libssl-dev libssl3 libx11-6 libx11-data libx11-xcb1 libxml2 openssh-client openssh-server openssh-sftp-server openssl"; \
+    security_packages="dotnet-hostfxr-8.0 libbrotli1"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
             installed_packages="$installed_packages $package"; \
         fi; \
     done; \
-    if [ -n "$installed_packages" ]; then apt-get install -y --only-upgrade $installed_packages; fi; \
+    if [ -n "$installed_packages" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade $installed_packages; \
+    fi; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
-
-# Reassert newly patched transitive dependencies after all package installs.
-RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'oauthlib>=4.0.0'
