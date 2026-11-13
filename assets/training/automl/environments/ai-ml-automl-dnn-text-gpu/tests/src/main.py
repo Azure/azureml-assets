@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-"""Simple Sklearn Test."""
+"""AutoML NLP dependency and scikit-learn smoke test."""
 # imports
 import mlflow
 import argparse
@@ -13,6 +13,7 @@ from sklearn.model_selection import train_test_split
 # define functions
 def main(args):
     """Run and evaluate model."""
+    validate_nlp_dependencies()
     # enable auto logging
     mlflow.autolog()
     # setup parameters
@@ -30,6 +31,31 @@ def main(args):
     model = train_model(params, X_train, X_test, y_train, y_test)
 
     print(model)
+
+
+def validate_nlp_dependencies():
+    """Import the actual NER runner and exercise its shared ONNX converter stack."""
+    import azureml.automl.dnn.nlp.ner.runner  # noqa: F401
+    import numpy as np
+    import onnx
+    import onnxconverter_common  # noqa: F401
+    import onnxmltools  # noqa: F401
+    import onnxruntime as ort
+    from skl2onnx import to_onnx
+
+    features = np.array([[0, 1], [1, 0], [1, 2], [2, 1]], dtype=np.float32)
+    targets = np.array([1, 2, 3, 4], dtype=np.float32)
+    model = LinearRegression().fit(features, targets)
+    graph = to_onnx(model, features[:1], target_opset=15)
+    onnx.checker.check_model(graph)
+    session = ort.InferenceSession(
+        graph.SerializeToString(), providers=["CPUExecutionProvider"]
+    )
+    predictions = session.run(None, {session.get_inputs()[0].name: features})[0]
+    np.testing.assert_allclose(
+        predictions.ravel(), model.predict(features), rtol=1e-5, atol=1e-5
+    )
+    print("AUTOML_TEXT_NER_IMPORT_AND_ONNX_PASSED")
 
 
 def process_data(df, random_state):
