@@ -127,7 +127,7 @@ RUN pip install --no-cache-dir --use-deprecated=legacy-resolver \
 
 # Separate updates for fixing vulnerabilities.
 # Keep this list small; prefer fixed parent packages when available.
-RUN pip install pyarrow==14.0.2 \
+RUN pip install pyarrow==23.0.1 \
                 accelerate==1.12.0 
 
 # transformers is a pinned transitive dep of azureml-automl-dnn-nlp; fixes GHSA-69w3-r845-3855 and GHSA-xrqw-3rrv-vx5w.
@@ -226,8 +226,10 @@ RUN set -eu; \
 # end pip install
 
 # Reassert newly patched transitive dependencies after all package installs.
+# Keep the patched Arrow release compatible with AutoML's NumPy 1.23 ABI;
+# newer datasets releases otherwise pull Arrow wheels requiring NumPy 2.
 RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/python -m pip install --no-cache-dir --upgrade \
-        'datasets>=5.0.1' 'fsspec>=2026.6.0' 'urllib3>=2.8.0' && \
+        'numpy~=1.23.5' 'pyarrow==23.0.1' 'datasets>=5.0.1' 'fsspec>=2026.6.0' 'urllib3>=2.8.0' && \
     /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0' 'urllib3>=2.8.0'
 
 # Reassert November 2026 vulnerability-report floors in the scanned Python prefixes.
