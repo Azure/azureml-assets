@@ -1651,3 +1651,12 @@ def test_native_decision_one_runner_request_per_converted_input():
     assert all(len(json.loads(call.args[0])["questions"]) == 12 for call in post.await_args_list)
     results = aggregate.call_args.kwargs["per_turn_results"]
     assert all(result["output_quality_total_tokens"] == 34 for result in results)
+
+
+@pytest.mark.unittest
+def test_invalid_output_message_is_actionable_and_privacy_safe():
+    """Invalid judge output is reported with its cause and safe metadata, never its content."""
+    from ..common.invalid_output_cases import assert_invalid_output_diagnostics
+    from ...builtin.output_quality.evaluator._output_quality import _invalid_output_message
+
+    assert_invalid_output_diagnostics(_invalid_output_message)
