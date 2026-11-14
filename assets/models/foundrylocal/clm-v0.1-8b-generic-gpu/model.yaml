@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/models/clm-v0.1-8b/webgpu/v1
+  container_path: foundrylocal/models/clm-v0.1-8b/webgpu/v2
   storage_name: foundrylocalassetdata
   type: azureblob
 publish:

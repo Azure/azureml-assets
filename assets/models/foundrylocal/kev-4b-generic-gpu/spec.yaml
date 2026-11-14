@@ -5,7 +5,7 @@ system_metadata:
   alias: kev-4b
   deploymentOptions:
   - Foundry Local on Devices
-  directoryPath: v1
+  directoryPath: v2
   foundryLocal: ''
   inputModalities:
   - text
@@ -31,9 +31,9 @@ variantInfo:
   variantMetadata:
     device: gpu
     executionProvider: WebGPUExecutionProvider
-    fileSizeBytes: 5950412516
+    fileSizeBytes: 5950411933
     modelType: ONNX
     quantization:
     - RTN
-    vRamFootprintBytes: 5950412516
-version: 1
+    vRamFootprintBytes: 5950411933
+version: 2
