@@ -127,7 +127,7 @@ RUN pip install --no-cache-dir --use-deprecated=legacy-resolver \
 
 # Separate updates for fixing vulnerabilities.
 # Keep this list small; prefer fixed parent packages when available.
-RUN pip install pyarrow==14.0.2 \
+RUN pip install pyarrow==23.0.1 \
                 accelerate==1.12.0 
 
 # transformers is a pinned transitive dep of azureml-automl-dnn-nlp; fixes GHSA-69w3-r845-3855 and GHSA-xrqw-3rrv-vx5w.
@@ -151,7 +151,8 @@ RUN pip install --no-cache-dir --upgrade 'pip>=26.1.2'
 # 2.x, which contradicts azureml-automl-runtime and scipy and leaves the prebuilt pandas 1.5.3
 # wheel binary-incompatible, so the image fails on import pandas with
 # "ValueError: numpy.dtype size changed".
-RUN pip install --upgrade 'numpy~=1.23.5' 'distributed>=2026.1.0' 'cryptography>=50.0.0' 'bokeh>=3.8.2' 'onnx>=1.22.0' 'sqlparse>=0.6.0' 'pillow>=13.0.0' 'filelock>=4.2.1' 'pyasn1>=0.6.5' 'tornado>=6.6'
+# Upgrade the converter family with ONNX, which no longer exports onnx.mapping.
+RUN pip install --upgrade 'numpy~=1.23.5' 'distributed>=2026.1.0' 'cryptography>=50.0.0' 'bokeh>=3.8.2' 'onnx>=1.22.0' 'skl2onnx==1.20.0' 'onnxmltools==1.16.0' 'onnxconverter-common==1.16.0' 'sqlparse>=0.6.0' 'pillow>=13.0.0' 'filelock>=4.2.1' 'pyasn1>=0.6.5' 'tornado>=6.6'
 
 # Security: upgrade aiohttp to fix GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8,
 # and follow-up aiohttp advisories requiring >=3.14.3 in the AzureML conda env.
@@ -225,8 +226,10 @@ RUN set -eu; \
 # end pip install
 
 # Reassert newly patched transitive dependencies after all package installs.
+# Keep the patched Arrow release compatible with AutoML's NumPy 1.23 ABI;
+# newer datasets releases otherwise pull Arrow wheels requiring NumPy 2.
 RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/python -m pip install --no-cache-dir --upgrade \
-        'datasets>=5.0.1' 'fsspec>=2026.6.0' 'urllib3>=2.8.0' && \
+        'numpy~=1.23.5' 'pyarrow==23.0.1' 'datasets>=5.0.1' 'fsspec>=2026.6.0' 'urllib3>=2.8.0' && \
     /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0' 'urllib3>=2.8.0'
 
 # Reassert November 2026 vulnerability-report floors in the scanned Python prefixes.
@@ -250,3 +253,13 @@ RUN set -eux; \
     fi; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
+
+# Match the vision image's Python 3.11 and setuptools compatibility backports.
+RUN sed -i 's/OnnxIncompatiblePythonVersion = (3, 11)/OnnxIncompatiblePythonVersion = (3, 12)/' \
+        "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/azureml/automl/core/onnx_convert/onnx_convert_constants.py" && \
+    grep -q 'OnnxIncompatiblePythonVersion = (3, 12)' \
+        "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/azureml/automl/core/onnx_convert/onnx_convert_constants.py" && \
+    sed -i \
+        -e 's/^import pkg_resources/from importlib.resources import files/' \
+        -e "s/pkg_resources.resource_filename(PACKAGE_NAME, 'faults_verifier_message.json')/str(files(PACKAGE_NAME).joinpath('faults_verifier_message.json'))/" \
+        "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/azureml/automl/runtime/faults_verifier.py"
