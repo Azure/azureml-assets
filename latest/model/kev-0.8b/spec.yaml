@@ -5,7 +5,7 @@ system_metadata:
   previewType: hideUI
   foundryLocal: ''
   deploymentOptions: ['Foundry Local on Devices']
-version: 1
+version: 2
 description: |
   KEV-0.8B is a compact non-generative decision model for local predicate, choice, and score evaluation. Foundry Local variants are available for CPU, CUDA GPU, and WebGPU with mixed FP16 and INT4 precision.
 

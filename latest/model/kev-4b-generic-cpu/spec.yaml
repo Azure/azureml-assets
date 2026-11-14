@@ -5,7 +5,7 @@ system_metadata:
   alias: kev-4b
   deploymentOptions:
   - Foundry Local on Devices
-  directoryPath: v1
+  directoryPath: v2
   foundryLocal: ''
   inputModalities:
   - text
@@ -31,11 +31,11 @@ variantInfo:
   variantMetadata:
     device: cpu
     executionProvider: CPUExecutionProvider
-    fileSizeBytes: 16917273822
+    fileSizeBytes: 16917273265
     modelType: ONNX
     quantization: []
-    vRamFootprintBytes: 16917273822
-version: 1
+    vRamFootprintBytes: 16917273265
+version: 2
 description: |
   This is the FP32 ONNX version of KEV-4B for local typed decisions on CPUs. It supports noul, choice, and score questions and requires Foundry Local 2.4.0 or later.
 

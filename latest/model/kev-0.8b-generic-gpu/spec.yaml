@@ -5,7 +5,7 @@ system_metadata:
   alias: kev-0.8b
   deploymentOptions:
   - Foundry Local on Devices
-  directoryPath: v1
+  directoryPath: v2
   foundryLocal: ''
   inputModalities:
   - text
@@ -31,12 +31,12 @@ variantInfo:
   variantMetadata:
     device: gpu
     executionProvider: WebGPUExecutionProvider
-    fileSizeBytes: 1300029717
+    fileSizeBytes: 1300029128
     modelType: ONNX
     quantization:
     - RTN
-    vRamFootprintBytes: 1300029717
-version: 1
+    vRamFootprintBytes: 1300029128
+version: 2
 description: |
   This is a mixed FP16 and INT4 ONNX version of KEV-0.8B for local typed decisions with WebGPU. It supports noul, choice, and score questions and requires Foundry Local 2.4.0 or later.
 
