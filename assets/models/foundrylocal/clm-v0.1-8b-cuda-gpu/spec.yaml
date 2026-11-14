@@ -5,7 +5,7 @@ system_metadata:
   alias: clm-v0.1-8b
   deploymentOptions:
   - Foundry Local on Devices
-  directoryPath: v1
+  directoryPath: v2
   foundryLocal: ''
   inputModalities:
   - text
@@ -31,9 +31,9 @@ variantInfo:
   variantMetadata:
     device: gpu
     executionProvider: CUDAExecutionProvider
-    fileSizeBytes: 8959068398
+    fileSizeBytes: 8959067809
     modelType: ONNX
     quantization:
     - RTN
-    vRamFootprintBytes: 8959068398
-version: 1
+    vRamFootprintBytes: 8959067809
+version: 2

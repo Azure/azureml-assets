@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/models/kev-0.8b/webgpu/v1
+  container_path: foundrylocal/models/kev-0.8b/webgpu/v2
   storage_name: foundrylocalassetdata
   type: azureblob
 publish:
