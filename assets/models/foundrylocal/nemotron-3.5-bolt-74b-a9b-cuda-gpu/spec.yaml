@@ -4,7 +4,7 @@ path: ./
 tags:
   capabilities: reasoning,tool-calling
   supportsReasoning: 'true'
-  contextLength: 135160
+  contextLength: 262144
 system_metadata:
   previewType: hideUI
   alias: nemotron-3.5-bolt-74b-a9b
@@ -45,5 +45,5 @@ variantInfo:
     device: gpu
     executionProvider: CUDAExecutionProvider
     fileSizeBytes: 26358839077
-    vRamFootprintBytes: 33285996544
+    vRamFootprintBytes: 36507222016
 version: 1
