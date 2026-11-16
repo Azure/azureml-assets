@@ -5,9 +5,12 @@
 # Test NER runner imports, shared ONNX converters, and scikit-learn training.
 # After the environment is deployed, notebooks tests should be run before updating
 # the "Prod" label in the Jasmine service
+import importlib
 import os
+import runpy
 import time
 from pathlib import Path
+import pytest
 from azure.ai.ml import command, Input, MLClient
 from azure.ai.ml.operations._run_history_constants import JobStatus
 from azure.ai.ml.entities import Environment, BuildContext
@@ -17,6 +20,47 @@ BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
 TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 120)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
+
+
+def test_entrypoint_imports_are_deferred(tmp_path, monkeypatch):
+    """Keep NLP logging importable without loading unrelated training dependencies."""
+    package = tmp_path / "entrypoints_backport_test"
+    utils = package / "utils"
+    utils.mkdir(parents=True)
+    initializer = package / "__init__.py"
+    initializer.write_text(
+        "from .utils import common as entrypoint_util\n"
+        "from .utils import training as training_entrypoint_util\n"
+        "telemetry_preserved = True\n"
+    )
+    (utils / "__init__.py").write_text("")
+    (utils / "common.py").write_text("def initialize_log_server():\n    return 'initialized'\n")
+    (utils / "training.py").write_text("raise ImportError('incompatible tabular dependency')\n")
+    backport = runpy.run_path(str(Path(__file__).parent / BUILD_CONTEXT / "patch_entrypoints.py"))
+    backport["patch_entrypoints"](initializer)
+    monkeypatch.syspath_prepend(str(tmp_path))
+
+    entrypoints = importlib.import_module(package.name)
+    common = importlib.import_module(package.name + ".utils.common")
+    assert common.initialize_log_server() == "initialized"
+    assert entrypoints.entrypoint_util is common
+    assert entrypoints.__dict__["entrypoint_util"] is common
+    assert entrypoints.telemetry_preserved
+    with pytest.raises(AttributeError):
+        entrypoints.unknown_entrypoint
+    with pytest.raises(ImportError, match="incompatible tabular dependency"):
+        entrypoints.training_entrypoint_util
+
+
+def test_entrypoint_backport_rejects_changed_imports(tmp_path):
+    """Fail the build instead of silently patching an unexpected SDK initializer."""
+    initializer = tmp_path / "__init__.py"
+    source = "from .utils import changed_entrypoint\n"
+    initializer.write_text(source)
+    backport = runpy.run_path(str(Path(__file__).parent / BUILD_CONTEXT / "patch_entrypoints.py"))
+    with pytest.raises(RuntimeError, match="Unexpected AutoML entrypoint import"):
+        backport["patch_entrypoints"](initializer)
+    assert initializer.read_text() == source
 
 
 def test_azure_ai_ml_automl():

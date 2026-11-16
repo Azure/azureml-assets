@@ -263,3 +263,8 @@ RUN sed -i 's/OnnxIncompatiblePythonVersion = (3, 11)/OnnxIncompatiblePythonVers
         -e 's/^import pkg_resources/from importlib.resources import files/' \
         -e "s/pkg_resources.resource_filename(PACKAGE_NAME, 'faults_verifier_message.json')/str(files(PACKAGE_NAME).joinpath('faults_verifier_message.json'))/" \
         "$AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/azureml/automl/runtime/faults_verifier.py"
+
+# NLP needs common logging utilities, not the tabular entrypoints that import
+# Dask dataframe against the SDK's intentionally retained pandas/NumPy pins.
+COPY patch_entrypoints.py /tmp/patch_entrypoints.py
+RUN python /tmp/patch_entrypoints.py && rm /tmp/patch_entrypoints.py
