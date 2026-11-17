@@ -44,6 +44,6 @@ variantInfo:
     - RTN
     device: gpu
     executionProvider: CUDAExecutionProvider
-    fileSizeBytes: 98075386018
-    vRamFootprintBytes: 65498251264
+    fileSizeBytes: 98072157905
+    vRamFootprintBytes: 67645734912
 version: 1
