@@ -9,7 +9,7 @@ system_metadata:
   previewType: hideUI
   alias: mai-code-1.1-flash
   publisher: Microsoft
-  directoryPath: v1
+  directoryPath: v2
   foundryLocal: ''
   deploymentOptions: ['Foundry Local on Devices']
   inputModalities:
@@ -44,6 +44,6 @@ variantInfo:
     - RTN
     device: gpu
     executionProvider: CUDAExecutionProvider
-    fileSizeBytes: 51505786418
+    fileSizeBytes: 51505787109
     vRamFootprintBytes: 78383153152
-version: 1
+version: 2
