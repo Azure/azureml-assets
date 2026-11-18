@@ -272,3 +272,7 @@ RUN python /tmp/patch_entrypoints.py && rm /tmp/patch_entrypoints.py
 # Backport MLflow 3 custom-loader logging until the runtime package includes it.
 COPY patch_mlflow_logging.py /tmp/patch_mlflow_logging.py
 RUN python /tmp/patch_mlflow_logging.py && rm /tmp/patch_mlflow_logging.py
+
+# Backport MLflow 3 runs:/ model registration until azureml-mlflow includes it.
+COPY patch_azureml_mlflow_listing.py /tmp/patch_azureml_mlflow_listing.py
+RUN python /tmp/patch_azureml_mlflow_listing.py && rm /tmp/patch_azureml_mlflow_listing.py

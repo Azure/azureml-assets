@@ -134,6 +134,78 @@ def test_mlflow_loader_backport_rejects_changed_source(tmp_path):
     assert module_path.read_text() == source
 
 
+_ARTIFACT_REPO_SOURCE = """\
+from mlflow.entities import FileInfo
+from packaging import version
+
+
+class Repo:
+    def __init__(self, artifacts):
+        self.artifacts = artifacts
+
+    def _get_full_artifact_path(self, artifact_path):
+        return "/".join([self.artifacts.path, artifact_path])
+
+    def list_artifacts(self, path):
+        # get and filter by paths
+
+        if path and self.artifacts.path and not path.startswith(self.artifacts.path):
+            path = self._get_full_artifact_path(path)
+
+        depth = len(path.split("/")) if path else 0
+        infos = {}
+        for file_path in self.artifacts.get_file_paths():
+            if path is None or file_path[:len(path)] == path and len(file_path) > len(path):
+                tokens = file_path.split("/")
+                infos.setdefault("/".join(tokens[:depth + 1]), len(tokens) > depth + 1)
+        return [FileInfo(path=p, is_dir=d, file_size=-1) for p, d in infos.items()]
+"""
+
+
+@pytest.mark.parametrize(("mlflow_version", "expected"), [
+    ("3.15.0", ["MLmodel", "data"]),
+    ("2.22.0", ["outputs", "user_logs"]),
+])
+def test_azureml_mlflow_listing_backport(tmp_path, monkeypatch, mlflow_version, expected):
+    """List runs:/ model roots relative to the model path only for MLflow 3 registration."""
+    module_path = tmp_path / "artifact_repo.py"
+    module_path.write_text(_ARTIFACT_REPO_SOURCE)
+    backport = runpy.run_path(str(Path(__file__).parent / BUILD_CONTEXT / "patch_azureml_mlflow_listing.py"))
+    backport["patch_azureml_mlflow_listing"](module_path)
+    patched = module_path.read_text()
+    backport["patch_azureml_mlflow_listing"](module_path)
+    assert module_path.read_text() == patched
+
+    mlflow = types.ModuleType("mlflow")
+    mlflow_version_module = types.ModuleType("mlflow.version")
+    mlflow_version_module.VERSION = mlflow_version
+    entities = types.ModuleType("mlflow.entities")
+    entities.FileInfo = lambda **kwargs: types.SimpleNamespace(**kwargs)
+    monkeypatch.setitem(sys.modules, "mlflow", mlflow)
+    monkeypatch.setitem(sys.modules, "mlflow.version", mlflow_version_module)
+    monkeypatch.setitem(sys.modules, "mlflow.entities", entities)
+    namespace = {}
+    exec(compile(patched, str(module_path), "exec"), namespace)
+    file_paths = ["outputs/mlflow-model/MLmodel", "outputs/mlflow-model/data/model.pt", "user_logs/std_log.txt"]
+    repo = namespace["Repo"](types.SimpleNamespace(path="outputs/mlflow-model/", get_file_paths=lambda: file_paths))
+
+    assert [info.path for info in repo.list_artifacts(None)] == expected
+    assert [info.path for info in repo.list_artifacts("outputs/mlflow-model")] == [
+        "outputs/mlflow-model/MLmodel", "outputs/mlflow-model/data"
+    ]
+
+
+def test_azureml_mlflow_listing_backport_rejects_changed_source(tmp_path):
+    """Reject an upstream azureml-mlflow whose artifact listing has changed."""
+    module_path = tmp_path / "artifact_repo.py"
+    source = "def changed_listing():\n    pass\n"
+    module_path.write_text(source)
+    backport = runpy.run_path(str(Path(__file__).parent / BUILD_CONTEXT / "patch_azureml_mlflow_listing.py"))
+    with pytest.raises(RuntimeError, match="azureml-mlflow artifact listing changed"):
+        backport["patch_azureml_mlflow_listing"](module_path)
+    assert module_path.read_text() == source
+
+
 def test_azure_ai_ml_automl():
     """Tests a sample job using ai-ml-automl-dnn-text-gpu as the environment."""
     this_dir = Path(__file__).parent

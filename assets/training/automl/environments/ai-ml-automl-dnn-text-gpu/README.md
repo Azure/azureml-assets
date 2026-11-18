@@ -39,3 +39,7 @@ Azure ML tracking does not support MLflow 3's logged-models API. Until the
 runtime package includes the fix, the image backports legacy logging for
 custom-loader models, using the current child run ID. MLflow 2 keeps its
 existing logging path.
+
+The image also backports `azureml-mlflow` artifact listing so MLflow 3 can
+find `MLmodel` when registering `runs:/` model URIs, instead of falling back to
+the logged-models search API. MLflow 2 listing is unchanged.
