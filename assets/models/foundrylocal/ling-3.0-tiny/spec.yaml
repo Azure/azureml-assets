@@ -1,0 +1,8 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: ling-3.0-tiny
+path: ./
+system_metadata:
+  previewType: hideUI
+  foundryLocal: ''
+  deploymentOptions: ['Foundry Local on Devices']
+version: 1

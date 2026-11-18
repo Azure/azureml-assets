@@ -5,7 +5,7 @@
 # Core scientific stack
 numpy==1.26.4
 pandas==2.2.2
-hydra-core==1.3.7
+hydra-core==1.3.8
 marshmallow==3.26.2
 
 # Azure ML SDK
@@ -36,7 +36,7 @@ lightning==2.6.6
 pydicom==2.4.5
 SimpleITK==2.4.0
 scikit-image==0.24.0
-nltk==3.10.3
+nltk==3.10.4
 h5py==3.14.0
 
 # Utilities
@@ -48,16 +48,16 @@ dotmap==1.3.30
 appdirs==1.4.4
 # ffmpeg python wrapper dropped: no video codepaths in MIP3D (NIFTI/DICOM only)
 # and the OS ffmpeg pkg accounts for 11/12 scan findings.
-filelock>=3.20.1
+filelock>=4.2.1
 
 # Build tooling pins (CVE / compatibility)
 wheel==0.46.2
-setuptools>=82.0.1
+setuptools>=84.1.0
 protobuf==6.33.5
-pillow==12.3.0
+pillow==13.0.0
 
 # Transitive CVE pins
-aiohttp>=3.14.0  # GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8
+aiohttp>=3.14.4  # GHSA-hg6j-4rv6-33pg, GHSA-jg22-mg44-37j8
 idna>=3.15       # GHSA-65pc-fj4g-8rjx
 sqlparse>=0.6.0  # pinned transitive dep of azureml-mlflow/mlflow-skinny; fixes GHSA-f2ff-p2ww-7p4p, GHSA-prg7-hcfm-mfcr, GHSA-3496-9g83-7v6x, GHSA-pwgv-4x5q-6m9f
 starlette==1.3.1 # pinned transitive dep of azureml-acft-image-components[mip3d]; fixes GHSA-82w8-qh3p-5jfq

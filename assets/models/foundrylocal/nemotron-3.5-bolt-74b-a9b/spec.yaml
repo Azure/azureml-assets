@@ -1,0 +1,8 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: nemotron-3.5-bolt-74b-a9b
+path: ./
+system_metadata:
+  previewType: hideUI
+  foundryLocal: ''
+  deploymentOptions: ['Foundry Local on Devices']
+version: 1

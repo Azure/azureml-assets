@@ -51,7 +51,7 @@ RUN printf '%s\n' 'msgpack>=1.2.3' 'setuptools>=84.1.0' > /tmp/pip-security-cons
     'debugpy~=1.6.3' \
     'ipykernel~=6.0' \
     tensorboard \
-    'psutil~=5.8.0' \
+    'psutil>=5.9,<8' \
     'matplotlib>=3.10.8,<3.11' \
     'tqdm~=4.66.3' \
     py-cpuinfo==5.0.0 \
@@ -82,6 +82,19 @@ RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade \
 # Reassert newly patched transitive dependencies after all package installs.
 RUN /azureml-envs/sklearn-1.5/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0' 'oauthlib>=4.0.0' 'urllib3>=2.8.0' && \
     /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade 'PyJWT>=2.15.0' 'urllib3>=2.8.0' && rm -rf /opt/miniconda/pkgs/urllib3-2.7.0-*
+
+# Remove stale Conda and pip-vendored inventory after the patched packages are installed.
+RUN set -eux; \
+    find /opt/miniconda "$CONDA_PREFIX" -path '*/pip/_vendor/bom.cdx.json' -type f -delete; \
+    find /opt/miniconda "$CONDA_PREFIX" -path '*/pip/_vendor/vendor.txt' -type f \
+        -exec sed -i -E '/^(setuptools|msgpack)==/d' {} +; \
+    rm -f /opt/miniconda/conda-meta/setuptools-*.json \
+          /opt/miniconda/conda-meta/msgpack-*.json \
+          /opt/miniconda/conda-meta/msgpack-python-*.json \
+          "$CONDA_PREFIX"/conda-meta/setuptools-*.json \
+          "$CONDA_PREFIX"/conda-meta/msgpack-*.json \
+          "$CONDA_PREFIX"/conda-meta/msgpack-python-*.json; \
+    rm -rf /opt/miniconda/pkgs /root/.cache/pip
 
 # Reassert November 2026 vulnerability-report floors in the scanned Python prefixes.
 RUN $CONDA_PREFIX/bin/python -m pip install --no-cache-dir --upgrade 'opentelemetry-api>=1.45.1'

@@ -16,7 +16,16 @@ import ray
 
 
 RAY_DIST_NAMES = ("ray_dist.jar", "ray__dist.jar")
-GROUP_PATH = "com/fasterxml/jackson/core"
+GROUP_PATHS = {
+    "jackson-core": "com/fasterxml/jackson/core",
+    "jackson-databind": "com/fasterxml/jackson/core",
+    "guava": "com/google/guava",
+}
+MAVEN_GROUPS = {
+    "jackson-core": "com.fasterxml.jackson.core",
+    "jackson-databind": "com.fasterxml.jackson.core",
+    "guava": "com.google.guava",
+}
 ARTIFACT_PREFIXES = {
     "jackson-core": (
         "com/fasterxml/jackson/core/",
@@ -25,6 +34,9 @@ ARTIFACT_PREFIXES = {
     "jackson-databind": (
         "com/fasterxml/jackson/databind/",
         "META-INF/services/com.fasterxml.jackson.databind.",
+    ),
+    "guava": (
+        "com/google/common/",
     ),
 }
 
@@ -44,7 +56,9 @@ def find_ray_dist() -> pathlib.Path:
 
 def download_maven_artifacts(artifact: str, version: str) -> tuple[bytes, bytes]:
     """Download the Jackson jar and pom artifacts."""
-    base_url = f"https://repo.maven.apache.org/maven2/{GROUP_PATH}/{artifact}/{version}"
+    base_url = (
+        f"https://repo.maven.apache.org/maven2/{GROUP_PATHS[artifact]}/{artifact}/{version}"
+    )
     jar = download_verified(
         f"{base_url}/{artifact}-{version}.jar",
         os.environ["JACKSON_JAR_SHA1"],
@@ -68,7 +82,7 @@ def download_verified(url: str, expected_sha1: str) -> bytes:
 
 def maven_metadata_prefix(artifact: str) -> str:
     """Return the Maven metadata prefix for a Jackson artifact."""
-    return f"META-INF/maven/com.fasterxml.jackson.core/{artifact}/"
+    return f"META-INF/maven/{MAVEN_GROUPS[artifact]}/{artifact}/"
 
 
 def is_jackson_entry(filename: str, artifact: str) -> bool:
@@ -177,7 +191,7 @@ def validate_patch(ray_dist: pathlib.Path, artifact: str, version: str) -> None:
 
 
 def main() -> None:
-    """Patch Ray's vendored Jackson dependency."""
+    """Patch Ray's vendored Maven dependency."""
     artifact = os.environ["JACKSON_ARTIFACT"]
     if artifact not in ARTIFACT_PREFIXES:
         raise RuntimeError(f"Unsupported Jackson artifact: {artifact}")
