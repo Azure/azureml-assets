@@ -565,5 +565,23 @@ class TestRetrievalNestedJudgeOutput:
         with pytest.raises(EvaluationException, match="invalid output"):
             self._evaluate({"properties": {"thought_chain": "t"}, "reason": "r"})
 
+    def test_nested_reason_is_removed_when_top_level_reason_is_set(self):
+        """A top-level reason wins, and the nested copy does not remain in properties."""
+        result = self._evaluate(
+            {"properties": {"thought_chain": "t", "reason": "Nested.", "score": 3}, "reason": "Top level."}
+        )
+        assert result["retrieval_score"] == 3
+        assert result["retrieval_reason"] == "Top level."
+        assert result["retrieval_properties"]["thought_chain"] == "t"
+        assert not {"reason", "score", "status"} & set(result["retrieval_properties"])
+
+    def test_nested_skipped_status_is_honoured(self):
+        """A skip nested under properties returns the not-applicable result, not invalid output."""
+        result = self._evaluate(
+            {"properties": {"reason": "Context is empty.", "score": None, "status": "skipped"}}
+        )
+        assert result["retrieval_status"] == "skipped"
+        assert result["retrieval_reason"] == "Not applicable: Context is empty."
+
 
 # endregion

@@ -522,6 +522,7 @@ class RetrievalEvaluator(ModelEvaluatorBase[Union[str, float]]):
                 except (json.JSONDecodeError, TypeError):
                     parsed_output = None
             if parsed_output and isinstance(parsed_output, dict):
+                parsed_output = self._lift_nested_result(parsed_output)
                 llm_status = parsed_output.get("status", "completed")
                 if llm_status == "skipped":
                     skip_reason = parsed_output.get("reason", "")
@@ -533,12 +534,6 @@ class RetrievalEvaluator(ModelEvaluatorBase[Union[str, float]]):
                 score = parsed_output.get("score", math.nan)
                 reason = parsed_output.get("reason", "")
                 llm_properties = parsed_output.get("properties", {}) or {}
-                if "score" not in parsed_output and isinstance(llm_properties, dict) and "score" in llm_properties:
-                    # The prompt lists properties first, so the judge sometimes nests its result inside it.
-                    llm_properties = dict(llm_properties)
-                    score = llm_properties.pop("score")
-                    reason = reason or llm_properties.pop("reason", "")
-                    llm_properties.pop("status", None)
             else:
                 if isinstance(llm_output, str) and self._result_key in PROMPT_BASED_REASON_EVALUATORS:
                     score, reason = parse_quality_evaluator_reason_score(llm_output)
@@ -569,6 +564,21 @@ class RetrievalEvaluator(ModelEvaluatorBase[Union[str, float]]):
             category=ErrorCategory.FAILED_EXECUTION,
             target=ErrorTarget.EVALUATE,
         )
+
+    @staticmethod
+    def _lift_nested_result(parsed_output: Dict) -> Dict:
+        """Move score, reason and status the judge nested under ``properties`` to the top level.
+
+        The prompt lists properties first, so the judge sometimes nests its result inside it.
+        Non-empty top-level values win; the nested copies are removed from properties either way.
+        """
+        properties = parsed_output.get("properties")
+        if "score" in parsed_output or not isinstance(properties, dict) or "score" not in properties:
+            return parsed_output
+        properties = dict(properties)
+        nested = {key: properties.pop(key) for key in ("score", "reason", "status") if key in properties}
+        top_level = {key: value for key, value in parsed_output.items() if value not in (None, "")}
+        return {**nested, **top_level, "properties": properties}
 
     @staticmethod
     def _get_token_metadata(prompty_output: Dict) -> Dict:
