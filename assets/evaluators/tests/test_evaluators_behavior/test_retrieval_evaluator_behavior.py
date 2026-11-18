@@ -7,6 +7,7 @@ import asyncio
 import builtins
 import json
 from types import SimpleNamespace
+from unittest.mock import MagicMock
 
 import pytest
 from azure.ai.evaluation._exceptions import EvaluationException
@@ -493,6 +494,94 @@ class TestRetrievalDecisionRouting(DecisionRoutingTests):
             {"query": "First query", "context": "First context"},
             {"query": "Second query", "context": '{"city": "Paris"}'},
         ]
+
+
+# endregion
+
+
+# region Judge output shape
+
+@pytest.mark.unittest
+class TestRetrievalNestedJudgeOutput:
+    """The judge sometimes nests score and reason under ``properties``; the row must still score."""
+
+    @staticmethod
+    def _evaluate(llm_output):
+        """Run ``_do_eval`` with the judge returning ``llm_output``."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+
+        async def flow(timeout, **kwargs):
+            return {"llm_output": llm_output}
+
+        evaluator._flow = MagicMock(side_effect=flow)
+        return asyncio.run(
+            evaluator._do_eval({"query": "What are the office hours?", "context": "The office is open 9 to 5."})
+        )
+
+    def test_score_nested_in_properties_is_used(self):
+        """A score and reason nested under properties are read instead of raising invalid output."""
+        result = self._evaluate(
+            {
+                "properties": {
+                    "thought_chain": "Let's think step by step: the top chunk answers the query.",
+                    "reason": "The top chunk states the hours.",
+                    "score": 4,
+                    "status": "completed",
+                }
+            }
+        )
+        assert result["retrieval_score"] == 4
+        assert result["retrieval_reason"] == "The top chunk states the hours."
+        assert result["retrieval_properties"]["thought_chain"].startswith("Let's think step by step")
+
+    def test_top_level_score_takes_precedence(self):
+        """A top-level score is used even when properties also carries one."""
+        result = self._evaluate(
+            {"properties": {"thought_chain": "t", "score": 5}, "reason": "Partly relevant.", "score": 2}
+        )
+        assert result["retrieval_score"] == 2
+        assert result["retrieval_reason"] == "Partly relevant."
+
+    def test_captured_judge_reply_with_unclosed_properties(self):
+        """A real gpt-5.4-mini reply that left ``properties`` open scores instead of raising invalid output."""
+        model_reply = json.loads(
+            '{\n  "properties": {\n    "thought_chain": "Let\'s think step by step: The query asks for the author'
+            ' of Pride and Prejudice. The first context chunk directly answers this with Jane Austen.",\n'
+            '  "reason": "The top context directly answers the query with the correct author.",\n'
+            '  "score": 5,\n  "status": "completed"\n} }'
+        )
+        # The SDK merges call metadata into the reply's properties.
+        model_reply["properties"].update({"finish_reason": "stop", "completion_tokens": 112})
+
+        result = self._evaluate(model_reply)
+
+        assert result["retrieval_score"] == 5
+        assert result["retrieval_result"] == "pass"
+        assert result["retrieval_reason"] == "The top context directly answers the query with the correct author."
+        assert "score" not in result["retrieval_properties"]
+
+    def test_missing_score_still_invalid(self):
+        """Output with no score at either level is still rejected."""
+        with pytest.raises(EvaluationException, match="invalid output"):
+            self._evaluate({"properties": {"thought_chain": "t"}, "reason": "r"})
+
+    def test_nested_reason_is_removed_when_top_level_reason_is_set(self):
+        """A top-level reason wins, and the nested copy does not remain in properties."""
+        result = self._evaluate(
+            {"properties": {"thought_chain": "t", "reason": "Nested.", "score": 3}, "reason": "Top level."}
+        )
+        assert result["retrieval_score"] == 3
+        assert result["retrieval_reason"] == "Top level."
+        assert result["retrieval_properties"]["thought_chain"] == "t"
+        assert not {"reason", "score", "status"} & set(result["retrieval_properties"])
+
+    def test_nested_skipped_status_is_honoured(self):
+        """A skip nested under properties returns the not-applicable result, not invalid output."""
+        result = self._evaluate(
+            {"properties": {"reason": "Context is empty.", "score": None, "status": "skipped"}}
+        )
+        assert result["retrieval_status"] == "skipped"
+        assert result["retrieval_reason"] == "Not applicable: Context is empty."
 
 
 # endregion
