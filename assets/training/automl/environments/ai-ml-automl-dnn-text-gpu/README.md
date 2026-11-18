@@ -32,3 +32,10 @@ entrypoint module exports, preserving their names and import errors when used.
 NER, multiclass, and multilabel runners can load common logging without loading
 unrelated forecasting dependencies. The pandas/NumPy pins and the patched
 `distributed>=2026.1.0` floor remain unchanged.
+
+## MLflow logging
+
+Azure ML tracking does not support MLflow 3's logged-models API. Until the
+runtime package includes the fix, the image backports legacy logging for
+custom-loader models, using the current child run ID. MLflow 2 keeps its
+existing logging path.

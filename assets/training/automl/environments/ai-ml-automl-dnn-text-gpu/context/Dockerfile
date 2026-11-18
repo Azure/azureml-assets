@@ -268,3 +268,7 @@ RUN sed -i 's/OnnxIncompatiblePythonVersion = (3, 11)/OnnxIncompatiblePythonVers
 # Dask dataframe against the SDK's intentionally retained pandas/NumPy pins.
 COPY patch_entrypoints.py /tmp/patch_entrypoints.py
 RUN python /tmp/patch_entrypoints.py && rm /tmp/patch_entrypoints.py
+
+# Backport MLflow 3 custom-loader logging until the runtime package includes it.
+COPY patch_mlflow_logging.py /tmp/patch_mlflow_logging.py
+RUN python /tmp/patch_mlflow_logging.py && rm /tmp/patch_mlflow_logging.py

@@ -8,8 +8,11 @@
 import importlib
 import os
 import runpy
+import sys
 import time
+import types
 from pathlib import Path
+from unittest.mock import Mock
 import pytest
 from azure.ai.ml import command, Input, MLClient
 from azure.ai.ml.operations._run_history_constants import JobStatus
@@ -61,6 +64,74 @@ def test_entrypoint_backport_rejects_changed_imports(tmp_path):
     with pytest.raises(RuntimeError, match="Unexpected AutoML entrypoint import"):
         backport["patch_entrypoints"](initializer)
     assert initializer.read_text() == source
+
+
+@pytest.mark.parametrize(
+    ("mlflow_version", "use_legacy"),
+    [("1.30.0", False), ("2.22.4", False), ("3.0.0", True), ("3.15.0", True), ("3.18.0", True)],
+)
+def test_mlflow_loader_backport(tmp_path, monkeypatch, mlflow_version, use_legacy):
+    """Keep loader logging compatible with both MLflow 2 and MLflow 3."""
+    source = (
+        "def log_model(self, mlflow, artifact_path, loader_module, data_path, signature, "
+        "input_example, conda_env, metadata):\n"
+        "    if True:\n"
+        "        if True:\n"
+        "            mlflow.pyfunc.log_model(\n"
+        "                artifact_path=artifact_path,\n"
+        "                loader_module=loader_module,\n"
+        "                data_path=data_path,\n"
+        "                signature=signature,\n"
+        "                input_example=input_example,\n"
+        "                conda_env=conda_env,\n"
+        "                metadata=metadata)\n"
+    )
+    module_path = tmp_path / "automl_run_context.py"
+    module_path.write_text(source)
+    backport = runpy.run_path(str(Path(__file__).parent / BUILD_CONTEXT / "patch_mlflow_logging.py"))
+    backport["patch_mlflow_logging"](module_path)
+    patched = module_path.read_text()
+    backport["patch_mlflow_logging"](module_path)
+    assert module_path.read_text() == patched
+
+    mlflow = types.ModuleType("mlflow")
+    mlflow.__version__ = mlflow_version
+    mlflow.pyfunc = types.SimpleNamespace(log_model=Mock())
+    models = types.ModuleType("mlflow.models")
+    models.Model = types.SimpleNamespace(_log_v2=Mock())
+    monkeypatch.setitem(sys.modules, "mlflow", mlflow)
+    monkeypatch.setitem(sys.modules, "mlflow.models", models)
+    namespace = {}
+    exec(compile(patched, str(module_path), "exec"), namespace)
+
+    options = {
+        "artifact_path": "outputs/mlflow-model",
+        "loader_module": "ner_loader",
+        "data_path": "model.pkl",
+        "signature": object(),
+        "input_example": object(),
+        "conda_env": {"name": "ner"},
+        "metadata": {"task": "ner"},
+    }
+    namespace["log_model"](types.SimpleNamespace(run_id="parent_1"), mlflow, **options)
+
+    if use_legacy:
+        models.Model._log_v2.assert_called_once_with(flavor=mlflow.pyfunc, run_id="parent_1", **options)
+        mlflow.pyfunc.log_model.assert_not_called()
+    else:
+        mlflow.pyfunc.log_model.assert_called_once_with(**options)
+        models.Model._log_v2.assert_not_called()
+
+
+def test_mlflow_loader_backport_rejects_changed_source(tmp_path):
+    """Reject an upstream runtime whose loader call has changed."""
+    module_path = tmp_path / "automl_run_context.py"
+    source = "def changed_runtime():\n    pass\n"
+    module_path.write_text(source)
+    backport = runpy.run_path(str(Path(__file__).parent / BUILD_CONTEXT / "patch_mlflow_logging.py"))
+    with pytest.raises(RuntimeError, match="AutoML MLflow loader logging changed"):
+        backport["patch_mlflow_logging"](module_path)
+    assert module_path.read_text() == source
 
 
 def test_azure_ai_ml_automl():
