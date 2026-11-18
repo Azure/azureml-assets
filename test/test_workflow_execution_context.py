@@ -270,7 +270,8 @@ def test_candidate_native_report_rejects_incomplete_or_skipped_coverage(tmp_path
     elif change == "missing_cases":
         tree.remove(first)
     elif change == "missing_native_variant":
-        first.set("name", "test_replacement")
+        name = sorted(runner["REQUIRED_CASES"])[0]
+        next(case for case in tree if case.get("name") == name).set("name", "test_replacement")
     elif change in ("missing_owned_native_case", "wrong_native_owner"):
         module, required = next(iter(runner["REQUIRED_MODULE_CASES"].items()))
         name = sorted(required)[0]

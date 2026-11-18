@@ -18,8 +18,21 @@ MINIMUM_CASES = {
     "test_quality_expansion": 132, "test_tool_expansion": 92, "test_judge_expansion": 108,
     "test_expansion_compatibility": 60,
     "test_output_quality_evaluator_behavior": 115, "test_tool_use_quality_evaluator_behavior": 132,
+    "test_openai_decisions": 106,
 }
+EXPANSION_ASSETS = (
+    "fluency", "coherence", "groundedness", "intent_resolution", "task_adherence",
+    "tool_call_success", "tool_input_accuracy", "tool_output_utilization", "tool_selection",
+    "customer_satisfaction", "deflection_rate", "relevance", "response_completeness", "retrieval", "similarity",
+)
+DECISION_ASSETS = (*EXPANSION_ASSETS, "task_completion", "tool_call_accuracy", "output_quality", "tool_use_quality")
 REQUIRED_MODULE_CASES = {
+    "test_openai_decisions": {
+        *(f"test_packaged_openai_decisions[{scenario}-{name}]"
+          for scenario in ("passed", "failed", "skipped", "refusal") for name in DECISION_ASSETS),
+        *(f"test_fabricated_parameters_name_the_fabricated_parameter_level[{rubric}]"
+          for rubric in ("tool_use_quality.decision.yaml", "tool_use_quality_multi_turn.decision.yaml")),
+    },
     "test_output_quality_evaluator_behavior": {
         f"test_native_decision_one_transport_twelve_questions_and_no_chat[{mode}]"
         for mode in ("sync", "async", "sync_in_loop")
@@ -70,11 +83,7 @@ REQUIRED_CASES = {
     *(f"test_public_evaluate_preserves_member_provenance_and_root_usage[passed-{name}]"
       for name in ("OutputQualityEvaluator", "ToolUseQualityEvaluator")),
     *(f"test_packaged_expansion_public_usage[{skipped}-{backend}-{name}]"
-      for name in (
-          "fluency", "coherence", "groundedness", "intent_resolution", "task_adherence",
-          "tool_call_success", "tool_input_accuracy", "tool_output_utilization", "tool_selection",
-          "customer_satisfaction", "deflection_rate", "relevance", "response_completeness", "retrieval", "similarity",
-      )
+      for name in EXPANSION_ASSETS
       for backend in ("native", "chat") for skipped in ("False", "True")),
 }
 

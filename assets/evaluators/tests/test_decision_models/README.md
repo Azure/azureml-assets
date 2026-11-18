@@ -1,5 +1,30 @@
 # Native Decision evaluator coverage
 
+## OpenAI Decisions
+
+The same 19 Decision-capable assets run unchanged on Azure OpenAI Decisions (for example `gpt-6-luna`) when the
+SDK model configuration selects `decision_protocol="openai"`. No released SDK supports that protocol yet; released
+1.18.11 rejects the field. These tests use the unreleased SDK build pinned in `assets-test.yaml`. The assets' runtime
+code, rubrics, metadata and versions are unchanged: protocol support belongs to the
+shared SDK, and hosted selection remains a service-approved named deployment. Older chat-only versions remain
+ineligible.
+
+The SDK translates the shared rubrics to OpenAI predicates and ordered score levels, and binds the answers back in
+the same canonical shape as Microsoft Decision answers, so each asset's score, applicability, threshold and
+composite contracts are unchanged. Provenance names the `decision_protocol` and the returned model, which for Azure OpenAI
+is the deployment alias. OpenAI's probability-weighted score is diagnostic, while ordinal metrics continue to use
+argmax. A refusal fails a result only when the asset reads the refused answer, with known usage; it never becomes a
+fabricated score or skip, and a refused grade behind a false applicability gate stays skipped.
+
+`deflection_rate` is the exception to qualify first: its unordered categories are sent as ordered score levels,
+because the shared rubric has no category question, while OpenAI recommends a `choice` question for categories.
+
+`test_openai_decisions.py` packages each asset independently and checks pass, fail, skip with refused grades and
+refusal through one request, the actual request encoding, canonical provenance and once-only usage. It also checks
+that rubric text naming a level, such as "Fabricated parameters imply level 2", names the criterion the request
+labels `Level 2`. CI requires every one of these cases. Controlled provider responses verify integration contracts,
+not model accuracy.
+
 The native Decision path covers 19 model-judged built-ins. Each asset retains its
 standalone inputs, score range, thresholds and declared evaluation levels. The
 existing chat path remains available on supported released SDKs.
