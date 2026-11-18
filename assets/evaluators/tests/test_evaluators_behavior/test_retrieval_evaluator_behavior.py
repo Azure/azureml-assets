@@ -542,6 +542,24 @@ class TestRetrievalNestedJudgeOutput:
         assert result["retrieval_score"] == 2
         assert result["retrieval_reason"] == "Partly relevant."
 
+    def test_captured_judge_reply_with_unclosed_properties(self):
+        """A real gpt-5.4-mini reply that left ``properties`` open scores instead of raising invalid output."""
+        model_reply = json.loads(
+            '{\n  "properties": {\n    "thought_chain": "Let\'s think step by step: The query asks for the author'
+            ' of Pride and Prejudice. The first context chunk directly answers this with Jane Austen.",\n'
+            '  "reason": "The top context directly answers the query with the correct author.",\n'
+            '  "score": 5,\n  "status": "completed"\n} }'
+        )
+        # The SDK merges call metadata into the reply's properties.
+        model_reply["properties"].update({"finish_reason": "stop", "completion_tokens": 112})
+
+        result = self._evaluate(model_reply)
+
+        assert result["retrieval_score"] == 5
+        assert result["retrieval_result"] == "pass"
+        assert result["retrieval_reason"] == "The top context directly answers the query with the correct author."
+        assert "score" not in result["retrieval_properties"]
+
     def test_missing_score_still_invalid(self):
         """Output with no score at either level is still rejected."""
         with pytest.raises(EvaluationException, match="invalid output"):
