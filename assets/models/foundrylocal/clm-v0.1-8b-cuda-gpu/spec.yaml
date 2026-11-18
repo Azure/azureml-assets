@@ -21,7 +21,7 @@ system_metadata:
   publisher: Microsoft
   tasks:
     inferenceTasks:
-    - ranking
+    - text-ranking
 tags:
   capabilities: candidate-ranking,structured-input,action-cache
   contextLength: 40960

@@ -21,7 +21,7 @@ system_metadata:
   publisher: Microsoft
   tasks:
     inferenceTasks:
-    - decision
+    - typed-decision
 tags:
   capabilities: noul,choice,score,structured-input
   contextLength: 262144
