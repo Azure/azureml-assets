@@ -108,7 +108,7 @@ RUN pip install --use-deprecated=legacy-resolver \
                 azureml-automl-core==1.62.0.post3 \
                 azureml-automl-runtime==1.62.0.post1 \
                 azureml-dataset-runtime==1.62.0.post1 \
-                azureml-mlflow==1.62.0.post6 \
+                azureml-mlflow==1.62.0.post7 \
                 'azureml-model-management-sdk==1.0.1b6.post1' \
                 'mlflow-skinny==2.15.1' --no-cache-dir
 

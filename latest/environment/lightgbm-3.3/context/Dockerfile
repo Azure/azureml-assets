@@ -59,7 +59,7 @@ RUN printf "setuptools>=84.1.0\nmsgpack>=1.2.3\n" > /tmp/pip-security-constraint
 RUN PIP_CONSTRAINT=/tmp/pip-security-constraints.txt conda run -p $CONDA_PREFIX pip install --no-cache-dir \
     azureml-core==1.61.0.post4 \
     azureml-defaults==1.62.0 \
-    azureml-mlflow==1.62.0.post6 \
+    azureml-mlflow==1.62.0.post7 \
     azureml-telemetry==1.62.0 \
     'scikit-learn~=1.5.1' \
     'xgboost~=1.7.6' \

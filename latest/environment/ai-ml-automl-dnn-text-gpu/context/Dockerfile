@@ -110,7 +110,7 @@ RUN find $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/pmdarima -
 RUN pip install --no-cache-dir --use-deprecated=legacy-resolver \
                 # begin pypi dependencies
                 azureml-core==1.61.0.post4 \
-                azureml-mlflow==1.62.0.post6 \
+                azureml-mlflow==1.62.0.post7 \
                 azureml-automl-core==1.62.0.post3 \
                 azureml-automl-runtime==1.62.0.post1 \
                 azureml-defaults==1.62.0 \

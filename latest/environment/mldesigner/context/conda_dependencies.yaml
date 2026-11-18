@@ -12,5 +12,5 @@ dependencies:
   - PyJWT>=2.15.0
   - urllib3>=2.8.0
   - azure-ai-ml==1.35.2
-  - azureml-mlflow==1.62.0.post6
+  - azureml-mlflow==1.62.0.post7
   - mldesigner==0.1.0b23

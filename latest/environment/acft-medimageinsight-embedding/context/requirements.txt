@@ -3,7 +3,7 @@ azureml-acft-contrib-hf-nlp==0.0.91
 # The hls extra pins Python 3.10-only numpy==1.22.2 and timm~=0.4.
 # Install the base component and carry the HLS dependencies explicitly.
 azureml-acft-image-components==0.0.91
-azureml-mlflow==1.62.0.post6
+azureml-mlflow==1.62.0.post7
 tensorboard
 mpi4py
 flake8

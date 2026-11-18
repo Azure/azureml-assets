@@ -65,7 +65,7 @@ RUN find $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.11/site-packages/pmdarima -
 # parent packages still allow the older, vulnerable versions.
 RUN pip install \
                 azureml-core==1.61.0.post4 \
-                azureml-mlflow==1.62.0.post6 \
+                azureml-mlflow==1.62.0.post7 \
                 azureml-pipeline-core==1.62.0 \
                 azureml-telemetry==1.62.0 \
                 azureml-interpret==1.62.0 \

@@ -78,7 +78,7 @@ RUN printf '%s\n' \
                 'msgpack>=1.2.3' \
                 'setuptools>=84.1.0' \
                 azureml-core==1.61.0.post4 \
-                azureml-mlflow==1.62.0.post6 \
+                azureml-mlflow==1.62.0.post7 \
                 azureml-pipeline-core==1.62.0 \
                 azureml-telemetry==1.62.0 \
                 azureml-interpret==1.62.0 \

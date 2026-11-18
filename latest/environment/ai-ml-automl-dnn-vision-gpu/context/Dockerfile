@@ -101,7 +101,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
 # Install pip dependencies. azureml-inference-server-http stays on the 1.4.x line
 # required by azureml-defaults to avoid resolving newer inference server extras.
 RUN pip install --no-cache-dir --use-deprecated=legacy-resolver \
-                azureml-mlflow==1.62.0.post6 \
+                azureml-mlflow==1.62.0.post7 \
                 azureml-dataset-runtime==1.62.0.post1 \
                 azureml-telemetry==1.62.0 \
                 azureml-responsibleai==1.62.0 \
