@@ -7,6 +7,7 @@ import asyncio
 import builtins
 import json
 from types import SimpleNamespace
+from unittest.mock import MagicMock
 
 import pytest
 from azure.ai.evaluation._exceptions import EvaluationException
@@ -493,6 +494,58 @@ class TestRetrievalDecisionRouting(DecisionRoutingTests):
             {"query": "First query", "context": "First context"},
             {"query": "Second query", "context": '{"city": "Paris"}'},
         ]
+
+
+# endregion
+
+
+# region Judge output shape
+
+@pytest.mark.unittest
+class TestRetrievalNestedJudgeOutput:
+    """The judge sometimes nests score and reason under ``properties``; the row must still score."""
+
+    @staticmethod
+    def _evaluate(llm_output):
+        """Run ``_do_eval`` with the judge returning ``llm_output``."""
+        evaluator = create_mocked_evaluator(RetrievalEvaluator, "retrieval")
+
+        async def flow(timeout, **kwargs):
+            return {"llm_output": llm_output}
+
+        evaluator._flow = MagicMock(side_effect=flow)
+        return asyncio.run(
+            evaluator._do_eval({"query": "What are the office hours?", "context": "The office is open 9 to 5."})
+        )
+
+    def test_score_nested_in_properties_is_used(self):
+        """A score and reason nested under properties are read instead of raising invalid output."""
+        result = self._evaluate(
+            {
+                "properties": {
+                    "thought_chain": "Let's think step by step: the top chunk answers the query.",
+                    "reason": "The top chunk states the hours.",
+                    "score": 4,
+                    "status": "completed",
+                }
+            }
+        )
+        assert result["retrieval_score"] == 4
+        assert result["retrieval_reason"] == "The top chunk states the hours."
+        assert result["retrieval_properties"]["thought_chain"].startswith("Let's think step by step")
+
+    def test_top_level_score_takes_precedence(self):
+        """A top-level score is used even when properties also carries one."""
+        result = self._evaluate(
+            {"properties": {"thought_chain": "t", "score": 5}, "reason": "Partly relevant.", "score": 2}
+        )
+        assert result["retrieval_score"] == 2
+        assert result["retrieval_reason"] == "Partly relevant."
+
+    def test_missing_score_still_invalid(self):
+        """Output with no score at either level is still rejected."""
+        with pytest.raises(EvaluationException, match="invalid output"):
+            self._evaluate({"properties": {"thought_chain": "t"}, "reason": "r"})
 
 
 # endregion

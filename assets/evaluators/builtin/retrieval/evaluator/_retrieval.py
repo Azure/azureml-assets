@@ -533,6 +533,12 @@ class RetrievalEvaluator(ModelEvaluatorBase[Union[str, float]]):
                 score = parsed_output.get("score", math.nan)
                 reason = parsed_output.get("reason", "")
                 llm_properties = parsed_output.get("properties", {}) or {}
+                if "score" not in parsed_output and isinstance(llm_properties, dict) and "score" in llm_properties:
+                    # The prompt lists properties first, so the judge sometimes nests its result inside it.
+                    llm_properties = dict(llm_properties)
+                    score = llm_properties.pop("score")
+                    reason = reason or llm_properties.pop("reason", "")
+                    llm_properties.pop("status", None)
             else:
                 if isinstance(llm_output, str) and self._result_key in PROMPT_BASED_REASON_EVALUATORS:
                     score, reason = parse_quality_evaluator_reason_score(llm_output)
