@@ -12,7 +12,6 @@ import argparse
 import shutil
 from transformers.training_args import OptimizerNames
 from transformers.trainer_utils import SchedulerType, IntervalStrategy
-from optimum.onnxruntime.training_args import ORTOptimizerNames
 from azureml._common._error_definition.azureml_error import AzureMLError
 from azureml.acft.accelerator.constants import MetricConstants
 
@@ -93,7 +92,6 @@ class Mapper:
         IncomingOptimizerNames.SGD: OptimizerNames.SGD,
         IncomingOptimizerNames.ADAFACTOR: OptimizerNames.ADAFACTOR,
         IncomingOptimizerNames.ADAGRAD: OptimizerNames.ADAGRAD,
-        IncomingOptimizerNames.ADAMW_ORT_FUSED: ORTOptimizerNames.ADAMW_ORT_FUSED,
     }
 
 
@@ -973,7 +971,12 @@ def main():
 
     # Map optimizer to as expected by the Trainer class
     if args.optim is not None:
-        args.optim = Mapper.OPTIMIZER_MAP[args.optim]
+        if args.optim == IncomingOptimizerNames.ADAMW_ORT_FUSED:
+            # Import lazily: optimum's ORT module is incompatible with transformers 5.x and only needed for ORT.
+            from optimum.onnxruntime.training_args import ORTOptimizerNames
+            args.optim = ORTOptimizerNames.ADAMW_ORT_FUSED
+        else:
+            args.optim = Mapper.OPTIMIZER_MAP[args.optim]
 
     # Update 'args' namespace with defaults based on task type and model selected
     # Doing this before any assignment to 'args' namespace
