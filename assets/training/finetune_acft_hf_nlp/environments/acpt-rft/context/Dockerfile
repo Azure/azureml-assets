@@ -67,7 +67,8 @@ RUN pip install --no-cache-dir --force-reinstall \
         --index-url https://download.pytorch.org/whl/cu129 && \
     pip uninstall -y torchaudio
 # vllm's resolver can upgrade numpy, but verl 0.7.1 requires numpy<2.
-RUN pip install --no-cache-dir numpy==1.26.4
+# ml-dtypes>=0.6 (pulled by tilelang, imported by flashinfer via tvm_ffi) requires numpy>=2.
+RUN pip install --no-cache-dir numpy==1.26.4 'ml-dtypes<0.6'
 # Keep xgrammar at the patched floor when pulled transitively by vllm; fixes GHSA-7rgv-gqhr-fxg3.
 RUN pip install --no-cache-dir 'xgrammar>=0.1.32'
 RUN pip install openai==2.25.0
