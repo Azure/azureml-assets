@@ -527,15 +527,39 @@ class TestToolUseQualityEvaluatorBehavior:
         assert result["tool_use_quality_evaluators"]["tool_selection"]["score"] == 1
         assert result["tool_call_accuracy_result"] == "fail"
 
-    @pytest.mark.parametrize("score", [True, 6])
+    @pytest.mark.parametrize("score", [True, 6, "completed", "score:null", float("nan"), float("inf"), "nan"])
     def test_invalid_member_score_raises(self, score):
-        """Boolean and out-of-range member scores raise evaluation exceptions."""
+        """Boolean, out-of-range, unreadable and non-finite member scores raise evaluation exceptions."""
         evaluator = _mock_flows(
             _make_evaluator(),
             _all_completed_llm_output(score_overrides={"tool_call_accuracy": score}),
         )
-        with pytest.raises(EvaluationException):
+        with pytest.raises(EvaluationException, match="Invalid score value for tool_call_accuracy"):
             evaluator(query=VALID_QUERY, response=VALID_RESPONSE, tool_definitions=VALID_TOOL_DEFINITIONS)
+
+    @pytest.mark.parametrize("text,score,passed", [("0", 0, False), (" 1 ", 1, True), ("1.0", 1, True)])
+    def test_member_score_written_as_text_is_read_as_a_number(self, text, score, passed):
+        """A judge that writes tool_output_utilization's score as text still scores that member."""
+        evaluator = _mock_flows(
+            _make_evaluator(),
+            _all_completed_llm_output(score_overrides={"tool_output_utilization": text}),
+        )
+        result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE, tool_definitions=VALID_TOOL_DEFINITIONS)
+        member = result["tool_use_quality_evaluators"]["tool_output_utilization"]
+        assert (member["score"], member["passed"], result["tool_output_utilization_score"]) == (score, passed, score)
+        assert result["tool_use_quality"] == int(passed)
+
+    @pytest.mark.parametrize("text", ["null", "None", "  "])
+    def test_member_score_written_as_null_text_is_skipped(self, text):
+        """A null score written as text skips that member like a JSON null does."""
+        evaluator = _mock_flows(
+            _make_evaluator(),
+            _all_completed_llm_output(score_overrides={"tool_output_utilization": text}),
+        )
+        result = evaluator(query=VALID_QUERY, response=VALID_RESPONSE, tool_definitions=VALID_TOOL_DEFINITIONS)
+        assert result["tool_use_quality"] == 1
+        assert result["tool_use_quality_evaluators"]["tool_output_utilization"]["score"] is None
+        assert result["tool_use_quality_properties"]["skipped_evaluators"] == ["tool_output_utilization"]
 
     # endregion
 
@@ -1059,7 +1083,7 @@ def test_native_decision_rubrics_and_init_schema():
             assert member["result"]["type"] == ("score" if name == "tool_call_accuracy" else "noul")
             assert len(member["result"]["criteria"]) == (5 if name == "tool_call_accuracy" else 2)
     spec = yaml.safe_load((root.parent / "spec.yaml").read_text(encoding="utf-8"))
-    assert spec["version"] == 7
+    assert spec["version"] == 8
     schema = spec["initParameterSchema"]
     config = {key: value for key, value in _native_decision_CONFIG.items() if key != "api_key"}
     assert "model_config" not in schema["properties"]

@@ -7,6 +7,7 @@ import contextvars
 import functools
 import json
 import logging
+import math
 import os
 from asyncio import CancelledError
 from collections.abc import Mapping
@@ -472,6 +473,21 @@ def _create_extended_error_target():
 
 ExtendedErrorTarget = _create_extended_error_target()
 
+
+def _read_member_score(score: Any) -> Any:
+    """Read a judge score written as text, e.g. "1" as 1 and "null" as no score; other values are unchanged."""
+    if not isinstance(score, str):
+        return score
+    text = score.strip()
+    if text.lower() in ("", "null", "none"):
+        return None
+    try:
+        number = float(text)
+    except ValueError:
+        return score
+    return int(number) if number.is_integer() else number
+
+
 # Ordered description of the six member evaluators batched into one LLM call.
 _EVALUATORS: Tuple[Dict[str, Union[str, int]], ...] = (
     {"name": "fluency", "min": 1, "max": 5, "default_threshold": 3},
@@ -880,7 +896,10 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
     def _build_aggregate_result(
         self, evaluators: Dict[str, Dict], token_metadata: Dict
     ) -> Dict[str, Union[str, int, float, Dict, None]]:
-        """Build the any-fail aggregate and preserve raw evaluator results."""
+        """Build the any-fail aggregate and preserve raw evaluator results.
+
+        A score the judge wrote as text, such as ``"1"`` or ``"null"``, is read as the number or as no score.
+        """
         evaluated_scores: Dict[str, Union[int, float]] = {}
         skipped_evaluators: List[str] = []
         normalized_evaluators: Dict[str, Dict] = {}
@@ -892,11 +911,13 @@ class OutputQualityEvaluator(ModelEvaluatorBase[Union[str, int]]):
             score = evaluator_output.get("score")
             evaluator_output["threshold"] = threshold
             evaluator_output["passed"] = None
+            if status != "skipped":
+                score = evaluator_output["score"] = _read_member_score(score)
             if status == "skipped" or score is None:
                 skipped_evaluators.append(name)
                 normalized_evaluators[name] = evaluator_output
                 continue
-            if isinstance(score, bool) or not isinstance(score, (int, float)):
+            if isinstance(score, bool) or not isinstance(score, (int, float)) or not math.isfinite(score):
                 raise EvaluationException(
                     message=f"Invalid score value for {name}: {score}.",
                     blame=ErrorBlame.SYSTEM_ERROR,
