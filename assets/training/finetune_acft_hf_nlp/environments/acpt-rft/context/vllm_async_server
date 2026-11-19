@@ -4,6 +4,7 @@ import json
 import logging
 import os
 from pprint import pprint
+import threading
 from typing import Any, Callable, Optional
 
 import cloudpickle as pickle
@@ -41,6 +42,7 @@ from verl.workers.rollout.vllm_rollout.utils import (
     VLLM_LORA_PATH,
     get_vllm_max_lora_rank,
 )
+from .zmq_auth import sign_message, verify_message
 
 logger = logging.getLogger(__file__)
 logger.setLevel(logging.INFO)
@@ -57,8 +59,16 @@ class ExternalZeroMQDistributedExecutor(Executor):
 
         addresses = os.environ["VERL_VLLM_ZMQ_ADDRESSES"].split(",")
         addresses = addresses[dp_rank_local * tp_size : (dp_rank_local + 1) * tp_size]
+        keys = json.loads(os.environ["VERL_VLLM_ZMQ_KEYS"])
+        keys = [bytes.fromhex(key) for key in keys[dp_rank_local * tp_size : (dp_rank_local + 1) * tp_size]]
+        if len(keys) != len(addresses):
+            raise RuntimeError("Mismatch between vLLM rollout ZeroMQ addresses and authentication keys")
+
         self.context = zmq.Context()
         self.sockets = []
+        self.keys = keys
+        self.sequences = [0] * len(keys)
+        self.rpc_lock = threading.Lock()
         for address in addresses:
             socket = self.context.socket(zmq.REQ)
             if address.startswith("tcp://["):
@@ -87,19 +97,35 @@ class ExternalZeroMQDistributedExecutor(Executor):
         **kwargs_extra: Any,
     ) -> list[Any]:
         from concurrent.futures import Future
-        if isinstance(method, str):
-            sent_method = method
-        else:
-            sent_method = pickle.dumps(method)
-        del method
+        with self.rpc_lock:
+            if isinstance(method, str):
+                sent_method = method
+            else:
+                sent_method = pickle.dumps(method)
+            del method
 
-        message = pickle.dumps((sent_method, args, kwargs or {}))
-        for socket in self.sockets:
-            socket.send(message, zmq.DONTWAIT)
+            message = pickle.dumps((sent_method, args, kwargs or {}))
+            for socket, key, sequence in zip(self.sockets, self.keys, self.sequences):
+                socket.send_multipart(sign_message(key, sequence, message, "request"), zmq.DONTWAIT)
 
-        outputs = []
-        for socket in self.sockets:
-            outputs.append(pickle.loads(socket.recv()))
+            responses = [socket.recv_multipart() for socket in self.sockets]
+            response_payloads = []
+            verification_errors = []
+            for index, (key, sequence, response) in enumerate(zip(self.keys, self.sequences, responses)):
+                try:
+                    response_payload = verify_message(key, sequence, response, "response")
+                    self.sequences[index] += 1
+                    if not response_payload:
+                        verification_errors.append(f"vLLM rollout worker {index}: empty authenticated response")
+                        continue
+                    response_payloads.append(response_payload)
+                except ValueError as e:
+                    verification_errors.append(f"vLLM rollout worker {index}: {e}")
+
+            if verification_errors:
+                raise RuntimeError("Invalid authenticated vLLM rollout response: " + "; ".join(verification_errors))
+
+            outputs = [pickle.loads(response_payload) for response_payload in response_payloads]
 
         # If non_block=True, wrap each output in a Future
         # This is required for compatibility with vLLM v0.13.0+ which expects
@@ -304,12 +330,15 @@ class vLLMHttpServerBase:
         distributed_executor_backend = ExternalZeroMQDistributedExecutor if len(self.workers) > 0 else None
         server_args.distributed_executor_backend = distributed_executor_backend
 
-        zmq_addresses = ray.get([worker.get_zeromq_address.remote() for worker in self.workers])
+        zmq_credentials = ray.get([worker.get_zeromq_address.remote() for worker in self.workers])
+        zmq_addresses = [address for address, _ in zmq_credentials]
+        zmq_keys = [key for _, key in zmq_credentials]
         logger.info(
             f"replica_rank={self.replica_rank}, node_rank={self.node_rank}, nnodes={self.nnodes}, "
             f"get worker zmq addresses: {zmq_addresses}"
         )
         os.environ["VERL_VLLM_ZMQ_ADDRESSES"] = ",".join(zmq_addresses)
+        os.environ["VERL_VLLM_ZMQ_KEYS"] = json.dumps(zmq_keys)
 
         # 3. launch server
         if self.node_rank == 0:

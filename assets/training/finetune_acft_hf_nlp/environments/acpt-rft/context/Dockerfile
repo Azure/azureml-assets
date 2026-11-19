@@ -51,6 +51,7 @@ RUN pip install --no-cache-dir --force-reinstall "mlflow>=3.2.0,<4.0.0" 'dnspyth
 RUN pip install --no-cache-dir --upgrade "wandb>=0.26.0" && \
     find /opt/conda/envs/ptca -name 'wandb-core' -path '*/wandb/bin/*' -delete 2>/dev/null || true
 COPY vllm_async_server /opt/conda/envs/ptca/lib/python3.11/site-packages/verl/workers/rollout/vllm_rollout/vllm_async_server.py
+COPY zmq_auth.py /opt/conda/envs/ptca/lib/python3.11/site-packages/verl/workers/rollout/vllm_rollout/zmq_auth.py
 COPY __init__ /opt/conda/envs/ptca/lib/python3.11/site-packages/verl/utils/reward_score/__init__.py
 COPY azure_grader /opt/conda/envs/ptca/lib/python3.11/site-packages/verl/utils/reward_score/azure_grader.py
 COPY azure_python_grader /opt/conda/envs/ptca/lib/python3.11/site-packages/verl/utils/reward_score/azure_python_grader.py
