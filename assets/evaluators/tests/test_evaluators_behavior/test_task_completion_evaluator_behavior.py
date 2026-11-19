@@ -492,15 +492,28 @@ class TestTaskCompletionMultiturnBehavior:
         with pytest.raises(EvaluationException, match="user"):
             evaluator(messages=messages)
 
-    def test_messages_rejects_no_assistant_message(self):
-        """Messages without any 'assistant' role raise validation error."""
+    def test_messages_without_assistant_reach_completion_judge(self):
+        """A supported validator lets the judge assess the absent deliverable."""
         evaluator = _create_mocked_evaluator()
         messages = [
             {"role": "user", "content": [{"type": "text", "text": "Hello"}]},
             {"role": "user", "content": [{"type": "text", "text": "Anyone there?"}]},
         ]
-        with pytest.raises(EvaluationException, match="assistant"):
-            evaluator(messages=messages)
+        if not hasattr(type(evaluator._validator), "requires_assistant"):
+            # Older shared SDK validators retain their existing strict contract.
+            with pytest.raises(EvaluationException, match="assistant"):
+                evaluator(messages=messages)
+            return
+
+        async def incomplete(timeout, **kwargs):
+            return {"llm_output": {"score": 0, "status": "completed", "reason": "No deliverable.", "properties": {}}}
+
+        evaluator._multi_turn_flow.side_effect = incomplete
+        result = evaluator(messages=messages)
+        assert result["task_completion"] == 0
+        assert result["task_completion_result"] == "fail"
+        assert result["task_completion_status"] == "completed"
+        evaluator._multi_turn_flow.assert_called_once()
 
     def test_messages_allows_conversation_ending_with_tool(self):
         """Messages ending with a tool message are accepted (mid-execution guard removed to align with SDK)."""
