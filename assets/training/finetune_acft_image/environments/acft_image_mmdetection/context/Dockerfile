@@ -92,6 +92,9 @@ RUN conda run -n ptca python -m pip uninstall -y torchaudio \
     'torch==2.13.0' \
     'torchvision==0.28.0'
 
+# NumPy 2 is installed by the dependency upgrades; pycocotools<2.0.8 and scikit-image<0.24 are NumPy 1 only.
+RUN conda run -n ptca python -m pip install --no-cache-dir --upgrade 'pycocotools>=2.0.10' 'scikit-image>=0.25.0'
+
 # The conda pip upgrade can reinstall the rattler solver. The base image does
 # not need it for runtime, and its compiled extension currently carries Rust CVEs.
 RUN conda config --system --set solver classic \
