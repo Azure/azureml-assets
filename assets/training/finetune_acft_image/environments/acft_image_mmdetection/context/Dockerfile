@@ -51,6 +51,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends --only-upgrade 
     libpython3.10-stdlib \
  && rm -rf /var/lib/apt/lists/*
 
+# libglib2.0-0 provides libgthread-2.0.so.0, required by OpenCV (cv2) during finetuning.
+RUN apt-get update && apt-get install -y --no-install-recommends libglib2.0-0 \
+ && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
 # openmim still imports pkg_resources, which is removed from setuptools>=82.
 # Keep a temporary compatibility pin for mim installation, then restore setuptools.
