@@ -8,6 +8,8 @@ datasets==5.0.1
 fsspec>=2026.6.0
 transformers==5.10.0
 accelerate==0.32.0
+# The shared finetune entry point imports deepspeed even when it is disabled.
+deepspeed==0.17.1
 optimum==1.23.3
 diffusers==0.38.0
 huggingface-hub==1.5.0
