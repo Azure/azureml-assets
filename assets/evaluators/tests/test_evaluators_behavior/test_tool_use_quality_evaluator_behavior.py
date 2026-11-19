@@ -1059,7 +1059,7 @@ def test_native_decision_rubrics_and_init_schema():
             assert member["result"]["type"] == ("score" if name == "tool_call_accuracy" else "noul")
             assert len(member["result"]["criteria"]) == (5 if name == "tool_call_accuracy" else 2)
     spec = yaml.safe_load((root.parent / "spec.yaml").read_text(encoding="utf-8"))
-    assert spec["version"] == 7
+    assert spec["version"] == 8
     schema = spec["initParameterSchema"]
     config = {key: value for key, value in _native_decision_CONFIG.items() if key != "api_key"}
     assert "model_config" not in schema["properties"]
@@ -1074,3 +1074,12 @@ def test_native_decision_rubrics_and_init_schema():
                     {"deployment_name": "Decision-1", "probability_threshold": -1}):
         with pytest.raises(jsonschema.ValidationError):
             jsonschema.validate(invalid, schema)
+
+
+@pytest.mark.unittest
+def test_invalid_output_message_is_actionable_and_privacy_safe():
+    """Invalid judge output is reported with its cause and safe metadata, never its content."""
+    from ..common.invalid_output_cases import assert_invalid_output_diagnostics
+    from ...builtin.tool_use_quality.evaluator._tool_use_quality import _invalid_output_message
+
+    assert_invalid_output_diagnostics(_invalid_output_message)

@@ -296,3 +296,12 @@ class TestToolInputAccuracyDecisionRouting(DecisionRoutingTests):
         evaluator._decision_strategy.evaluate.assert_not_awaited()
         assert result[self.result_key + "_status"] == "skipped"
         assert result[self.result_key + "_properties"] is None
+
+
+@pytest.mark.unittest
+def test_invalid_output_message_is_actionable_and_privacy_safe():
+    """Invalid judge output is reported with its cause and safe metadata, never its content."""
+    from ..common.invalid_output_cases import assert_invalid_output_diagnostics
+    from ...builtin.tool_input_accuracy.evaluator._tool_input_accuracy import _invalid_output_message
+
+    assert_invalid_output_diagnostics(_invalid_output_message)

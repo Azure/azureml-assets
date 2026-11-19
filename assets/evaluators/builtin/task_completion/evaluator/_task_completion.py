@@ -455,6 +455,34 @@ def _load_decision_questions(path: str, question_id: str) -> Dict:
     return {"status": rubric["status"], question_id: rubric["result"]}
 
 
+def _invalid_output_message(model_output: Any) -> str:
+    """Describe why the judge model output was unusable, using only non-content metadata."""
+    details = model_output if isinstance(model_output, dict) else {"llm_output": model_output}
+    llm_output = details.get("llm_output", details)
+    finish_reason = details.get("finish_reason")
+    if finish_reason not in ("stop", "length", "content_filter", "tool_calls", "function_call"):
+        finish_reason = "unknown"
+    output_tokens = details.get("output_token_count", details.get("completion_tokens"))
+    if isinstance(output_tokens, bool) or not isinstance(output_tokens, int):
+        output_tokens = "unknown"
+    if finish_reason == "length":
+        cause = "the judge model output was truncated"
+    elif finish_reason == "content_filter":
+        cause = "the judge model output was blocked by the content filter"
+    elif llm_output is None or (isinstance(llm_output, (str, dict)) and not llm_output):
+        cause = "the judge model returned an empty response"
+    elif isinstance(llm_output, str):
+        cause = "the judge model output was not a valid JSON object"
+    elif not isinstance(llm_output, dict):
+        cause = f"the judge model output had unexpected type {type(llm_output).__name__}"
+    else:
+        cause = "no valid score could be parsed from the judge model output"
+    return (
+        f"Evaluator returned invalid output: {cause} "
+        f"(finish_reason={finish_reason}, output_tokens={output_tokens})."
+    )
+
+
 @experimental
 class TaskCompletionEvaluator(ModelEvaluatorBase[Union[str, int]]):
     """The Task Completion evaluator determines whether an AI agent successfully completed the requested task.
@@ -1022,7 +1050,7 @@ class TaskCompletionEvaluator(ModelEvaluatorBase[Union[str, int]]):
         )
         if not isinstance(answer, dict):
             raise EvaluationException(
-                message="Evaluator returned invalid output.",
+                message=_invalid_output_message(model_output_dict),
                 blame=ErrorBlame.SYSTEM_ERROR,
                 category=ErrorCategory.FAILED_EXECUTION,
                 target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
