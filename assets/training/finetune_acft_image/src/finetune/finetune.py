@@ -12,7 +12,6 @@ import argparse
 import shutil
 from transformers.training_args import OptimizerNames
 from transformers.trainer_utils import SchedulerType, IntervalStrategy
-from optimum.onnxruntime.training_args import ORTOptimizerNames
 from azureml._common._error_definition.azureml_error import AzureMLError
 from azureml.acft.accelerator.constants import MetricConstants
 
@@ -85,16 +84,18 @@ class Mapper:
     # Optimizer names mapping from incoming names to finetune runner names
     OPTIMIZER_MAP = {
         IncomingOptimizerNames.ADAMW_TORCH: OptimizerNames.ADAMW_TORCH,
-        IncomingOptimizerNames.ADAMW_HF: OptimizerNames.ADAMW_HF,
         IncomingOptimizerNames.ADAMW_TORCH_XLA: OptimizerNames.ADAMW_TORCH_XLA,
-        IncomingOptimizerNames.ADAMW_APEX_FUSED: OptimizerNames.ADAMW_APEX_FUSED,
         IncomingOptimizerNames.ADAMW_BNB: OptimizerNames.ADAMW_BNB,
         IncomingOptimizerNames.ADAMW_ANYPRECISION: OptimizerNames.ADAMW_ANYPRECISION,
         IncomingOptimizerNames.SGD: OptimizerNames.SGD,
         IncomingOptimizerNames.ADAFACTOR: OptimizerNames.ADAFACTOR,
         IncomingOptimizerNames.ADAGRAD: OptimizerNames.ADAGRAD,
-        IncomingOptimizerNames.ADAMW_ORT_FUSED: ORTOptimizerNames.ADAMW_ORT_FUSED,
     }
+    # These optimizers were removed in Transformers 5.
+    if hasattr(OptimizerNames, "ADAMW_HF"):
+        OPTIMIZER_MAP[IncomingOptimizerNames.ADAMW_HF] = OptimizerNames.ADAMW_HF
+    if hasattr(OptimizerNames, "ADAMW_APEX_FUSED"):
+        OPTIMIZER_MAP[IncomingOptimizerNames.ADAMW_APEX_FUSED] = OptimizerNames.ADAMW_APEX_FUSED
 
 
 def get_parser():
@@ -306,7 +307,7 @@ def get_parser():
     # # optimizer
     parser.add_argument(
         "--optim",
-        choices=(
+        choices=tuple(name for name in (
             IncomingOptimizerNames.ADAMW_HF,
             IncomingOptimizerNames.ADAMW_TORCH,
             # # # Todo: enable or take them out post testing.
@@ -318,7 +319,7 @@ def get_parser():
             IncomingOptimizerNames.ADAFACTOR,
             IncomingOptimizerNames.ADAGRAD,
             IncomingOptimizerNames.ADAMW_ORT_FUSED,
-        ),
+        ) if name == IncomingOptimizerNames.ADAMW_ORT_FUSED or name in Mapper.OPTIMIZER_MAP),
         type=str,
         help=(
             "Optimizer to be used while training."
@@ -973,7 +974,12 @@ def main():
 
     # Map optimizer to as expected by the Trainer class
     if args.optim is not None:
-        args.optim = Mapper.OPTIMIZER_MAP[args.optim]
+        if args.optim == IncomingOptimizerNames.ADAMW_ORT_FUSED:
+            # Import lazily: optimum's ORT module is incompatible with transformers 5.x and only needed for ORT.
+            from optimum.onnxruntime.training_args import ORTOptimizerNames
+            args.optim = ORTOptimizerNames.ADAMW_ORT_FUSED
+        else:
+            args.optim = Mapper.OPTIMIZER_MAP[args.optim]
 
     # Update 'args' namespace with defaults based on task type and model selected
     # Doing this before any assignment to 'args' namespace
