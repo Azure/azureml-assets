@@ -42,7 +42,7 @@ from verl.workers.rollout.vllm_rollout.utils import (
     VLLM_LORA_PATH,
     get_vllm_max_lora_rank,
 )
-from .zmq_auth import sign_message, verify_message
+from .zmq_auth import sign_message, validate_key, validate_ray_tls_for_addresses, verify_message
 
 logger = logging.getLogger(__file__)
 logger.setLevel(logging.INFO)
@@ -59,10 +59,13 @@ class ExternalZeroMQDistributedExecutor(Executor):
 
         addresses = os.environ["VERL_VLLM_ZMQ_ADDRESSES"].split(",")
         addresses = addresses[dp_rank_local * tp_size : (dp_rank_local + 1) * tp_size]
+        validate_ray_tls_for_addresses(addresses)
         keys = json.loads(os.environ["VERL_VLLM_ZMQ_KEYS"])
         keys = [bytes.fromhex(key) for key in keys[dp_rank_local * tp_size : (dp_rank_local + 1) * tp_size]]
         if len(keys) != len(addresses):
             raise RuntimeError("Mismatch between vLLM rollout ZeroMQ addresses and authentication keys")
+        for key in keys:
+            validate_key(key)
 
         self.context = zmq.Context()
         self.sockets = []
