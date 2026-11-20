@@ -57,7 +57,7 @@ from verl.workers.rollout.vllm_rollout.utils import (
     VLLM_LORA_PATH,
     get_vllm_max_lora_rank,
 )
-from .zmq_auth import sign_message, verify_message
+from .zmq_auth import sign_message, verify_message, verify_ray_worker_tls
 
 logger = logging.getLogger(__file__)
 logger.setLevel(os.getenv("VERL_LOGGING_LEVEL", "WARN"))
@@ -301,4 +301,5 @@ class vLLMAsyncRollout(BaseRollout):
     # ==================== server mode public methods ====================
 
     def get_zeromq_address(self):
+        verify_ray_worker_tls(self.address)
         return self.address, self._zmq_auth_key.hex()
