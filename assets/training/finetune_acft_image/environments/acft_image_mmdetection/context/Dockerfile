@@ -92,6 +92,14 @@ RUN conda run -n ptca python -m pip uninstall -y torchaudio \
     'torch==2.13.0' \
     'torchvision==0.28.0'
 
+# The OpenMMLab mmcv wheel targets CUDA 11.8/torch 2.2; rebuild its CUDA ops against the installed torch.
+# mmcv's setup imports pkg_resources; restore the patched setuptools after building.
+RUN conda run -n ptca python -m pip uninstall -y mmcv \
+ && conda run -n ptca python -m pip install --no-cache-dir 'setuptools<82' \
+ && MMCV_WITH_OPS=1 FORCE_CUDA=1 MAX_JOBS=3 TORCH_CUDA_ARCH_LIST="8.0+PTX" \
+    conda run --no-capture-output -n ptca python -m pip install --no-cache-dir --no-build-isolation --no-binary mmcv 'mmcv==2.2.0' \
+ && conda run -n ptca python -m pip install --no-cache-dir --upgrade 'setuptools==84.1.0'
+
 # The conda pip upgrade can reinstall the rattler solver. The base image does
 # not need it for runtime, and its compiled extension currently carries Rust CVEs.
 RUN conda config --system --set solver classic \
