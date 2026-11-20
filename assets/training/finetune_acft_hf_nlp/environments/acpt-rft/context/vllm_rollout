@@ -137,7 +137,8 @@ class vLLMAsyncRollout(BaseRollout):
             context = zmq.asyncio.Context()
             self.socket = context.socket(zmq.REP)
             self.socket.setsockopt(
-                zmq.MAXMSGSIZE, int(os.getenv("VERL_VLLM_ZMQ_MAX_MESSAGE_BYTES", str(1 << 30)))
+                zmq.MAXMSGSIZE,
+                int(os.getenv("VERL_VLLM_ZMQ_MAX_MESSAGE_BYTES", str(64 << 20))),
             )
             if socket_type == "ipc":
                 pid = os.getpid()

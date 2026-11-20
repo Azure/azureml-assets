@@ -72,6 +72,9 @@ class ExternalZeroMQDistributedExecutor(Executor):
         self.keys = keys
         self.sequences = [0] * len(keys)
         self.rpc_lock = threading.Lock()
+        self._closed = False
+        os.environ.pop("VERL_VLLM_ZMQ_ADDRESSES", None)
+        os.environ.pop("VERL_VLLM_ZMQ_KEYS", None)
         for address in addresses:
             socket = self.context.socket(zmq.REQ)
             if address.startswith("tcp://["):
@@ -101,6 +104,11 @@ class ExternalZeroMQDistributedExecutor(Executor):
     ) -> list[Any]:
         from concurrent.futures import Future
         with self.rpc_lock:
+            if self._closed:
+                raise RuntimeError(
+                    "Authenticated vLLM rollout executor is closed after "
+                    "an invalid response; recreate the executor"
+                )
             if isinstance(method, str):
                 sent_method = method
             else:
@@ -126,6 +134,7 @@ class ExternalZeroMQDistributedExecutor(Executor):
                     verification_errors.append(f"vLLM rollout worker {index}: {e}")
 
             if verification_errors:
+                self._closed = True
                 raise RuntimeError("Invalid authenticated vLLM rollout response: " + "; ".join(verification_errors))
 
             outputs = [pickle.loads(response_payload) for response_payload in response_payloads]
@@ -332,6 +341,9 @@ class vLLMHttpServerBase:
         # 2. setup distributed executor backend
         distributed_executor_backend = ExternalZeroMQDistributedExecutor if len(self.workers) > 0 else None
         server_args.distributed_executor_backend = distributed_executor_backend
+
+        if getattr(self, "nnodes", 1) > 1:
+            validate_ray_tls_for_addresses(["tcp://worker"])
 
         zmq_credentials = ray.get([worker.get_zeromq_address.remote() for worker in self.workers])
         zmq_addresses = [address for address, _ in zmq_credentials]

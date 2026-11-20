@@ -23,6 +23,7 @@ def validate_key(key: bytes) -> None:
 
 def validate_ray_tls_for_addresses(addresses: Iterable[str]) -> None:
     """Require Ray TLS before authentication keys are used over TCP."""
+    addresses = list(addresses)
     if not any(address.startswith("tcp://") for address in addresses):
         return
 
