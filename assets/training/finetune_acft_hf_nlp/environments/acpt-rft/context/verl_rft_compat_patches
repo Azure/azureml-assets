@@ -367,16 +367,16 @@ _VERL_LOGITS_NEW = '''                    logits_rmpad = output.logits.squeeze(0
 
 # --------------------------------------------------------------------------------------
 # The bundled RFT driver starts the Ray head with the dashboard disabled. Enable it on
-# port 8265 (ray[default] from PyPI ships the dashboard frontend, so no separate frontend
-# install is required). The recipe-supplied driver copy is enabled separately at submit time.
+# loopback port 8265 (ray[default] from PyPI ships the dashboard frontend, so no separate frontend
+# install is required). Keep it off external interfaces because the Ray dashboard is unauthenticated. The recipe-supplied driver copy is enabled separately at submit time.
 # --------------------------------------------------------------------------------------
 _DRIVER_DASH_OLD = '''                    "--disable-usage-stats",
                     "--include-dashboard=false",
                 ], stdout=subprocess.PIPE,'''
 _DRIVER_DASH_NEW = '''                    "--disable-usage-stats",
-                    # ACFT-RFT-COMPAT: start the Ray dashboard on port 8265.
+                    # ACFT-RFT-COMPAT: start the Ray dashboard on loopback port 8265.
                     "--include-dashboard=true",
-                    "--dashboard-host=0.0.0.0",
+                    "--dashboard-host=127.0.0.1",
                     "--dashboard-port=8265",
                 ], stdout=subprocess.PIPE,'''
 
