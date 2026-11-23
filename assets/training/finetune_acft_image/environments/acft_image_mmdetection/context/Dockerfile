@@ -120,7 +120,7 @@ RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade \
 # Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="dotnet-host-8.0 libbrotli1 dotnet-hostfxr-8.0"; \
+    security_packages="apt libapt-pkg6.0 libpcre2-8-0 dotnet-host-8.0 libbrotli1 dotnet-hostfxr-8.0"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
