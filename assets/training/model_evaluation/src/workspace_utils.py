@@ -6,10 +6,10 @@ import json
 import os
 import re
 from typing import Optional, Union
-from distutils.version import LooseVersion
 from contextlib import suppress
+from importlib.metadata import version as get_package_version
 
-import pkg_resources
+from packaging.version import Version
 
 from logging_utilities import get_logger
 
@@ -28,14 +28,14 @@ Connection = None
 logger = get_logger(name="connections")
 
 pkg_versions = {
-    "azure-ai-ml": ""
+    "azure-ai-ml": None
 }
 
-AZURE_AI_ML_MIN_VERSION = LooseVersion("1.10.0")
+AZURE_AI_ML_MIN_VERSION = Version("1.10.0")
 
 for package in pkg_versions:
     with suppress(Exception):
-        pkg_versions[package] = LooseVersion(pkg_resources.get_distribution(package).version)
+        pkg_versions[package] = Version(get_package_version(package))
 
 
 def create_session_with_retry(retry=3):
@@ -290,7 +290,8 @@ def get_connection_by_id_v2(
 
     logger.info(f"Using auth: {type(credential)}")
 
-    if client == "sdk" and MLClient is not None and pkg_versions["azure-ai-ml"] >= AZURE_AI_ML_MIN_VERSION:
+    if client == "sdk" and MLClient is not None and pkg_versions["azure-ai-ml"] is not None \
+            and pkg_versions["azure-ai-ml"] >= AZURE_AI_ML_MIN_VERSION:
         logger.info("Getting workspace connection via MLClient")
         ml_client = MLClient(
             credential=credential,
