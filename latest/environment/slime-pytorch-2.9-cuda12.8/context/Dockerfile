@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.8-ubuntu24.04:20261108.v1
+FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.8-ubuntu24.04:20261122.v1
 
 # IMPORTANT (2026-10-26): This image already uses Python 3.12; Pillow was upgraded to 13 for security fixes.
 # Downstream users must keep interpreter-specific paths, wheels, and compiled dependencies compatible with Python 3.12.
