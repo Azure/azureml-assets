@@ -106,7 +106,7 @@ RUN rm -rf /opt/miniconda/pkgs/setuptools-84.0.0-* \
 # Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="libbrotli1 nginx"; \
+    security_packages="libc6 libc-bin libc6-dev libc-dev-bin locales nginx nginx-common nginx-light libnginx-mod-http-geoip2 libnginx-mod-http-echo libbrotli1"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \

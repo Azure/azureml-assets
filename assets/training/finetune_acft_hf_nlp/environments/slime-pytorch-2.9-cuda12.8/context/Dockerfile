@@ -353,7 +353,7 @@ RUN set -eux; \
 # Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="bind9-dnsutils bind9-host bind9-libs zlib1g nginx nginx-common nginx-light libbrotli1 libpcre2-8-0"; \
+    security_packages="libc6 libc-bin libc6-dev libc-dev-bin locales nginx nginx-common nginx-light libnginx-mod-http-geoip2 libnginx-mod-http-echo bind9-dnsutils bind9-host bind9-libs zlib1g libbrotli1 libpcre2-8-0"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \

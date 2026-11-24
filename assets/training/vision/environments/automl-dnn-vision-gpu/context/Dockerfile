@@ -210,7 +210,7 @@ RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/python -m pip install --no-cache-dir --u
 # Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="dotnet-host-8.0 dotnet-hostfxr-8.0 dotnet-runtime-8.0 libbrotli1 libnginx-mod-http-echo libnginx-mod-http-geoip2 libpcre2-8-0 nginx-common nginx-light"; \
+    security_packages="libc6 libc-bin libc6-dev libc-dev-bin locales nginx nginx-common nginx-light libnginx-mod-http-geoip2 libnginx-mod-http-echo dotnet-host-8.0 dotnet-hostfxr-8.0 dotnet-runtime-8.0 libbrotli1 libpcre2-8-0"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
