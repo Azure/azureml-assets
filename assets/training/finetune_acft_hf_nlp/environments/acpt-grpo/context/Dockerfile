@@ -165,7 +165,7 @@ RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade \
 # Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="libbrotli1 dotnet-hostfxr-8.0"; \
+    security_packages="apt libapt-pkg6.0 libpcre2-8-0 libc6 libc-bin libc6-dev libc-dev-bin locales perl perl-base perl-modules-5.34 libperl5.34 libbrotli1 dotnet-host-8.0 dotnet-hostfxr-8.0 dotnet-runtime-8.0"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \

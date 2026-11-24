@@ -65,8 +65,9 @@ RUN pip install --no-cache-dir --force-reinstall \
         torch==2.13.0 torchvision==0.28.0 \
         --index-url https://download.pytorch.org/whl/cu129 && \
     pip uninstall -y torchaudio
-# vllm's resolver can upgrade numpy, but verl 0.7.1 requires numpy<2.
-RUN pip install --no-cache-dir numpy==1.26.4
+# vllm's resolver can upgrade numpy and ml-dtypes, but verl 0.7.1 requires
+# numpy<2 while ml-dtypes>=0.6 requires numpy>=2.
+RUN pip install --no-cache-dir numpy==1.26.4 ml-dtypes==0.5.4
 # Keep xgrammar at the patched floor when pulled transitively by vllm; fixes GHSA-7rgv-gqhr-fxg3.
 RUN pip install --no-cache-dir 'xgrammar>=0.1.32'
 RUN pip install openai==2.25.0
@@ -243,12 +244,13 @@ RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade \
     'certifi>=2026.10.19' 'opentelemetry-api>=1.45.1' 'brotlicffi>=1.2.1.0' && \
     rm -rf /opt/conda/lib/python3.14/site-packages/certifi-2024.7.4.dist-info && \
     rm -rf /opt/conda/lib/python3.14/site-packages/opentelemetry__api-1.43.0.dist-info
-RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'virtualenv>=21.14.9'
+RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'virtualenv>=21.14.9' && \
+    rm -f /opt/conda/envs/ptca/lib/python3.11/site-packages/virtualenv-*.dist-info/sboms/virtualenv.cdx.json
 
 # Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
     apt-get update; \
-    security_packages="libbrotli1 dotnet-hostfxr-8.0"; \
+    security_packages="apt libapt-pkg6.0 libpcre2-8-0 libc6 libc-bin libc6-dev libc-dev-bin locales perl perl-base perl-modules-5.34 libperl5.34 libbrotli1 dotnet-host-8.0 dotnet-hostfxr-8.0 dotnet-runtime-8.0"; \
     installed_packages=""; \
     for package in $security_packages; do \
         if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then \
