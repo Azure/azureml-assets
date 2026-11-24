@@ -244,7 +244,8 @@ RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade \
     'certifi>=2026.10.19' 'opentelemetry-api>=1.45.1' 'brotlicffi>=1.2.1.0' && \
     rm -rf /opt/conda/lib/python3.14/site-packages/certifi-2024.7.4.dist-info && \
     rm -rf /opt/conda/lib/python3.14/site-packages/opentelemetry__api-1.43.0.dist-info
-RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'virtualenv>=21.14.9'
+RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'virtualenv>=21.14.9' && \
+    rm -f /opt/conda/envs/ptca/lib/python3.11/site-packages/virtualenv-*.dist-info/sboms/virtualenv.cdx.json
 
 # Reassert November 2026 OS-package floors for installed packages only.
 RUN set -eux; \
