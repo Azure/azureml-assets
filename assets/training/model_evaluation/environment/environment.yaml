@@ -1,0 +1,13 @@
+image:
+  name: azureml/curated/model-evaluation
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+    - conda.yaml
+    - requirements.txt
+  publish:
+    location: mcr
+    visibility: public
