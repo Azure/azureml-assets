@@ -4,19 +4,53 @@
 """Test vision utility code."""
 
 import base64
+import io
 import os
 import pytest
 import requests
+import socket
 import tempfile
 
 import pandas as pd
 
-from unittest.mock import patch
 from PIL import Image, ImageChops
 
+from azureml.model.mgmt.processors.common import vision_utils
 from azureml.model.mgmt.processors.common.vision_utils import (
-    process_image, process_image_pandas_series, save_image, _is_valid_url
+    process_image, process_image_pandas_series, save_image, _is_valid_url, IMAGE_URL_ALLOWED_NETWORKS_ENV_VAR,
+    UnsafeImageUrlError
 )
+
+PUBLIC_ADDRESS = "20.70.246.20"
+
+
+def _mock_dns(monkeypatch, resolve):
+    """Make socket.getaddrinfo resolve every host name to the address returned by resolve(host)."""
+    def getaddrinfo(host, port, *args, **kwargs):
+        address = resolve(host)
+        family = socket.AF_INET6 if ":" in address else socket.AF_INET
+        return [(family, socket.SOCK_STREAM, socket.IPPROTO_TCP, "", (address, port))]
+
+    monkeypatch.setattr(socket, "getaddrinfo", getaddrinfo)
+
+
+def _mock_http(monkeypatch, routes):
+    """Serve canned (status_code, headers, content) responses by url and return the list of requested urls."""
+    requested_urls = []
+
+    def send(adapter, request, **kwargs):
+        requested_urls.append(request.url)
+        status_code, headers, content = routes[request.url]
+        response = requests.Response()
+        response.status_code = status_code
+        response.headers.update(headers)
+        response.raw = io.BytesIO(content)
+        response.url = request.url
+        response.request = request
+        return response
+
+    monkeypatch.setattr(requests.adapters.HTTPAdapter, "send", send)
+    return requested_urls
 
 
 class TestVisionUtilities:
@@ -40,28 +74,111 @@ class TestVisionUtilities:
 
         assert process_image(image_bytes) == image_bytes
 
-    @patch("requests.get")
-    def test_process_image_url_successful(self, mock_requests_get):
-        """Test process_image() with a 'correct' URL."""
+    def test_process_image_url_successful(self, monkeypatch):
+        """Test process_image() with a URL whose host resolves to a public address."""
         image_url = "http://microsoft.com/image.jpg"
         image_bytes = bytes([2, 3])
-
-        response = mock_requests_get.return_value
-        response.content = image_bytes
+        _mock_dns(monkeypatch, lambda host: PUBLIC_ADDRESS)
+        requested_urls = _mock_http(monkeypatch, {image_url: (200, {}, image_bytes)})
 
         assert process_image(image_url) == image_bytes
+        assert requested_urls == [image_url]
 
-    @patch("requests.get")
-    def test_process_image_url_unavailable(self, mock_requests_get):
+    def test_process_image_url_unavailable(self, monkeypatch):
         """Test process_image() with an 'incorrect' URL."""
         image_url = "http://microsoft.com/this_image_does_not_exist.jpg"
-
-        response = mock_requests_get.return_value
-        response.raise_for_status.side_effect = requests.exceptions.RequestException("Url unavailable.")
+        _mock_dns(monkeypatch, lambda host: PUBLIC_ADDRESS)
+        _mock_http(monkeypatch, {image_url: (404, {}, b"")})
 
         with pytest.raises(ValueError) as e:
             assert process_image(image_url)
         assert "Unable to retrieve image from url string due to exception: " in str(e.value)
+
+    @pytest.mark.parametrize("address", [
+        "127.0.0.1", "10.0.0.5", "172.16.0.1", "192.168.1.1", "100.64.0.1", "0.0.0.0", "169.254.169.254",
+        "168.63.129.16", "::1", "fd00::1", "fe80::1", "::ffff:10.0.0.5", "64:ff9b::a9fe:a9fe",
+    ])
+    def test_process_image_url_rejects_non_public_address(self, monkeypatch, address):
+        """Test that process_image() does not fetch URLs whose host resolves to a non-public address."""
+        _mock_dns(monkeypatch, lambda host: address)
+        requested_urls = _mock_http(monkeypatch, {})
+
+        with pytest.raises(UnsafeImageUrlError):
+            process_image("http://images.contoso.com/image.jpg")
+        assert requested_urls == []
+
+    def test_process_image_url_rejects_ip_literal(self, monkeypatch):
+        """Test that process_image() does not fetch URLs with a non-public IP literal host."""
+        requested_urls = _mock_http(monkeypatch, {})
+
+        with pytest.raises(UnsafeImageUrlError):
+            process_image("http://169.254.169.254/metadata/instance?api-version=2021-02-01&format=.json")
+        assert requested_urls == []
+
+    def test_process_image_url_rejects_redirect_to_non_public_address(self, monkeypatch):
+        """Test that process_image() validates the destination of every redirect."""
+        image_url = "http://images.contoso.com/image.jpg"
+        internal_url = "http://internal.contoso.com/secret.png"
+        _mock_dns(monkeypatch, lambda host: "10.0.0.5" if host == "internal.contoso.com" else PUBLIC_ADDRESS)
+        requested_urls = _mock_http(monkeypatch, {
+            image_url: (302, {"Location": internal_url}, b""),
+            internal_url: (200, {}, b"internal"),
+        })
+
+        with pytest.raises(UnsafeImageUrlError):
+            process_image(image_url)
+        assert requested_urls == [image_url]
+
+    def test_process_image_url_follows_redirect_to_public_address(self, monkeypatch):
+        """Test that process_image() follows relative redirects to allowed destinations."""
+        image_url = "http://images.contoso.com/image.jpg"
+        _mock_dns(monkeypatch, lambda host: PUBLIC_ADDRESS)
+        requested_urls = _mock_http(monkeypatch, {
+            image_url: (301, {"Location": "/v2/image.jpg"}, b""),
+            "http://images.contoso.com/v2/image.jpg": (200, {}, b"image"),
+        })
+
+        assert process_image(image_url) == b"image"
+        assert requested_urls == [image_url, "http://images.contoso.com/v2/image.jpg"]
+
+    def test_process_image_url_rejects_redirect_loop(self, monkeypatch):
+        """Test that process_image() limits the number of redirects."""
+        image_url = "http://images.contoso.com/image.jpg"
+        _mock_dns(monkeypatch, lambda host: PUBLIC_ADDRESS)
+        _mock_http(monkeypatch, {image_url: (302, {"Location": image_url}, b"")})
+
+        with pytest.raises(ValueError, match="maximum of 5 redirects"):
+            process_image(image_url)
+
+    def test_process_image_url_rejects_dns_rebinding(self, monkeypatch):
+        """Test that connections are pinned to validated addresses when DNS changes after validation."""
+        addresses = iter([PUBLIC_ADDRESS])
+        _mock_dns(monkeypatch, lambda host: next(addresses, "127.0.0.1"))
+        monkeypatch.setattr(requests.utils, "getproxies", lambda: {})
+
+        with pytest.raises(UnsafeImageUrlError):
+            process_image("http://rebind.contoso.com/image.jpg")
+
+    def test_process_image_url_allowed_networks(self, monkeypatch):
+        """Test that deployments can allow private networks, but never link-local addresses."""
+        monkeypatch.setenv(IMAGE_URL_ALLOWED_NETWORKS_ENV_VAR, "10.1.0.0/16, 169.254.0.0/16")
+        image_url = "http://blob.contoso.com/image.jpg"
+        _mock_dns(monkeypatch, lambda host: "169.254.169.254" if host == "metadata.contoso.com" else "10.1.2.3")
+        _mock_http(monkeypatch, {image_url: (200, {}, b"image")})
+
+        assert process_image(image_url) == b"image"
+        with pytest.raises(UnsafeImageUrlError):
+            process_image("http://metadata.contoso.com/image.jpg")
+
+    def test_process_image_url_rejects_oversized_image(self, monkeypatch):
+        """Test that process_image() limits the size of downloaded images."""
+        image_url = "http://images.contoso.com/image.jpg"
+        monkeypatch.setattr(vision_utils, "_IMAGE_URL_MAX_BYTES", 4)
+        _mock_dns(monkeypatch, lambda host: PUBLIC_ADDRESS)
+        _mock_http(monkeypatch, {image_url: (200, {}, b"12345")})
+
+        with pytest.raises(ValueError, match="exceeds the maximum size"):
+            process_image(image_url)
 
     def test_process_image_b64(self):
         """Test process_image() with a b64encoded string."""

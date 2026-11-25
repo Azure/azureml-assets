@@ -3,11 +3,13 @@
 
 """This file contains unit tests for vesta image modifier."""
 
+import io
 import os
 from pathlib import Path
 from urllib.parse import urlparse
 
 import pytest
+import requests
 from mock import MagicMock
 
 from src.batch_score.common.request_modification.modifiers.vesta_image_encoder import (
@@ -24,6 +26,25 @@ from tests.fixtures.vesta_image_modifier import (
     MOCKED_BINARY_FROM_FILE,
     MOCKED_BINARY_FROM_URL,
 )
+
+
+def _mock_http(monkeypatch, routes):
+    """Serve canned (status_code, headers, content) responses by url and return the list of requested urls."""
+    requested_urls = []
+
+    def send(adapter, request, **kwargs):
+        requested_urls.append(request.url)
+        status_code, headers, content = routes[request.url]
+        response = requests.Response()
+        response.status_code = status_code
+        response.headers.update(headers)
+        response.raw = io.BytesIO(content)
+        response.url = request.url
+        response.request = request
+        return response
+
+    monkeypatch.setattr(requests.adapters.HTTPAdapter, "send", send)
+    return requested_urls
 
 
 def test_vesta_payload_type():
@@ -137,25 +158,19 @@ def test_encode_b64_url(mock_get_logger, make_image_encoder, mock__b64_from_url)
 def test__b64_from_url(mock_get_logger: MagicMock, monkeypatch, make_image_encoder):
     """Test b64 from url."""
     image_encoder: ImageEncoder = make_image_encoder()
-    target_url = "https://fake.url"
+    target_url = "https://fake.url/"
 
     # Resolve to a public address so the SSRF validation permits the request.
     monkeypatch.setattr(
         "socket.getaddrinfo",
         lambda host, port, **kwargs: [(2, 1, 6, "", ("93.184.216.34", port or 443))])
 
-    mock_get = MagicMock()
-    mock_get.status_code = 200
-    mock_get.content = b"MOCK_CONTENT_BYTES"
-    monkeypatch.setattr("requests.get", lambda url, **kwargs: mock_get)
+    _mock_http(monkeypatch, {target_url: (200, {}, b"MOCK_CONTENT_BYTES")})
 
     encoding = image_encoder._b64_from_url(target_url)
     assert encoding
 
-    mock_get.status_code = 404
-    mock_get.content = None
-    mock_get.reason = "mocked for testing purposes"
-    monkeypatch.setattr("requests.get", lambda url, **kwargs: mock_get)
+    _mock_http(monkeypatch, {target_url: (404, {}, b"")})
 
     with pytest.raises(UnsuccessfulUrlResponse):
         image_encoder._b64_from_url(target_url)
@@ -175,18 +190,17 @@ def test__b64_from_url_rejects_disallowed_scheme(make_image_encoder):
 def test__b64_from_url_rejects_non_public_address(monkeypatch, make_image_encoder):
     """Test that urls resolving to non-public addresses are rejected to mitigate SSRF (CWE-918)."""
     image_encoder: ImageEncoder = make_image_encoder()
-
-    def fail_get(*args, **kwargs):
-        raise AssertionError("requests.get must not be called for an unsafe url")
-
-    monkeypatch.setattr("requests.get", fail_get)
+    requested_urls = _mock_http(monkeypatch, {})
 
     blocked_ips = [
         "169.254.169.254",  # cloud instance metadata endpoint (link-local)
+        "168.63.129.16",    # Azure platform endpoint (WireServer)
         "127.0.0.1",        # loopback
         "10.0.0.5",         # private
         "192.168.1.1",      # private
+        "100.64.0.1",       # shared address space
         "0.0.0.0",          # unspecified
+        "::ffff:127.0.0.1",  # IPv4-mapped loopback
     ]
     for ip in blocked_ips:
         monkeypatch.setattr(
@@ -194,6 +208,39 @@ def test__b64_from_url_rejects_non_public_address(monkeypatch, make_image_encode
             lambda host, port, _ip=ip, **kwargs: [(2, 1, 6, "", (_ip, port or 443))])
         with pytest.raises(UnsafeUrl):
             image_encoder._b64_from_url("https://malicious.example/image.png")
+    assert requested_urls == []
+
+
+def test__b64_from_url_rejects_redirect_to_non_public_address(monkeypatch, make_image_encoder):
+    """Test that every redirect hop is validated to mitigate SSRF (CWE-918)."""
+    image_encoder: ImageEncoder = make_image_encoder()
+    image_url = "https://public.example/image.png"
+    internal_url = "http://internal.example/secret.png"
+    monkeypatch.setattr(
+        "socket.getaddrinfo",
+        lambda host, port, **kwargs: [
+            (2, 1, 6, "", ("10.0.0.5" if host == "internal.example" else "93.184.216.34", port or 443))])
+    requested_urls = _mock_http(monkeypatch, {
+        image_url: (302, {"Location": internal_url}, b""),
+        internal_url: (200, {}, b"internal"),
+    })
+
+    with pytest.raises(UnsafeUrl):
+        image_encoder._b64_from_url(image_url)
+    assert requested_urls == [image_url]
+
+
+def test__b64_from_url_rejects_dns_rebinding(monkeypatch, make_image_encoder):
+    """Test that connections are pinned to validated addresses to mitigate DNS rebinding."""
+    image_encoder: ImageEncoder = make_image_encoder()
+    addresses = iter(["93.184.216.34"])
+    monkeypatch.setattr(
+        "socket.getaddrinfo",
+        lambda host, port, **kwargs: [(2, 1, 6, "", (next(addresses, "127.0.0.1"), port or 443))])
+    monkeypatch.setattr(requests.utils, "getproxies", lambda: {})
+
+    with pytest.raises(UnsafeUrl):
+        image_encoder._b64_from_url("https://rebind.example/image.png")
 
 
 def test__b64_from_url_rejects_unresolvable_host(monkeypatch, make_image_encoder):

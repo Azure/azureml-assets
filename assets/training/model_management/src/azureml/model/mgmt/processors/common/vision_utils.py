@@ -5,10 +5,13 @@
 
 import base64
 import io
+import ipaddress
 import logging
 import os
 import re
 import requests
+import socket
+import time
 import uuid
 
 import PIL
@@ -18,13 +21,30 @@ import torch
 
 from ast import literal_eval
 from PIL import Image, UnidentifiedImageError
-from typing import Union
+from requests.adapters import HTTPAdapter
+from typing import Callable, List, Union
+from urllib.parse import urljoin, urlparse
+from urllib3.connection import HTTPConnection, HTTPSConnection
+from urllib3.connectionpool import HTTPConnectionPool, HTTPSConnectionPool
+from urllib3.exceptions import ConnectTimeoutError, NewConnectionError
 
 
 logger = logging.getLogger(__name__)
 
 # Uncomment the following line for mlflow debug mode
 # logging.getLogger("mlflow").setLevel(logging.DEBUG)
+
+# Image urls come from untrusted inference input, so images are only fetched from public addresses.
+# Deployments that need images from private endpoints can allow specific CIDR ranges with this variable.
+IMAGE_URL_ALLOWED_NETWORKS_ENV_VAR = "AZUREML_IMAGE_URL_ALLOWED_NETWORKS"
+_IMAGE_URL_SCHEMES = ("http", "https")
+_IMAGE_URL_TIMEOUT_SECONDS = (10, 30)  # (connect, read)
+_IMAGE_URL_TOTAL_TIMEOUT_SECONDS = 120
+_IMAGE_URL_MAX_REDIRECTS = 5
+_IMAGE_URL_MAX_BYTES = 50 * 1024 * 1024
+# Azure platform endpoints (WireServer / host agent) are globally routable but must never be fetched.
+_ALWAYS_BLOCKED_NETWORKS = (ipaddress.ip_network("168.63.129.16/32"),)
+_NAT64_NETWORK = ipaddress.ip_network("64:ff9b::/96")
 
 
 def save_image(output_folder: str, img: PIL.Image.Image, format: str) -> str:
@@ -83,7 +103,8 @@ def process_image(image: Union[str, bytes]) -> bytes:
 
     If input image is in bytes format, return it as it is.
     If input image is in base64 string format, decode it to bytes.
-    If input image is in url format, download it and return bytes.
+    If input image is in url format, download it and return bytes. Only http(s) urls whose host
+    resolves to public addresses (or to networks allowed via AZUREML_IMAGE_URL_ALLOWED_NETWORKS) are fetched.
     https://github.com/mlflow/mlflow/blob/master/examples/flower_classifier/image_pyfunc.py
 
     :param image: image in base64 string format or url or bytes.
@@ -96,10 +117,7 @@ def process_image(image: Union[str, bytes]) -> bytes:
     elif isinstance(image, str):
         if _is_valid_url(image):
             try:
-                response = requests.get(image)
-                response.raise_for_status()  # Raise exception in case of unsuccessful response code.
-                image = response.content
-                return image
+                return _download_image(image)
             except requests.exceptions.RequestException as ex:
                 raise ValueError(f"Unable to retrieve image from url string due to exception: {ex}")
         else:
@@ -161,6 +179,217 @@ def _is_valid_url(text: str) -> bool:
         return True
     else:
         return False
+
+
+class UnsafeImageUrlError(ValueError):
+    """Raised when an image url points to a destination that is not allowed."""
+
+
+def _get_allowed_networks() -> list:
+    """Return the non-public networks that the deployment explicitly allows image urls to resolve to.
+
+    :return: allowed networks
+    :rtype: list
+    """
+    networks = []
+    for entry in os.environ.get(IMAGE_URL_ALLOWED_NETWORKS_ENV_VAR, "").split(","):
+        entry = entry.strip()
+        if entry:
+            try:
+                networks.append(ipaddress.ip_network(entry, strict=False))
+            except ValueError:
+                raise ValueError(f"Invalid CIDR range '{entry}' in {IMAGE_URL_ALLOWED_NETWORKS_ENV_VAR}.")
+    return networks
+
+
+def _is_allowed_address(address: str, allowed_networks: list) -> bool:
+    """Check whether images may be fetched from an ip address.
+
+    :param address: resolved ip address
+    :type address: str
+    :param allowed_networks: non-public networks explicitly allowed by the deployment
+    :type allowed_networks: list
+    :return: True if the address is allowed, else False
+    :rtype: bool
+    """
+    ip = ipaddress.ip_address(address.split("%", 1)[0])
+    if ip.version == 6:
+        # Validate the IPv4 address embedded in IPv4-mapped, 6to4 and NAT64 addresses.
+        if ip.ipv4_mapped is not None:
+            ip = ip.ipv4_mapped
+        elif ip.sixtofour is not None:
+            ip = ip.sixtofour
+        elif ip in _NAT64_NETWORK:
+            ip = ipaddress.IPv4Address(int(ip) & 0xFFFFFFFF)
+    if (ip.is_loopback or ip.is_link_local or ip.is_multicast or ip.is_unspecified
+            or any(ip in network for network in _ALWAYS_BLOCKED_NETWORKS)):
+        return False
+    if any(ip in network for network in allowed_networks):
+        return True
+    return ip.is_global and not ip.is_reserved and not (ip.version == 6 and ip.is_site_local)
+
+
+def _resolve_allowed_addresses(host: str, port: int) -> List[str]:
+    """Resolve an image url host, ensuring that every address it resolves to is allowed.
+
+    :param host: host name or ip address
+    :type host: str
+    :param port: port number
+    :type port: int
+    :return: resolved addresses
+    :rtype: List[str]
+    """
+    allowed_networks = _get_allowed_networks()
+    try:
+        address_infos = socket.getaddrinfo(host, port, 0, socket.SOCK_STREAM)
+    except (socket.gaierror, UnicodeError) as ex:
+        raise ValueError(f"Unable to resolve image url host '{host}': {ex}")
+    addresses = []
+    for address_info in address_infos:
+        address = address_info[4][0]
+        if not _is_allowed_address(address, allowed_networks):
+            raise UnsafeImageUrlError(
+                f"Image url host '{host}' resolves to a non-public address, which is not allowed. To fetch images "
+                f"from private networks, set {IMAGE_URL_ALLOWED_NETWORKS_ENV_VAR} to a comma-separated list of "
+                "allowed CIDR ranges."
+            )
+        if address not in addresses:
+            addresses.append(address)
+    if not addresses:
+        raise ValueError(f"Unable to resolve image url host '{host}'.")
+    return addresses
+
+
+def _connect_to_allowed_address(connection: HTTPConnection, connect: Callable) -> socket.socket:
+    """Open a urllib3 connection to an allowed address of its host.
+
+    The host is resolved and validated again at connect time, so the connection is pinned to the validated
+    addresses and cannot be redirected to another address by DNS rebinding.
+
+    :param connection: urllib3 connection being opened
+    :type connection: HTTPConnection
+    :param connect: urllib3's implementation for opening the connection socket
+    :type connect: Callable
+    :return: connected socket
+    :rtype: socket.socket
+    """
+    host = connection._dns_host
+    addresses = _resolve_allowed_addresses(host.strip("[]"), connection.port)
+    error = None
+    for address in addresses:
+        connection._dns_host = address
+        try:
+            return connect()
+        except (NewConnectionError, ConnectTimeoutError) as ex:
+            error = ex
+        finally:
+            connection._dns_host = host
+    raise error
+
+
+class _AllowedAddressHTTPConnection(HTTPConnection):
+    """urllib3 HTTP connection that only connects to allowed addresses."""
+
+    def _new_conn(self) -> socket.socket:
+        return _connect_to_allowed_address(self, super()._new_conn)
+
+
+class _AllowedAddressHTTPSConnection(HTTPSConnection):
+    """urllib3 HTTPS connection that only connects to allowed addresses."""
+
+    def _new_conn(self) -> socket.socket:
+        return _connect_to_allowed_address(self, super()._new_conn)
+
+
+class _AllowedAddressHTTPConnectionPool(HTTPConnectionPool):
+    """urllib3 HTTP connection pool that only connects to allowed addresses."""
+
+    ConnectionCls = _AllowedAddressHTTPConnection
+
+
+class _AllowedAddressHTTPSConnectionPool(HTTPSConnectionPool):
+    """urllib3 HTTPS connection pool that only connects to allowed addresses."""
+
+    ConnectionCls = _AllowedAddressHTTPSConnection
+
+
+class _AllowedAddressHTTPAdapter(HTTPAdapter):
+    """Requests adapter whose direct connections are pinned to allowed addresses.
+
+    Requests sent through a proxy are not pinned, since the proxy resolves the host; they are still covered by
+    the per-hop validation in _download_image.
+    """
+
+    def init_poolmanager(self, *args, **kwargs):
+        """Initialize the pool manager with connection pools that validate addresses at connect time."""
+        super().init_poolmanager(*args, **kwargs)
+        self.poolmanager.pool_classes_by_scheme = {
+            "http": _AllowedAddressHTTPConnectionPool,
+            "https": _AllowedAddressHTTPSConnectionPool,
+        }
+
+
+def _validate_image_url(url: str) -> None:
+    """Validate that an image url uses http(s) and that its host only resolves to allowed addresses.
+
+    :param url: image url
+    :type url: str
+    """
+    parsed = urlparse(url)
+    if parsed.scheme not in _IMAGE_URL_SCHEMES or not parsed.hostname:
+        raise UnsafeImageUrlError("Only http and https image urls with a host name are supported.")
+    _resolve_allowed_addresses(parsed.hostname, parsed.port or (443 if parsed.scheme == "https" else 80))
+
+
+def _read_image_content(response: requests.Response, deadline: float) -> bytes:
+    """Read an image response body, enforcing the maximum image size and the total download time.
+
+    :param response: streamed response
+    :type response: requests.Response
+    :param deadline: time.monotonic() value by which the download must complete
+    :type deadline: float
+    :return: response body
+    :rtype: bytes
+    """
+    too_large_message = f"Image downloaded from url exceeds the maximum size of {_IMAGE_URL_MAX_BYTES} bytes."
+    content_length = response.headers.get("Content-Length", "")
+    if content_length.isdigit() and int(content_length) > _IMAGE_URL_MAX_BYTES:
+        raise ValueError(too_large_message)
+    content = bytearray()
+    for chunk in response.iter_content(chunk_size=64 * 1024):
+        content.extend(chunk)
+        if len(content) > _IMAGE_URL_MAX_BYTES:
+            raise ValueError(too_large_message)
+        if time.monotonic() > deadline:
+            raise ValueError(f"Image download from url exceeded {_IMAGE_URL_TOTAL_TIMEOUT_SECONDS} seconds.")
+    return bytes(content)
+
+
+def _download_image(url: str) -> bytes:
+    """Download an image from a url provided in the inference input.
+
+    Every redirect hop is validated before it is requested, and direct connections are pinned to validated
+    addresses.
+
+    :param url: image url
+    :type url: str
+    :return: image bytes
+    :rtype: bytes
+    """
+    deadline = time.monotonic() + _IMAGE_URL_TOTAL_TIMEOUT_SECONDS
+    with requests.Session() as session:
+        adapter = _AllowedAddressHTTPAdapter()
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
+        for _ in range(_IMAGE_URL_MAX_REDIRECTS + 1):
+            _validate_image_url(url)
+            with session.get(url, allow_redirects=False, stream=True, timeout=_IMAGE_URL_TIMEOUT_SECONDS) as response:
+                if response.is_redirect:
+                    url = urljoin(url, session.get_redirect_target(response))
+                    continue
+                response.raise_for_status()  # Raise exception in case of unsuccessful response code.
+                return _read_image_content(response, deadline)
+    raise ValueError(f"Image url exceeded the maximum of {_IMAGE_URL_MAX_REDIRECTS} redirects.")
 
 
 def get_current_device() -> torch.device:

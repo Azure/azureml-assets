@@ -9,12 +9,20 @@ import os
 import socket
 import time
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.connection import HTTPConnection, HTTPSConnection
+from urllib3.connectionpool import HTTPConnectionPool, HTTPSConnectionPool
+from urllib3.exceptions import ConnectTimeoutError, NewConnectionError
 
 from ...telemetry import logging_utils as lu
 from .request_modifier import RequestModificationException
+
+# Azure platform endpoints (WireServer / host agent) are globally routable but must never be fetched.
+_BLOCKED_NETWORKS = (ipaddress.ip_network("168.63.129.16/32"),)
+_NAT64_NETWORK = ipaddress.ip_network("64:ff9b::/96")
 
 
 class ImageEncoder():
@@ -26,6 +34,7 @@ class ImageEncoder():
     # SSRF (CWE-918) mitigation: only fetch http(s) urls that resolve to public addresses.
     ALLOWED_URL_SCHEMES = ("http", "https")
     URL_REQUEST_TIMEOUT_SECONDS = 30
+    URL_MAX_REDIRECTS = 5
 
     def __init__(self, image_input_folder_str: str = None) -> None:
         """Initialize ImageEncoder."""
@@ -64,8 +73,10 @@ class ImageEncoder():
         The image url originates from untrusted per-row input data. Only http(s)
         urls whose host resolves exclusively to public addresses are permitted.
         Requests targeting loopback, private, link-local (e.g. the cloud instance
-        metadata endpoint at 169.254.169.254), reserved, multicast, or
-        unspecified addresses are rejected before any network call is made.
+        metadata endpoint at 169.254.169.254), reserved, multicast, unspecified,
+        or Azure platform (168.63.129.16) addresses are rejected before any network
+        call is made. Every redirect hop is validated the same way, and connections
+        are pinned to the validated addresses to prevent DNS rebinding.
         """
         parsed = urlparse(url)
 
@@ -76,31 +87,27 @@ class ImageEncoder():
         if not hostname:
             raise UnsafeUrl(url)
 
-        try:
-            address_infos = socket.getaddrinfo(hostname, parsed.port, proto=socket.IPPROTO_TCP)
-        except socket.gaierror as e:
-            raise UnsafeUrl(url) from e
+        _resolve_public_addresses(hostname, parsed.port)
 
-        if not address_infos:
-            raise UnsafeUrl(url)
+    def _get_url(self, url: str) -> requests.Response:
+        """Get a url, validating the destination of every redirect hop."""
+        with requests.Session() as session:
+            adapter = _PublicAddressHTTPAdapter()
+            session.mount("http://", adapter)
+            session.mount("https://", adapter)
+            for _ in range(ImageEncoder.URL_MAX_REDIRECTS + 1):
+                self._validate_url(url)
+                resp = session.get(url, allow_redirects=False, timeout=ImageEncoder.URL_REQUEST_TIMEOUT_SECONDS)
+                if not resp.is_redirect:
+                    return resp
+                url = urljoin(url, session.get_redirect_target(resp))
 
-        for address_info in address_infos:
-            ip = ipaddress.ip_address(address_info[4][0])
-            if (
-                ip.is_private
-                or ip.is_loopback
-                or ip.is_link_local
-                or ip.is_reserved
-                or ip.is_multicast
-                or ip.is_unspecified
-            ):
-                raise UnsafeUrl(url)
+        lu.get_logger().info(f"URL exceeded the maximum of {ImageEncoder.URL_MAX_REDIRECTS} redirects.")
+        raise UnsuccessfulUrlResponse()
 
     def _b64_from_url(self, url: str) -> str:
-        self._validate_url(url)
-
         start = time.time()
-        resp = requests.get(url, timeout=ImageEncoder.URL_REQUEST_TIMEOUT_SECONDS)
+        resp = self._get_url(url)
         if resp.status_code != 200:
             lu.get_logger().info(
                 f"URL '{url}' responded with an unsuccessful response: {resp.status_code}, {resp.reason}.")
@@ -159,3 +166,107 @@ class VestaImageModificationException(RequestModificationException):
     def __init__(self) -> None:
         """Initialize VestaImageModificationException."""
         super().__init__("The ImageEncoder raised an exception")
+
+
+def _is_public_address(address: str) -> bool:
+    """Check whether an ip address is a public destination that images may be fetched from."""
+    ip = ipaddress.ip_address(address.split("%", 1)[0])
+    if ip.version == 6:
+        # Validate the IPv4 address embedded in IPv4-mapped, 6to4 and NAT64 addresses.
+        if ip.ipv4_mapped is not None:
+            ip = ip.ipv4_mapped
+        elif ip.sixtofour is not None:
+            ip = ip.sixtofour
+        elif ip in _NAT64_NETWORK:
+            ip = ipaddress.IPv4Address(int(ip) & 0xFFFFFFFF)
+    if (
+        ip.is_loopback
+        or ip.is_link_local
+        or ip.is_multicast
+        or ip.is_unspecified
+        or any(ip in network for network in _BLOCKED_NETWORKS)
+    ):
+        return False
+    return ip.is_global and not ip.is_reserved and not (ip.version == 6 and ip.is_site_local)
+
+
+def _resolve_public_addresses(hostname: str, port) -> list:
+    """Resolve a host, ensuring that every address it resolves to is public."""
+    try:
+        address_infos = socket.getaddrinfo(hostname, port, proto=socket.IPPROTO_TCP)
+    except socket.gaierror as e:
+        raise UnsafeUrl(hostname) from e
+
+    addresses = []
+    for address_info in address_infos:
+        address = address_info[4][0]
+        if not _is_public_address(address):
+            raise UnsafeUrl(hostname)
+        if address not in addresses:
+            addresses.append(address)
+
+    if not addresses:
+        raise UnsafeUrl(hostname)
+    return addresses
+
+
+def _connect_to_public_address(connection: HTTPConnection, connect):
+    """Open a urllib3 connection pinned to a public address of its host.
+
+    The host is resolved and validated again at connect time, so DNS rebinding
+    cannot redirect the connection to another address after validation.
+    """
+    host = connection._dns_host
+    addresses = _resolve_public_addresses(host.strip("[]"), connection.port)
+    error = None
+    for address in addresses:
+        connection._dns_host = address
+        try:
+            return connect()
+        except (NewConnectionError, ConnectTimeoutError) as e:
+            error = e
+        finally:
+            connection._dns_host = host
+    raise error
+
+
+class _PublicAddressHTTPConnection(HTTPConnection):
+    """urllib3 HTTP connection that only connects to public addresses."""
+
+    def _new_conn(self):
+        return _connect_to_public_address(self, super()._new_conn)
+
+
+class _PublicAddressHTTPSConnection(HTTPSConnection):
+    """urllib3 HTTPS connection that only connects to public addresses."""
+
+    def _new_conn(self):
+        return _connect_to_public_address(self, super()._new_conn)
+
+
+class _PublicAddressHTTPConnectionPool(HTTPConnectionPool):
+    """urllib3 HTTP connection pool that only connects to public addresses."""
+
+    ConnectionCls = _PublicAddressHTTPConnection
+
+
+class _PublicAddressHTTPSConnectionPool(HTTPSConnectionPool):
+    """urllib3 HTTPS connection pool that only connects to public addresses."""
+
+    ConnectionCls = _PublicAddressHTTPSConnection
+
+
+class _PublicAddressHTTPAdapter(HTTPAdapter):
+    """Requests adapter whose direct connections are pinned to public addresses.
+
+    Requests sent through a proxy are not pinned, since the proxy resolves the
+    host; they are still covered by the per-hop validation in _get_url.
+    """
+
+    def init_poolmanager(self, *args, **kwargs):
+        """Initialize the pool manager with connection pools that validate addresses at connect time."""
+        super().init_poolmanager(*args, **kwargs)
+        self.poolmanager.pool_classes_by_scheme = {
+            "http": _PublicAddressHTTPConnectionPool,
+            "https": _PublicAddressHTTPSConnectionPool,
+        }
