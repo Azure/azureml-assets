@@ -35,22 +35,36 @@ def _mock_dns(monkeypatch, resolve):
 
 
 def _mock_http(monkeypatch, routes):
-    """Serve canned (status_code, headers, content) responses by url and return the list of requested urls."""
-    requested_urls = []
+    """Serve canned (status_code, headers, body) responses by url and return the list of sent requests."""
+    sent_requests = []
 
     def send(adapter, request, **kwargs):
-        requested_urls.append(request.url)
-        status_code, headers, content = routes[request.url]
+        sent_requests.append(request)
+        status_code, headers, body = routes[request.url]
         response = requests.Response()
         response.status_code = status_code
         response.headers.update(headers)
-        response.raw = io.BytesIO(content)
+        response.raw = body if hasattr(body, "read") else io.BytesIO(body)
         response.url = request.url
         response.request = request
         return response
 
     monkeypatch.setattr(requests.adapters.HTTPAdapter, "send", send)
-    return requested_urls
+    return sent_requests
+
+
+class _UnreadableBody(io.BytesIO):
+    """Response body that fails the test when it is read."""
+
+    def read(self, *args, **kwargs):
+        """Fail when the body is read."""
+        raise AssertionError("The response body must not be read.")
+
+
+@pytest.fixture(autouse=True)
+def _no_environment_proxies(monkeypatch):
+    """Ignore proxies configured on the machine running the tests."""
+    monkeypatch.setattr(requests.utils, "getproxies", lambda: {})
 
 
 class TestVisionUtilities:
@@ -79,10 +93,10 @@ class TestVisionUtilities:
         image_url = "http://microsoft.com/image.jpg"
         image_bytes = bytes([2, 3])
         _mock_dns(monkeypatch, lambda host: PUBLIC_ADDRESS)
-        requested_urls = _mock_http(monkeypatch, {image_url: (200, {}, image_bytes)})
+        sent_requests = _mock_http(monkeypatch, {image_url: (200, {}, image_bytes)})
 
         assert process_image(image_url) == image_bytes
-        assert requested_urls == [image_url]
+        assert [request.url for request in sent_requests] == [image_url]
 
     def test_process_image_url_unavailable(self, monkeypatch):
         """Test process_image() with an 'incorrect' URL."""
@@ -101,45 +115,70 @@ class TestVisionUtilities:
     def test_process_image_url_rejects_non_public_address(self, monkeypatch, address):
         """Test that process_image() does not fetch URLs whose host resolves to a non-public address."""
         _mock_dns(monkeypatch, lambda host: address)
-        requested_urls = _mock_http(monkeypatch, {})
+        sent_requests = _mock_http(monkeypatch, {})
 
         with pytest.raises(UnsafeImageUrlError):
             process_image("http://images.contoso.com/image.jpg")
-        assert requested_urls == []
+        assert sent_requests == []
 
     def test_process_image_url_rejects_ip_literal(self, monkeypatch):
         """Test that process_image() does not fetch URLs with a non-public IP literal host."""
-        requested_urls = _mock_http(monkeypatch, {})
+        sent_requests = _mock_http(monkeypatch, {})
 
         with pytest.raises(UnsafeImageUrlError):
             process_image("http://169.254.169.254/metadata/instance?api-version=2021-02-01&format=.json")
-        assert requested_urls == []
+        assert sent_requests == []
+
+    def test_process_image_url_rejects_proxy(self, monkeypatch):
+        """Test that process_image() does not download images through a proxy."""
+        monkeypatch.setattr(requests.utils, "getproxies", lambda: {"http": "http://proxy.contoso.com:3128"})
+        _mock_dns(monkeypatch, lambda host: PUBLIC_ADDRESS)
+        sent_requests = _mock_http(monkeypatch, {})
+
+        with pytest.raises(UnsafeImageUrlError):
+            process_image("http://images.contoso.com/image.jpg")
+        assert sent_requests == []
 
     def test_process_image_url_rejects_redirect_to_non_public_address(self, monkeypatch):
         """Test that process_image() validates the destination of every redirect."""
         image_url = "http://images.contoso.com/image.jpg"
         internal_url = "http://internal.contoso.com/secret.png"
         _mock_dns(monkeypatch, lambda host: "10.0.0.5" if host == "internal.contoso.com" else PUBLIC_ADDRESS)
-        requested_urls = _mock_http(monkeypatch, {
+        sent_requests = _mock_http(monkeypatch, {
             image_url: (302, {"Location": internal_url}, b""),
             internal_url: (200, {}, b"internal"),
         })
 
         with pytest.raises(UnsafeImageUrlError):
             process_image(image_url)
-        assert requested_urls == [image_url]
+        assert [request.url for request in sent_requests] == [image_url]
 
     def test_process_image_url_follows_redirect_to_public_address(self, monkeypatch):
-        """Test that process_image() follows relative redirects to allowed destinations."""
+        """Test that process_image() follows relative redirects without reading the redirect response body."""
         image_url = "http://images.contoso.com/image.jpg"
         _mock_dns(monkeypatch, lambda host: PUBLIC_ADDRESS)
-        requested_urls = _mock_http(monkeypatch, {
-            image_url: (301, {"Location": "/v2/image.jpg"}, b""),
+        sent_requests = _mock_http(monkeypatch, {
+            image_url: (301, {"Location": "/v2/image.jpg"}, _UnreadableBody()),
             "http://images.contoso.com/v2/image.jpg": (200, {}, b"image"),
         })
 
         assert process_image(image_url) == b"image"
-        assert requested_urls == [image_url, "http://images.contoso.com/v2/image.jpg"]
+        assert [request.url for request in sent_requests] == [image_url, "http://images.contoso.com/v2/image.jpg"]
+
+    def test_process_image_url_keeps_credentials_only_on_same_origin_redirect(self, monkeypatch):
+        """Test that URL credentials are kept on same-origin redirects and removed when the host changes."""
+        image_url = "http://user:pass@images.contoso.com/image.jpg"
+        same_origin_url = "http://images.contoso.com/v2/image.jpg"
+        other_origin_url = "http://cdn.contoso.com/image.jpg"
+        _mock_dns(monkeypatch, lambda host: PUBLIC_ADDRESS)
+        sent_requests = _mock_http(monkeypatch, {
+            image_url: (302, {"Location": same_origin_url}, b""),
+            same_origin_url: (302, {"Location": other_origin_url}, b""),
+            other_origin_url: (200, {}, b"image"),
+        })
+
+        assert process_image(image_url) == b"image"
+        assert ["Authorization" in request.headers for request in sent_requests] == [True, True, False]
 
     def test_process_image_url_rejects_redirect_loop(self, monkeypatch):
         """Test that process_image() limits the number of redirects."""
@@ -154,7 +193,6 @@ class TestVisionUtilities:
         """Test that connections are pinned to validated addresses when DNS changes after validation."""
         addresses = iter([PUBLIC_ADDRESS])
         _mock_dns(monkeypatch, lambda host: next(addresses, "127.0.0.1"))
-        monkeypatch.setattr(requests.utils, "getproxies", lambda: {})
 
         with pytest.raises(UnsafeImageUrlError):
             process_image("http://rebind.contoso.com/image.jpg")

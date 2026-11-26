@@ -11,7 +11,6 @@ import os
 import re
 import requests
 import socket
-import time
 import uuid
 
 import PIL
@@ -39,7 +38,6 @@ logger = logging.getLogger(__name__)
 IMAGE_URL_ALLOWED_NETWORKS_ENV_VAR = "AZUREML_IMAGE_URL_ALLOWED_NETWORKS"
 _IMAGE_URL_SCHEMES = ("http", "https")
 _IMAGE_URL_TIMEOUT_SECONDS = (10, 30)  # (connect, read)
-_IMAGE_URL_TOTAL_TIMEOUT_SECONDS = 120
 _IMAGE_URL_MAX_REDIRECTS = 5
 _IMAGE_URL_MAX_BYTES = 50 * 1024 * 1024
 # Azure platform endpoints (WireServer / host agent) are globally routable but must never be fetched.
@@ -314,10 +312,10 @@ class _AllowedAddressHTTPSConnectionPool(HTTPSConnectionPool):
 
 
 class _AllowedAddressHTTPAdapter(HTTPAdapter):
-    """Requests adapter whose direct connections are pinned to allowed addresses.
+    """Requests adapter whose connections are pinned to allowed addresses.
 
-    Requests sent through a proxy are not pinned, since the proxy resolves the host; they are still covered by
-    the per-hop validation in _download_image.
+    Urls that would be fetched through a proxy are rejected by _validate_image_url, since a proxy resolves
+    the host itself and the destination could not be pinned.
     """
 
     def init_poolmanager(self, *args, **kwargs):
@@ -329,8 +327,20 @@ class _AllowedAddressHTTPAdapter(HTTPAdapter):
         }
 
 
+class _NoAutoRedirectSession(requests.Session):
+    """Requests session that never processes redirects itself.
+
+    Requests drains the body of a redirect response, even with allow_redirects=False, to prepare
+    Response.next. Redirects are followed by _download_image instead, so redirect bodies are never read.
+    """
+
+    def resolve_redirects(self, *args, **kwargs):
+        """Do not prepare or follow redirects."""
+        return iter(())
+
+
 def _validate_image_url(url: str) -> None:
-    """Validate that an image url uses http(s) and that its host only resolves to allowed addresses.
+    """Validate that an image url uses http(s), is not fetched through a proxy and only resolves to allowed addresses.
 
     :param url: image url
     :type url: str
@@ -338,16 +348,19 @@ def _validate_image_url(url: str) -> None:
     parsed = urlparse(url)
     if parsed.scheme not in _IMAGE_URL_SCHEMES or not parsed.hostname:
         raise UnsafeImageUrlError("Only http and https image urls with a host name are supported.")
+    if requests.utils.select_proxy(url, requests.utils.get_environ_proxies(url)):
+        raise UnsafeImageUrlError(
+            "Image urls cannot be downloaded through a proxy. Send the image as a base64 string, or exclude the "
+            "image host from the proxy with NO_PROXY."
+        )
     _resolve_allowed_addresses(parsed.hostname, parsed.port or (443 if parsed.scheme == "https" else 80))
 
 
-def _read_image_content(response: requests.Response, deadline: float) -> bytes:
-    """Read an image response body, enforcing the maximum image size and the total download time.
+def _read_image_content(response: requests.Response) -> bytes:
+    """Read an image response body, enforcing the maximum image size.
 
     :param response: streamed response
     :type response: requests.Response
-    :param deadline: time.monotonic() value by which the download must complete
-    :type deadline: float
     :return: response body
     :rtype: bytes
     """
@@ -360,35 +373,38 @@ def _read_image_content(response: requests.Response, deadline: float) -> bytes:
         content.extend(chunk)
         if len(content) > _IMAGE_URL_MAX_BYTES:
             raise ValueError(too_large_message)
-        if time.monotonic() > deadline:
-            raise ValueError(f"Image download from url exceeded {_IMAGE_URL_TOTAL_TIMEOUT_SECONDS} seconds.")
     return bytes(content)
 
 
 def _download_image(url: str) -> bytes:
     """Download an image from a url provided in the inference input.
 
-    Every redirect hop is validated before it is requested, and direct connections are pinned to validated
-    addresses.
+    Every redirect hop is validated before it is requested, and connections are pinned to validated addresses.
 
     :param url: image url
     :type url: str
     :return: image bytes
     :rtype: bytes
     """
-    deadline = time.monotonic() + _IMAGE_URL_TOTAL_TIMEOUT_SECONDS
-    with requests.Session() as session:
+    headers = {}
+    with _NoAutoRedirectSession() as session:
         adapter = _AllowedAddressHTTPAdapter()
         session.mount("http://", adapter)
         session.mount("https://", adapter)
         for _ in range(_IMAGE_URL_MAX_REDIRECTS + 1):
             _validate_image_url(url)
-            with session.get(url, allow_redirects=False, stream=True, timeout=_IMAGE_URL_TIMEOUT_SECONDS) as response:
+            with session.get(url, headers=headers, allow_redirects=False, stream=True,
+                             timeout=_IMAGE_URL_TIMEOUT_SECONDS) as response:
                 if response.is_redirect:
-                    url = urljoin(url, session.get_redirect_target(response))
+                    redirect_url = urljoin(url, session.get_redirect_target(response))
+                    # Keep credentials only where requests' own redirect handling would keep them.
+                    authorization = response.request.headers.get("Authorization")
+                    keep_authorization = authorization and not session.should_strip_auth(url, redirect_url)
+                    headers = {"Authorization": authorization} if keep_authorization else {}
+                    url = redirect_url
                     continue
                 response.raise_for_status()  # Raise exception in case of unsuccessful response code.
-                return _read_image_content(response, deadline)
+                return _read_image_content(response)
     raise ValueError(f"Image url exceeded the maximum of {_IMAGE_URL_MAX_REDIRECTS} redirects.")
 
 

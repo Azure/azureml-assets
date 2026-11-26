@@ -29,11 +29,11 @@ from tests.fixtures.vesta_image_modifier import (
 
 
 def _mock_http(monkeypatch, routes):
-    """Serve canned (status_code, headers, content) responses by url and return the list of requested urls."""
-    requested_urls = []
+    """Serve canned (status_code, headers, content) responses by url and return the list of sent requests."""
+    sent_requests = []
 
     def send(adapter, request, **kwargs):
-        requested_urls.append(request.url)
+        sent_requests.append(request)
         status_code, headers, content = routes[request.url]
         response = requests.Response()
         response.status_code = status_code
@@ -44,7 +44,13 @@ def _mock_http(monkeypatch, routes):
         return response
 
     monkeypatch.setattr(requests.adapters.HTTPAdapter, "send", send)
-    return requested_urls
+    return sent_requests
+
+
+@pytest.fixture(autouse=True)
+def _no_environment_proxies(monkeypatch):
+    """Ignore proxies configured on the machine running the tests."""
+    monkeypatch.setattr(requests.utils, "getproxies", lambda: {})
 
 
 def test_vesta_payload_type():
@@ -190,7 +196,7 @@ def test__b64_from_url_rejects_disallowed_scheme(make_image_encoder):
 def test__b64_from_url_rejects_non_public_address(monkeypatch, make_image_encoder):
     """Test that urls resolving to non-public addresses are rejected to mitigate SSRF (CWE-918)."""
     image_encoder: ImageEncoder = make_image_encoder()
-    requested_urls = _mock_http(monkeypatch, {})
+    sent_requests = _mock_http(monkeypatch, {})
 
     blocked_ips = [
         "169.254.169.254",  # cloud instance metadata endpoint (link-local)
@@ -208,7 +214,21 @@ def test__b64_from_url_rejects_non_public_address(monkeypatch, make_image_encode
             lambda host, port, _ip=ip, **kwargs: [(2, 1, 6, "", (_ip, port or 443))])
         with pytest.raises(UnsafeUrl):
             image_encoder._b64_from_url("https://malicious.example/image.png")
-    assert requested_urls == []
+    assert sent_requests == []
+
+
+def test__b64_from_url_rejects_proxy(monkeypatch, make_image_encoder):
+    """Test that urls are not fetched through a proxy, where the destination cannot be pinned."""
+    image_encoder: ImageEncoder = make_image_encoder()
+    monkeypatch.setattr(requests.utils, "getproxies", lambda: {"https": "http://proxy.example:3128"})
+    monkeypatch.setattr(
+        "socket.getaddrinfo",
+        lambda host, port, **kwargs: [(2, 1, 6, "", ("93.184.216.34", port or 443))])
+    sent_requests = _mock_http(monkeypatch, {})
+
+    with pytest.raises(UnsafeUrl):
+        image_encoder._b64_from_url("https://public.example/image.png")
+    assert sent_requests == []
 
 
 def test__b64_from_url_rejects_redirect_to_non_public_address(monkeypatch, make_image_encoder):
@@ -220,14 +240,33 @@ def test__b64_from_url_rejects_redirect_to_non_public_address(monkeypatch, make_
         "socket.getaddrinfo",
         lambda host, port, **kwargs: [
             (2, 1, 6, "", ("10.0.0.5" if host == "internal.example" else "93.184.216.34", port or 443))])
-    requested_urls = _mock_http(monkeypatch, {
+    sent_requests = _mock_http(monkeypatch, {
         image_url: (302, {"Location": internal_url}, b""),
         internal_url: (200, {}, b"internal"),
     })
 
     with pytest.raises(UnsafeUrl):
         image_encoder._b64_from_url(image_url)
-    assert requested_urls == [image_url]
+    assert [request.url for request in sent_requests] == [image_url]
+
+
+def test__b64_from_url_keeps_credentials_only_on_same_origin_redirect(monkeypatch, make_image_encoder):
+    """Test that url credentials are kept on same-origin redirects and removed when the host changes."""
+    image_encoder: ImageEncoder = make_image_encoder()
+    image_url = "https://user:pass@public.example/image.png"
+    same_origin_url = "https://public.example/v2/image.png"
+    other_origin_url = "https://cdn.example/image.png"
+    monkeypatch.setattr(
+        "socket.getaddrinfo",
+        lambda host, port, **kwargs: [(2, 1, 6, "", ("93.184.216.34", port or 443))])
+    sent_requests = _mock_http(monkeypatch, {
+        image_url: (302, {"Location": same_origin_url}, b""),
+        same_origin_url: (302, {"Location": other_origin_url}, b""),
+        other_origin_url: (200, {}, b"image"),
+    })
+
+    assert image_encoder._b64_from_url(image_url)
+    assert ["Authorization" in request.headers for request in sent_requests] == [True, True, False]
 
 
 def test__b64_from_url_rejects_dns_rebinding(monkeypatch, make_image_encoder):
@@ -237,7 +276,6 @@ def test__b64_from_url_rejects_dns_rebinding(monkeypatch, make_image_encoder):
     monkeypatch.setattr(
         "socket.getaddrinfo",
         lambda host, port, **kwargs: [(2, 1, 6, "", (next(addresses, "127.0.0.1"), port or 443))])
-    monkeypatch.setattr(requests.utils, "getproxies", lambda: {})
 
     with pytest.raises(UnsafeUrl):
         image_encoder._b64_from_url("https://rebind.example/image.png")

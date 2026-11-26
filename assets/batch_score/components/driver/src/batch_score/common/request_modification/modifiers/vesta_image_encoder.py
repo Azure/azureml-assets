@@ -76,7 +76,9 @@ class ImageEncoder():
         metadata endpoint at 169.254.169.254), reserved, multicast, unspecified,
         or Azure platform (168.63.129.16) addresses are rejected before any network
         call is made. Every redirect hop is validated the same way, and connections
-        are pinned to the validated addresses to prevent DNS rebinding.
+        are pinned to the validated addresses to prevent DNS rebinding. Urls that
+        would be fetched through a proxy are rejected, since the proxy resolves the
+        host itself and the destination could not be pinned.
         """
         parsed = urlparse(url)
 
@@ -87,20 +89,30 @@ class ImageEncoder():
         if not hostname:
             raise UnsafeUrl(url)
 
+        if requests.utils.select_proxy(url, requests.utils.get_environ_proxies(url)):
+            raise UnsafeUrl(url)
+
         _resolve_public_addresses(hostname, parsed.port)
 
     def _get_url(self, url: str) -> requests.Response:
         """Get a url, validating the destination of every redirect hop."""
+        headers = {}
         with requests.Session() as session:
             adapter = _PublicAddressHTTPAdapter()
             session.mount("http://", adapter)
             session.mount("https://", adapter)
             for _ in range(ImageEncoder.URL_MAX_REDIRECTS + 1):
                 self._validate_url(url)
-                resp = session.get(url, allow_redirects=False, timeout=ImageEncoder.URL_REQUEST_TIMEOUT_SECONDS)
+                resp = session.get(
+                    url, headers=headers, allow_redirects=False, timeout=ImageEncoder.URL_REQUEST_TIMEOUT_SECONDS)
                 if not resp.is_redirect:
                     return resp
-                url = urljoin(url, session.get_redirect_target(resp))
+                redirect_url = urljoin(url, session.get_redirect_target(resp))
+                # Keep credentials only where requests' own redirect handling would keep them.
+                authorization = resp.request.headers.get("Authorization")
+                keep_authorization = authorization and not session.should_strip_auth(url, redirect_url)
+                headers = {"Authorization": authorization} if keep_authorization else {}
+                url = redirect_url
 
         lu.get_logger().info(f"URL exceeded the maximum of {ImageEncoder.URL_MAX_REDIRECTS} redirects.")
         raise UnsuccessfulUrlResponse()
@@ -257,10 +269,10 @@ class _PublicAddressHTTPSConnectionPool(HTTPSConnectionPool):
 
 
 class _PublicAddressHTTPAdapter(HTTPAdapter):
-    """Requests adapter whose direct connections are pinned to public addresses.
+    """Requests adapter whose connections are pinned to public addresses.
 
-    Requests sent through a proxy are not pinned, since the proxy resolves the
-    host; they are still covered by the per-hop validation in _get_url.
+    Urls that would be fetched through a proxy are rejected by
+    ImageEncoder._validate_url, so every request uses a pinned connection.
     """
 
     def init_poolmanager(self, *args, **kwargs):
