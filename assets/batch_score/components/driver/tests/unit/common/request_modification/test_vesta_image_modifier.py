@@ -205,8 +205,10 @@ def test__b64_from_url_rejects_non_public_address(monkeypatch, make_image_encode
         "10.0.0.5",         # private
         "192.168.1.1",      # private
         "100.64.0.1",       # shared address space
+        "192.0.0.8",        # IETF protocol assignment (global on unpatched Python releases)
         "0.0.0.0",          # unspecified
         "::ffff:127.0.0.1",  # IPv4-mapped loopback
+        "3fff::1",          # IPv6 documentation
     ]
     for ip in blocked_ips:
         monkeypatch.setattr(
@@ -267,6 +269,41 @@ def test__b64_from_url_keeps_credentials_only_on_same_origin_redirect(monkeypatc
 
     assert image_encoder._b64_from_url(image_url)
     assert ["Authorization" in request.headers for request in sent_requests] == [True, True, False]
+
+
+def test__b64_from_url_removes_credentials_on_backslash_redirect(monkeypatch, make_image_encoder):
+    """Test that url credentials are removed when a redirect only appears to stay on the same host."""
+    image_encoder: ImageEncoder = make_image_encoder()
+    image_url = "https://user:pass@public.example/image.png"
+    location = "https://attacker.example\\@public.example/image.png"
+    attacker_url = requests.Request("GET", location).prepare().url
+    monkeypatch.setattr(
+        "socket.getaddrinfo",
+        lambda host, port, **kwargs: [(2, 1, 6, "", ("93.184.216.34", port or 443))])
+    sent_requests = _mock_http(monkeypatch, {
+        image_url: (302, {"Location": location}, b""),
+        attacker_url: (200, {}, b"image"),
+    })
+
+    assert image_encoder._b64_from_url(image_url)
+    assert [request.url for request in sent_requests] == [image_url, attacker_url]
+    assert "Authorization" not in sent_requests[1].headers
+
+
+def test__b64_from_url_rejects_proxy_for_the_host_requests_connects_to(monkeypatch, make_image_encoder):
+    """Test that the proxy check uses the host requests connects to, not the one urlparse reports."""
+    image_encoder: ImageEncoder = make_image_encoder()
+    monkeypatch.delenv("no_proxy", raising=False)
+    monkeypatch.setenv("NO_PROXY", "public.example")
+    monkeypatch.setattr(requests.utils, "getproxies", lambda: {"https": "http://proxy.example:3128"})
+    monkeypatch.setattr(
+        "socket.getaddrinfo",
+        lambda host, port, **kwargs: [(2, 1, 6, "", ("93.184.216.34", port or 443))])
+    sent_requests = _mock_http(monkeypatch, {})
+
+    with pytest.raises(UnsafeUrl):
+        image_encoder._b64_from_url("https://attacker.example\\@public.example/image.png")
+    assert sent_requests == []
 
 
 def test__b64_from_url_rejects_dns_rebinding(monkeypatch, make_image_encoder):

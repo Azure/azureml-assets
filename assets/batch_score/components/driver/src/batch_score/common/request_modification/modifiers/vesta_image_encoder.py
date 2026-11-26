@@ -22,6 +22,9 @@ from .request_modifier import RequestModificationException
 
 # Azure platform endpoints (WireServer / host agent) are globally routable but must never be fetched.
 _BLOCKED_NETWORKS = (ipaddress.ip_network("168.63.129.16/32"),)
+# Special-purpose ranges that are not globally reachable but that ipaddress reports as global on some Python
+# patch releases (192.0.0.0/24 before 3.8.20, 3.10.15 and 3.12.4; 3fff::/20 on current releases).
+_NON_PUBLIC_NETWORKS = (ipaddress.ip_network("192.0.0.0/24"), ipaddress.ip_network("3fff::/20"))
 _NAT64_NETWORK = ipaddress.ip_network("64:ff9b::/96")
 
 
@@ -102,15 +105,17 @@ class ImageEncoder():
             session.mount("http://", adapter)
             session.mount("https://", adapter)
             for _ in range(ImageEncoder.URL_MAX_REDIRECTS + 1):
-                self._validate_url(url)
+                prepared_url = _prepare_url(url)
+                self._validate_url(prepared_url)
                 resp = session.get(
                     url, headers=headers, allow_redirects=False, timeout=ImageEncoder.URL_REQUEST_TIMEOUT_SECONDS)
                 if not resp.is_redirect:
                     return resp
-                redirect_url = urljoin(url, session.get_redirect_target(resp))
+                redirect_url = urljoin(prepared_url, session.get_redirect_target(resp))
                 # Keep credentials only where requests' own redirect handling would keep them.
                 authorization = resp.request.headers.get("Authorization")
-                keep_authorization = authorization and not session.should_strip_auth(url, redirect_url)
+                keep_authorization = authorization and not session.should_strip_auth(
+                    prepared_url, _prepare_url(redirect_url))
                 headers = {"Authorization": authorization} if keep_authorization else {}
                 url = redirect_url
 
@@ -199,7 +204,27 @@ def _is_public_address(address: str) -> bool:
         or any(ip in network for network in _BLOCKED_NETWORKS)
     ):
         return False
-    return ip.is_global and not ip.is_reserved and not (ip.version == 6 and ip.is_site_local)
+    return (
+        ip.is_global
+        and not ip.is_reserved
+        and not (ip.version == 6 and ip.is_site_local)
+        and not any(ip in network for network in _NON_PUBLIC_NETWORKS)
+    )
+
+
+def _prepare_url(url: str) -> str:
+    """Return a url as requests sends it.
+
+    requests and urlparse can disagree on the host of an unusual url (for example,
+    one with a backslash in the authority), so destination, proxy and origin checks
+    use the prepared url.
+    """
+    request = requests.PreparedRequest()
+    try:
+        request.prepare_url(url, None)
+    except requests.exceptions.RequestException as e:
+        raise UnsafeUrl(url) from e
+    return request.url
 
 
 def _resolve_public_addresses(hostname: str, port) -> list:

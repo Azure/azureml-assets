@@ -110,7 +110,7 @@ class TestVisionUtilities:
 
     @pytest.mark.parametrize("address", [
         "127.0.0.1", "10.0.0.5", "172.16.0.1", "192.168.1.1", "100.64.0.1", "0.0.0.0", "169.254.169.254",
-        "168.63.129.16", "::1", "fd00::1", "fe80::1", "::ffff:10.0.0.5", "64:ff9b::a9fe:a9fe",
+        "168.63.129.16", "192.0.0.8", "::1", "fd00::1", "fe80::1", "::ffff:10.0.0.5", "64:ff9b::a9fe:a9fe", "3fff::1",
     ])
     def test_process_image_url_rejects_non_public_address(self, monkeypatch, address):
         """Test that process_image() does not fetch URLs whose host resolves to a non-public address."""
@@ -137,6 +137,18 @@ class TestVisionUtilities:
 
         with pytest.raises(UnsafeImageUrlError):
             process_image("http://images.contoso.com/image.jpg")
+        assert sent_requests == []
+
+    def test_process_image_url_rejects_proxy_for_the_host_requests_connects_to(self, monkeypatch):
+        """Test that the proxy check uses the host requests connects to, not the one urlparse reports."""
+        monkeypatch.delenv("no_proxy", raising=False)
+        monkeypatch.setenv("NO_PROXY", "images.contoso.com")
+        monkeypatch.setattr(requests.utils, "getproxies", lambda: {"http": "http://proxy.contoso.com:3128"})
+        _mock_dns(monkeypatch, lambda host: PUBLIC_ADDRESS)
+        sent_requests = _mock_http(monkeypatch, {})
+
+        with pytest.raises(UnsafeImageUrlError):
+            process_image("http://attacker.contoso.com\\@images.contoso.com/image.jpg")
         assert sent_requests == []
 
     def test_process_image_url_rejects_redirect_to_non_public_address(self, monkeypatch):
@@ -179,6 +191,21 @@ class TestVisionUtilities:
 
         assert process_image(image_url) == b"image"
         assert ["Authorization" in request.headers for request in sent_requests] == [True, True, False]
+
+    def test_process_image_url_removes_credentials_on_backslash_redirect(self, monkeypatch):
+        """Test that credentials are removed when a redirect only appears to stay on the same host."""
+        image_url = "http://user:pass@images.contoso.com/image.jpg"
+        location = "http://attacker.contoso.com\\@images.contoso.com/image.jpg"
+        attacker_url = requests.Request("GET", location).prepare().url
+        _mock_dns(monkeypatch, lambda host: PUBLIC_ADDRESS)
+        sent_requests = _mock_http(monkeypatch, {
+            image_url: (302, {"Location": location}, b""),
+            attacker_url: (200, {}, b"image"),
+        })
+
+        assert process_image(image_url) == b"image"
+        assert [request.url for request in sent_requests] == [image_url, attacker_url]
+        assert "Authorization" not in sent_requests[1].headers
 
     def test_process_image_url_rejects_redirect_loop(self, monkeypatch):
         """Test that process_image() limits the number of redirects."""
