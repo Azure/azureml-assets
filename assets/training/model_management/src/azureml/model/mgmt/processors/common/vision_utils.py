@@ -40,8 +40,13 @@ _IMAGE_URL_SCHEMES = ("http", "https")
 _IMAGE_URL_TIMEOUT_SECONDS = (10, 30)  # (connect, read)
 _IMAGE_URL_MAX_REDIRECTS = 5
 _IMAGE_URL_MAX_BYTES = 50 * 1024 * 1024
-# Azure platform endpoints (WireServer / host agent) are globally routable but must never be fetched.
-_ALWAYS_BLOCKED_NETWORKS = (ipaddress.ip_network("168.63.129.16/32"),)
+# Never fetched, even when allowlisted: Azure platform endpoints (WireServer / host agent), and the local-use NAT64
+# and Teredo prefixes, whose embedded IPv4 destination cannot be validated.
+_ALWAYS_BLOCKED_NETWORKS = (
+    ipaddress.ip_network("168.63.129.16/32"),
+    ipaddress.ip_network("64:ff9b:1::/48"),
+    ipaddress.ip_network("2001::/32"),
+)
 # Special-purpose ranges that are not globally reachable but that ipaddress reports as global on some Python
 # patch releases (192.0.0.0/24 before 3.8.20, 3.10.15 and 3.12.4; 3fff::/20 on current releases).
 _NON_PUBLIC_NETWORKS = (ipaddress.ip_network("192.0.0.0/24"), ipaddress.ip_network("3fff::/20"))
@@ -214,24 +219,26 @@ def _is_allowed_address(address: str, allowed_networks: list) -> bool:
     :rtype: bool
     """
     ip = ipaddress.ip_address(address.split("%", 1)[0])
+    if ip.version == 6 and ip.ipv4_mapped is not None:
+        ip = ip.ipv4_mapped
+    # 6to4 and NAT64 addresses reach the IPv4 address they embed, so that address decides whether they are public.
+    destination = ip
     if ip.version == 6:
-        # Validate the IPv4 address embedded in IPv4-mapped, 6to4 and NAT64 addresses.
-        if ip.ipv4_mapped is not None:
-            ip = ip.ipv4_mapped
-        elif ip.sixtofour is not None:
-            ip = ip.sixtofour
+        if ip.sixtofour is not None:
+            destination = ip.sixtofour
         elif ip in _NAT64_NETWORK:
-            ip = ipaddress.IPv4Address(int(ip) & 0xFFFFFFFF)
-    if (ip.is_loopback or ip.is_link_local or ip.is_multicast or ip.is_unspecified
-            or any(ip in network for network in _ALWAYS_BLOCKED_NETWORKS)):
-        return False
+            destination = ipaddress.IPv4Address(int(ip) & 0xFFFFFFFF)
+    for candidate in (ip, destination):
+        if (candidate.is_loopback or candidate.is_link_local or candidate.is_multicast or candidate.is_unspecified
+                or any(candidate in network for network in _ALWAYS_BLOCKED_NETWORKS)):
+            return False
     if any(ip in network for network in allowed_networks):
         return True
     return (
-        ip.is_global
-        and not ip.is_reserved
-        and not (ip.version == 6 and ip.is_site_local)
-        and not any(ip in network for network in _NON_PUBLIC_NETWORKS)
+        destination.is_global
+        and not destination.is_reserved
+        and not (destination.version == 6 and destination.is_site_local)
+        and not any(destination in network for network in _NON_PUBLIC_NETWORKS)
     )
 
 
@@ -347,6 +354,23 @@ class _NoAutoRedirectSession(requests.Session):
         return iter(())
 
 
+class _PreparedUrlAuth(requests.auth.AuthBase):
+    """Apply .netrc or url credentials for the host that requests connects to.
+
+    requests looks up .netrc credentials for the url before preparing it, which can name a different host than the
+    one it connects to. Passing this explicit auth disables that lookup.
+    """
+
+    def __call__(self, request: requests.PreparedRequest) -> requests.PreparedRequest:
+        """Add Basic credentials for the host of the prepared url, if there are any."""
+        parsed = urlparse(request.url)
+        netrc_auth = requests.utils.get_netrc_auth(parsed._replace(netloc=parsed.netloc.rpartition("@")[2]).geturl())
+        credentials = netrc_auth or requests.utils.get_auth_from_url(request.url)
+        if any(credentials):
+            return requests.auth.HTTPBasicAuth(*credentials)(request)
+        return request
+
+
 def _validate_image_url(url: str) -> None:
     """Validate that an image url uses http(s), is not fetched through a proxy and only resolves to allowed addresses.
 
@@ -418,7 +442,7 @@ def _download_image(url: str) -> bytes:
         for _ in range(_IMAGE_URL_MAX_REDIRECTS + 1):
             prepared_url = _prepare_url(url)
             _validate_image_url(prepared_url)
-            with session.get(url, headers=headers, allow_redirects=False, stream=True,
+            with session.get(url, headers=headers, auth=_PreparedUrlAuth(), allow_redirects=False, stream=True,
                              timeout=_IMAGE_URL_TIMEOUT_SECONDS) as response:
                 if response.is_redirect:
                     redirect_url = urljoin(prepared_url, session.get_redirect_target(response))

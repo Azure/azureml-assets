@@ -108,7 +108,8 @@ class ImageEncoder():
                 prepared_url = _prepare_url(url)
                 self._validate_url(prepared_url)
                 resp = session.get(
-                    url, headers=headers, allow_redirects=False, timeout=ImageEncoder.URL_REQUEST_TIMEOUT_SECONDS)
+                    url, headers=headers, auth=_PreparedUrlAuth(), allow_redirects=False,
+                    timeout=ImageEncoder.URL_REQUEST_TIMEOUT_SECONDS)
                 if not resp.is_redirect:
                     return resp
                 redirect_url = urljoin(prepared_url, session.get_redirect_target(resp))
@@ -225,6 +226,24 @@ def _prepare_url(url: str) -> str:
     except requests.exceptions.RequestException as e:
         raise UnsafeUrl(url) from e
     return request.url
+
+
+class _PreparedUrlAuth(requests.auth.AuthBase):
+    """Apply .netrc or url credentials for the host that requests connects to.
+
+    requests looks up .netrc credentials for the url before preparing it, which
+    can name a different host than the one it connects to. Passing this explicit
+    auth disables that lookup.
+    """
+
+    def __call__(self, request: requests.PreparedRequest) -> requests.PreparedRequest:
+        """Add Basic credentials for the host of the prepared url, if there are any."""
+        parsed = urlparse(request.url)
+        netrc_auth = requests.utils.get_netrc_auth(parsed._replace(netloc=parsed.netloc.rpartition("@")[2]).geturl())
+        credentials = netrc_auth or requests.utils.get_auth_from_url(request.url)
+        if any(credentials):
+            return requests.auth.HTTPBasicAuth(*credentials)(request)
+        return request
 
 
 def _resolve_public_addresses(hostname: str, port) -> list:

@@ -10,10 +10,12 @@ import pytest
 import requests
 import socket
 import tempfile
+import urllib3
 
 import pandas as pd
 
 from PIL import Image, ImageChops
+from urllib.parse import urlparse
 
 from azureml.model.mgmt.processors.common import vision_utils
 from azureml.model.mgmt.processors.common.vision_utils import (
@@ -25,13 +27,26 @@ PUBLIC_ADDRESS = "20.70.246.20"
 
 
 def _mock_dns(monkeypatch, resolve):
-    """Make socket.getaddrinfo resolve every host name to the address returned by resolve(host)."""
+    """Make socket.getaddrinfo resolve every host name to the address or addresses returned by resolve(host)."""
     def getaddrinfo(host, port, *args, **kwargs):
-        address = resolve(host)
-        family = socket.AF_INET6 if ":" in address else socket.AF_INET
-        return [(family, socket.SOCK_STREAM, socket.IPPROTO_TCP, "", (address, port))]
+        addresses = resolve(host)
+        if isinstance(addresses, str):
+            addresses = [addresses]
+        return [
+            (socket.AF_INET6 if ":" in address else socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP, "",
+             (address, port))
+            for address in addresses
+        ]
 
     monkeypatch.setattr(socket, "getaddrinfo", getaddrinfo)
+
+
+def _use_netrc(monkeypatch, tmp_path):
+    """Use a .netrc file with credentials for images.contoso.com and return their Authorization header."""
+    netrc_path = tmp_path / "netrc"
+    netrc_path.write_text("machine images.contoso.com login user password secret\n")
+    monkeypatch.setenv("NETRC", str(netrc_path))
+    return "Basic " + base64.b64encode(b"user:secret").decode()
 
 
 def _mock_http(monkeypatch, routes):
@@ -224,6 +239,71 @@ class TestVisionUtilities:
         with pytest.raises(UnsafeImageUrlError):
             process_image("http://rebind.contoso.com/image.jpg")
 
+    @pytest.mark.parametrize("addresses", [[PUBLIC_ADDRESS, "10.0.0.5"], ["10.0.0.5", PUBLIC_ADDRESS]])
+    def test_process_image_url_rejects_host_with_any_non_public_address(self, monkeypatch, addresses):
+        """Test that process_image() rejects a host that resolves to both public and non-public addresses."""
+        _mock_dns(monkeypatch, lambda host: addresses)
+        sent_requests = _mock_http(monkeypatch, {})
+
+        with pytest.raises(UnsafeImageUrlError):
+            process_image("http://images.contoso.com/image.jpg")
+        assert sent_requests == []
+
+    @pytest.mark.parametrize("connection_class, port", [
+        (vision_utils._AllowedAddressHTTPConnection, 80),
+        (vision_utils._AllowedAddressHTTPSConnection, 443),
+    ])
+    def test_connection_is_pinned_to_validated_addresses(self, monkeypatch, connection_class, port):
+        """Test that connections only go to validated addresses, fall back between them and keep the host name."""
+        answers = iter([[PUBLIC_ADDRESS, "20.70.246.21"]])
+        _mock_dns(monkeypatch, lambda host: next(answers, "127.0.0.1"))
+        destinations = []
+
+        def create_connection(address, *args, **kwargs):
+            destinations.append(address)
+            if address[0] == PUBLIC_ADDRESS:
+                raise OSError("unreachable")
+            return "socket"
+
+        monkeypatch.setattr(urllib3.util.connection, "create_connection", create_connection)
+        connection = connection_class("images.contoso.com", port)
+
+        assert connection._new_conn() == "socket"
+        assert destinations == [(PUBLIC_ADDRESS, port), ("20.70.246.21", port)]
+        assert connection.host == "images.contoso.com"
+
+    @pytest.mark.parametrize("image_url, location", [
+        ("http://attacker.contoso.com\\@images.contoso.com/image.jpg", None),
+        ("http://images.contoso.com:ignored@attacker.contoso.com/image.jpg", None),
+        ("http://images.contoso.com/image.jpg", "http://attacker.contoso.com\\@images.contoso.com/image.jpg"),
+        ("http://images.contoso.com/image.jpg", "http://images.contoso.com:ignored@attacker.contoso.com/image.jpg"),
+    ])
+    def test_process_image_url_sends_netrc_credentials_only_to_their_host(
+            self, monkeypatch, tmp_path, image_url, location):
+        """Test that .netrc credentials are not sent to a host that a url only appears to name."""
+        netrc_authorization = _use_netrc(monkeypatch, tmp_path)
+        _mock_dns(monkeypatch, lambda host: PUBLIC_ADDRESS)
+        first_url = requests.Request("GET", image_url).prepare().url
+        routes = {first_url: (302, {"Location": location}, b"") if location else (200, {}, b"image")}
+        if location:
+            routes[requests.Request("GET", location).prepare().url] = (200, {}, b"image")
+        sent_requests = _mock_http(monkeypatch, routes)
+
+        assert process_image(image_url) == b"image"
+        attacker_requests = [r for r in sent_requests if urlparse(r.url).hostname == "attacker.contoso.com"]
+        assert len(attacker_requests) == 1
+        assert attacker_requests[0].headers.get("Authorization") != netrc_authorization
+
+    def test_process_image_url_sends_netrc_credentials_to_their_host(self, monkeypatch, tmp_path):
+        """Test that .netrc credentials are still sent to the host they belong to."""
+        netrc_authorization = _use_netrc(monkeypatch, tmp_path)
+        image_url = "http://images.contoso.com/image.jpg"
+        _mock_dns(monkeypatch, lambda host: PUBLIC_ADDRESS)
+        sent_requests = _mock_http(monkeypatch, {image_url: (200, {}, b"image")})
+
+        assert process_image(image_url) == b"image"
+        assert sent_requests[0].headers.get("Authorization") == netrc_authorization
+
     def test_process_image_url_allowed_networks(self, monkeypatch):
         """Test that deployments can allow private networks, but never link-local addresses."""
         monkeypatch.setenv(IMAGE_URL_ALLOWED_NETWORKS_ENV_VAR, "10.1.0.0/16, 169.254.0.0/16")
@@ -234,6 +314,37 @@ class TestVisionUtilities:
         assert process_image(image_url) == b"image"
         with pytest.raises(UnsafeImageUrlError):
             process_image("http://metadata.contoso.com/image.jpg")
+
+    @pytest.mark.parametrize("allowed_network, address", [
+        ("64:ff9b:1::/48", "64:ff9b:1::a9fe:a9fe"),
+        ("2001::/32", "2001:0:4136:e378:8000:63bf:3fff:fdd2"),
+        ("64:ff9b::/96", "64:ff9b::a9fe:a9fe"),
+        ("2002::/16", "2002:a9fe:a9fe::1"),
+    ])
+    def test_process_image_url_allowed_networks_cannot_admit_blocked_destinations(
+            self, monkeypatch, allowed_network, address):
+        """Test that allowing IPv6 translation ranges cannot admit an always-blocked IPv4 destination."""
+        monkeypatch.setenv(IMAGE_URL_ALLOWED_NETWORKS_ENV_VAR, allowed_network)
+        _mock_dns(monkeypatch, lambda host: address)
+        sent_requests = _mock_http(monkeypatch, {})
+
+        with pytest.raises(UnsafeImageUrlError):
+            process_image("http://images.contoso.com/image.jpg")
+        assert sent_requests == []
+
+    def test_process_image_url_allowed_networks_match_the_resolved_address(self, monkeypatch):
+        """Test that allowed networks are matched against the resolved address, not an embedded IPv4 address."""
+        image_url = "http://images.contoso.com/image.jpg"
+        _mock_http(monkeypatch, {image_url: (200, {}, b"image")})
+
+        monkeypatch.setenv(IMAGE_URL_ALLOWED_NETWORKS_ENV_VAR, "10.1.0.0/16")
+        _mock_dns(monkeypatch, lambda host: "2002:a01:203::1")
+        with pytest.raises(UnsafeImageUrlError):
+            process_image(image_url)
+
+        monkeypatch.setenv(IMAGE_URL_ALLOWED_NETWORKS_ENV_VAR, "64:ff9b::/96")
+        _mock_dns(monkeypatch, lambda host: "64:ff9b::a01:203")
+        assert process_image(image_url) == b"image"
 
     def test_process_image_url_rejects_oversized_image(self, monkeypatch):
         """Test that process_image() limits the size of downloaded images."""

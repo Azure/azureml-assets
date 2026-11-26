@@ -3,6 +3,7 @@
 
 """This file contains unit tests for vesta image modifier."""
 
+import base64
 import io
 import os
 from pathlib import Path
@@ -10,6 +11,7 @@ from urllib.parse import urlparse
 
 import pytest
 import requests
+import urllib3
 from mock import MagicMock
 
 from src.batch_score.common.request_modification.modifiers.vesta_image_encoder import (
@@ -18,6 +20,8 @@ from src.batch_score.common.request_modification.modifiers.vesta_image_encoder i
     UnsafeUrl,
     UnsuccessfulUrlResponse,
     VestaImageModificationException,
+    _PublicAddressHTTPConnection,
+    _PublicAddressHTTPSConnection,
 )
 from src.batch_score.common.request_modification.modifiers.vesta_image_modifier import (
     VestaImageModifier,
@@ -316,6 +320,77 @@ def test__b64_from_url_rejects_dns_rebinding(monkeypatch, make_image_encoder):
 
     with pytest.raises(UnsafeUrl):
         image_encoder._b64_from_url("https://rebind.example/image.png")
+
+
+@pytest.mark.parametrize("addresses", [["93.184.216.34", "10.0.0.5"], ["10.0.0.5", "93.184.216.34"]])
+def test__b64_from_url_rejects_host_with_any_non_public_address(monkeypatch, make_image_encoder, addresses):
+    """Test that a host resolving to both public and non-public addresses is rejected."""
+    image_encoder: ImageEncoder = make_image_encoder()
+    monkeypatch.setattr(
+        "socket.getaddrinfo",
+        lambda host, port, **kwargs: [(2, 1, 6, "", (address, port or 443)) for address in addresses])
+    sent_requests = _mock_http(monkeypatch, {})
+
+    with pytest.raises(UnsafeUrl):
+        image_encoder._b64_from_url("https://public.example/image.png")
+    assert sent_requests == []
+
+
+@pytest.mark.parametrize("connection_class, port", [
+    (_PublicAddressHTTPConnection, 80),
+    (_PublicAddressHTTPSConnection, 443),
+])
+def test_connection_is_pinned_to_validated_addresses(monkeypatch, connection_class, port):
+    """Test that connections only go to validated addresses, fall back between them and keep the host name."""
+    answers = iter([["93.184.216.34", "93.184.216.35"]])
+    monkeypatch.setattr(
+        "socket.getaddrinfo",
+        lambda host, port, **kwargs: [(2, 1, 6, "", (address, port)) for address in next(answers, ["127.0.0.1"])])
+    destinations = []
+
+    def create_connection(address, *args, **kwargs):
+        destinations.append(address)
+        if address[0] == "93.184.216.34":
+            raise OSError("unreachable")
+        return "socket"
+
+    monkeypatch.setattr(urllib3.util.connection, "create_connection", create_connection)
+    connection = connection_class("public.example", port)
+
+    assert connection._new_conn() == "socket"
+    assert destinations == [("93.184.216.34", port), ("93.184.216.35", port)]
+    assert connection.host == "public.example"
+
+
+@pytest.mark.parametrize("image_url, location", [
+    ("https://attacker.example\\@public.example/image.png", None),
+    ("https://public.example:ignored@attacker.example/image.png", None),
+    ("https://public.example/image.png", "https://attacker.example\\@public.example/image.png"),
+    ("https://public.example/image.png", "https://public.example:ignored@attacker.example/image.png"),
+])
+def test__b64_from_url_sends_netrc_credentials_only_to_their_host(
+        monkeypatch, tmp_path, make_image_encoder, image_url, location):
+    """Test that .netrc credentials are not sent to a host that a url only appears to name."""
+    image_encoder: ImageEncoder = make_image_encoder()
+    netrc_path = tmp_path / "netrc"
+    netrc_path.write_text("machine public.example login user password secret\n")
+    monkeypatch.setenv("NETRC", str(netrc_path))
+    netrc_authorization = "Basic " + base64.b64encode(b"user:secret").decode()
+    monkeypatch.setattr(
+        "socket.getaddrinfo",
+        lambda host, port, **kwargs: [(2, 1, 6, "", ("93.184.216.34", port or 443))])
+    first_url = requests.Request("GET", image_url).prepare().url
+    routes = {first_url: (302, {"Location": location}, b"") if location else (200, {}, b"image")}
+    if location:
+        routes[requests.Request("GET", location).prepare().url] = (200, {}, b"image")
+    sent_requests = _mock_http(monkeypatch, routes)
+
+    assert image_encoder._b64_from_url(image_url)
+    attacker_requests = [r for r in sent_requests if urlparse(r.url).hostname == "attacker.example"]
+    assert len(attacker_requests) == 1
+    assert attacker_requests[0].headers.get("Authorization") != netrc_authorization
+    if location:
+        assert sent_requests[0].headers.get("Authorization") == netrc_authorization
 
 
 def test__b64_from_url_rejects_unresolvable_host(monkeypatch, make_image_encoder):
