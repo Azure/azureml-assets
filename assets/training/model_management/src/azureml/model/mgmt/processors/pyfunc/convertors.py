@@ -1291,6 +1291,7 @@ class HibouBMLFlowConvertor(PyFuncMLFLowConvertor):
         code_path = [
             os.path.join(self.MODEL_DIR, "hiboub_mlflow_wrapper.py"),
             os.path.join(self.MODEL_DIR, "config.py"),
+            os.path.join(self.COMMON_DIR, "vision_utils.py"),
         ]
         return code_path
 
