@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 IMAGE_URL_ALLOWED_NETWORKS_ENV_VAR = "AZUREML_IMAGE_URL_ALLOWED_NETWORKS"
 _IMAGE_URL_SCHEMES = ("http", "https")
 _IMAGE_URL_TIMEOUT_SECONDS = (10, 30)  # (connect, read)
-_IMAGE_URL_MAX_REDIRECTS = 5
+_IMAGE_URL_MAX_REDIRECTS = requests.models.DEFAULT_REDIRECT_LIMIT  # 30, the limit requests applies
 _IMAGE_URL_MAX_BYTES = 50 * 1024 * 1024
 # Never fetched, even when allowlisted: Azure platform endpoints (WireServer / host agent), and the local-use NAT64
 # and Teredo prefixes, whose embedded IPv4 destination cannot be validated.
@@ -358,15 +358,25 @@ class _PreparedUrlAuth(requests.auth.AuthBase):
     """Apply .netrc or url credentials for the host that requests connects to.
 
     requests looks up .netrc credentials for the url before preparing it, which can name a different host than the
-    one it connects to. Passing this explicit auth disables that lookup.
+    one it connects to. Passing this explicit auth disables that lookup. As in requests' redirect handling, .netrc
+    credentials replace a carried Authorization header, and url credentials are only used for the original url.
     """
+
+    def __init__(self, use_url_credentials: bool):
+        """Initialize the auth.
+
+        :param use_url_credentials: whether to apply credentials embedded in the url
+        :type use_url_credentials: bool
+        """
+        self._use_url_credentials = use_url_credentials
 
     def __call__(self, request: requests.PreparedRequest) -> requests.PreparedRequest:
         """Add Basic credentials for the host of the prepared url, if there are any."""
         parsed = urlparse(request.url)
-        netrc_auth = requests.utils.get_netrc_auth(parsed._replace(netloc=parsed.netloc.rpartition("@")[2]).geturl())
-        credentials = netrc_auth or requests.utils.get_auth_from_url(request.url)
-        if any(credentials):
+        credentials = requests.utils.get_netrc_auth(parsed._replace(netloc=parsed.netloc.rpartition("@")[2]).geturl())
+        if not credentials and self._use_url_credentials:
+            credentials = requests.utils.get_auth_from_url(request.url)
+        if credentials and any(credentials):
             return requests.auth.HTTPBasicAuth(*credentials)(request)
         return request
 
@@ -439,10 +449,11 @@ def _download_image(url: str) -> bytes:
         adapter = _AllowedAddressHTTPAdapter()
         session.mount("http://", adapter)
         session.mount("https://", adapter)
-        for _ in range(_IMAGE_URL_MAX_REDIRECTS + 1):
+        for hop in range(_IMAGE_URL_MAX_REDIRECTS + 1):
             prepared_url = _prepare_url(url)
             _validate_image_url(prepared_url)
-            with session.get(url, headers=headers, auth=_PreparedUrlAuth(), allow_redirects=False, stream=True,
+            auth = _PreparedUrlAuth(use_url_credentials=hop == 0)
+            with session.get(url, headers=headers, auth=auth, allow_redirects=False, stream=True,
                              timeout=_IMAGE_URL_TIMEOUT_SECONDS) as response:
                 if response.is_redirect:
                     redirect_url = urljoin(prepared_url, session.get_redirect_target(response))

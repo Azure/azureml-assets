@@ -207,6 +207,23 @@ class TestVisionUtilities:
         assert process_image(image_url) == b"image"
         assert ["Authorization" in request.headers for request in sent_requests] == [True, True, False]
 
+    def test_process_image_url_ignores_credentials_in_redirect_location(self, monkeypatch):
+        """Test that credentials in a redirect Location neither replace carried credentials nor are sent elsewhere."""
+        image_url = "http://user:pass@images.contoso.com/image.jpg"
+        same_origin_url = "http://other:creds@images.contoso.com/v2/image.jpg"
+        other_origin_url = "http://other:creds@cdn.contoso.com/image.jpg"
+        _mock_dns(monkeypatch, lambda host: PUBLIC_ADDRESS)
+        sent_requests = _mock_http(monkeypatch, {
+            image_url: (302, {"Location": same_origin_url}, b""),
+            same_origin_url: (302, {"Location": other_origin_url}, b""),
+            other_origin_url: (200, {}, b"image"),
+        })
+
+        assert process_image(image_url) == b"image"
+        user_authorization = "Basic " + base64.b64encode(b"user:pass").decode()
+        assert [request.headers.get("Authorization") for request in sent_requests] == [
+            user_authorization, user_authorization, None]
+
     def test_process_image_url_removes_credentials_on_backslash_redirect(self, monkeypatch):
         """Test that credentials are removed when a redirect only appears to stay on the same host."""
         image_url = "http://user:pass@images.contoso.com/image.jpg"
@@ -223,13 +240,14 @@ class TestVisionUtilities:
         assert "Authorization" not in sent_requests[1].headers
 
     def test_process_image_url_rejects_redirect_loop(self, monkeypatch):
-        """Test that process_image() limits the number of redirects."""
+        """Test that process_image() limits the number of redirects to the limit requests uses."""
         image_url = "http://images.contoso.com/image.jpg"
         _mock_dns(monkeypatch, lambda host: PUBLIC_ADDRESS)
-        _mock_http(monkeypatch, {image_url: (302, {"Location": image_url}, b"")})
+        sent_requests = _mock_http(monkeypatch, {image_url: (302, {"Location": image_url}, b"")})
 
-        with pytest.raises(ValueError, match="maximum of 5 redirects"):
+        with pytest.raises(ValueError, match=f"maximum of {requests.models.DEFAULT_REDIRECT_LIMIT} redirects"):
             process_image(image_url)
+        assert len(sent_requests) == requests.models.DEFAULT_REDIRECT_LIMIT + 1
 
     def test_process_image_url_rejects_dns_rebinding(self, monkeypatch):
         """Test that connections are pinned to validated addresses when DNS changes after validation."""
@@ -239,15 +257,42 @@ class TestVisionUtilities:
         with pytest.raises(UnsafeImageUrlError):
             process_image("http://rebind.contoso.com/image.jpg")
 
+    @pytest.mark.parametrize("at_connect_time", [False, True])
     @pytest.mark.parametrize("addresses", [[PUBLIC_ADDRESS, "10.0.0.5"], ["10.0.0.5", PUBLIC_ADDRESS]])
-    def test_process_image_url_rejects_host_with_any_non_public_address(self, monkeypatch, addresses):
-        """Test that process_image() rejects a host that resolves to both public and non-public addresses."""
-        _mock_dns(monkeypatch, lambda host: addresses)
-        sent_requests = _mock_http(monkeypatch, {})
+    def test_process_image_url_rejects_host_with_any_non_public_address(self, monkeypatch, addresses, at_connect_time):
+        """Test that a host with both public and non-public addresses is rejected before any connection is opened."""
+        answers = iter([PUBLIC_ADDRESS] if at_connect_time else [])
+        _mock_dns(monkeypatch, lambda host: next(answers, addresses))
+        connections = []
+        monkeypatch.setattr(
+            urllib3.util.connection, "create_connection", lambda address, *args, **kwargs: connections.append(address))
 
         with pytest.raises(UnsafeImageUrlError):
             process_image("http://images.contoso.com/image.jpg")
-        assert sent_requests == []
+        assert connections == []
+
+    @pytest.mark.parametrize("scheme, port", [("http", 80), ("https", 443)])
+    def test_process_image_url_connects_only_to_validated_addresses(self, monkeypatch, scheme, port):
+        """Test that a download connects only to addresses validated at connect time, even if DNS changes later."""
+        # The url check and the connection check see public addresses; any later lookup would see a private one.
+        answers = iter([PUBLIC_ADDRESS, [PUBLIC_ADDRESS, "20.70.246.21"]])
+        _mock_dns(monkeypatch, lambda host: next(answers, "127.0.0.1"))
+        destinations = []
+
+        class Connected(Exception):
+            """Stops the download once a connection is opened."""
+
+        def create_connection(address, *args, **kwargs):
+            destinations.append(address)
+            if address[0] == PUBLIC_ADDRESS:
+                raise OSError("unreachable")
+            raise Connected()
+
+        monkeypatch.setattr(urllib3.util.connection, "create_connection", create_connection)
+
+        with pytest.raises(Connected):
+            process_image(f"{scheme}://images.contoso.com/image.jpg")
+        assert destinations == [(PUBLIC_ADDRESS, port), ("20.70.246.21", port)]
 
     @pytest.mark.parametrize("connection_class, port", [
         (vision_utils._AllowedAddressHTTPConnection, 80),

@@ -37,7 +37,7 @@ class ImageEncoder():
     # SSRF (CWE-918) mitigation: only fetch http(s) urls that resolve to public addresses.
     ALLOWED_URL_SCHEMES = ("http", "https")
     URL_REQUEST_TIMEOUT_SECONDS = 30
-    URL_MAX_REDIRECTS = 5
+    URL_MAX_REDIRECTS = requests.models.DEFAULT_REDIRECT_LIMIT  # 30, the limit requests applies
 
     def __init__(self, image_input_folder_str: str = None) -> None:
         """Initialize ImageEncoder."""
@@ -104,11 +104,11 @@ class ImageEncoder():
             adapter = _PublicAddressHTTPAdapter()
             session.mount("http://", adapter)
             session.mount("https://", adapter)
-            for _ in range(ImageEncoder.URL_MAX_REDIRECTS + 1):
+            for hop in range(ImageEncoder.URL_MAX_REDIRECTS + 1):
                 prepared_url = _prepare_url(url)
                 self._validate_url(prepared_url)
                 resp = session.get(
-                    url, headers=headers, auth=_PreparedUrlAuth(), allow_redirects=False,
+                    url, headers=headers, auth=_PreparedUrlAuth(use_url_credentials=hop == 0), allow_redirects=False,
                     timeout=ImageEncoder.URL_REQUEST_TIMEOUT_SECONDS)
                 if not resp.is_redirect:
                     return resp
@@ -233,15 +233,22 @@ class _PreparedUrlAuth(requests.auth.AuthBase):
 
     requests looks up .netrc credentials for the url before preparing it, which
     can name a different host than the one it connects to. Passing this explicit
-    auth disables that lookup.
+    auth disables that lookup. As in requests' redirect handling, .netrc
+    credentials replace a carried Authorization header, and url credentials are
+    only used for the original url.
     """
+
+    def __init__(self, use_url_credentials: bool):
+        """Initialize _PreparedUrlAuth."""
+        self._use_url_credentials = use_url_credentials
 
     def __call__(self, request: requests.PreparedRequest) -> requests.PreparedRequest:
         """Add Basic credentials for the host of the prepared url, if there are any."""
         parsed = urlparse(request.url)
-        netrc_auth = requests.utils.get_netrc_auth(parsed._replace(netloc=parsed.netloc.rpartition("@")[2]).geturl())
-        credentials = netrc_auth or requests.utils.get_auth_from_url(request.url)
-        if any(credentials):
+        credentials = requests.utils.get_netrc_auth(parsed._replace(netloc=parsed.netloc.rpartition("@")[2]).geturl())
+        if not credentials and self._use_url_credentials:
+            credentials = requests.utils.get_auth_from_url(request.url)
+        if credentials and any(credentials):
             return requests.auth.HTTPBasicAuth(*credentials)(request)
         return request
 

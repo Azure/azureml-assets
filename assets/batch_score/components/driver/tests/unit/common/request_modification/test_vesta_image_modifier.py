@@ -275,6 +275,27 @@ def test__b64_from_url_keeps_credentials_only_on_same_origin_redirect(monkeypatc
     assert ["Authorization" in request.headers for request in sent_requests] == [True, True, False]
 
 
+def test__b64_from_url_ignores_credentials_in_redirect_location(monkeypatch, make_image_encoder):
+    """Test that credentials in a redirect Location neither replace carried credentials nor are sent elsewhere."""
+    image_encoder: ImageEncoder = make_image_encoder()
+    image_url = "https://user:pass@public.example/image.png"
+    same_origin_url = "https://other:creds@public.example/v2/image.png"
+    other_origin_url = "https://other:creds@cdn.example/image.png"
+    monkeypatch.setattr(
+        "socket.getaddrinfo",
+        lambda host, port, **kwargs: [(2, 1, 6, "", ("93.184.216.34", port or 443))])
+    sent_requests = _mock_http(monkeypatch, {
+        image_url: (302, {"Location": same_origin_url}, b""),
+        same_origin_url: (302, {"Location": other_origin_url}, b""),
+        other_origin_url: (200, {}, b"image"),
+    })
+
+    assert image_encoder._b64_from_url(image_url)
+    user_authorization = "Basic " + base64.b64encode(b"user:pass").decode()
+    assert [request.headers.get("Authorization") for request in sent_requests] == [
+        user_authorization, user_authorization, None]
+
+
 def test__b64_from_url_removes_credentials_on_backslash_redirect(monkeypatch, make_image_encoder):
     """Test that url credentials are removed when a redirect only appears to stay on the same host."""
     image_encoder: ImageEncoder = make_image_encoder()
@@ -322,18 +343,50 @@ def test__b64_from_url_rejects_dns_rebinding(monkeypatch, make_image_encoder):
         image_encoder._b64_from_url("https://rebind.example/image.png")
 
 
+@pytest.mark.parametrize("at_connect_time", [False, True])
 @pytest.mark.parametrize("addresses", [["93.184.216.34", "10.0.0.5"], ["10.0.0.5", "93.184.216.34"]])
-def test__b64_from_url_rejects_host_with_any_non_public_address(monkeypatch, make_image_encoder, addresses):
-    """Test that a host resolving to both public and non-public addresses is rejected."""
+def test__b64_from_url_rejects_host_with_any_non_public_address(
+        monkeypatch, make_image_encoder, addresses, at_connect_time):
+    """Test that a host with both public and non-public addresses is rejected before any connection is opened."""
     image_encoder: ImageEncoder = make_image_encoder()
+    answers = iter([["93.184.216.34"]] if at_connect_time else [])
     monkeypatch.setattr(
         "socket.getaddrinfo",
-        lambda host, port, **kwargs: [(2, 1, 6, "", (address, port or 443)) for address in addresses])
-    sent_requests = _mock_http(monkeypatch, {})
+        lambda host, port, **kwargs: [(2, 1, 6, "", (address, port or 443)) for address in next(answers, addresses)])
+    connections = []
+    monkeypatch.setattr(
+        urllib3.util.connection, "create_connection", lambda address, *args, **kwargs: connections.append(address))
 
     with pytest.raises(UnsafeUrl):
         image_encoder._b64_from_url("https://public.example/image.png")
-    assert sent_requests == []
+    assert connections == []
+
+
+@pytest.mark.parametrize("scheme, port", [("http", 80), ("https", 443)])
+def test__b64_from_url_connects_only_to_validated_addresses(monkeypatch, make_image_encoder, scheme, port):
+    """Test that a download connects only to addresses validated at connect time, even if DNS changes later."""
+    image_encoder: ImageEncoder = make_image_encoder()
+    # The url check and the connection check see public addresses; any later lookup would see a private one.
+    answers = iter([["93.184.216.34"], ["93.184.216.34", "93.184.216.35"]])
+    monkeypatch.setattr(
+        "socket.getaddrinfo",
+        lambda host, port, **kwargs: [(2, 1, 6, "", (address, port)) for address in next(answers, ["127.0.0.1"])])
+    destinations = []
+
+    class Connected(Exception):
+        """Stops the download once a connection is opened."""
+
+    def create_connection(address, *args, **kwargs):
+        destinations.append(address)
+        if address[0] == "93.184.216.34":
+            raise OSError("unreachable")
+        raise Connected()
+
+    monkeypatch.setattr(urllib3.util.connection, "create_connection", create_connection)
+
+    with pytest.raises(Connected):
+        image_encoder._b64_from_url(f"{scheme}://public.example/image.png")
+    assert destinations == [("93.184.216.34", port), ("93.184.216.35", port)]
 
 
 @pytest.mark.parametrize("connection_class, port", [
