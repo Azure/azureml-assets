@@ -53,8 +53,11 @@ def _mock_http(monkeypatch, routes):
 
 @pytest.fixture(autouse=True)
 def _no_environment_proxies(monkeypatch):
-    """Ignore proxies configured on the machine running the tests."""
+    """Ignore proxies and proxy exclusions configured on the machine running the tests."""
     monkeypatch.setattr(requests.utils, "getproxies", lambda: {})
+    monkeypatch.setattr(requests.utils, "proxy_bypass", lambda host: False)
+    for variable in ("no_proxy", "NO_PROXY"):
+        monkeypatch.delenv(variable, raising=False)
 
 
 def test_vesta_payload_type():
