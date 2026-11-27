@@ -383,7 +383,7 @@ class TestVisionUtilities:
         _mock_http(monkeypatch, {image_url: (200, {}, b"image")})
 
         assert process_image(image_url) == b"image"
-        with pytest.raises(UnsafeImageUrlError):
+        with pytest.raises(UnsafeImageUrlError, match="link-local.*cannot"):
             process_image("http://metadata.contoso.com/image.jpg")
 
     @pytest.mark.parametrize("allowed_network, address", [

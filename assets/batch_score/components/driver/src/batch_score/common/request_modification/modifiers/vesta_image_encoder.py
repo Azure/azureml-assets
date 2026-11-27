@@ -99,7 +99,9 @@ class ImageEncoder():
             raise UnsafeUrl(url)
 
         if requests.utils.select_proxy(url, requests.utils.get_environ_proxies(url)):
-            raise UnsafeUrl(url)
+            raise UnsafeUrl(
+                url, "Urls that would be fetched through a proxy are not allowed. Provide the image data inline, or "
+                "exclude the image host from the proxy with NO_PROXY if it can be reached without the proxy.")
 
         _resolve_public_addresses(hostname, parsed.port)
 
@@ -175,11 +177,11 @@ class UnsuccessfulUrlResponse(Exception):
 class UnsafeUrl(Exception):
     """Unsafe url rejected by SSRF protection."""
 
-    def __init__(self, url: str, *args: object) -> None:
+    def __init__(self, url: str, reason: str = None) -> None:
         """Initialize UnsafeUrl."""
         super().__init__(
             f"{ImageEncoder.IMAGE_URL} used in data, but the url is not permitted. "
-            "Only http(s) urls that resolve to public addresses are allowed.")
+            + (reason or "Only http(s) urls that resolve to public addresses are allowed."))
 
 
 class FolderNotMounted(Exception):

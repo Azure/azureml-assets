@@ -278,9 +278,9 @@ def _resolve_allowed_addresses(host: str, port: int) -> List[str]:
         address = address_info[4][0]
         if not _is_allowed_address(address, allowed_networks):
             raise UnsafeImageUrlError(
-                f"Image url host '{host}' resolves to a non-public address, which is not allowed. To fetch images "
-                f"from private networks, set {IMAGE_URL_ALLOWED_NETWORKS_ENV_VAR} to a comma-separated list of "
-                "allowed CIDR ranges."
+                f"Image url host '{host}' resolves to a non-public address, which is not allowed. Private network "
+                f"ranges can be allowed with {IMAGE_URL_ALLOWED_NETWORKS_ENV_VAR} (a comma-separated list of CIDR "
+                "ranges), but loopback, unspecified, link-local, multicast and Azure platform addresses cannot."
             )
         if address not in addresses:
             addresses.append(address)
@@ -408,8 +408,9 @@ def _validate_image_url(url: str) -> None:
         raise UnsafeImageUrlError("Only http and https image urls with a host name are supported.")
     if requests.utils.select_proxy(url, requests.utils.get_environ_proxies(url)):
         raise UnsafeImageUrlError(
-            "Image urls cannot be downloaded through a proxy. Send the image as a base64 string, or exclude the "
-            "image host from the proxy with NO_PROXY."
+            f"Image url host '{parsed.hostname}' would be fetched through a proxy, which is not allowed. Send the "
+            "image as a base64 string, or exclude the host from the proxy with NO_PROXY if it can be reached "
+            "without the proxy."
         )
     _resolve_allowed_addresses(parsed.hostname, parsed.port or (443 if parsed.scheme == "https" else 80))
 

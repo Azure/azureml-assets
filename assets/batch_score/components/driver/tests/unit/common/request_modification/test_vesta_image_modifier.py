@@ -237,7 +237,7 @@ def test__b64_from_url_rejects_proxy(monkeypatch, make_image_encoder):
         lambda host, port, **kwargs: [(2, 1, 6, "", ("93.184.216.34", port or 443))])
     sent_requests = _mock_http(monkeypatch, {})
 
-    with pytest.raises(UnsafeUrl):
+    with pytest.raises(UnsafeUrl, match="proxy"):
         image_encoder._b64_from_url("https://public.example/image.png")
     assert sent_requests == []
 
@@ -362,7 +362,7 @@ def test__b64_from_url_rejects_proxy_for_the_host_requests_connects_to(monkeypat
         lambda host, port, **kwargs: [(2, 1, 6, "", ("93.184.216.34", port or 443))])
     sent_requests = _mock_http(monkeypatch, {})
 
-    with pytest.raises(UnsafeUrl):
+    with pytest.raises(UnsafeUrl, match="proxy"):
         image_encoder._b64_from_url("https://attacker.example\\@public.example/image.png")
     assert sent_requests == []
 
