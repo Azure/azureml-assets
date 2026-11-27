@@ -148,6 +148,23 @@ class TestVisionUtilities:
             process_image("http://169.254.169.254/metadata/instance?api-version=2021-02-01&format=.json")
         assert sent_requests == []
 
+    @pytest.mark.parametrize("error", [
+        socket.gaierror("Name or service not known"), UnicodeError("label too long"), None,
+    ])
+    def test_process_image_url_rejects_unresolvable_host(self, monkeypatch, error):
+        """Test that process_image() does not send a request when the host cannot be resolved."""
+        def resolve(host):
+            if error:
+                raise error
+            return []
+
+        _mock_dns(monkeypatch, resolve)
+        sent_requests = _mock_http(monkeypatch, {})
+
+        with pytest.raises(ValueError, match="Unable to resolve image url host 'images.contoso.com'"):
+            process_image("http://images.contoso.com/image.jpg")
+        assert sent_requests == []
+
     def test_process_image_url_rejects_proxy(self, monkeypatch):
         """Test that process_image() does not download images through a proxy."""
         monkeypatch.setattr(requests.utils, "getproxies", lambda: {"http": "http://proxy.contoso.com:3128"})
@@ -181,6 +198,17 @@ class TestVisionUtilities:
         })
 
         with pytest.raises(UnsafeImageUrlError):
+            process_image(image_url)
+        assert [request.url for request in sent_requests] == [image_url]
+
+    @pytest.mark.parametrize("location", ["ftp://images.contoso.com/image.jpg", "file:///etc/passwd"])
+    def test_process_image_url_rejects_redirect_to_non_http_url(self, monkeypatch, location):
+        """Test that process_image() does not follow redirects to non-http(s) urls."""
+        image_url = "http://images.contoso.com/image.jpg"
+        _mock_dns(monkeypatch, lambda host: PUBLIC_ADDRESS)
+        sent_requests = _mock_http(monkeypatch, {image_url: (302, {"Location": location}, b"")})
+
+        with pytest.raises(UnsafeImageUrlError, match="Only http and https"):
             process_image(image_url)
         assert [request.url for request in sent_requests] == [image_url]
 
@@ -403,6 +431,17 @@ class TestVisionUtilities:
         sent_requests = _mock_http(monkeypatch, {})
 
         with pytest.raises(UnsafeImageUrlError):
+            process_image("http://images.contoso.com/image.jpg")
+        assert sent_requests == []
+
+    @pytest.mark.parametrize("allowed_networks", ["10.0.0.0/33", "10.1.0.0/16, not-a-network"])
+    def test_process_image_url_rejects_invalid_allowed_networks(self, monkeypatch, allowed_networks):
+        """Test that an invalid allowed network fails image url downloads instead of being ignored."""
+        monkeypatch.setenv(IMAGE_URL_ALLOWED_NETWORKS_ENV_VAR, allowed_networks)
+        _mock_dns(monkeypatch, lambda host: PUBLIC_ADDRESS)
+        sent_requests = _mock_http(monkeypatch, {})
+
+        with pytest.raises(ValueError, match=f"Invalid CIDR range .* in {IMAGE_URL_ALLOWED_NETWORKS_ENV_VAR}"):
             process_image("http://images.contoso.com/image.jpg")
         assert sent_requests == []
 
