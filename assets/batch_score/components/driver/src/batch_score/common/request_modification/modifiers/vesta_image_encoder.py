@@ -22,9 +22,15 @@ from .request_modifier import RequestModificationException
 
 # Azure platform endpoints (WireServer / host agent) are globally routable but must never be fetched.
 _BLOCKED_NETWORKS = (ipaddress.ip_network("168.63.129.16/32"),)
-# Special-purpose ranges that are not globally reachable but that ipaddress reports as global on some Python
-# patch releases (192.0.0.0/24 before 3.8.20, 3.10.15 and 3.12.4; 3fff::/20 on current releases).
-_NON_PUBLIC_NETWORKS = (ipaddress.ip_network("192.0.0.0/24"), ipaddress.ip_network("3fff::/20"))
+# Treated as non-public on every Python release: ranges that ipaddress classifies differently across patch releases
+# (the IETF protocol assignment blocks 192.0.0.0/24 and 2001::/23, and the 3fff::/20 documentation block), and the
+# deprecated 6to4 relay anycast block 192.88.99.0/24, which ipaddress reports as global.
+_NON_PUBLIC_NETWORKS = (
+    ipaddress.ip_network("192.0.0.0/24"),
+    ipaddress.ip_network("192.88.99.0/24"),
+    ipaddress.ip_network("2001::/23"),
+    ipaddress.ip_network("3fff::/20"),
+)
 _NAT64_NETWORK = ipaddress.ip_network("64:ff9b::/96")
 
 

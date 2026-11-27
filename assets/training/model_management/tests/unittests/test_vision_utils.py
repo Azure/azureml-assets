@@ -125,7 +125,8 @@ class TestVisionUtilities:
 
     @pytest.mark.parametrize("address", [
         "127.0.0.1", "10.0.0.5", "172.16.0.1", "192.168.1.1", "100.64.0.1", "0.0.0.0", "169.254.169.254",
-        "168.63.129.16", "192.0.0.8", "::1", "fd00::1", "fe80::1", "::ffff:10.0.0.5", "64:ff9b::a9fe:a9fe", "3fff::1",
+        "168.63.129.16", "192.0.0.8", "192.88.99.1", "::1", "fd00::1", "fe80::1", "::ffff:10.0.0.5",
+        "64:ff9b::a9fe:a9fe", "2001:3::1", "3fff::1",
     ])
     def test_process_image_url_rejects_non_public_address(self, monkeypatch, address):
         """Test that process_image() does not fetch URLs whose host resolves to a non-public address."""
@@ -365,10 +366,13 @@ class TestVisionUtilities:
         ("2001::/32", "2001:0:4136:e378:8000:63bf:3fff:fdd2"),
         ("64:ff9b::/96", "64:ff9b::a9fe:a9fe"),
         ("2002::/16", "2002:a9fe:a9fe::1"),
+        ("::/0", "::a9fe:a9fe"),
+        ("::/0", "::ffff:0:a9fe:a9fe"),
+        ("::/8", "::7f00:1"),
     ])
     def test_process_image_url_allowed_networks_cannot_admit_blocked_destinations(
             self, monkeypatch, allowed_network, address):
-        """Test that allowing IPv6 translation ranges cannot admit an always-blocked IPv4 destination."""
+        """Test that allowing IPv6 ranges cannot admit an always-blocked IPv4 destination embedded in them."""
         monkeypatch.setenv(IMAGE_URL_ALLOWED_NETWORKS_ENV_VAR, allowed_network)
         _mock_dns(monkeypatch, lambda host: address)
         sent_requests = _mock_http(monkeypatch, {})
@@ -390,6 +394,23 @@ class TestVisionUtilities:
         monkeypatch.setenv(IMAGE_URL_ALLOWED_NETWORKS_ENV_VAR, "64:ff9b::/96")
         _mock_dns(monkeypatch, lambda host: "64:ff9b::a01:203")
         assert process_image(image_url) == b"image"
+
+    @pytest.mark.parametrize("address, allowed", [
+        ("10.1.2.3", True), ("::ffff:10.1.2.3", True), ("10.2.0.1", False), ("::ffff:10.2.0.1", False),
+    ])
+    def test_process_image_url_allowed_networks_in_ipv4_mapped_notation(self, monkeypatch, address, allowed):
+        """Test that allowed IPv4 ranges written in IPv4-mapped IPv6 notation match IPv4 addresses."""
+        monkeypatch.setenv(IMAGE_URL_ALLOWED_NETWORKS_ENV_VAR, "::ffff:10.1.0.0/112")
+        image_url = "http://images.contoso.com/image.jpg"
+        _mock_dns(monkeypatch, lambda host: address)
+        sent_requests = _mock_http(monkeypatch, {image_url: (200, {}, b"image")})
+
+        if allowed:
+            assert process_image(image_url) == b"image"
+        else:
+            with pytest.raises(UnsafeImageUrlError):
+                process_image(image_url)
+            assert sent_requests == []
 
     def test_process_image_url_rejects_oversized_image(self, monkeypatch):
         """Test that process_image() limits the size of downloaded images."""

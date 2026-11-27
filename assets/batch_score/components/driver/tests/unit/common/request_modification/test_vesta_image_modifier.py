@@ -210,8 +210,10 @@ def test__b64_from_url_rejects_non_public_address(monkeypatch, make_image_encode
         "192.168.1.1",      # private
         "100.64.0.1",       # shared address space
         "192.0.0.8",        # IETF protocol assignment (global on unpatched Python releases)
+        "192.88.99.1",      # deprecated 6to4 relay anycast (reported as global by ipaddress)
         "0.0.0.0",          # unspecified
         "::ffff:127.0.0.1",  # IPv4-mapped loopback
+        "2001:3::1",        # IETF protocol assignment (global on patched Python releases)
         "3fff::1",          # IPv6 documentation
     ]
     for ip in blocked_ips:

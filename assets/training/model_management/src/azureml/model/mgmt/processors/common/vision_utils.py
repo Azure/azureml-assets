@@ -40,16 +40,26 @@ _IMAGE_URL_SCHEMES = ("http", "https")
 _IMAGE_URL_TIMEOUT_SECONDS = (10, 30)  # (connect, read)
 _IMAGE_URL_MAX_REDIRECTS = requests.models.DEFAULT_REDIRECT_LIMIT  # 30, the limit requests applies
 _IMAGE_URL_MAX_BYTES = 50 * 1024 * 1024
-# Never fetched, even when allowlisted: Azure platform endpoints (WireServer / host agent), and the local-use NAT64
-# and Teredo prefixes, whose embedded IPv4 destination cannot be validated.
+# Never fetched, even when allowlisted: Azure platform endpoints (WireServer / host agent), and IPv6 prefixes that
+# embed an IPv4 destination this check does not decode (local-use NAT64, Teredo, and the deprecated IPv4-compatible
+# and IPv4-translated forms).
 _ALWAYS_BLOCKED_NETWORKS = (
     ipaddress.ip_network("168.63.129.16/32"),
     ipaddress.ip_network("64:ff9b:1::/48"),
     ipaddress.ip_network("2001::/32"),
+    ipaddress.ip_network("::/96"),
+    ipaddress.ip_network("::ffff:0:0:0/96"),
 )
-# Special-purpose ranges that are not globally reachable but that ipaddress reports as global on some Python
-# patch releases (192.0.0.0/24 before 3.8.20, 3.10.15 and 3.12.4; 3fff::/20 on current releases).
-_NON_PUBLIC_NETWORKS = (ipaddress.ip_network("192.0.0.0/24"), ipaddress.ip_network("3fff::/20"))
+# Treated as non-public on every Python release: ranges that ipaddress classifies differently across patch releases
+# (the IETF protocol assignment blocks 192.0.0.0/24 and 2001::/23, and the 3fff::/20 documentation block), and the
+# deprecated 6to4 relay anycast block 192.88.99.0/24, which ipaddress reports as global.
+_NON_PUBLIC_NETWORKS = (
+    ipaddress.ip_network("192.0.0.0/24"),
+    ipaddress.ip_network("192.88.99.0/24"),
+    ipaddress.ip_network("2001::/23"),
+    ipaddress.ip_network("3fff::/20"),
+)
+_IPV4_MAPPED_NETWORK = ipaddress.ip_network("::ffff:0:0/96")
 _NAT64_NETWORK = ipaddress.ip_network("64:ff9b::/96")
 
 
@@ -194,6 +204,9 @@ class UnsafeImageUrlError(ValueError):
 def _get_allowed_networks() -> list:
     """Return the non-public networks that the deployment explicitly allows image urls to resolve to.
 
+    IPv4-mapped addresses are checked as the IPv4 address they map to, so ranges written in IPv4-mapped IPv6
+    notation are converted to IPv4, and other IPv6 ranges never match IPv4 destinations.
+
     :return: allowed networks
     :rtype: list
     """
@@ -202,9 +215,12 @@ def _get_allowed_networks() -> list:
         entry = entry.strip()
         if entry:
             try:
-                networks.append(ipaddress.ip_network(entry, strict=False))
+                network = ipaddress.ip_network(entry, strict=False)
             except ValueError:
                 raise ValueError(f"Invalid CIDR range '{entry}' in {IMAGE_URL_ALLOWED_NETWORKS_ENV_VAR}.")
+            if network.version == 6 and network.subnet_of(_IPV4_MAPPED_NETWORK):
+                network = ipaddress.ip_network((network.network_address.ipv4_mapped, network.prefixlen - 96))
+            networks.append(network)
     return networks
 
 
