@@ -433,20 +433,19 @@ def _prepare_url(url: str) -> str:
 def _read_image_content(response: requests.Response) -> bytes:
     """Read an image response body, enforcing the maximum image size.
 
+    The limit applies to the decoded body as it is read. Content-Length is not used, since it is the size of the
+    encoded body and is ignored for chunked responses.
+
     :param response: streamed response
     :type response: requests.Response
     :return: response body
     :rtype: bytes
     """
-    too_large_message = f"Image downloaded from url exceeds the maximum size of {_IMAGE_URL_MAX_BYTES} bytes."
-    content_length = response.headers.get("Content-Length", "")
-    if content_length.isdigit() and int(content_length) > _IMAGE_URL_MAX_BYTES:
-        raise ValueError(too_large_message)
     content = bytearray()
     for chunk in response.iter_content(chunk_size=64 * 1024):
         content.extend(chunk)
         if len(content) > _IMAGE_URL_MAX_BYTES:
-            raise ValueError(too_large_message)
+            raise ValueError(f"Image downloaded from url exceeds the maximum size of {_IMAGE_URL_MAX_BYTES} bytes.")
     return bytes(content)
 
 
@@ -471,8 +470,10 @@ def _download_image(url: str) -> bytes:
             auth = _PreparedUrlAuth(use_url_credentials=hop == 0)
             with session.get(url, headers=headers, auth=auth, allow_redirects=False, stream=True,
                              timeout=_IMAGE_URL_TIMEOUT_SECONDS) as response:
-                if response.is_redirect:
-                    redirect_url = urljoin(prepared_url, session.get_redirect_target(response))
+                # As in requests, a redirect response without a Location target is the final response.
+                redirect_target = session.get_redirect_target(response)
+                if redirect_target:
+                    redirect_url = urljoin(prepared_url, redirect_target)
                     # Keep credentials only where requests' own redirect handling would keep them.
                     authorization = response.request.headers.get("Authorization")
                     keep_authorization = authorization and not session.should_strip_auth(

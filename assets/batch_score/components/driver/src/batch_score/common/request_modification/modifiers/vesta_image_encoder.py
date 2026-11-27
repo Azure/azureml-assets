@@ -116,9 +116,11 @@ class ImageEncoder():
                 resp = session.get(
                     url, headers=headers, auth=_PreparedUrlAuth(use_url_credentials=hop == 0), allow_redirects=False,
                     timeout=ImageEncoder.URL_REQUEST_TIMEOUT_SECONDS)
-                if not resp.is_redirect:
+                # As in requests, a redirect response without a Location target is the final response.
+                redirect_target = session.get_redirect_target(resp)
+                if not redirect_target:
                     return resp
-                redirect_url = urljoin(prepared_url, session.get_redirect_target(resp))
+                redirect_url = urljoin(prepared_url, redirect_target)
                 # Keep credentials only where requests' own redirect handling would keep them.
                 authorization = resp.request.headers.get("Authorization")
                 keep_authorization = authorization and not session.should_strip_auth(

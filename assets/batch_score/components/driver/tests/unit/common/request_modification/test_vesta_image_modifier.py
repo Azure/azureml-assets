@@ -261,6 +261,20 @@ def test__b64_from_url_rejects_redirect_to_non_public_address(monkeypatch, make_
     assert [request.url for request in sent_requests] == [image_url]
 
 
+def test__b64_from_url_treats_redirect_without_location_as_final_response(monkeypatch, make_image_encoder):
+    """Test that, as in requests, a redirect response with an empty Location is not followed."""
+    image_encoder: ImageEncoder = make_image_encoder()
+    image_url = "https://public.example/image.png"
+    monkeypatch.setattr(
+        "socket.getaddrinfo",
+        lambda host, port, **kwargs: [(2, 1, 6, "", ("93.184.216.34", port or 443))])
+    sent_requests = _mock_http(monkeypatch, {image_url: (302, {"Location": ""}, b"")})
+
+    with pytest.raises(UnsuccessfulUrlResponse):
+        image_encoder._b64_from_url(image_url)
+    assert [request.url for request in sent_requests] == [image_url]
+
+
 def test__b64_from_url_keeps_credentials_only_on_same_origin_redirect(monkeypatch, make_image_encoder):
     """Test that url credentials are kept on same-origin redirects and removed when the host changes."""
     image_encoder: ImageEncoder = make_image_encoder()

@@ -253,6 +253,15 @@ class TestVisionUtilities:
             process_image(image_url)
         assert len(sent_requests) == requests.models.DEFAULT_REDIRECT_LIMIT + 1
 
+    def test_process_image_url_treats_redirect_without_location_as_final_response(self, monkeypatch):
+        """Test that, as in requests, a redirect response with an empty Location is not followed."""
+        image_url = "http://images.contoso.com/image.jpg"
+        _mock_dns(monkeypatch, lambda host: PUBLIC_ADDRESS)
+        sent_requests = _mock_http(monkeypatch, {image_url: (302, {"Location": ""}, b"body")})
+
+        assert process_image(image_url) == b"body"
+        assert len(sent_requests) == 1
+
     def test_process_image_url_rejects_dns_rebinding(self, monkeypatch):
         """Test that connections are pinned to validated addresses when DNS changes after validation."""
         addresses = iter([PUBLIC_ADDRESS])
@@ -424,6 +433,19 @@ class TestVisionUtilities:
 
         with pytest.raises(ValueError, match="exceeds the maximum size"):
             process_image(image_url)
+
+    @pytest.mark.parametrize("headers", [
+        {"Transfer-Encoding": "chunked", "Content-Length": "999999999"},
+        {"Content-Length": "\u00b2"},
+        {"Content-Length": "1" * 5000},
+    ])
+    def test_process_image_url_size_limit_ignores_content_length(self, monkeypatch, headers):
+        """Test that the size limit applies to the bytes read, not to a Content-Length that urllib3 ignores."""
+        image_url = "http://images.contoso.com/image.jpg"
+        _mock_dns(monkeypatch, lambda host: PUBLIC_ADDRESS)
+        _mock_http(monkeypatch, {image_url: (200, headers, b"image")})
+
+        assert process_image(image_url) == b"image"
 
     def test_process_image_b64(self):
         """Test process_image() with a b64encoded string."""
