@@ -120,6 +120,10 @@ class ImageEncoder():
                 redirect_target = session.get_redirect_target(resp)
                 if not redirect_target:
                     return resp
+                # As in requests, a relative target is quoted before it is resolved, so that encoded dot segments
+                # are resolved too.
+                if not urlparse(redirect_target).netloc:
+                    redirect_target = requests.utils.requote_uri(redirect_target)
                 redirect_url = urljoin(prepared_url, redirect_target)
                 # Keep credentials only where requests' own redirect handling would keep them.
                 authorization = resp.request.headers.get("Authorization")

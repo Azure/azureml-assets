@@ -473,6 +473,10 @@ def _download_image(url: str) -> bytes:
                 # As in requests, a redirect response without a Location target is the final response.
                 redirect_target = session.get_redirect_target(response)
                 if redirect_target:
+                    # As in requests, a relative target is quoted before it is resolved, so that encoded dot
+                    # segments are resolved too.
+                    if not urlparse(redirect_target).netloc:
+                        redirect_target = requests.utils.requote_uri(redirect_target)
                     redirect_url = urljoin(prepared_url, redirect_target)
                     # Keep credentials only where requests' own redirect handling would keep them.
                     authorization = response.request.headers.get("Authorization")

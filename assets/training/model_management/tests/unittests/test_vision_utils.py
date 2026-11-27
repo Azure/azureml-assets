@@ -262,6 +262,19 @@ class TestVisionUtilities:
         assert process_image(image_url) == b"body"
         assert len(sent_requests) == 1
 
+    def test_process_image_url_resolves_encoded_dot_segments_in_relative_redirect(self, monkeypatch):
+        """Test that, as in requests, encoded dot segments in a relative redirect target are resolved."""
+        image_url = "http://images.contoso.com/image.jpg"
+        resolved_url = "http://images.contoso.com/a/image.jpg"
+        _mock_dns(monkeypatch, lambda host: PUBLIC_ADDRESS)
+        sent_requests = _mock_http(monkeypatch, {
+            image_url: (302, {"Location": "/a/b/%2e%2e/%2E/image.jpg"}, b""),
+            resolved_url: (200, {}, b"image"),
+        })
+
+        assert process_image(image_url) == b"image"
+        assert [request.url for request in sent_requests] == [image_url, resolved_url]
+
     def test_process_image_url_rejects_dns_rebinding(self, monkeypatch):
         """Test that connections are pinned to validated addresses when DNS changes after validation."""
         addresses = iter([PUBLIC_ADDRESS])
